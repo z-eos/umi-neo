@@ -26,6 +26,7 @@ sub startup ($self) {
   $self->session->{'user'} = $user;
   $self->flash(message => 'Thanks for logging in.');
   # say $self->session->{'user'};
+
   
   $r->get('/logout')->to('Auth#login');
   $r->post('/login')->to('Auth#passed');
