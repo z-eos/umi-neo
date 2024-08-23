@@ -1,8 +1,8 @@
 % layout 'default';
 <div class="container">
-<div class="alert alert-primary" role="alert">
-% if (my $msg = flash 'message') {
-<b><%= $msg %></b><br>
+<div class="alert alert-secondary" role="alert">
+% if (my $message = flash 'message') {
+<h3 class="text-success"><%= $message %></h3>
 % }
   
 We welcome you, <%= session 'user' %>.<br>
