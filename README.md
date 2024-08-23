@@ -1,2 +1,3 @@
 # umi-neo
-reincarnation of umi
+
+Mojo reincarnation of [umi](https://github.com/z-eos/umi)

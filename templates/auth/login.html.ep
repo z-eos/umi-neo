@@ -1,0 +1,47 @@
+% layout 'default';
+%= form_for index => (method => 'POST', class => 'form-login') => begin
+% if (param 'user') {
+<h3>Wrong name or password, please try again.</h3>
+% }
+    
+    <div class="container">
+      <div class="row row-login">
+
+	<div class="col-12 mb-5 text-center">
+	  <img src="/assets/images/umi-logo-black-diagonal.png"
+	       alt="Unified Management Interface"
+	       width="200" height="200"
+	       class="img-responsive">
+	</div>
+	
+	<div class="col-12 form-size">
+	  <div class="input-group">
+	    <div class="input-group-prepend" id="basic-login">
+	      <span class="input-group-text btn-secondary" id="basic-login-prepend">
+		<i class="fas fa-fw fa-user-alt"></i>
+	      </span>
+	    </div>
+	    
+	    %= text_field 'user', 'class' => 'form-control', 'placeholder' => 'login', 'aria-label' => 'login', 'aria-describedby' => 'basic-login-prepend', 'required' => '', 'autofocus' => ''
+
+	  </div>
+	  <div class="input-group">
+	    <div class="input-group-prepend" id="basic-password">
+	      <span class="input-group-text btn-default" id="basic-password-prepend">
+		<i class="fas fa-fw fa-fingerprint"></i>
+	      </span>
+	    </div>
+	    
+	    %= password_field 'pass', 'class' => 'form-control', 'placeholder' => 'password', 'aria-label' => 'password', 'aria-describedby' => 'basic-password-prepend', 'required' => ''
+	    
+	  </div>
+	  <div class="input-group">
+	    
+	    %= submit_button 'Login', 'class' => 'form-control btn btn-primary btn-block'
+
+	  </div>
+	</div>
+      </div>
+    </div>
+    
+% end
