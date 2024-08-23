@@ -8,6 +8,10 @@ sub login ($self) {
   $self->render(msg => 'Welcome to the Mojolicious real-time web framework!');
 }
 
+sub logout ($self) {
+    $self->session(expires => 1);
+    $self->redirect_to('login');
+}
 # This action will render a template
 sub passed ($self) {
 

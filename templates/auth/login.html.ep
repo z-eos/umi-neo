@@ -1,5 +1,5 @@
 % layout 'default';
-%= form_for index => (method => 'POST', class => 'form-login') => begin
+%= form_for login => (method => 'POST', class => 'form-login') => begin
 % if (param 'user') {
 <h3>Wrong name or password, please try again.</h3>
 % }

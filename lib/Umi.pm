@@ -1,11 +1,10 @@
 package Umi;
 
-use strict;
-use warnings;
-use experimental qw(signatures);
-
 use Mojo::Base 'Mojolicious', -signatures;
 use Umi::Model::Users;
+
+use strict;
+use warnings;
 
 # This method will run once at server start
 sub startup ($self) {
@@ -19,16 +18,17 @@ sub startup ($self) {
   # Router
   my $r = $self->routes;
 
-  $self->log->debug('RESTARTING application');
-
   $self->helper( users => sub { state $users = Umi::Model::Users->new } );
   my $user = $self->param('user') || '';
   my $pass = $self->param('pass') || '';
-  
-  # Normal route to controller
-  $r->any()->to('Auth#login') unless $self->users->check($user, $pass);
 
-  $r->get('/index')->to('Auth#passed');
+  $r->any()->to('Auth#login') unless $self->users->check($user, $pass);
+  $self->session->{'user'} = $user;
+  $self->flash(message => 'Thanks for logging in.');
+  # say $self->session->{'user'};
+  
+  $r->get('/logout')->to('Auth#login');
+  $r->post('/login')->to('Auth#passed');
 
   # # Make sure user is logged in for actions in this group
   # group {
