@@ -2,10 +2,11 @@
 <div class="container">
 <div class="alert alert-secondary" role="alert">
 % if (my $message = flash 'message') {
-<h3 class="text-success"><%= $message %></h3>
+<h5 class="text-success"><%= $message %></h5>
 % }
-  
-We welcome you, <%= session 'user' %>.<br>
+<h2>
+  We welcome you, <i><%= session 'user' %></i>.
+</h2>
 %= link_to Logout => 'logout'
 </div>
 </div>
