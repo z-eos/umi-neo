@@ -1,11 +1,13 @@
 /* -*- mode: css; mode: follow -*- */
 
+/*
 html,body {
     height: 100%;
     font-size: 0.95rem;
     max-height: 100vh;
     overflow: hidden;
 }
+*/
 
 .umi-bg:after {
     content: ' ';

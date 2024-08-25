@@ -1,0 +1,49 @@
+<form id="index" class="form-login" method="POST" action="index">
+  <div class="container">
+    <div class="row row-login">
+
+      <div class="col-12 mb-5 text-center">
+	<img src="/assets/images/umi-logo-black-diagonal.png"
+	     alt="Unified Management Interface"
+	     width="200" height="200"
+	     class="img-responsive">
+      </div>
+      
+      <div class="col-12 row-login rounded-0">
+	<div class="input-group border border-1 rounded-0">
+	  <span class="input-group-text btn-secondary border border-0 rounded-0" id="basic-login-prepend">
+	    <i class="fas fa-user-alt"></i>
+	  </span>
+	  
+          <input type="text"
+		 class="form-control border border-0 rounded-0"
+                 placeholder="login"
+                 aria-label="login"
+                 aria-describedby="basic-login-prpend"
+                 name="user" required autofocus>
+
+	</div>
+	
+	<div class="input-group border border-top-0 rounded-0">
+	  <span class="input-group-text btn-default border border-0 rounded-0" id="basic-password-prepend">
+	    <i class="fas fa-fingerprint"></i>
+	  </span>
+	  
+          <input type="password" class="form-control"
+                 placeholder="password"
+                 aria-label="password"
+                 aria-describedby="basic-password-prepend"
+                 name="pass" required>
+	  
+	</div>
+	<div class="input-group">
+	  
+          <div class="input-group">
+            <button class="rounded-0 form-control btn btn-primary btn-block" type="submit">Login</button>
+          </div>
+
+	</div>
+      </div>
+    </div>
+  </div>
+</form>

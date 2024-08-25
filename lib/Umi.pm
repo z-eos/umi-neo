@@ -61,16 +61,35 @@ use Umi::Model::Users;
 
 sub startup ($self) {
 
-  $self->secrets(['Mojolicious rocks']);
-  $self->helper(users => sub { state $users = Umi::Model::Users->new });
+    # Load configuration from config file
+    my $config = $self->plugin('NotYAMLConfig');
+    # p $config;
+    # Configure the application
+    $self->secrets($config->{secrets});
+    $self->plugin('tt_renderer' => {
+	template_options => {
+	    PRE_CHOMP => 1,
+	    # PRE_PROCESS => '',
+	    POST_CHOMP => 1,
+	    TRIM => 1,
+	    EVAL_PERL => 1,
+	    WRAPPER => 'layouts/default.html.tt',
+	},
+		  });
 
-  my $r = $self->routes;
-  $r->any('/')->to('login#index')->name('index');
+    $self->renderer->default_handler('tt');
 
-  my $logged_in = $r->under('/')->to('login#logged_in');
-  $logged_in->get('/protected')->to('login#protected');
+    $self->helper(users => sub { state $users = Umi::Model::Users->new });
 
-  $r->get('/logout')->to('login#logout');
+    my $r = $self->routes;
+    $r->any('/')->to('login#index')->name('index');
+    $r->post('/index')->to('login#index')->name('index');
+    $r->get('/index')->to('login#index')->name('index');
+
+    my $logged_in = $r->under('/')->to('login#logged_in');
+    $logged_in->get('/protected')->to('login#protected');
+
+    $r->get('/logout')->to('login#logout');
 }
 
 1;
