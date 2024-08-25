@@ -1,9 +1,6 @@
 <pre>[% USE dumper(); dumper.dump(c.session) %]</pre>
 
-[%# PROCESS site/header #%]
-
-
-      <div class="container">
+      <!- div class="container" ->
         <div class="alert alert-secondary" role="alert">
           [% IF c.stash.item('mojo.session').flash.message %]
           <h5 class="text-success">[% c.stash.item('mojo.session').flash.message %]</h5>
@@ -13,4 +10,4 @@
           </h2>
           <a href="/logout">Logout</a>
         </div>
-      </div>
+      <!- /div ->

@@ -77,6 +77,22 @@ sub startup ($self) {
 	},
 		  });
 
+    # $self->plugin(
+    # 	Authentication => {
+    # 	    load_user     => sub ($app, $uid) { load_account($uid) },
+    # 	    validate_user => sub ($c, $u, $p, $e) {
+    # 		validate($u, $p) ? $u : () },
+    # 	}
+    # 	);
+
+    # $self->hook(
+    # 	before_render => sub ($c, $args) {
+    # 	    my $user = $c->is_user_authenticated ? $c->current_user : undef;
+    # 	    $c->stash(user => $user);
+    # 	    return $c;
+    # 	}
+    # 	);
+
     $self->renderer->default_handler('tt');
 
     $self->helper(users => sub { state $users = Umi::Model::Users->new });
