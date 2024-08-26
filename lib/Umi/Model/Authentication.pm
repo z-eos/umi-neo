@@ -1,4 +1,4 @@
-package Umi::Model::Authentication;
+package Umi::Model::Authentication::Hash;
 
 use strict;
 use warnings;
@@ -11,25 +11,45 @@ use Mojolicious::Plugin::Authentication;
 has 'db';
 has name => 'hashy';
 
-sub new ($class) { bless {}, $class }
+sub create ($class, $model, %args) {
+   my $db = $args{db} or return;
 
-sub validate_user ($self, $user, $pass) {
+   # create an instance, leave db unset for the moment
+   my $self = $class->new;
 
-    my $account = load_user($user) // return;
-  # Success
-  return 1 if $USERS->{$user} && secure_compare $USERS->{$user}, $pass;
+   if (! ref($db)) { # passed in as a JSON string or a file path?
+      $db = Mojo::File->new($db)->slurp if $db !~ m{\A \s* \[ }mxs;
+      $db = decode_json($db);
+   }
 
-  # Fail
-  return undef;
+   if (! $args{secrets_already_hashed}) {  # need hashing?
+      $db = [
+         map {
+            my $hashed_secret = $self->ensure_hashed($_->{secret});
+            +{ $_->%*, secret => $hashed_secret };
+         } $db->@*
+      ];
+   }
+   
+   # normalize to hash reference name => record
+   $db = { map { $_->{name} => $_ } $db->@* } if ref($db) eq 'ARRAY';
+
+   $self->db($db);
+   return $self;
 }
 
-sub load_user ($self, $uid) {
-    return $self->model->authentication->load_user($uid);
+sub load_user ($self, $name) {
+   my $item = $self->db->{$name} // return;
+   return { $item->%* }; # shallow copy
 }
 
-sub validate_user ($controller, $username, $password, $extra) {
-   my $authn = $controller->app->model->authentication;
-   return $authn->validate_user($username, $password, $extra);
+*{load_user_by_id}   = \&load_user;
+*{load_user_by_name} = \&load_user;
+
+sub save_user ($self, $user) {
+   my $hashed_secret = $self->ensure_hashed($user->{secret});
+   $self->db->{$user->{name}} = { $user->%*, secret => $hashed_secret };
+   return $self;
 }
 
 1;

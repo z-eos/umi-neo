@@ -1,7 +1,7 @@
 package Umi;
 use Mojo::Base 'Mojolicious', -signatures;
 use Mojo::Util 'b64_decode';
-use Umi::Model::Authentication;
+use Umi::Model::Authentication::Hash;
 
 use constant DEFAULTS => {
    CONFIG => {},
@@ -72,7 +72,7 @@ sub _startup_secrets ($self) {
 
 sub _startup_model ($self) {
    my $config = $self->config;
-   my $model = [% all_modules.model_module %]->new(
+   my $model = Umi::Model::Authentication::Hash->new(
       [%= $pfx{db} %]db_url => $self->config->{database_url},
 
       authentication_options => {
@@ -80,7 +80,7 @@ sub _startup_model ($self) {
          providers => [
             {
                name  => 'hashy',
-               class => '[% all_modules.model_authn_hash_module %]',
+               class => 'Umi::Model::Authentication',
                args  => [
                   db => DEFAULTS->{HARDCODED_AUTHENTICATION_DB},
 
