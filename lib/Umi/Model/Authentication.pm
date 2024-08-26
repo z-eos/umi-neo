@@ -7,6 +7,7 @@ use experimental qw(signatures);
 use Mojo::Base 'Mojolicious', -signatures;
 use Mojo::Util qw(secure_compare);
 use Mojolicious::Plugin::Authentication;
+use Mojolicious::Plugin::Passphrase;
 
 has 'db';
 has name => 'hashy';

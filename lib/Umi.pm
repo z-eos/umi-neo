@@ -73,7 +73,7 @@ sub _startup_secrets ($self) {
 sub _startup_model ($self) {
    my $config = $self->config;
    my $model = Umi::Model::Authentication::Hash->new(
-      [%= $pfx{db} %]db_url => $self->config->{database_url},
+      db_url => $self->config->{database_url},
 
       authentication_options => {
 
