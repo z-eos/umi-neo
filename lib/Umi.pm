@@ -1,5 +1,3 @@
-#!/usr/bin/env perl
-
 package Umi;
 use v5.24;
 use Mojo::Base qw< Mojolicious -signatures >;
@@ -61,6 +59,7 @@ sub startup ($self) {
    );
    $protected_root->get('/')->to('protected#homepage')->name('protected_root');
    $protected_root->get('/other')->to('protected#other');
+   $protected_root->get('/profile')->to('protected#profile');
 
    # default to 404 for anything that has not been handled explicitly.
    # This is probably reinventing a wheel already present in Mojolicious

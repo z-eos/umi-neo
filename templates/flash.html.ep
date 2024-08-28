@@ -1,10 +1,14 @@
 % if (defined(my $message = flash('message'))) {
-<div id="flash" class="alert alert-%= my $status = flash('status'));
-		       %= if ( $status eq 'error') {
-danger
-		       %= } else if ( $status eq 'ok') {
-success
-		       %= }
-  <%= $message; %>
-</div>
+  % my $status = flash('status');
+  % my $class = "";
+  % if ( $status eq 'error') {
+  %   $class = "danger";
+  % } elsif ( $status eq 'ok') {
+  %   $class = "success";
+  % }
+
+  <div id="flash" class="alert alert-<%= $class; %>" role="alert">
+    <i class="fa-solid fa-triangle-exclamation pe-3"></i></i><%= $message; %>
+  </div>
+
 % }

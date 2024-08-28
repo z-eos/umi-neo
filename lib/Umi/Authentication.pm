@@ -35,56 +35,63 @@ sub new {
 # this function takes a user identifier (same as username for us) and
 # returns the user's object.
 sub load_user ($self, $id) {
-    my $user = $self->get_user_from_db($id);
-    return $user;
+    return $self->{app}->{cfg}->{ldap}->{user}->{as_struct};
 }
-
-use Data::Printer;
 
 # this function takes the parameters provided and makes sure that the
 # password is the right one for the username.
 sub validate_user ($self, $username, $password, $extra) {
     # return the user identifier if the password check is good
     # return $username if $self->password_is_right($username, $password);
-    p $self->{app}->{cfg};
-    my $ldap = Net::LDAP->new( $self->{app}->{cfg}->{ldap}->{store}->{ldap_server} ) ||
-	$self->{app}->{log}->warn("Couldn't connect to LDAP server $self->{app}->{cfg}->{ldap}->{store}->{ldap_server}: $@"), return;
 
+    my $ldap = Net::LDAP->new( $self->{app}->{cfg}->{ldap}->{store}->{ldap_server} );
+    if ( ! defined $ldap ) {
+	p $@;
+	$self->{app}->{log}->error("Error connecting to $self->{app}->{cfg}->{ldap}->{store}->{ldap_server}");
+	return 0;
+    }
+    
     my $mesg = $ldap->bind(
 	sprintf("uid=%s,%s",
 		$username,
 		$self->{app}->{cfg}->{ldap}->{store}->{user_basedn}),
 	password => $password,
 	version  => 3,);
-    $mesg->code &&
-	$self->log->error(sprintf("code: %s; message: %s; text: %s",
+    if ( $mesg->is_error ) {
+	$self->{app}->{log}->error(sprintf("code: %s; message: %s; text: %s",
 				  $mesg->code,
 				  $mesg->error_name,
 				  $mesg->error_text ));
-
+	return $mesg->code == LDAP_INVALID_CREDENTIALS ? 0	: 1;
+    }
+    
     my $search = $ldap->search(
 	base => $self->{app}->{cfg}->{ldap}->{store}->{user_basedn},
 	filter => join('=',
 		       $self->{app}->{cfg}->{ldap}->{store}->{user_field},
 		       $username),
+	scope => "one"
 	);
-    
-    my $entry = $search->pop_entry();
-    if ( $entry->code ) {
-	$self->log->error(sprintf("code: %s; message: %s; text: %s",
-				  $entry->code,
-				  $entry->error_name,
-				  $entry->error_text
+    if ( $search->code ) {
+	$self->{app}->{log}->error(sprintf("code: %s; message: %s; text: %s",
+				  $search->code,
+				  $search->error_name,
+				  $search->error_text
 			  ));
-    } else {
-	$self->{app}->{cfg}->{ldap}->{user_entry} = $entry->as_struct;
+	return $search->code == LDAP_INVALID_CREDENTIALS ? 0	: 1;
+    } elsif ( $search->count != 1 ) {
+	$self->{app}->{log}->error(sprintf("there are %d users with uid %s",
+					   $search->count,
+					   $username
+				   ));
+	return 0;
     }
-    use Data::Printer;
-    p $self->{app}->{cfg}->{ldap}->{user_entry};
-    return unless $self->{app}->{cfg}->{ldap}->{user_entry}; # does user exist?
 
-    # return 1 on success, 0 on failure with the ternary operator
-    return $entry->code == LDAP_INVALID_CREDENTIALS ? 0	: 1;
+    
+    $self->{app}->{cfg}->{ldap}->{user}->{as_struct} = $search->as_struct;
+    $self->{app}->{cfg}->{ldap}->{user}->{entry} = $search->pop_entry;
+
+    return $username;
 }
 
 

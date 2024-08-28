@@ -1,0 +1,6 @@
+#!/bin/sh
+
+dot -Tpdf -o model-ldap-objects.pdf model-ldap-objects.gv
+mupdf model-ldap-objects.pdf
+rm -v model-ldap-objects.pdf
+

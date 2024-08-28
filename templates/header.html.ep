@@ -1,4 +1,5 @@
 % my $account = $c->current_user;
+% my ($user) = values %$account;
 <header>
   <nav class="navbar navbar-expand-lg bg-body-tertiary" id="header">
     <div class="container-fluid">
@@ -27,12 +28,12 @@
           <li class="nav-item dropdown">
             <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
 	      <i class="fa fa-lg fa-fw fa-user-alt"></i>
-	      <% if ($account) { %>
-		<%= $account->{name} %>
+	      <% if ($user) { %>
+		<%= $user->{gecos}->[0] %>
 	      <% } %>
             </a>
             <ul class="dropdown-menu dropdown-menu-end dropdown-menu-lg-start">
-	      <li><a class="dropdown-item" href="#">Profile</a></li>
+	      <li><a class="dropdown-item" href="/profile">Profile</a></li>
 	      <li><hr class="dropdown-divider"></li>
 	      <li><a class="dropdown-item" href="/logout">
 		  <i class="fas fa-lg fa-fw fa-sign-out-alt"></i>
