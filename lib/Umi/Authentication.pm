@@ -39,19 +39,21 @@ sub load_user ($self, $id) {
     return $user;
 }
 
+use Data::Printer;
+
 # this function takes the parameters provided and makes sure that the
 # password is the right one for the username.
 sub validate_user ($self, $username, $password, $extra) {
     # return the user identifier if the password check is good
     # return $username if $self->password_is_right($username, $password);
-
-    my $ldap = Net::LDAP->new( $self->{app}->cfg->{ldap}->{store}->{ldap_server} ) ||
-	$self->log->warn("Couldn't connect to LDAP server $self->{app}->cfg->{ldap}->{store}->{ldap_server}: $@"), return;
+    p $self->{app}->{cfg};
+    my $ldap = Net::LDAP->new( $self->{app}->{cfg}->{ldap}->{store}->{ldap_server} ) ||
+	$self->{app}->{log}->warn("Couldn't connect to LDAP server $self->{app}->{cfg}->{ldap}->{store}->{ldap_server}: $@"), return;
 
     my $mesg = $ldap->bind(
 	sprintf("uid=%s,%s",
 		$username,
-		$self->{app}->cfg->{ldap}->{store}->{user_basedn}),
+		$self->{app}->{cfg}->{ldap}->{store}->{user_basedn}),
 	password => $password,
 	version  => 3,);
     $mesg->code &&
@@ -61,9 +63,9 @@ sub validate_user ($self, $username, $password, $extra) {
 				  $mesg->error_text ));
 
     my $search = $ldap->search(
-	base => $self->{app}->cfg->{ldap}->{store}->{user_basedn},
+	base => $self->{app}->{cfg}->{ldap}->{store}->{user_basedn},
 	filter => join('=',
-		       $self->{app}->cfg->{ldap}->{store}->{user_field},
+		       $self->{app}->{cfg}->{ldap}->{store}->{user_field},
 		       $username),
 	);
     
@@ -75,11 +77,11 @@ sub validate_user ($self, $username, $password, $extra) {
 				  $entry->error_text
 			  ));
     } else {
-	$self->{app}->cfg->{ldap}->{user_entry} = $entry->as_struct;
+	$self->{app}->{cfg}->{ldap}->{user_entry} = $entry->as_struct;
     }
     use Data::Printer;
-    p $self->{app}->cfg->{ldap}->{user_entry};
-    return unless $self->{app}->cfg->{ldap}->{user_entry}; # does user exist?
+    p $self->{app}->{cfg}->{ldap}->{user_entry};
+    return unless $self->{app}->{cfg}->{ldap}->{user_entry}; # does user exist?
 
     # return 1 on success, 0 on failure with the ternary operator
     return $entry->code == LDAP_INVALID_CREDENTIALS ? 0	: 1;

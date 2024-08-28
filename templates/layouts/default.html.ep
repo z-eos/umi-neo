@@ -36,6 +36,8 @@
 
     <div class="outmost-wrapper">
 
+      %= include 'flash'
+      
       <% if ($account) { %>
 	%= include 'header'
       <% } %>
