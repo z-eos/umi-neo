@@ -1,0 +1,197 @@
+<form class="container-fluid d-flex"
+      role="form"
+      id="searchby"
+      method="POST"
+      action="/searchby">
+
+  <div class="input-group flex-grow-1">
+    <div class="input-group-prepend">
+      <button type="button"
+	      class="btn btn-secondary"
+	      title="clear search field"
+	      onclick="$('#ldapsearch_filter').val('').focus()">
+	<i class="fas fa-eraser"></i>
+      </button>
+    </div>
+    <input type="text"
+	   class="form-control font-monospace"
+	   id="ldapsearch_filter"
+	   name="ldapsearch_filter"
+	   placeholder='attributeName=*value*'
+	   accesskey="s"
+	   title="Shortcut key to focus here: s (FF: Alt-Shift-s; Chrome: Alt-s)
+
+	   &bull; default sort criteria is by name (First/Last Name, uid and cn)
+	   &bull; for each search criteria, objectClass=* is used if empty
+	   &bull; use * as substring
+	   &bull; narrow search results for non &laquo;by ...&raquo; presets, by providing attribute in filter, like: uid=*dreii.*
+	   &bull; to search in access log, use base [% helper_cfg('cfg_local','ldap_crud_db_log') %>">
+
+    <input type="hidden" name="ldap_base_case" id="ldap_base_case" >
+   
+    <div class="btn-group">
+      <button type="submit"
+	      class="btn btn-secondary"
+	      onClick="$('#ldap_base_case').val(this.value);$('#ldapsearch_filter').focus()"
+              value="ldapsearch_by_name" tabindex="13"
+              title="Search &laquo;by name&raquo;">
+        <i class="fas fa-search"></i>
+      </button>
+      
+      <div type="submit" 
+	   class="btn btn-secondary dropdown-toggle dropdown-toggle-split"
+	   data-bs-toggle="dropdown" 
+	   aria-haspopup="true"
+	   title="ldap search base by"
+	   aria-expanded="false">
+	<i class="sr-only">Toggle Dropdown</i>
+      </div>
+
+      <% my $icon_class = "fas fa-fw text-success"; %>
+      <% my $menu_item = "dropdown-item btn btn-link "; %>
+      <% my $color = "text-success"; %>
+
+      <div class="dropdown-menu dropdown-menu-right">
+
+	<button type="submit" class="<%= $menu_item %><%= $color %>"
+		onClick="$('#ldap_base_case').val(this.value);$('#ldapsearch_filter').focus()"
+		value="ldapsearch_by_name"
+		title="filter pattern in givenName or sn or uid or cn">
+	  <i class="<%= $icon_class %> fa-user"></i> by name
+	</button>
+	<button type="submit" class="<%= $menu_item %><%= $color %>"
+		onClick="$('#ldap_base_case').val(this.value);$('#ldapsearch_filter').focus()"
+		value="ldapsearch_by_email"
+		title="filter pattern in mail">
+	  <i class="<%= $icon_class %> fa-envelope"></i> by mail
+	</button>
+	<button type="submit" class="<%= $menu_item %><%= $color %>"
+		onClick="$('#ldap_base_case').val(this.value);$('#ldapsearch_filter').focus()"
+		value="ldapsearch_by_jid"
+		title="filter pattern in mail">
+	  <i class="<%= $icon_class %> fa-lightbulb"></i> by JID
+	</button>
+	<button type="submit" class="<%= $menu_item %><%= $color %>"
+		onClick="$('#ldap_base_case').val(this.value);$('#ldapsearch_filter').focus()"
+		value="ldapsearch_by_ip"
+		title="filter pattern in ip address">
+	  <i class="<%= $icon_class %> fa-network-wired"></i> by IP
+	</button>
+	<button type="submit" class="<%= $menu_item %><%= $color %>"
+		onClick="$('#ldap_base_case').val(this.value);$('#ldapsearch_filter').focus()"
+		value="ldapsearch_by_mac"
+		title="filter pattern in MAC address">
+	  <i class="<%= $icon_class %> fa-barcode"></i> by MAC
+	</button>
+	<button type="submit" class="<%= $menu_item %><%= $color %>"
+		onClick="$('#ldap_base_case').val(this.value);$('#ldapsearch_filter').focus()"
+		value="ldapsearch_by_sn"
+		title="filter pattern in Serial Number address">
+	  <i class="<%= $icon_class %> fa-qrcode"></i> by S/N
+	</button>
+	<button type="submit" class="<%= $menu_item %><%= $color %>"
+		onClick="$('#ldap_base_case').val(this.value);$('#ldapsearch_filter').focus()"
+		value="ldapsearch_by_telephone"
+		title="filter pattern in telephone number">
+	  <i class="<%= $icon_class %> fa-phone"></i> by tel num
+	</button>
+	<button type="submit" class="<%= $menu_item %><%= $color %>"
+		onClick="$('#ldap_base_case').val(this.value);$('#ldapsearch_filter').focus()"
+		value="ldapsearch_pgp"
+		title="search by PGP certId, keyId or userId">
+	  <i class="<%= $icon_class %> fa-key"></i> PGP key
+	</button>
+	<button type="submit" class="<%= $menu_item %> text-dark"
+		onClick="$('#ldap_base_case').val(this.value);$('#ldapsearch_filter').focus()"
+		value="ldapsearch_global"
+		title="base: <% # c.session.ldap.base.db %>">
+	  <i class="fas fa-fw fa-database text-dark"></i> GLOBAL
+	</button>
+	
+	% $icon_class = "fas fa-fw text-info";
+	% $color = "text-info";
+
+	<button type="submit" class="<%= $menu_item %><%= $color %>"
+		onClick="$('#ldap_base_case').val(this.value);$('#ldapsearch_filter').focus()"
+		name="ldapsearch_base"
+		value="<% # helper_cfg('cfg_ldap_crud','base', 'acc_root') %>"
+		title="base: <% # c.session.ldap.base.acc_root %>">
+	  <i class="<%= $icon_class %> fa-user"></i> people
+	</button>
+	<button type="submit" class="<%= $menu_item %><%= $color %>"
+		onClick="$('#ldap_base_case').val(this.value);$('#ldapsearch_filter').focus()"
+		value="<% # helper_cfg('cfg_ldap_crud','base', 'dhcp') %>"
+		tabindex="21"
+		title="base: <% # c.session.ldap.base.dhcp %>">
+	  <i class="<%= $icon_class %> fa-network-wired"></i> DHCP
+	</button>
+	<button type="submit" class="<%= $menu_item %><%= $color %>"
+		onClick="$('#ldap_base_case').val(this.value);$('#ldapsearch_filter').focus()"
+		value="<% # helper_cfg('cfg_ldap_crud','base', 'org') %>"
+		tabindex="20"
+		title="base: <% # c.session.ldap.base.org %>">
+	  <i class="<%= $icon_class %> fa-building"></i> organization
+	</button>
+
+	<button type="submit" class="<%= $menu_item %><%= $color %>"
+		onClick="$('#ldap_base_case').val(this.value);$('#ldapsearch_filter').focus()"
+		value="<% # helper_cfg('cfg_ldap_crud','base', 'group') %>"
+		title="base: <% # c.session.ldap.base.group %>">
+	  <i class="<%= $icon_class %> fa-users"></i> group
+	</button>
+	<button type="submit" class="<%= $menu_item %><%= $color %>"
+		onClick="$('#ldap_base_case').val(this.value);$('#ldapsearch_filter').focus()"
+		value="<% # helper_cfg('cfg_ldap_crud','base', 'netgroup') %>"
+		title="base: <% # c.session.ldap.base.netgroup %>">
+	  <i class="<%= $icon_class %> fa-user-friends"></i> netgroup
+	</button>
+	<button type="submit" class="<%= $menu_item %><%= $color %>"
+		onClick="$('#ldap_base_case').val(this.value);$('#ldapsearch_filter').focus()"
+		tabindex="22"
+		title="base: <% # c.session.ldap.base.alias %>">
+	  <i class="<%= $icon_class %> fa-file-alt"></i> alias
+	</button>
+	<button type="submit" class="<%= $menu_item %><%= $color %>"
+		onClick="$('#ldap_base_case').val(this.value);$('#ldapsearch_filter').focus()"
+		value="<% # helper_cfg('cfg_ldap_crud','base', 'workstations') %>"
+		tabindex="23"
+		title="base: <% # c.session.ldap.base.workstations %>">
+	  <i class="<%= $icon_class %> fa-desktop"></i> workstations
+	</button>
+	<button type="submit" class="<%= $menu_item %><%= $color %>"
+		onClick="$('#ldap_base_case').val(this.value);$('#ldapsearch_filter').focus()"
+		value="<% # helper_cfg('cfg_ldap_crud','base', 'machines') %>"
+		tabindex="24"
+		title="base: <% # c.session.ldap.base.machines %>">
+	  <i class="<%= $icon_class %> fa-server"></i> machines
+	</button>
+	<button type="submit" class="<%= $menu_item %><%= $color %>"
+		onClick="$('#ldap_base_case').val(this.value);$('#ldapsearch_filter').focus()"
+		value="<% # helper_cfg('cfg_ldap_crud','base', 'inventory') %>"
+		tabindex="24"
+		title="base: <% # c.session.ldap.base.inventory %>">
+	  <i class="<%= $icon_class %> fa-pen-nib"></i> inventory
+	</button>
+	<button type="submit" class="<%= $menu_item %><%= $color %>"
+		onClick="$('#ldap_base_case').val(this.value);$('#ldapsearch_filter').focus()"
+		value="<% # helper_cfg('cfg_ldap_crud','base', 'mta') %>"
+		tabindex="24"
+		title="base: <% # c.session.ldap.base.mta %>">
+	  <i class="<%= $icon_class %> fa-envelope"></i> sendmail
+	</button>
+	<button type="submit" class="<%= $menu_item %><%= $color %>"
+		onClick="$('#ldap_base_case').val(this.value);$('#ldapsearch_filter').focus()"
+		value="<% # helper_cfg('cfg_ldap_crud','base', 'gitacl') %>"
+		tabindex="25"
+		title="base: <% # c.session.ldap.base.gitacl %>">
+	  <i class="fab fa-fw text-info fa-git"></i> GitACL
+	</button>
+
+      </div>
+      <a href="/searchadvanced" class="btn btn-secondary"
+	 title="advanced search">
+	<i class="fa fa-binoculars"></i>
+      </a>
+    </div>
+  </div>
+</form>

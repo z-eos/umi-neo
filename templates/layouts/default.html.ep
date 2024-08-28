@@ -1,4 +1,4 @@
-[% # -*- mode: web -*- %]
+% my $account = $c->current_user;
 <!DOCTYPE html>
 <html lang="en" data-bs-theme="dark">
   <head>
@@ -8,7 +8,7 @@
     <meta name="author" content="">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
-    <title>[% title %]</title>
+    <title>%= title</title>
 
     <link rel="icon" type="image/x-icon" href="/assets/images/favicon.png">
 
@@ -36,25 +36,28 @@
 
     <div class="outmost-wrapper">
 
-[% IF c.session.user %]
-[% PROCESS layouts/header %]
-<div class="wrapper"> <!-- APP BODY -->
-  [% PROCESS layouts/sidebar %]
-  <main class="container-fluid flex-grow-1 mb-3 w-25" id="workingfield">
-[% END %]
-    
-[% content %]
+      <% if ($account) { %>
+	%= include 'header'
+      <% } %>
 
-    [% IF c.session.user %]
-  </main>
-  [% PROCESS layouts/aside %]
-</div> <!-- div layout -->
-</div> <!-- APP BODY -->
-[%# PROCESS layouts/footer #%]
-[% END %]
-    </div>
+      <div class="wrapper"> <!-- APP BODY -->
+	<% if ($account) { %>
+	  %= include 'sidebar'
+	<% } %>
+	<main class="container-fluid flex-grow-1 mb-3 w-25" id="workingfield">
+	  
+	  %= content
 
-<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+	</main>
+	<% if ($account) { %>
+	  %= include 'aside'
+	<% } %>
+      </div> <!-- div layout -->
+    </div> <!-- APP BODY -->
+
+      </div>
+
+      <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+      <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
   </body>
 </html>

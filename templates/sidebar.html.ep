@@ -1,6 +1,11 @@
-[% # -*- mode: web; -*- %]
+<% # -*- mode: web; -*- %>
 
-[% IF c.check_any_user_role ('admin', 'coadmin', 'operator') %]
+% my $account = $c->current_user;
+
+<!-- sidebar start -->
+
+<% if ($account) { %>
+<% # %>[% IF c.check_any_user_role ('admin', 'coadmin', 'operator') %] %>
 <div class="modal modal-warning" id="modal-is-accounts"
      role="dialog" aria-labelledby="modal-area-is-accounts">
   <div class="modal-dialog modal-sm border border-warning" role="document">
@@ -24,14 +29,15 @@
   </div>
 </div>
 
-[% END %]
+<% #  %>[% END %] %>
+<% } %>
+
 
 
 <nav id="sidebar-left" class="collapse [% c.session.settings.ui.sidebar == 0 ? 'folded' : '' %]">
 
     <ul id="sidebar-left-menu" class="nav flex-column">
 
-      [% IF c.check_any_user_role ('admin', 'coadmin', 'operator') %]
       <li class="nav-item">
 	<a href="#submenuAnalyze"
 	   data-toggle="collapse"
@@ -66,7 +72,6 @@
 	      MTA
 	    </a>
 	  </li>
-	  [% IF c.session.settings.sidebar.mikrotik %]
           <li class="nav-item">
 	    <a class="text-light nav-link" href="/mikrotik"
 	       tabindex="2"
@@ -83,10 +88,8 @@
 	      CAPs PSK
 	    </a>
 	  </li>
-	  [% END %]
 	</ul>
       </li>
-      [% END %]
       
       <li class="nav-item">
 	<a href="#submenuTools"
@@ -135,7 +138,6 @@
 	      Translit
 	    </a>
 	  </li>
-	  [% IF c.check_user_roles('admin') %]
 	  <li class="nav-item">
 	    <a class="text-light nav-link" href="/sysinfo">
 	      <i class="fas fa-fw fa-info-circle"></i>
@@ -151,11 +153,9 @@
 	      LDIF Import
 	    </a>
 	  </li>
-	  [% END %]
 	</ul>
       </li>
 
-      [% IF c.check_any_user_role ('admin', 'coadmin', 'acl-w-people', 'acl-w-organizations', 'acl-w-inventory', 'dhcp') %]
       <li class="nav-item">
 	<a href="#submenuObjects"
 	   data-toggle="collapse"
@@ -167,23 +167,18 @@
 	  </div>
 	</a>
 	<ul class="nav flex-column collapse ml-4 p-0" id="submenuObjects">
-	  [% IF c.check_any_user_role ('admin', 'coadmin', 'acl-w-people') %]
           <li class="nav-item">
 	    <a class="text-light nav-link" href="/userall" tabindex="2">
 	      <i class="fas fa-fw fa-user"></i>
 	      User
 	    </a>
 	  </li>
-	  [% END %]
-	  [% IF c.check_any_user_role ('admin', 'coadmin', 'dhcp') %]
           <li class="nav-item disabled">
 	    <a class="text-light nav-link" href="/dhcp" tabindex="7">
               <i class="fas fa-fw fa-network-wired"></i>
               DHCP
 	    </a>
 	  </li>
-	  [% END %]
-	  [% IF c.check_user_roles('admin') %]
           <li class="nav-item">
 	    <a class="text-light nav-link" href="/sudo" tabindex="5">
               <i class="fas fa-fw fa-user-secret"></i>
@@ -232,27 +227,21 @@
 		DNS</del>
 	    </a>
 	  </li>
-	  [% END %]
-	  [% IF c.check_any_user_role ('admin', 'coadmin', 'acl-w-organizations') %]
           <li class="nav-item">
 	    <a class="text-light nav-link" href="/org" tabindex="4">
               <i class="fas fa-fw fa-building"></i>
               Org
 	    </a>
 	  </li>
-	  [% END %]
-	  [% IF c.check_any_user_role ('admin', 'coadmin', 'acl-w-inventory')  %]
           <li class="nav-item">
 	    <a class="text-light nav-link" href="/inventory" tabindex="4">
               <i class="fas fa-fw fa-pen-nib"></i>
               Inventory
 	    </a>
 	  </li>
-	  [% END %]
 	  
 	</ul>
       </li>
-      [% END %]
 
       <li class="nav-item divider"></li>
       
@@ -277,48 +266,8 @@
 	    <a class="text-light nav-link" href="https://github.com/z-eos/umi/wiki"><i class="fab fa-fw fa-wikipedia-w"></i> UMI wiki</a>
 	  </li>
 	  <li class="nav-item">
-	    <a class="text-light nav-link" href="[% helper_cfg('cfg_local','header','help', 'item2', 'url') %]">
-	      <i class="fas fa-fw [% helper_cfg('cfg_local','header','help', 'item2', 'ico') %]"></i>
-	    [% helper_cfg('cfg_local','header','help', 'item2', 'txt') %]</a>
-	  </li>
-	  <li class="nav-item">
 	    <a class="text-light nav-link" href="#chat" ><i class="fas fa-fw fa-comment-alt"></i> chat</a>
 	    
-	    <script>
-	     /* CONVERSEJS https://conversejs.org */
-	     
-	     var is_chat = false;
-	     
-	     $('[href="#chat"]').on('click', function(e){
-	       $('head').append('<link rel="stylesheet" type="text/css" media="screen" href="/static/converse.js/css/converse.css">');
-	       $('<script src="/static/converse.js/converse.js"></' + 'script>').appendTo(document.body);
-	    
-	       e.preventDefault();
-
-	       if (!is_chat) {
-		 converse.initialize({
-		   allow_chat_pending_contacts: true,
-		   allow_registration: false,
-		   /* auto_join_rooms: [
-		      'tech_support@conference.im.ibs.dn.ua',
-		      ], */
-		   bosh_service_url: 'https://im.ibs.dn.ua:5281/bosh',
-		   i18n: 'en',
-		   keepalive: true,
-		   message_carbons: true,
-		   roster_groups: true,
-		   show_controlbox_by_default: true,
-		   show_send_button: true,
-		   strict_plugin_dependencies: false,
-		   //   view_mode: 'fullscreen',
-		   //   debug: true,
-		   xhr_user_search: false
-		 });
-	       }
-	       
-	       is_chat = true;
-	     });
-	    </script>
 	    
 	    </li>
 	  <li class="nav-item">
@@ -328,5 +277,6 @@
       </li>      
     </ul>
 
-</nav> <!-- sidebar -->
+</nav>
+<!-- sidebar end -->
 

@@ -1,5 +1,4 @@
-[% # -*- mode: web; mode: follow; -*- %]
-<!-- BEGIN site/header -->
+% my $account = $c->current_user;
 <header>
   <nav class="navbar navbar-expand-lg bg-body-tertiary" id="header">
     <div class="container-fluid">
@@ -17,15 +16,20 @@
       
       <div class="collapse navbar-collapse" id="navbarSupportedContent">
 	
-	<form class="container-fluid d-flex" role="search">
-          <input class="form-control me-2" type="search" placeholder="Search" aria-label="Search">
-          <button class="btn btn-outline-success" type="submit">Search</button>
-	</form>
+	<!-- <form class="container-fluid d-flex" role="search">
+            <input class="form-control me-2" type="search" placeholder="Search" aria-label="Search">
+            <button class="btn btn-outline-success" type="submit">Search</button>
+	    </form> -->
+
+	%= include 'header-form'
 	
 	<ul class="navbar-nav me-auto my-2 my-lg-0 navbar-nav-scroll">
           <li class="nav-item dropdown">
             <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-	      <i class="fa fa-lg fa-fw fa-user-alt"></i>[% c.session.user %]
+	      <i class="fa fa-lg fa-fw fa-user-alt"></i>
+	      <% if ($account) { %>
+		<%= $account->{name} %>
+	      <% } %>
             </a>
             <ul class="dropdown-menu dropdown-menu-end dropdown-menu-lg-start">
 	      <li><a class="dropdown-item" href="#">Profile</a></li>
@@ -49,4 +53,3 @@
       </div>
   </nav>
 </header>
-<!-- END site/header -->

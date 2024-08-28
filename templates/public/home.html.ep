@@ -1,4 +1,4 @@
-<form id="index" class="form-login" method="POST" action="index">
+<form id="index" class="form-login" method="POST" action="login">
   <div class="container">
     <div class="row row-login">
 
@@ -20,7 +20,7 @@
                  placeholder="login"
                  aria-label="login"
                  aria-describedby="basic-login-prpend"
-                 name="user" required autofocus>
+                 name="username" required autofocus>
 
 	</div>
 	
@@ -33,7 +33,7 @@
                  placeholder="password"
                  aria-label="password"
                  aria-describedby="basic-password-prepend"
-                 name="pass" required>
+                 name="password" required>
 	  
 	</div>
 	<div class="input-group">

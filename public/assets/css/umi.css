@@ -9,6 +9,10 @@ html,body {
 }
 */
 
+* {
+  border-radius: 0 !important;
+}
+
 .umi-bg:after {
     content: ' ';
     display: block;
