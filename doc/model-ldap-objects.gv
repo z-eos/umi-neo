@@ -273,7 +273,30 @@ digraph BIBLICAL_GENEALOGY
 	"a0183" [ label="sendmailMTACluster", xlabel="" ];
 	"a0184" [ label="description", xlabel="" ];
 
+	# --- OBJECT GITACL
+	"o0010" [ shape="box", fillcolor="lightpink", color="lightpink4", label="objGitAcl", xlabel="" ];
+	"m0029" [ shape="component", fillcolor="olivedrab2", color="olivedrab4", label="methodObjSendmailMTAKeyAdd", xlabel="" ];
+	"m0030" [ shape="component", fillcolor="olivedrab2", color="olivedrab4", label="methodObjSendmailMTAKeyDelete", xlabel="" ];
+	"m0031" [ shape="component", fillcolor="olivedrab2", color="olivedrab4", label="methodObjSendmailMTAKeyModify", xlabel="" ];
+	"a0185" [ label="dn", xlabel="" ];
+	"a0186" [ shape="folder", fillcolor="lightskyblue1", color="lightskyblue4", label=<objectClass<BR/><FONT COLOR="gray30" POINT-SIZE="10"><I>[]string</I></FONT>>, xlabel="" ];
+	"a0187" [ label="cn", xlabel="" ];
+	"a0188" [ label="gitAclVerb", xlabel="" ];
+	"a0189" [ label="gitAclProject", xlabel="" ];
+	"a0190" [ label="gitAclUser", xlabel="" ];
+	"a0191" [ label="structuralObjectClass", xlabel="" ];
+	"a0192" [ label="entryUUID", xlabel="" ];
+	"a0193" [ label="creatorsName", xlabel="" ];
+	"a0194" [ label="createTimestamp", xlabel="" ];
+	"a0195" [ label="gitAclRef", xlabel="" ];
+	"a0196" [ label="gitAclOrder", xlabel="" ];
+	"a0197" [ label="modifiersName", xlabel="" ];
+	"a0198" [ label="modifyTimestamp", xlabel="" ];
+	"a0199" [ label="entryDN", xlabel="" ];
+
+
 	# LINKS AND SUBGRAPHS
+
 	
 	subgraph cluster_o0001
 	{
@@ -554,6 +577,31 @@ digraph BIBLICAL_GENEALOGY
 		"o0009" -> "a0184"
 	}
 
-{ rank=same; o0005; o0006; o0008; }
+	subgraph cluster_o0010
+	{
+		style="invis";
+		margin="80";
+
+		"o0010" -> "m0029"
+		"o0010" -> "m0030"
+		"o0010" -> "m0031"
+		"o0010" -> "a0185"
+		"o0010" -> "a0186"
+		"o0010" -> "a0187"
+		"o0010" -> "a0188"
+		"o0010" -> "a0189"
+		"o0010" -> "a0190"
+		"o0010" -> "a0191"
+		"o0010" -> "a0192"
+		"o0010" -> "a0193"
+		"o0010" -> "a0194"
+		"o0010" -> "a0195"
+		"o0010" -> "a0196"
+		"o0010" -> "a0197"
+		"o0010" -> "a0198"
+		"o0010" -> "a0199"
+        }
+
+        { rank=same; o0005; o0006; o0008; }
 	
 }

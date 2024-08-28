@@ -3,17 +3,17 @@ use Mojo::Base qw< -base -signatures >;
 
 use Net::LDAP qw/LDAP_INVALID_CREDENTIALS/;
 
-# In this example we assume that our users have username (which double
-# down as user identifiers too) and password.
-has 'db' => sub {
-    return {
-	map { $_->{username} => $_ }
-	{ name => 'Foo Ish' => username => foo    => password => 123 },
-	{ name => 'Bar Ong' => username => bar    => password => 456 },
-	{ name => 'Baz Ing' => username => baz    => password => 789 },
-	{ name => 'Gal Ook' => username => galook => password => 0   },
-    };
-};
+# to rm # # In this example we assume that our users have username (which double
+# to rm # # down as user identifiers too) and password.
+# to rm # has 'db' => sub {
+# to rm #     return {
+# to rm # 	map { $_->{username} => $_ }
+# to rm # 	{ name => 'Foo Ish' => username => foo    => password => 123 },
+# to rm # 	{ name => 'Bar Ong' => username => bar    => password => 456 },
+# to rm # 	{ name => 'Baz Ing' => username => baz    => password => 789 },
+# to rm # 	{ name => 'Gal Ook' => username => galook => password => 0   },
+# to rm #     };
+# to rm # };
 
 sub new {
     my ($class, $app) = @_;
@@ -95,35 +95,35 @@ sub validate_user ($self, $username, $password, $extra) {
 }
 
 
-########################################################################
-#### methods below are specific for the user database technology    ####
-
-sub get_user_from_db ($self, $userid) {
-    # In a LDAP setup, this is where we query the directory to get the
-    # user's record with the attributes we're interested into.
-
-    # But we're using a hash here, so...
-    my $user = $self->db->{$userid} or return;
-    return { $user->%*, password => '***' };  # protect the record
-}
-
-# sub get_user_from_db ($self, $userid) {
-#    # In a LDAP setup, this is where we query the directory to get the
-#    # user's record with the attributes we're interested into.
-
-#    # But we're using a hash here, so...
-#    my $user = $self->db->{$userid} or return;
-#    return { $user->%*, password => '***' };  # protect the record
-# }
-
-sub password_is_right ($self, $username, $password) {
-    # In a LDAP setup, this is where we ask the directory to check the
-    # provided username/password pair.
-    warn "password_is_right <$username>/<$password>";
-    # But we're using a hash here, so...
-    my $user = $self->db->{$username} or return;
-    warn "password_is_right <$password> vs $user->{password}>";
-    return $user->{password} eq $password;
-}
+# to rm # ########################################################################
+# to rm # #### methods below are specific for the user database technology    ####
+# to rm # 
+# to rm # sub get_user_from_db ($self, $userid) {
+# to rm #     # In a LDAP setup, this is where we query the directory to get the
+# to rm #     # user's record with the attributes we're interested into.
+# to rm # 
+# to rm #     # But we're using a hash here, so...
+# to rm #     my $user = $self->db->{$userid} or return;
+# to rm #     return { $user->%*, password => '***' };  # protect the record
+# to rm # }
+# to rm # 
+# to rm # # sub get_user_from_db ($self, $userid) {
+# to rm # #    # In a LDAP setup, this is where we query the directory to get the
+# to rm # #    # user's record with the attributes we're interested into.
+# to rm # 
+# to rm # #    # But we're using a hash here, so...
+# to rm # #    my $user = $self->db->{$userid} or return;
+# to rm # #    return { $user->%*, password => '***' };  # protect the record
+# to rm # # }
+# to rm # 
+# to rm # sub password_is_right ($self, $username, $password) {
+# to rm #     # In a LDAP setup, this is where we ask the directory to check the
+# to rm #     # provided username/password pair.
+# to rm #     warn "password_is_right <$username>/<$password>";
+# to rm #     # But we're using a hash here, so...
+# to rm #     my $user = $self->db->{$username} or return;
+# to rm #     warn "password_is_right <$password> vs $user->{password}>";
+# to rm #     return $user->{password} eq $password;
+# to rm # }
 
 1;
