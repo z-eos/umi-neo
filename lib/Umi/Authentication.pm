@@ -46,8 +46,7 @@ sub validate_user ($self, $username, $password, $extra) {
 
     my $ldap = Net::LDAP->new( $self->{app}->{cfg}->{ldap}->{store}->{ldap_server} );
     if ( ! defined $ldap ) {
-	p $@;
-	$self->{app}->{log}->error("Error connecting to $self->{app}->{cfg}->{ldap}->{store}->{ldap_server}");
+	$self->{app}->{log}->error("Error connecting to $self->{app}->{cfg}->{ldap}->{store}->{ldap_server}: $@");
 	return 0;
     }
     
@@ -62,7 +61,7 @@ sub validate_user ($self, $username, $password, $extra) {
 				  $mesg->code,
 				  $mesg->error_name,
 				  $mesg->error_text ));
-	return $mesg->code == LDAP_INVALID_CREDENTIALS ? 0	: 1;
+	return $mesg->code == LDAP_INVALID_CREDENTIALS ? 0 : 1;
     }
     
     my $search = $ldap->search(

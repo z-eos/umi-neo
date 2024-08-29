@@ -104,7 +104,7 @@
 	<button type="submit" class="<%= $menu_item %> text-dark"
 		onClick="$('#ldap_base_case').val(this.value);$('#ldapsearch_filter').focus()"
 		value="ldapsearch_global"
-		title="base: <% # c.session.ldap.base.db %>">
+		title="base: "><% # c.session.ldap.base.db %>">
 	  <i class="fas fa-fw fa-database text-dark"></i> GLOBAL
 	</button>
 	
@@ -114,76 +114,76 @@
 	<button type="submit" class="<%= $menu_item %><%= $color %>"
 		onClick="$('#ldap_base_case').val(this.value);$('#ldapsearch_filter').focus()"
 		name="ldapsearch_base"
-		value="<% # helper_cfg('cfg_ldap_crud','base', 'acc_root') %>"
-		title="base: <% # c.session.ldap.base.acc_root %>">
+		value=""><% # helper_cfg('cfg_ldap_crud','base', 'acc_root') %>"
+		title="base: "><% # c.session.ldap.base.acc_root %>">
 	  <i class="<%= $icon_class %> fa-user"></i> people
 	</button>
 	<button type="submit" class="<%= $menu_item %><%= $color %>"
 		onClick="$('#ldap_base_case').val(this.value);$('#ldapsearch_filter').focus()"
-		value="<% # helper_cfg('cfg_ldap_crud','base', 'dhcp') %>"
+		value=""><% # helper_cfg('cfg_ldap_crud','base', 'dhcp') %>"
 		tabindex="21"
-		title="base: <% # c.session.ldap.base.dhcp %>">
+		title="base: "><% # c.session.ldap.base.dhcp %>">
 	  <i class="<%= $icon_class %> fa-network-wired"></i> DHCP
 	</button>
 	<button type="submit" class="<%= $menu_item %><%= $color %>"
 		onClick="$('#ldap_base_case').val(this.value);$('#ldapsearch_filter').focus()"
-		value="<% # helper_cfg('cfg_ldap_crud','base', 'org') %>"
+		value=""><% # helper_cfg('cfg_ldap_crud','base', 'org') %>"
 		tabindex="20"
-		title="base: <% # c.session.ldap.base.org %>">
+		title="base: "><% # c.session.ldap.base.org %>">
 	  <i class="<%= $icon_class %> fa-building"></i> organization
 	</button>
 
 	<button type="submit" class="<%= $menu_item %><%= $color %>"
 		onClick="$('#ldap_base_case').val(this.value);$('#ldapsearch_filter').focus()"
-		value="<% # helper_cfg('cfg_ldap_crud','base', 'group') %>"
-		title="base: <% # c.session.ldap.base.group %>">
+		value=""><% # helper_cfg('cfg_ldap_crud','base', 'group') %>"
+		title="base: "><% # c.session.ldap.base.group %>">
 	  <i class="<%= $icon_class %> fa-users"></i> group
 	</button>
 	<button type="submit" class="<%= $menu_item %><%= $color %>"
 		onClick="$('#ldap_base_case').val(this.value);$('#ldapsearch_filter').focus()"
-		value="<% # helper_cfg('cfg_ldap_crud','base', 'netgroup') %>"
-		title="base: <% # c.session.ldap.base.netgroup %>">
+		value=""><% # helper_cfg('cfg_ldap_crud','base', 'netgroup') %>"
+		title="base: "><% # c.session.ldap.base.netgroup %>">
 	  <i class="<%= $icon_class %> fa-user-friends"></i> netgroup
 	</button>
 	<button type="submit" class="<%= $menu_item %><%= $color %>"
 		onClick="$('#ldap_base_case').val(this.value);$('#ldapsearch_filter').focus()"
 		tabindex="22"
-		title="base: <% # c.session.ldap.base.alias %>">
+		title="base: "><% # c.session.ldap.base.alias %>">
 	  <i class="<%= $icon_class %> fa-file-alt"></i> alias
 	</button>
 	<button type="submit" class="<%= $menu_item %><%= $color %>"
 		onClick="$('#ldap_base_case').val(this.value);$('#ldapsearch_filter').focus()"
-		value="<% # helper_cfg('cfg_ldap_crud','base', 'workstations') %>"
+		value=""><% # helper_cfg('cfg_ldap_crud','base', 'workstations') %>"
 		tabindex="23"
-		title="base: <% # c.session.ldap.base.workstations %>">
+		title="base: "><% # c.session.ldap.base.workstations %>">
 	  <i class="<%= $icon_class %> fa-desktop"></i> workstations
 	</button>
 	<button type="submit" class="<%= $menu_item %><%= $color %>"
 		onClick="$('#ldap_base_case').val(this.value);$('#ldapsearch_filter').focus()"
-		value="<% # helper_cfg('cfg_ldap_crud','base', 'machines') %>"
+		value=""><% # helper_cfg('cfg_ldap_crud','base', 'machines') %>"
 		tabindex="24"
-		title="base: <% # c.session.ldap.base.machines %>">
+		title="base: "><% # c.session.ldap.base.machines %>">
 	  <i class="<%= $icon_class %> fa-server"></i> machines
 	</button>
 	<button type="submit" class="<%= $menu_item %><%= $color %>"
 		onClick="$('#ldap_base_case').val(this.value);$('#ldapsearch_filter').focus()"
-		value="<% # helper_cfg('cfg_ldap_crud','base', 'inventory') %>"
+		value=""><% # helper_cfg('cfg_ldap_crud','base', 'inventory') %>"
 		tabindex="24"
-		title="base: <% # c.session.ldap.base.inventory %>">
+		title="base: "><% # c.session.ldap.base.inventory %>">
 	  <i class="<%= $icon_class %> fa-pen-nib"></i> inventory
 	</button>
 	<button type="submit" class="<%= $menu_item %><%= $color %>"
 		onClick="$('#ldap_base_case').val(this.value);$('#ldapsearch_filter').focus()"
-		value="<% # helper_cfg('cfg_ldap_crud','base', 'mta') %>"
+		value=""><% # helper_cfg('cfg_ldap_crud','base', 'mta') %>"
 		tabindex="24"
-		title="base: <% # c.session.ldap.base.mta %>">
+		title="base: "><% # c.session.ldap.base.mta %>">
 	  <i class="<%= $icon_class %> fa-envelope"></i> sendmail
 	</button>
 	<button type="submit" class="<%= $menu_item %><%= $color %>"
 		onClick="$('#ldap_base_case').val(this.value);$('#ldapsearch_filter').focus()"
-		value="<% # helper_cfg('cfg_ldap_crud','base', 'gitacl') %>"
+		value=""><% # helper_cfg('cfg_ldap_crud','base', 'gitacl') %>"
 		tabindex="25"
-		title="base: <% # c.session.ldap.base.gitacl %>">
+		title="base: "><% # c.session.ldap.base.gitacl %>">
 	  <i class="fab fa-fw text-info fa-git"></i> GitACL
 	</button>
 
