@@ -101,11 +101,11 @@
 		title="search by PGP certId, keyId or userId">
 	  <i class="<%= $icon_class %> fa-key"></i> PGP key
 	</button>
-	<button type="submit" class="<%= $menu_item %> text-dark"
+	<button type="submit" class="<%= $menu_item %>"
 		onClick="$('#ldap_base_case').val(this.value);$('#ldapsearch_filter').focus()"
 		value="ldapsearch_global"
 		title="base: "><% # c.session.ldap.base.db %>">
-	  <i class="fas fa-fw fa-database text-dark"></i> GLOBAL
+	  <i class="fas fa-fw fa-database"></i> GLOBAL
 	</button>
 	
 	% $icon_class = "fas fa-fw text-info";
