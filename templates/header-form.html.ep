@@ -47,7 +47,7 @@
 	<i class="sr-only">Toggle Dropdown</i>
       </div>
 
-      <% my $icon_class = "fas fa-fw text-success"; %>
+      <% my $icon_class = "fa-solid fa-fw text-success"; %>
       <% my $menu_item = "dropdown-item btn btn-link "; %>
       <% my $color = "text-success"; %>
 

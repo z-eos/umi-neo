@@ -5,6 +5,8 @@
   %   $class = "danger";
   % } elsif ( $status eq 'ok') {
   %   $class = "success";
+  % } elsif ( $status eq 'warn') {
+  %   $class = "warning";
   % }
 
   <div id="flash" class="alert alert-<%= $class; %>" role="alert">

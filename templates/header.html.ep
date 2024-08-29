@@ -33,7 +33,23 @@
 	      <% } %>
             </a>
             <ul class="dropdown-menu dropdown-menu-end dropdown-menu-lg-start">
-	      <li><a class="dropdown-item" href="/profile">Profile</a></li>
+	      <li>
+		<a class="dropdown-item" href="/profile">
+		  <i class="fa-regular fa-id-card"></i>
+		  <span class="ms-2">Profile</span>
+		</a>
+	      </li>
+              <li>
+		<button class="dropdown-item btn btn-link" id="bd-theme"
+			type="button" title="Dark/Light theme switch."
+			aria-expanded="false"
+			data-bs-toggle="dropdown"
+			data-bs-display="static"
+			aria-label="Toggle theme (dark)">
+		  <i class="fa-solid fa-circle-half-stroke"></i>
+		  <span class="ms-2" id="bd-theme-text">Toggle theme</span>
+		</button>
+	      </li>          
 	      <li><hr class="dropdown-divider"></li>
 	      <li><a class="dropdown-item" href="/logout">
 		  <i class="fas fa-lg fa-fw fa-sign-out-alt"></i>
