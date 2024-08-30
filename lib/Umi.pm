@@ -24,7 +24,7 @@ sub startup ($self) {
     # exit from this "startup" method.
     $self->plugin(
      	Authentication => {
-     	    load_user     => sub ($a, $x) { $authn->load_user($x)     },
+     	    load_user     => sub ($app, $uid) { $authn->load_user($uid)     },
      	    validate_user => sub ($c, @A) { $authn->validate_user(@A) },
      	},
      	);
@@ -132,6 +132,7 @@ sub _startup_routes ($self) {
     $protected_root->get('/other')->to('protected#other');
     $protected_root->get('/profile')->to('protected#profile');
     $protected_root->get('/tool/ldif-import')->to('protected#ldif_import');
+    $protected_root->post('/search/common')->to('protected#search_common');
 
     # default to 404 for anything that has not been handled explicitly.
     # This is probably reinventing a wheel already present in Mojolicious

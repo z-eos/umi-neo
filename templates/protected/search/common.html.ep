@@ -1,0 +1,6 @@
+%= t h1 => 'Search results'
+
+<pre>
+<%= b( $searchres ); %>
+</pre>
+

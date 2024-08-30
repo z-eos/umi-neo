@@ -2,7 +2,7 @@
       role="form"
       id="searchby"
       method="POST"
-      action="/searchby">
+      action="/search/common">
 
   <div class="input-group flex-grow-1">
     <div class="input-group-prepend">
@@ -32,11 +32,17 @@
     <div class="btn-group">
       <button type="submit"
 	      class="btn btn-secondary"
-	      onClick="$('#ldap_base_case').val(this.value);$('#ldapsearch_filter').focus()"
-              value="ldapsearch_by_name" tabindex="13"
               title="Search &laquo;by name&raquo;">
         <i class="fas fa-search"></i>
       </button>
+      <!-- <div class="btn-group">
+	   <button type="submit"
+	   class="btn btn-secondary"
+	   onClick="$('#ldap_base_case').val(this.value);$('#ldapsearch_filter').focus()"
+           value="ldapsearch_by_name" tabindex="13"
+           title="Search &laquo;by name&raquo;">
+           <i class="fas fa-search"></i>
+	   </button> -->
       
       <div type="submit" 
 	   class="btn btn-secondary dropdown-toggle dropdown-toggle-split"

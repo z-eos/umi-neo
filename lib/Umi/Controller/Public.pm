@@ -12,6 +12,8 @@ sub do_login ($self) {
 				 $self->session('uid'),
 				 $self->session('pwd')));
 
+	$self->stash({uid => $username => pwd => $password});
+
 	if ($self->authenticate($username, $password, {})) {
 	    # $self->set_user_session($username, $password);
 	    $self->flash(message => "Successful login as $username", status => 'ok');
