@@ -3,18 +3,6 @@ use Mojo::Base qw< -base -signatures >;
 
 use Net::LDAP qw/LDAP_INVALID_CREDENTIALS/;
 
-# to rm # # In this example we assume that our users have username (which double
-# to rm # # down as user identifiers too) and password.
-# to rm # has 'db' => sub {
-# to rm #     return {
-# to rm # 	map { $_->{username} => $_ }
-# to rm # 	{ name => 'Foo Ish' => username => foo    => password => 123 },
-# to rm # 	{ name => 'Bar Ong' => username => bar    => password => 456 },
-# to rm # 	{ name => 'Baz Ing' => username => baz    => password => 789 },
-# to rm # 	{ name => 'Gal Ook' => username => galook => password => 0   },
-# to rm #     };
-# to rm # };
-
 sub new {
     my ($class, $app) = @_;
     my $self = bless {}, $class;
@@ -27,7 +15,7 @@ sub new {
 # keep them separated for sake of clarity about what the plugin
 # interface needs and what we need to do towards our user database
 
-# In theory, we might keep load_user and validate_user as coded below,
+# In. theory, we might keep load_user and validate_user as coded below,
 # and only hack on get_user_from_db and password_is_right to adapt the
 # implementation to any LDAP querying need.
 
@@ -35,12 +23,63 @@ sub new {
 # this function takes a user identifier (same as username for us) and
 # returns the user's object.
 sub load_user ($self, $id) {
+    $self->{app}->{log}->debug("LOAD_USER() HAS BEEN CALLED");
+    # my $ldap = Net::LDAP->new( $self->{app}->{cfg}->{ldap}->{store}->{ldap_server} );
+    # if ( ! defined $ldap ) {
+    # 	$self->{app}->{log}->error("Error connecting to $self->{app}->{cfg}->{ldap}->{store}->{ldap_server}: $@");
+    # 	return 0;
+    # }
+
+    # $self->{app}->{log}->error(sprintf("Authentification: uid: %s; pwd: %s\n",
+    # 				       $self->session->{uid},
+    # 				       $self->session->{pwd}));
+
+    # my $mesg = $ldap->bind(
+    # 	sprintf("uid=%s,%s",
+    # 		$self->session('uid'),
+    # 		$self->{app}->{cfg}->{ldap}->{store}->{user_basedn}),
+    # 	password => $self->session('pwd'),
+    # 	version  => 3,);
+    # if ( $mesg->is_error ) {
+    # 	$self->{app}->{log}->error(sprintf("code: %s; message: %s; text: %s",
+    # 				  $mesg->code,
+    # 				  $mesg->error_name,
+    # 				  $mesg->error_text ));
+    # 	return $mesg->code == LDAP_INVALID_CREDENTIALS ? 0 : 1;
+    # }
+    
+    # my $search = $ldap->search(
+    # 	base => $self->{app}->{cfg}->{ldap}->{store}->{user_basedn},
+    # 	filter => join('=',
+    # 		       $self->{app}->{cfg}->{ldap}->{store}->{user_field},
+    # 		       $self->session('uid')),
+    # 	scope => "one"
+    # 	);
+    # if ( $search->code ) {
+    # 	$self->{app}->{log}->error(sprintf("code: %s; message: %s; text: %s",
+    # 				  $search->code,
+    # 				  $search->error_name,
+    # 				  $search->error_text
+    # 			  ));
+    # 	return $search->code == LDAP_INVALID_CREDENTIALS ? 0	: 1;
+    # } elsif ( $search->count != 1 ) {
+    # 	$self->{app}->{log}->error(sprintf("there are %d users with uid %s",
+    # 					   $search->count,
+    # 					   $self->session('uid')
+    # 				   ));
+    # 	return 0;
+    # }
+
+
+    # return $search->as_struct;
+
     return $self->{app}->{cfg}->{ldap}->{user}->{as_struct};
 }
 
 # this function takes the parameters provided and makes sure that the
 # password is the right one for the username.
 sub validate_user ($self, $username, $password, $extra) {
+    $self->{app}->{log}->debug("VALIDATE_USER() HAS BEEN CALLED");
     # return the user identifier if the password check is good
     # return $username if $self->password_is_right($username, $password);
 
@@ -86,9 +125,13 @@ sub validate_user ($self, $username, $password, $extra) {
 	return 0;
     }
 
-    
-    $self->{app}->{cfg}->{ldap}->{user}->{as_struct} = $search->as_struct;
+
+    # $self->{app}->session(user => $search->as_struct);
+    %{$self->{app}->{cfg}->{ldap}->{user}->{as_struct}} = %{$search->as_struct};
     $self->{app}->{cfg}->{ldap}->{user}->{entry} = $search->pop_entry;
+
+    # $self->{app}->session('uid' => $username);
+    # $self->{app}->session('pwd' => $password);
 
     return $username;
 }

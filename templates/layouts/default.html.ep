@@ -1,4 +1,3 @@
-% my $account = $c->current_user;
 <!DOCTYPE html>
 <html lang="en" data-bs-theme="dark">
   <head>
@@ -36,12 +35,12 @@
 
     <div class="outmost-wrapper">
 
-      <% if ($account) { %>
+      <% if ($c->is_user_authenticated) { %>
 	%= include 'header'
       <% } %>
 
       <div class="wrapper"> <!-- APP BODY -->
-	<% if ($account) { %>
+	<% if ($c->is_user_authenticated) { %>
 	  %= include 'sidebar'
 	<% } %>
 	<main class="container-fluid flex-grow-1 mb-3 w-25" id="workingfield">
@@ -50,7 +49,7 @@
 	  %= content
 
 	</main>
-	<% if ($account) { %>
+	<% if ($c->is_user_authenticated) { %>
 	  %= include 'aside'
 	<% } %>
       </div> <!-- div layout -->
