@@ -1,5 +1,6 @@
 package Umi::Authentication;
 use Mojo::Base qw< -base -signatures >;
+use Mojolicious::Plugin::Authentication;
 
 use Net::LDAP qw/LDAP_INVALID_CREDENTIALS/;
 
@@ -24,6 +25,9 @@ sub new {
 # returns the user's object.
 sub load_user ($self, $id) {
     $self->{app}->{log}->debug("LOAD_USER() HAS BEEN CALLED");
+    use Data::Printer;
+    p $self;
+    p $self->{app};
     # my $ldap = Net::LDAP->new( $self->{app}->{cfg}->{ldap}->{store}->{ldap_server} );
     # if ( ! defined $ldap ) {
     # 	$self->{app}->{log}->error("Error connecting to $self->{app}->{cfg}->{ldap}->{store}->{ldap_server}: $@");
@@ -127,7 +131,8 @@ sub validate_user ($self, $username, $password, $extra) {
 
 
     # $self->{app}->session(user => $search->as_struct);
-    %{$self->{app}->{cfg}->{ldap}->{user}->{as_struct}} = %{$search->as_struct};
+    $self->{app}->{cfg}->{ldap}->{user}->{as_struct} = $search->as_struct;
+    delete $self->{app}->{cfg}->{ldap}->{user}->{as_struct}->{'uid=zeus,ou=People,dc=nxc,dc=no'}->{jpegphoto};
     $self->{app}->{cfg}->{ldap}->{user}->{entry} = $search->pop_entry;
 
     # $self->{app}->session('uid' => $username);

@@ -23,11 +23,11 @@ sub startup ($self) {
     # sub:s close on lexical variable $authn, keeping it alive after we
     # exit from this "startup" method.
     $self->plugin(
-	Authentication => {
-	    load_user     => sub ($a, $x) { $authn->load_user($x)     },
-	    validate_user => sub ($c, @A) { $authn->validate_user(@A) },
-	},
-	);
+     	Authentication => {
+     	    load_user     => sub ($a, $x) { $authn->load_user($x)     },
+     	    validate_user => sub ($c, @A) { $authn->validate_user(@A) },
+     	},
+     	);
 
     $self->_startup_routes;
 
@@ -44,6 +44,11 @@ sub _startup_session ($self) {
         $c->session(uid => $username);
         $c->session(pwd => $password);
         $c->session(last_seen => time());
+		  });
+
+    $self->helper(get_pwd => sub {
+        my $c = shift;
+        return $c->session('pwd');
 		  });
 
     # Helper to check if user is authenticated

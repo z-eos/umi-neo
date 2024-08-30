@@ -8,7 +8,7 @@ sub do_login ($self) {
 	my $password = $self->param('password');
 	$self->set_user_session($username, $password);
 
-	$self->log->debug(sprintf("session: uid<%s> pwd<%s>",
+	$self->log->debug(sprintf("SESSION: uid<%s> pwd<%s>",
 				 $self->session('uid'),
 				 $self->session('pwd')));
 
@@ -24,6 +24,7 @@ sub do_login ($self) {
 }
 
 sub do_logout ($self) {
+    $self->logout;
     $self->session(expires => 1);
     return $self->redirect_to('/');
 }
