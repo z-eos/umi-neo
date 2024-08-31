@@ -1,7 +1,8 @@
 package Umi::Ldap;
 
-use Mojo::Base qw< -base -signatures >;
+use Mojo::Base qw( -base -signatures );
 use Mojo::Log;
+use Mojo::Util qw( dumper );
 
 use Net::LDAP;
 use Net::LDAP::Constant qw(
@@ -43,7 +44,7 @@ sub ldap ($self) {
 
     my $ldap = Net::LDAP->new( $self->{app}->{cfg}->{ldap}->{conn}->{host} );
     if ( ! defined $ldap ) {
-	$self->log->error("Error connecting to $self->app->{cfg}->{ldap}->{store}->{ldap_server}: $@");
+	$self->{log}->error("Error connecting to $self->app->{cfg}->{ldap}->{store}->{ldap_server}: $@");
 	return undef;
     }
     
@@ -73,7 +74,7 @@ sub search {
 	scope     => $a->{scope}     // $self->{app}->{cfg}->{ldap}->{defaults}->{scope},
 	sizelimit => $a->{sizelimit} // $self->{app}->{cfg}->{ldap}->{defaults}->{sizelimit},
     };
-
+    $self->{log}->debug(dumper($arg));
     return $self->ldap->search( %{$arg} );
 }
 

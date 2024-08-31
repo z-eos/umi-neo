@@ -1,70 +1,63 @@
-<header>
-  <nav class="navbar navbar-expand-lg bg-body-tertiary" id="header">
-    <div class="container-fluid">
-      <a class="navbar-brand" href="/">
-	<img src="/assets/images/umi-logo.50x50.png" width="30" height="30" alt="logo">
-      </a>
+<header class="navbar navbar-expand-lg bg-body-tertiary sticky-top flex-md-nowrap p-0" id="header">
+  <div class="container-fluid">
+    <a class="navbar-brand" href="/">
+      <img src="/assets/images/umi-logo.50x50.png" width="30" height="30" alt="logo">
+    </a>
+    <button class="border-0" type="button"
+	    data-bs-toggle="collapse"
+	    data-bs-target="#sidebar-left"
+	    aria-controls="sidebar-left"
+	    aria-expanded="true"
+	    aria-label="Toggle sidebar navigation">
+      <i class="fas fa-bars"></i>
+    </button>
+    
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      
+      %= include 'header-form'
+      
+      <ul class="navbar-nav me-auto my-2 my-lg-0 navbar-nav-scroll">
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+	    <i class="fa fa-lg fa-fw fa-user-alt"></i>
+	    <% if ($c->is_user_authenticated) { %>
+	      <%= $c->session('uid') %>
+	    <% } %>
+          </a>
+          <ul class="dropdown-menu dropdown-menu-end dropdown-menu-lg-start">
+	    <li>
+	      <a class="dropdown-item" href="/profile">
+		<i class="fa-regular fa-id-card"></i>
+		<span class="ms-2">Profile</span>
+	      </a>
+	    </li>
+            <li>
+	      <button class="dropdown-item btn btn-link" id="bd-theme"
+		      type="button" title="Dark/Light theme switch."
+		      aria-expanded="false"
+		      data-bs-toggle="dropdown"
+		      data-bs-display="static"
+		      aria-label="Toggle theme (dark)">
+		<i class="fa-solid fa-circle-half-stroke"></i>
+		<span class="ms-2" id="bd-theme-text">Toggle theme</span>
+	      </button>
+	    </li>          
+	    <li><hr class="dropdown-divider"></li>
+	    <li><a class="dropdown-item" href="/logout">
+	      <i class="fas fa-lg fa-fw fa-sign-out-alt"></i>
+	      LogOut</a></li>
+          </ul>
+        </li>
+      </ul>
+      
       <button class="border-0" type="button"
 	      data-bs-toggle="collapse"
-	      data-bs-target="#sidebar-left"
-	      aria-controls="sidebar-left"
+	      data-bs-target="#aside"
+	      aria-controls="aside"
 	      aria-expanded="true"
-	      aria-label="Toggle sidebar navigation">
+	      aria-label="Toggle aside navigation">
 	<i class="fas fa-bars"></i>
       </button>
-      
-      <div class="collapse navbar-collapse" id="navbarSupportedContent">
-	
-	<!-- <form class="container-fluid d-flex" role="search">
-            <input class="form-control me-2" type="search" placeholder="Search" aria-label="Search">
-            <button class="btn btn-outline-success" type="submit">Search</button>
-	    </form> -->
 
-	%= include 'header-form'
-	
-	<ul class="navbar-nav me-auto my-2 my-lg-0 navbar-nav-scroll">
-          <li class="nav-item dropdown">
-            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-	      <i class="fa fa-lg fa-fw fa-user-alt"></i>
-	      <% if ($c->is_user_authenticated) { %>
-		<%= $c->session('uid') %>
-	      <% } %>
-            </a>
-            <ul class="dropdown-menu dropdown-menu-end dropdown-menu-lg-start">
-	      <li>
-		<a class="dropdown-item" href="/profile">
-		  <i class="fa-regular fa-id-card"></i>
-		  <span class="ms-2">Profile</span>
-		</a>
-	      </li>
-              <li>
-		<button class="dropdown-item btn btn-link" id="bd-theme"
-			type="button" title="Dark/Light theme switch."
-			aria-expanded="false"
-			data-bs-toggle="dropdown"
-			data-bs-display="static"
-			aria-label="Toggle theme (dark)">
-		  <i class="fa-solid fa-circle-half-stroke"></i>
-		  <span class="ms-2" id="bd-theme-text">Toggle theme</span>
-		</button>
-	      </li>          
-	      <li><hr class="dropdown-divider"></li>
-	      <li><a class="dropdown-item" href="/logout">
-		  <i class="fas fa-lg fa-fw fa-sign-out-alt"></i>
-		  LogOut</a></li>
-            </ul>
-          </li>
-	</ul>
-	
-	<button class="border-0" type="button"
-		data-bs-toggle="collapse"
-		data-bs-target="#aside"
-		aria-controls="aside"
-		aria-expanded="true"
-		aria-label="Toggle aside navigation">
-	  <i class="fas fa-bars"></i>
-	</button>
-
-      </div>
-  </nav>
+    </div>
 </header>
