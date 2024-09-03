@@ -108,6 +108,7 @@ sub _startup_routes ($self) {
     my $public_root = $root->any('/public');
     $public_root->get('/')->to('public#homepage')->name('public_root');
     $public_root->get('/other')->to('public#other');
+    $public_root->get('/other')->to('public#other');
 
     # everything else under '/' will be protected. We make sure this will
     # be the case by attaching any following route "under" a common
@@ -127,11 +128,12 @@ sub _startup_routes ($self) {
 	    return 0;
 	}
 	);
-    
     $protected_root->get('/')->to('protected#homepage')->name('protected_root');
     $protected_root->get('/other')->to('protected#other');
     $protected_root->get('/profile')->to('protected#profile');
     $protected_root->get('/tool/ldif-import')->to('protected#ldif_import');
+    $protected_root->get('/tool/pwdgen')->to('protected#pwdgen');
+    $protected_root->post('/tool/pwdgen')->to('protected#pwdgen');
     $protected_root->post('/search/common')->to('protected#search_common');
 
     # default to 404 for anything that has not been handled explicitly.

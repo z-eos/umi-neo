@@ -1,43 +1,145 @@
 package Umi::Helpers::Common;
 
 use Mojo::Base 'Mojolicious::Plugin';
+use Mojo::Util;
+
+use MIME::Base64 qw(decode_base64 encode_base64);
+use Crypt::HSXKPasswd;
+
+use Data::Printer caller_info => 1;
 
 sub register {
     my ($self, $app) = @_;
 
-    # Example string helper
-    $app->helper(header_form_subsearch_button => sub {
-        my ($c, $text) = @_;
-        return uc($text);
+    $app->helper(
+		 header_form_subsearch_button => sub {
+		     my ($c, $text) = @_;
+		     return uc($text);
+		 });
+
+    $app->helper(
+		 h_pad_base64 => sub {
+		     my ( $self, $to_pad ) = @_;
+		     while (length($to_pad) % 4) {
+			 $to_pad .= '=';
+		     }
+		     return $to_pad;
+		 });
+
+    $app->helper(
+		 is_ascii => sub {
+		     my ($self, $arg) = @_;
+		     return defined $arg && $arg ne '' && $arg !~ /^[[:ascii:]]+$/ ? 1 : 0;
+		 });
+
+    $app->helper(
+		 is_ip => sub {
+		     my ($self, $arg) = @_;
+		     return defined $arg && $arg ne '' && $arg =~ /^$self->{a}->{re}->{ip}$/ ? 1 : 0;
 		 });
 
     # MAC address normalyzer
-    $app->helper(macnorm => sub {
-	my ( $c, $args ) = @_;
-	my $arg = {
-	    mac => $args->{mac},
-	    dlm => $args->{dlm} || '',
-	};
-
-	my $re1 = $self->{a}->{re}->{mac}->{mac48};
-	my $re2 = $self->{a}->{re}->{mac}->{cisco};
-	if ( ($arg->{mac} =~ /^$re1$/ || $arg->{mac} =~ /^$re2$/) &&
-	     ($arg->{dlm} eq '' || $arg->{dlm} eq ':' || $arg->{dlm} eq '-') ) {
-	    my $sep = $1 eq '.' ? '\.' : $1;
-
-	    my @mac_arr = split(/$sep/, $arg->{mac});
-	    
-	    @mac_arr = map { substr($_, 0, 2), substr($_, 2) } @mac_arr
-		if scalar(@mac_arr) == 3;
-
-	    log_debug { np(@mac_arr) };
-	    return lc( join( $arg->{dlm}, @mac_arr ) );
-	    } else {
-		return 0;
-	}
+    $app->helper(
+		 macnorm => sub {
+		     my ( $c, $args ) = @_;
+		     my $arg = {
+				mac => $args->{mac},
+				dlm => $args->{dlm} || '',
+			       };
+		     my $re1 = $self->{a}->{re}->{mac}->{mac48};
+		     my $re2 = $self->{a}->{re}->{mac}->{cisco};
+		     if ( ($arg->{mac} =~ /^$re1$/ || $arg->{mac} =~ /^$re2$/) &&
+			  ($arg->{dlm} eq '' || $arg->{dlm} eq ':' || $arg->{dlm} eq '-') ) {
+			 my $sep = $1 eq '.' ? '\.' : $1;
+			 my @mac_arr = split(/$sep/, $arg->{mac});
+			 @mac_arr = map { substr($_, 0, 2), substr($_, 2) } @mac_arr
+			     if scalar(@mac_arr) == 3;
+			 # log_debug { np(@mac_arr) };
+			 return lc( join( $arg->{dlm}, @mac_arr ) );
+		     } else {
+			 return 0;
+		     }
 		 });
 
+    # PWDGEN
+    $app->helper(
+		 h_pwdgen => sub {
+		     my ( $self, $par ) = @_;
+		     # return {} if ! %$par;
+		     my $cf = $app->{cfg}->{tool}->{pwdgen} // undef;
+		     my $p =
+			 {
+			  pwd => $par->{pwd} // undef,
+			  xk => {
+				 allow_accents             => 0,
+				 case_transform            => $par->{xk_case_transform} // "RANDOM",
+				 num_words                 => $par->{xk_num_words} // 5,
+				 padding_characters_after  => $par->{xk_padding_characters_after} // 0,
+				 padding_characters_before => $par->{xk_padding_characters_before} // 0,
+				 padding_digits_after      => $par->{xk_padding_digits_after} // 0,
+				 padding_digits_before     => $par->{xk_padding_digits_before} // 0,
+				 padding_type              => $par->{xk_padding_type} // "NONE",
+				 separator_character       => $par->{xk_separator_character_char} || "-",
+				 symbol_alphabet           => ['!', '@', '$', '%', '^', '&', '*', '-', '_',
+							       '+', '=', ':', '|', '~', '?', '/', '.', ';'],
+				 word_length_max           => $par->{xk_word_length_max} // 8,
+				 word_length_min           => $par->{xk_word_length_min} // 4
+				},
+			  pnum => $par->{pwd_num} // $cf->{pnum} || 1,
+			  palg => $par->{pwd_alg} // $cf->{palg} // $cf->{xk}->{preset_default} || 'XKCD',
+			 };
 
+		     if (! defined $p->{pwd} || $p->{pwd} eq '') {
+			 ### password generation (not verification)
+			 if ( defined $p->{palg} ) {
+
+			     Crypt::HSXKPasswd->module_config('LOG_ERRORS', 1);
+			     Crypt::HSXKPasswd->module_config('DEBUG', 0);
+			     my $default_config = Crypt::HSXKPasswd->default_config();
+			     my $xk_cf = Crypt::HSXKPasswd->preset_config( $p->{palg} );
+			     p $xk_cf;
+			     # log_debug { 'PRESET ' . $p->{palg} . " ORIGINAL: \n" . np($xk_cf) };
+			     foreach (keys %{$xk_cf}) {
+				 $xk_cf->{$_} = $p->{xk}->{$_} if exists $p->{xk}->{$_};
+			     }
+			     # log_debug { 'PRESET ' . $p->{palg} . " MODIFIED: \n" . np($xk_cf) };
+			     p $xk_cf;
+			     my $xk = Crypt::HSXKPasswd->new( config => $xk_cf );
+			     $p->{pwd}->{clear}    = $xk->password( $p->{pnum} );
+			     %{$p->{pwd}->{stats}} = $xk->stats();
+			     $p->{pwd}->{status}   = $xk->status();
+
+			 }
+		     } elsif ( ref($p->{pwd}) ne 'HASH' ) {
+			 ### password verification
+			 $p->{tmp} = $p->{pwd};
+			 delete $p->{pwd};
+			 $p->{pwd}->{clear} = $p->{tmp};
+		     }
+		     # http://www.openldap.org/faq/data/cache/347.html
+		     #
+		     # RFC 2307 passwords (http://www.openldap.org/faq/data/cache/346.html)
+		     # generation ( {SSHA} ) to be used as userPassword value.
+		     #
+		     # Prepares with Digest::SHA, password provided or autogenerated, to be
+		     # used as userPassword attribute value
+
+		     my $sha = Digest::SHA->new( $cf->{sha}->{alg} );
+		     $sha->add($p->{pwd}->{clear});
+		     $sha->add($cf->{sha}->{salt});
+		     $p->{return} =
+			 {
+			  clear => $p->{pwd}->{clear},
+			  # WARNING Mojo::Util->b64_encode produces wrong result
+			  #ssha  => '{SSHA}' . $self->h_pad_base64($self->b64_encode( $sha->digest . $cf->{sha}->{salt}, ''))
+			  ssha  => '{SSHA}' . $self->h_pad_base64(encode_base64( $sha->digest . $cf->{sha}->{salt}, ''))
+			 };
+
+		     $p->{return}->{stats}  = $p->{pwd}->{stats}  if $p->{pwd}->{stats};
+		     $p->{return}->{status} = $p->{pwd}->{status} if $p->{pwd}->{status};
+
+		     return $p->{return};
+		 });
 
 }
 

@@ -48,7 +48,7 @@ sub search_common  ($self) {
 	    ldap_subtree    => $self->param('ldap_subtree')    =>
 	    search_filter   => $self->param('search_filter')   =>
 	    search_base     => $self->param('search_base')
-    }; use Data::Printer; p $params;
+    };
     my $sort_order = 'reverse';
     my $filter_armor = '';
 
@@ -174,6 +174,18 @@ sub search_common  ($self) {
 
     $self->render(template => 'protected/search/common' => searchres => $search->as_struct);
 
+}
+
+sub pwdgen ($self) {
+    my $par = $self->req->params->to_hash;
+    use Data::Printer;
+    p $par;
+    if (%$par) {
+	$self->stash(pwdgen_params => $par);
+	return $self->render(template => 'protected/tool/pwdgen' => pwdgen => $self->h_pwdgen($par));
+    } else {
+	return $self->render(template => 'protected/tool/pwdgen');
+    }
 }
 
 1;
