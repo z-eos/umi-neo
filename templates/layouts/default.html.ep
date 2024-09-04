@@ -68,5 +68,12 @@
        }
      })
     </script>
+
+    <!-- UMI SCRIPTS -->
+    <script src="/assets/js/umi-common.js"></script>
+    <script src="/assets/js/umi-tool-qrcode.js"></script>
+    <script src="/assets/js/umi-tool-keygen-ssh.js"></script>
+    <script src="/assets/js/umi-tool-pwdgen.js"></script>
+
   </body>
 </html>

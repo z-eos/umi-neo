@@ -1,0 +1,49 @@
+<h3 class="fw-bold p-5">
+    <i class="fas fa-qrcode fa-lg mr-3 text-muted"></i>
+    Text to QR-code<small><em class="text-muted font-monospace"></em></small>
+</h3>
+<hr>
+
+% my ($en_blind, $en_seen, $ico, $selected);
+% my $par = stash('qrcode_params');
+% my $qrcode = stash('qrcode');
+<!-- <div id="result" class="alert alert-info" role="alert">
+     <i class="fa-solid fa-triangle-exclamation pe-3"></i></i><pre><%#= dumper $qrcode %></pre>
+     </div>     -->
+% if (defined $qrcode && %$qrcode) {
+    <div id="result" class="alert alert-success" role="alert">
+	<figure class="text-center">
+	    <figcaption class="h6 text-left font-monospace"><%= $par->{toqr} %></figcaption>
+	    <img alt="QR for: <%= $par->{toqr} %>" src="data:image/png;base64,<%= $qrcode->{qr} =%>" class="img-thumbnail bg-light">
+		 </figure>
+    </div>
+% } else {
+    <div id="result" class="alert alert-info" role="alert">
+	<i class="fa-solid fa-triangle-exclamation pe-3"></i></i>FIRST RUN
+    </div>    
+% }
+
+<form action="/tool/qrcode" class="form-horizontal" id="form732" method="post">
+    <div class="form-group row mt-3">
+	<label class="col text-end font-weight-bold control-label" for="toqr">Text to QR Code</label>
+	<div class="input-sm col-10">
+	    <textarea name="toqr" id="toqr" class="input-sm text-monospace form-control"
+		      placeholder="Text to QRCode" rows="4" cols="10"><%= $par->{toqr} =%></textarea>
+	</div>
+    </div>
+    
+    <div class="form-group row mt-3">
+	<label class="col-2 text-end font-weight-bold control-label" for="mod">
+	    Module Size: <span id="mod_size" class=""></span>
+	</label>
+	<div class="col-1 text-end font-weight-bold"><span>1</span></div>
+	<div class="col-8">
+	    <input id="mod" name="mod" type="range" class="form-range" min="1" max="30" step="1" value="5">
+	</div>
+	<div class="col-1 font-weight-bold"><span>30</span></div>
+    </div>
+
+    <div class="row">
+	    <input type="submit" value="Submit" class="btn btn-success btn-block font-weight-bold text-uppercase">
+    </div>
+</form>

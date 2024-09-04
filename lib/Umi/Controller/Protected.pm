@@ -178,13 +178,37 @@ sub search_common  ($self) {
 
 sub pwdgen ($self) {
     my $par = $self->req->params->to_hash;
-    use Data::Printer;
-    p $par;
     if (%$par) {
 	$self->stash(pwdgen_params => $par);
 	return $self->render(template => 'protected/tool/pwdgen' => pwdgen => $self->h_pwdgen($par));
     } else {
 	return $self->render(template => 'protected/tool/pwdgen');
+    }
+}
+
+sub qrcode ($self) {
+    my $par = $self->req->params->to_hash;
+    if (%$par) {
+	$self->stash(qrcode_params => $par);
+	return $self->render(template => 'protected/tool/qrcode' => qrcode => $self->h_qrcode($par));
+    } else {
+	return $self->render(template => 'protected/tool/qrcode');
+    }
+}
+
+sub keygen_ssh ($self) {
+    my $par = $self->req->params->to_hash;
+    if (%$par) {
+	$self->stash(kg_ssh_params => $par);
+	return $self->render(template => 'protected/tool/keygen/ssh' =>
+			     key => {
+				 ssh => $self->h_keygen_ssh($par),
+				 name => { real => 'name will be here',
+					   email => 'email will be here' }
+			     }
+			     );
+    } else {
+	return $self->render(template => 'protected/tool/keygen/ssh');
     }
 }
 

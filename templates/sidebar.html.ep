@@ -115,7 +115,7 @@
 	    </a>
 	  </li>
           <li class="nav-item">
-	    <a class="text-light nav-link" href="/tool/sshkeygen">
+	    <a class="text-light nav-link" href="/tool/keygen/ssh">
 	      <i class="fas fa-fw fa-key"></i>
 	      SSH keygen
 	    </a>
@@ -127,7 +127,7 @@
 	    </a>
 	  </li>
           <li class="nav-item">
-	    <a class="text-light nav-link" href="/tool/qr">
+	    <a class="text-light nav-link" href="/tool/qrcode">
 	      <i class="fas fa-fw fa-qrcode"></i>
 	      QR
 	    </a>

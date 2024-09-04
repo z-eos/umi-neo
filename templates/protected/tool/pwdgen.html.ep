@@ -50,7 +50,7 @@
  .show-padd-char-separator .cond-input-padd-char:not(.on-padd-char-separator) { display: none; }
  /* ------------------------------------------------------------- */
  .show-none       .cond-input-sep                     { display: none; }
- .show-sep-char   .cond-input-sep:not(.on-sep-char)   { display: none; }
+g .show-sep-char   .cond-input-sep:not(.on-sep-char)   { display: none; }
  .show-sep-random .cond-input-sep:not(.on-sep-random) { display: none; }
 </style>
 
@@ -130,8 +130,9 @@
 		%             WIFI      => "WIFI (example: 8241_GREAT_FRACTION_fell_feel_quick_REAL_7834~~~~~~~~~~~~~~~~~~)",
 		%             XKCD      => "XKCD (example: ALLOW-CLOTH-LANGUAGE-UNCLE-BROKEN)" };
 		% foreach my $k (sort(keys(%$alg))) {
-		    <option value="<%= $k %>" id="pwd_alg.<%= $m %>"
-			<%= $par->{pwd_alg} && $par->{pwd_alg} eq $k ? 'selected="selected"' : '' %>><%= $alg->{$k} %></option>
+		  <option value="<%= $k %>" id="pwd_alg.<%= $m %>"
+			  <%= (! $par->{pwd_alg} && $k eq 'XKCD') || ($par->{pwd_alg} && $par->{pwd_alg} eq $k) ? 'selected="selected"' : '' %>
+			  ><%= $alg->{$k} %></option>
 		    % $m++;
 		% }
 	    </select>
@@ -201,16 +202,12 @@
 		<span class="input-group-text font-weight-bold" for="xk_separator_character">Separator</span>
 		<select name="xk_separator_character" id="xk_separator_character" class="custom-select form-control" title="Separator">
 		    <option value="NONE" id="xk_separator_character.0" selected="selected">NONE</option>
-		    <option value="CHAR" id="xk_separator_character.1">Specified Character</option>
-		    <option value="RANDOM" id="xk_separator_character.2">Random Character</option>
+		    <option value="CHARACTER" id="xk_separator_character.1" selected="selected">CHARACTER</option>
+		    <option value="RANDOM" id="xk_separator_character.2">RANDOM</option>
 		</select>
-		<!-- SEPARATOR CHARACTER -->
-                <input type="text" name="xk_separator_character_char" id="xk_separator_character_char" area-describedby="sepCharHelpBlock"
-		       maxlength="1" value="" class="text-center text-monospace font-weight-bold form-control"
-		       title="Separator Character (one of): !&quot;#$%&amp;'()*+,-./:;<=>?@[\]^_{|}~">
-		<!-- SEPARATOR CHARACTER ALPHABETH -->
-                <input type="text" name="xk_separator_character_random" id="xk_separator_character_random"
-		       value="" class="text-center text-monospace font-weight-bold form-control"
+		<!-- SEPARATOR ALPHABETH -->
+                <input type="text" name="xk_separator_alphabet" id="xk_separator_alphabet"
+		       value="-+=.*_|~," class="text-center text-monospace font-weight-bold form-control"
 		       title="Separator Character Alphabet: !&quot;#$%&amp;'()*+,-./:;<=>?@[\]^_{|}~">
 		<small id="sepCharHelpBlock" class="form-text text-muted"></small>
 	    </div>
@@ -280,7 +277,7 @@
 				<span class="input-group-text text-right font-weight-bold" for="xk_padding_character">Padding Character</span>
 				<select name="xk_padding_character" id="xk_padding_character" class="custom-select form-control" title="Separator">
 				    <option value="SEPARATOR" id="xk_padding_character.0" selected="selected">Separator Character</option>
-				    <option value="CHAR" id="xk_padding_character.1">Specified Character</option>
+				    <option vlue="CHAR" id="xk_padding_character.1">Specified Character</option>
 				    <option value="RANDOM" id="xk_padding_character.2">Random Alphabet</option>
 				</select>
 				<input type="text" name="xk_padding_character_separator" id="xk_padding_character_separator"
@@ -304,54 +301,3 @@
 	
     </div>
 </form>
-
-<script src="/assets/js/pwdgen.js"></script>
-<script>
-    $('#sepCharHelpBlock').appendTo( $('#xk_separator_character_char').parent() );
-    $('#xk_separator_character_char').change( function() {
-    console.log('CHANGED ', this.value);
-    var char = this.value.charCodeAt(0) < 255 ? 'ASCII' : 'char';
-    $('#sepCharHelpBlock').html( $(this).val() ? +char+' code: '+this.value.charCodeAt(0) : '' );
-    });
-    // -------------------------------------------------------------------------
-    $('#pwd_operations').on('change', 'select[id=pwd_alg]', function(e) {
-    var $container = $(this).closest('.target-container');
-    var value = $(this).val().toLowerCase();
-    if ( xkPresets ) {
-    loadPreset(xkPresets, value.toUpperCase());
-    // should be here, since #xk_separator_character_char is set not from form but via js
-    $('#xk_separator_character_char').change();
-    }
-    $container.attr(
-    'class', 'target-container ' + (value ? ' alg '+value : ' alg none'),
-    );
-    } ).change();
-    // -------------------------------------------------------------------------
-    $('#padd').on('change', '#xk_padding_type', function(e) {
-    var $container = $(this).closest('.target-container');
-    var value = $(this).val().toLowerCase();
-    $container.attr(
-    'class', 'row col-12 form-group target-container ' + (value != 'none' ? ' pad '+value : ' pad none'),
-    );
-    } ).change();
-    // -------------------------------------------------------------------------
-    $('#padd-char').on('change', '#xk_padding_character', function(e) {
-    var $container = $(this).closest('.target-container');
-    var value = $(this).val().toLowerCase();
-    $container.attr(
-    'class', 'col-12 row form-group target-container ' + (value != 'separator' ? ' pch '+value : ' pch none'),
-    );
-    } ).change();
-    // -------------------------------------------------------------------------
-    $('#sep').on('change', '#xk_separator_character', function(e) {
-    var $container = $(this).closest('.target-container');
-    var value = $(this).val().toLowerCase();
-    $container.attr(
-    'class', 'row col-12 mb-0 form-group target-container ' + (value != 'none' ? ' sep '+value : ' sep none'),
-    );
-    } ).change();
-    $('#pwd_alg').change();
-    $('#xk_padding_type').change();
-    $('#xk_separator_character').change();
-    $('#xk_padding_character').change();
-</script>
