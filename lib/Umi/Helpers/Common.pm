@@ -209,23 +209,30 @@ $app->helper(
 		     {
 		      pwd => $par->{pwd} // undef,
 		      xk => {
-			     case_transform            => $par->{xk_case_transform} // "RANDOM",
+			     case_transform            => $par->{xk_case_transform} // 'RANDOM',
 			     num_words                 => $par->{xk_num_words} // 5,
 			     padding_characters_after  => $par->{xk_padding_characters_after} // 0,
 			     padding_characters_before => $par->{xk_padding_characters_before} // 0,
 			     padding_digits_after      => $par->{xk_padding_digits_after} // 0,
 			     padding_digits_before     => $par->{xk_padding_digits_before} // 0,
-			     padding_type              => $par->{xk_padding_type} // "NONE",
-			     separator_character       => $par->{xk_separator_character_char} // "RANDOM",
+			     padding_type              => $par->{xk_padding_type} // 'NONE',
+			     separator_character       => $par->{xk_separator_character} // 'RANDOM',
+			     separator_alphabet        => $par->{xk_separator_alphabet},
 			     word_length_max           => $par->{xk_word_length_max} // 8,
 			     word_length_min           => $par->{xk_word_length_min} // 4
 			    },
 		      pnum => $par->{pwd_num} // $cf->{pnum} || 1,
 		      palg => $par->{pwd_alg} // $cf->{palg} // $cf->{xk}->{preset_default} || 'XKCD',
 		     };
-		     
-		 @{$p->{xk}->{separator_alphabet}} = split(//, $par->{xk_separator_alphabet})
-		     if exists $par->{xk_separator_alphabet};
+		 
+		 if ($par->{xk_separator_character} eq 'CHAR') {
+		     $p->{xk}->{separator_character} = $par->{xk_separator_character_char};
+		 } elsif ($par->{xk_separator_character} eq 'RANDOM' && length($par->{xk_separator_character_random}) == 1) {
+		     $par->{separator_character_random} .= $par->{separator_character_random};
+		 }
+		 my @arr = split(//, $par->{xk_separator_character_random});
+		 $p->{xk}->{separator_alphabet} = \@arr;
+
 		 p $p;
 		 if (! defined $p->{pwd} || $p->{pwd} eq '') {
 		     ### password generation (not verification)
@@ -239,8 +246,8 @@ $app->helper(
 			 my $xk_cf = Crypt::HSXKPasswd->preset_config( $p->{palg} );
 			 p $xk_cf;
 			 foreach (keys %{$xk_cf}) {
-			     #$xk_cf->{$_} = $p->{xk}->{$_} if exists $p->{xk}->{$_};
-			     $xk_cf->{$_} = $par->{'xk_'.$_} if exists $par->{'xk_'.$_};
+			     $xk_cf->{$_} = $p->{xk}->{$_} if exists $p->{xk}->{$_};
+			     #$xk_cf->{$_} = $par->{'xk_'.$_} if exists $par->{'xk_'.$_};
 			 }
 			 $xk_cf->{separator_alphabet} = $p->{xk}->{separator_alphabet}
 			     if $p->{xk}->{separator_character} eq 'RANDOM';

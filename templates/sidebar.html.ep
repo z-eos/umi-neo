@@ -32,64 +32,62 @@
 <% #  %>[% END %] %>
 <% } %>
 
-
-
 <nav id="sidebar-left" class="collapse [% c.session.settings.ui.sidebar == 0 ? 'folded' : '' %]">
 
     <ul id="sidebar-left-menu" class="nav flex-column">
 
-      <li class="nav-item">
-	<a href="#submenuAnalyze"
-	   data-bs-toggle="collapse"
-	   aria-expanded="false"
-	   aria-controls="submenuAnalyze"
-	   class="nav-link text-white-50 umi-text-truncate-noelipsis">
-	  <i class="fas fa-lg fa-fw fa-flask"></i>
-	  <div class="sidebar-left-item d-inline-flex">
-	    <b class="text-uppercase">Analyze</b>
-	  </div>
-	</a>
-	<ul class="nav flex-column collapse ml-4 p-0" id="submenuAnalyze">
-          <li class="nav-item">
-	    <a class="text-light nav-link" href="#modal-is-accounts" data-bs-toggle="modal">
-	      <i class="fas fa-id-card"></i>
-	      Accounts
-	    </a>
-	  </li>
-          <li class="nav-item">
-	    <a class="text-light nav-link" href="/abstrstataccgroups"
-	       tabindex="2"
-	       title="Acc &harr; Group">
-	      <i class="fas fa-users"></i>
-	      Usr<i class="fas fa-arrows-alt-h m-0 mx-1"></i>Grp
-	    </a>
-	  </li>
-          <li class="nav-item">
-	    <a class="text-light nav-link" href="/servermta"
-	       tabindex="2"
-	       title="All MTAs info in one single table">
-	      <i class="fas fa-mail-bulk"></i>
-	      MTA
-	    </a>
-	  </li>
-          <li class="nav-item">
-	    <a class="text-light nav-link" href="/mikrotik"
-	       tabindex="2"
-	       title="CAPsMAN registrations">
-	      <i class="fas fa-broadcast-tower"></i>
-	      CAPs reg
-	    </a>
-	  </li>
-          <li class="nav-item">
-	    <a class="text-light nav-link" href="/mikrotikpsk"
-	       tabindex="2"
-	       title="all corp SSID-s PSK-s">
-	      <i class="fas fa-wifi"></i>
-	      CAPs PSK
-	    </a>
-	  </li>
-	</ul>
-      </li>
+	<!-- <li class="nav-item">
+	     <a href="#submenuAnalyze"
+	     data-bs-toggle="collapse"
+	     aria-expanded="false"
+	     aria-controls="submenuAnalyze"
+	     class="nav-link text-white-50 umi-text-truncate-noelipsis">
+	     <i class="fas fa-lg fa-fw fa-flask"></i>
+	     <div class="sidebar-left-item d-inline-flex">
+	     <b class="text-uppercase">Analyze</b>
+	     </div>
+	     </a>
+	     <ul class="nav flex-column collapse ml-4 p-0" id="submenuAnalyze">
+             <li class="nav-item">
+	     <a class="text-light nav-link" href="#modal-is-accounts" data-bs-toggle="modal">
+	     <i class="fas fa-id-card"></i>
+	     Accounts
+	     </a>
+	     </li>
+             <li class="nav-item">
+	     <a class="text-light nav-link" href="/abstrstataccgroups"
+	     tabindex="2"
+	     title="Acc &harr; Group">
+	     <i class="fas fa-users"></i>
+	     Usr<i class="fas fa-arrows-alt-h m-0 mx-1"></i>Grp
+	     </a>
+	     </li>
+             <li class="nav-item">
+	     <a class="text-light nav-link" href="/servermta"
+	     tabindex="2"
+	     title="All MTAs info in one single table">
+	     <i class="fas fa-mail-bulk"></i>
+	     MTA
+	     </a>
+	     </li>
+             <li class="nav-item">
+	     <a class="text-light nav-link" href="/mikrotik"
+	     tabindex="2"
+	     title="CAPsMAN registrations">
+	     <i class="fas fa-broadcast-tower"></i>
+	     CAPs reg
+	     </a>
+	     </li>
+             <li class="nav-item">
+	     <a class="text-light nav-link" href="/mikrotikpsk"
+	     tabindex="2"
+	     title="all corp SSID-s PSK-s">
+	     <i class="fas fa-wifi"></i>
+	     CAPs PSK
+	     </a>
+	     </li>
+	     </ul>
+	     </li> -->
       
       <li class="nav-item">
 	<a href="#submenuTools"
@@ -103,7 +101,7 @@
 	</a>
 	<ul class="nav flex-column collapse ml-4 p-0" id="submenuTools">
           <li class="nav-item">
-	    <a class="text-light nav-link" href="/onboarding">
+	    <a class="text-light nav-link disabled" href="/onboarding">
 	      <i class="fas fa-fw fa-baby"></i>
 	      Onboarding
 	    </a>

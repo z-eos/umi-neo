@@ -1,3 +1,5 @@
+# -*- mode: cperl; eval: (follow-mode) -*-
+
 package Umi::Ldap;
 
 use Mojo::Base qw( -base -signatures );
@@ -5,6 +7,7 @@ use Mojo::Log;
 use Mojo::Util qw( dumper );
 
 use Net::LDAP;
+use Net::LDAP::Schema;
 use Net::LDAP::Constant qw(
 			    LDAP_SUCCESS
 			    LDAP_PROTOCOL_ERROR
@@ -27,55 +30,63 @@ use Net::LDAP::Util qw(
 use Data::Printer;
 
 sub new {
-    my ($class, $app, $uid, $pwd) = @_;
-    my $self =
-	bless {
-	    app => $app,
-	    uid => $uid,
-	    pwd => $pwd,
-	    log => Mojo::Log->new
-    }, $class;
-    return $self;
+  my ($class, $app, $uid, $pwd) = @_;
+  my $self =
+    bless {
+	   app => $app,
+	   uid => $uid,
+	   pwd => $pwd,
+	   log => Mojo::Log->new
+	  }, $class;
+  return $self;
 }
 
 sub ldap ($self) {
 
-    $self->{log}->debug('Umi::Ldap->ldap() HAS BEEN CALLED');
+  $self->{log}->debug('Umi::Ldap->ldap() HAS BEEN CALLED');
 
-    my $ldap = Net::LDAP->new( $self->{app}->{cfg}->{ldap}->{conn}->{host} );
-    if ( ! defined $ldap ) {
-	$self->{log}->error("Error connecting to $self->app->{cfg}->{ldap}->{store}->{ldap_server}: $@");
-	return undef;
-    }
+  my $ldap = Net::LDAP->new( $self->{app}->{cfg}->{ldap}->{conn}->{host} );
+  if ( ! defined $ldap ) {
+    $self->{log}->error("Error connecting to $self->app->{cfg}->{ldap}->{store}->{ldap_server}: $@");
+    return undef;
+  }
     
-    my $m = $ldap->bind(
-	sprintf("uid=%s,%s",
-		$self->{uid},
-		$self->{app}->{cfg}->{ldap}->{base}->{acc_root}),
-	password => $self->{pwd},
-	version  => 3,);
-    if ( $m->is_error ) {
-	$self->log->error(
-	    sprintf("code: %s; mesg: %s; txt: %s", $m->code, $m->error_name, $m->error_text)
-	    );
-	return undef;
-    }
+  my $m = $ldap->bind(
+		      sprintf("uid=%s,%s",
+			      $self->{uid},
+			      $self->{app}->{cfg}->{ldap}->{base}->{acc_root}),
+		      password => $self->{pwd},
+		      version  => 3,);
+  if ( $m->is_error ) {
+    $self->log->error(
+		      sprintf("code: %s; mesg: %s; txt: %s", $m->code, $m->error_name, $m->error_text)
+		     );
+    return undef;
+  }
 
-    return $ldap;
+  return $ldap;
 }
 
 sub search {
-    my ($self, $a) = @_;
-    my $arg = {
-	base      => $a->{base}      // $self->{app}->{cfg}->{ldap}->{base}->{dc},
-	attrs     => $a->{attrs}     // $self->{app}->{cfg}->{ldap}->{defaults}->{attrs},
-	deref     => $a->{deref}     // $self->{app}->{cfg}->{ldap}->{defaults}->{deref},
-	filter    => $a->{filter}    // $self->{app}->{cfg}->{ldap}->{defaults}->{filter},
-	scope     => $a->{scope}     // $self->{app}->{cfg}->{ldap}->{defaults}->{scope},
-	sizelimit => $a->{sizelimit} // $self->{app}->{cfg}->{ldap}->{defaults}->{sizelimit},
+  my ($self, $a) = @_;
+  my $cf = $self->{app}->{cfg}->{ldap};
+  my $o =
+    {
+     base   => $a->{base}   // $cf->{base}->{dc},
+     attrs  => $a->{attrs}  // $cf->{defaults}->{attrs},
+     deref  => $a->{deref}  // $cf->{defaults}->{deref},
+     filter => $a->{filter} // $cf->{defaults}->{filter},
+     scope  => $a->{scope}  // $cf->{defaults}->{scope},
+     sizelimit => $a->{sizelimit} // $cf->{defaults}->{sizelimit},
     };
-    $self->{log}->debug(dumper($arg));
-    return $self->ldap->search( %{$arg} );
+
+  #$self->{log}->debug(dumper($o));
+
+  return $self->ldap->search( %{$o} );
+}
+
+sub schema ($self) {
+  return $self->ldap->schema();
 }
 
 1;

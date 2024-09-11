@@ -54,7 +54,7 @@ g .show-sep-char   .cond-input-sep:not(.on-sep-char)   { display: none; }
  .show-sep-random .cond-input-sep:not(.on-sep-random) { display: none; }
 </style>
 
-<h3 class="font-weight-bold py-5">
+<h3 class="fw-bold py-5">
     <i class="fa fa-unlock-alt fa-lg m-3 text-muted"></i>
     Password Generator Form
     <small>
@@ -109,16 +109,16 @@ g .show-sep-char   .cond-input-sep:not(.on-sep-char)   { display: none; }
 	</div>
     </div>
 % } else {
-    <div id="result" class="alert alert-info" role="alert">
-	<i class="fa-solid fa-triangle-exclamation pe-3"></i></i>FIRST RUN
-    </div>    
+    <!-- <div id="result" class="alert alert-info" role="alert">
+	 <i class="fa-solid fa-triangle-exclamation pe-3"></i></i>FIRST RUN
+	 </div>     -->
 % }
 
 <form id="formPwdgen" class="form-horizonal pwdgen" method="post" enctype="multipart/form-data" action="/tool/pwdgen">
-    <div id="pwd_operations" class="target-container calg">
+    <div id="pwd_operations" class="row target-container calg">
 	<!-- PRESET -->
-	<div class="col-7 d-flex input-group" aria-describedby="pwd_algHelpBlock">
-	    <span class="input-group-text font-weight-bold text-uppercase" for="pwd_alg">Preset</span>
+	<div class="row input-group m-0" aria-describedby="pwd_algHelpBlock">
+	    <span class="input-group-text fw-bold text-uppercase col-2" for="pwd_alg">Preset</span>
 	    <select name="pwd_alg" id="pwd_alg" aria-describedby="pwd_algHelpBlock" class="custom-select form-control" title="Password algorythm">
 		% my $m = 0;
 		% my $alg = { APPLEID   => "APPLEID (example: @74,animal,forget,angry,55@)",
@@ -140,10 +140,10 @@ g .show-sep-char   .cond-input-sep:not(.on-sep-char)   { display: none; }
     </div>
     <small id="pwd_algHelpBlock" class="form-text text-muted"></small>
 
-    <div class="row calg on-appleid on-default on-ntlm on-securityq on-web16 on-web32 on-wifi on-xkcd">
+    <div class="row calg on-appleid on-default on-ntlm on-securityq on-web16 on-web32 on-wifi on-xkcd my-3">
 	<!-- NUMBER OF WORDS -->
 	<div class="input-group">
-            <span class="input-group-text font-weight-bold" for="xk_num_words">Number Of Words</span>
+            <span class="input-group-text fw-bold text-uppercase col-2" for="xk_num_words">Number Of Words</span>
             <select name="xk_num_words" id="xk_num_words" class="custom-select form-control" title="Number Of Words In Password">
 		% for my $i (3 .. 10) {
 		    % if ($par->{xk_num_words} && $par->{xk_num_words} == $i ) {
@@ -154,14 +154,15 @@ g .show-sep-char   .cond-input-sep:not(.on-sep-char)   { display: none; }
 		    <option value="<%= $i %>" id="xk_num_words.<%= $i - 3 %>" <%= $selected %>><%= $i %></option>
 		% }
             </select>
-	</div>
-	<div class="input-group">
+	    <!-- </div>
+		 <div class="input-group"> -->
 	    <!-- LEN MIN / MAX -->
-	    <span class="input-group-text font-weight-bold" for="xk_word_length_min">Len min/max</span>
+	    <span class="input-group-text fw-bold text-uppercase col-2" for="xk_word_length_min">Len min/max</span>
 	    <select name="xk_word_length_min" id="xk_word_length_min" class="custom-select form-control" title="Word Length Min">
 		% for my $i (4 .. 13) {
 		    <option value="<%= $i %>" id="xk_word_length_min.<%= $i - 4 %>"
-			<%= $par->{xk_word_length_min} && $par->{xk_word_length_min} == $i ? 'selected="selected"' : '' %>><%= $i %></option>
+			<%= $par->{xk_word_length_min} == $i ? 'selected="selected"' : '' %>
+			><%= $i %></option>
 		% }
 	    </select>
 	    <select name="xk_word_length_max" id="xk_word_length_max" class="custom-select form-control" title="Word Length Max">
@@ -176,9 +177,9 @@ g .show-sep-char   .cond-input-sep:not(.on-sep-char)   { display: none; }
 		% }
 	    </select>
 	</div>
-	<!-- CASE -->
-        <div class="input-group">
-	    <span class="input-group-text font-weight-bold" for="xk_case_transform">Case</span>
+	<!-- CASE TRANSFORMATION -->
+        <div class="input-group my-3">
+	    <span class="input-group-text fw-bold text-uppercase col-2" for="xk_case_transform">Case Transformation</span>
 	    <select name="xk_case_transform" id="xk_case_transform" class="custom-select form-control" title="Case Transformation">
 		% $m = 0;
 		% my $case_tr = { ALTERNATE  => "ALTERNATE (example: alternating WORD case)",
@@ -196,26 +197,39 @@ g .show-sep-char   .cond-input-sep:not(.on-sep-char)   { display: none; }
 	    </select>
         </div>
 	<!-- SEPARATOR -->
-	<div id="sep" class="row form-group target-container csep">
+	<div id="sep" class="row form-group target-container csep my-3">
 	    <div class="input-group">
 		<!-- SEPARATOR SELECTOR -->
-		<span class="input-group-text font-weight-bold" for="xk_separator_character">Separator</span>
+		<span class="input-group-text fw-bold text-uppercase col-2" for="xk_separator_character">Separator</span>
 		<select name="xk_separator_character" id="xk_separator_character" class="custom-select form-control" title="Separator">
-		    <option value="NONE" id="xk_separator_character.0" selected="selected">NONE</option>
-		    <option value="CHARACTER" id="xk_separator_character.1" selected="selected">CHARACTER</option>
-		    <option value="RANDOM" id="xk_separator_character.2">RANDOM</option>
+		    % $m = 0;
+		    % my $sc = ['NONE', 'CHAR', 'RANDOM'];
+		    % foreach (@$sc) {
+			<option value="<%= $_ %>" id="xk_separator_character.<%= $m %>"
+			    <%= $par->{xk_separator_character} eq $_ ? 'selected="selected"' : '' %>
+			    ><%= $_ %></option>
+			% $m++
+		    % }
+		    <!-- <option value="NONE" id="xk_separator_character.0">NONE</option>
+			 <option value="CHARACTER" id="xk_separator_character.1">CHARACTER</option>
+			 <option value="RANDOM" id="xk_separator_character.2">RANDOM</option> -->
 		</select>
-		<!-- SEPARATOR ALPHABETH -->
-                <input type="text" name="xk_separator_alphabet" id="xk_separator_alphabet"
-		       value="-+=.*_|~," class="text-center text-monospace font-weight-bold form-control"
-		       title="Separator Character Alphabet: !&quot;#$%&amp;'()*+,-./:;<=>?@[\]^_{|}~">
+		<!-- SEPARATOR CHARACTER -->
+                <input type="text" name="xk_separator_character_char" id="xk_separator_character_char"
+		       value="" class="text-center text-monospace form-control"
+		       aria-describedby="sepCharHelpBlock"
+		       title="Separator Character one of: !&quot;#$%&amp;'()*+,-./:;<=>?@[\]^_{|}~">
 		<small id="sepCharHelpBlock" class="form-text text-muted"></small>
+		<!-- SEPARATOR ALPHABETH -->
+                <input type="text" name="xk_separator_character_random" id="xk_separator_character_random"
+		       value="" class="text-center text-monospace form-control"
+		       title="Separator Character Alphabet: !&quot;#$%&amp;'()*+,-./:;<=>?@[\]^_{|}~">
 	    </div>
 	</div>
 	<!-- PADDING DIGITS -->
-	<div class="row form-group">
+	<div class="row form-group my-3">
 	    <div class="input-group">
-		<span class="input-group-text font-weight-bold" for="xk_padding_digits_before">Padding Digits</span>
+		<span class="input-group-text fw-bold text-uppercase col-2" for="xk_padding_digits_before">Padding Digits</span>
 		<select name="xk_padding_digits_before" id="xk_padding_digits_before" class="custom-select form-control"
 			title="Padding Digits From the Left">
                     % for my $i (0 .. 5) {
@@ -231,11 +245,11 @@ g .show-sep-char   .cond-input-sep:not(.on-sep-char)   { display: none; }
 	    </div>
 	</div>
 	
-	<div id="padd" class="target-container cpad">
+	<div id="padd" class="target-container cpad my-3">
 	    <div class="row form-group">
 		<!-- PADDING TYPE -->
 		<div class="input-group">
-                    <span class="input-group-text font-weight-bold" for="xk_padding_type">Padding Type</span>
+                    <span class="input-group-text fw-bold text-uppercase col-2" for="xk_padding_type">Padding Type</span>
                     <select name="xk_padding_type" id="xk_padding_type" class="custom-select form-control" title="Padding Type">
 			<option value="NONE" id="xk_padding_type.0">NONE</option>
 			<option value="FIXED" id="xk_padding_type.1">FIXED</option>
@@ -246,7 +260,7 @@ g .show-sep-char   .cond-input-sep:not(.on-sep-char)   { display: none; }
 		    <div class="row form-group cpad on-padd-fixed">
 			<!-- SYMBOLS LEFT / RIGHT -->
 			<div class="input-group cpad on-padd-fixed">
-			    <span class="input-group-text font-weight-bold"
+			    <span class="input-group-text fw-bold text-uppercase"
 				  for="xk_padding_characters_before">Symbols left/right</span>
 			    <select name="xk_padding_characters_before" id="xk_padding_characters_before"
 					  class="custom-select form-control"
@@ -265,26 +279,26 @@ g .show-sep-char   .cond-input-sep:not(.on-sep-char)   { display: none; }
 		    </div>
 		    <!-- TO LENGTH -->
 		    <div class="input-group cpad on-padd-adaptive">
-			<span class="input-group-text text-right font-weight-bold" for="xk_pad_to_length">To Length</span>
+			<span class="input-group-text text-right fw-bold" for="xk_pad_to_length">To Length</span>
 			<input type="text" name="xk_pad_to_length" id="xk_pad_to_length" size="3" maxlength="3" value=""
-			       class="text-center text-monospace font-weight-bold form-control" max="999" min="8"
+			       class="text-center text-monospace fw-bold form-control" max="999" min="8"
 			       title="Padding To Length">
 		    </div>
 		    <div class="row form-group cpad on-padd-fixed on-padd-adaptive">
 			<div id="padd-char" class="target-container cpch">
 			    <!-- PADDING CHARACTER -->
 			    <div class="input-group">
-				<span class="input-group-text text-right font-weight-bold" for="xk_padding_character">Padding Character</span>
+				<span class="input-group-text text-right fw-bold" for="xk_padding_character">Padding Character</span>
 				<select name="xk_padding_character" id="xk_padding_character" class="custom-select form-control" title="Separator">
 				    <option value="SEPARATOR" id="xk_padding_character.0" selected="selected">Separator Character</option>
 				    <option vlue="CHAR" id="xk_padding_character.1">Specified Character</option>
 				    <option value="RANDOM" id="xk_padding_character.2">Random Alphabet</option>
 				</select>
 				<input type="text" name="xk_padding_character_separator" id="xk_padding_character_separator"
-				       maxlength="1" value="" class="text-center text-monospace font-weight-bold form-control"
+				       maxlength="1" value="" class="text-center text-monospace fw-bold form-control"
 				       title="Padding Character">
 				<input type="text" name="xk_padding_character_random" id="xk_padding_character_random"
-				       value="" class="text-center text-monospace font-weight-bold input-sm form-control"
+				       value="" class="text-center text-monospace fw-bold input-sm form-control"
 				       title="Padding Character Alphabet: !&quot;#$%&amp;'()*+,-./:;<=>?@[\]^_{|}~">
 			    </div>
 			</div>
@@ -296,7 +310,7 @@ g .show-sep-char   .cond-input-sep:not(.on-sep-char)   { display: none; }
 
 	<div class="row">
             <div class="col-4"></div>
-            <input type="submit" name="aux_submit" id="aux_submit" value="Submit" class="btn btn-success col-4 my-5 mr-2 font-weight-bold text-uppercase">      <div class="col-4"></div>
+            <input type="submit" name="aux_submit" id="aux_submit" value="Submit" class="btn btn-success col-4 my-5 mr-2 fw-bold text-uppercase">      <div class="col-4"></div>
 	</div>
 	
     </div>

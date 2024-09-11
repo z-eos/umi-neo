@@ -12,8 +12,11 @@ has 'cfg' => sub { {} };
 sub startup ($self) {
 
     $self->_startup_config;
+    $self->secrets($self->cfg->{secrets});
     
     $self->plugin('Umi::Helpers');
+    $self->plugin('Umi::Helpers::Common');
+    $self->plugin('Umi::Helpers::SearchResult');
 
     # in this example, we have a class that is devoted to handling our
     # authentication calls.
@@ -79,7 +82,8 @@ sub _startup_session ($self) {
 
 sub _startup_config ($self) {
     $self->cfg($self->plugin('NotYAMLConfig'));
-
+    $self->plugin('StaticCache' => { even_in_dev => 1 });
+    
     # # variables to be taken remapped from the environment
     # if (defined(my $remaps = $config->{remap_env})) {
     #    for my $definition (split m{,}mxs, $remaps) {
@@ -131,10 +135,15 @@ sub _startup_routes ($self) {
     $protected_root->get('/')->to('protected#homepage')->name('protected_root');
     $protected_root->get('/other')->to('protected#other');
     $protected_root->get('/profile')->to('protected#profile');
-    $protected_root->post('/search/common')->to('protected#search_common');
+    $protected_root->get( '/search/common')->to('search#search_common');
+    $protected_root->post('/search/common')->to('search#search_common');
+    $protected_root->get( '/tool/ldif-export')->to('protected#ldif_export');
+    $protected_root->post('/tool/ldif-export')->to('protected#ldif_export');
     $protected_root->get( '/tool/ldif-import')->to('protected#ldif_import');
-    $protected_root->get( '/tool/ldif-import')->to('protected#ldif_import');
-    $protected_root->post('/tool/pwdgen')->to('protected#pwdgen');
+    $protected_root->post('/tool/ldif-import')->to('protected#ldif_import');
+    $protected_root->get( '/tool/modify')->to('protected#modify');
+    $protected_root->post('/tool/modify')->to('protected#modify');
+    $protected_root->get( '/tool/pwdgen')->to('protected#pwdgen');
     $protected_root->post('/tool/pwdgen')->to('protected#pwdgen');
     $protected_root->get( '/tool/qrcode')->to('protected#qrcode');
     $protected_root->post('/tool/qrcode')->to('protected#qrcode');

@@ -1,0 +1,343 @@
+%# -*- mode: web; eval: (follow-mode) -*-
+
+% $dn =~ s/,/, /g;
+
+%# data for menu is provided in menu template
+% my $menu = stash->{menu};
+
+% my $it = "delete";
+<div class="modal border-1" id="modal_<%= $it %><%= $i %>" tabindex="-1"
+     aria-labelledby="modal_<%= $it %><%= $i %>_label" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+	<div class="modal-content border border-<%= $menu->{$it}->{col} %> border-1">
+	    <div class="modal-header bg-<%= $menu->{$it}->{col} %> row m-0">
+		<h4 class="modal-title mb-3" id="modal_<%= $it %><%= $i %>_label">
+		    <i class="fa <%= $menu->{$it}->{ico} %> mr-3"></i> Object / hierarchy deletion</h4>
+		    <b class=""><%= $dn %></b>
+	    </div>
+	    <div class="modal-body">
+		<form role="form" method="POST" action="/searchby/<%= $it %>">
+		    <div class="form-check form-switch">
+			<input type="checkbox" class="form-check-input" role="switch"
+			       id="modal_<%= $it %>_switch<%= $i %>">
+			<label class="form-check-label" for="modal_<%= $it %>_switch<%= $i %>">
+			    recursive
+			</label>
+		    </div>
+		    <div class="modal-error mx-5"></div>
+		    <div class="btn-group float-end">
+			<button type="button" class="btn btn-sm btn-block btn-secondary umi-btn-event"
+			    data-bs-dismiss="modal">Close</button>
+			<button type="submit" class="btn btn-sm btn-block btn-<%= $menu->{$it}->{col} %> umi-btn-event umi-btn-ajax"
+				name="ldap_<%= $it %>" value="<%= $dn %>" data-bs-action="<%= $it %>">
+			    Yes, DELETE
+			</button>
+		    </div>
+		</form>
+	    </div>
+	</div>
+    </div>
+</div>
+
+% $it = "block";
+<div class="modal border-1" id="modal_<%= $it %><%= $i %>" tabindex="-1"
+     aria-labelledby="modal_block<%= $i %>_label" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+      <div class="modal-content border border-<%= $menu->{$it}->{col} %> border-1">
+	  <div class="modal-header bg-<%= $menu->{$it}->{col} %> row m-0">
+	      <h4 class="modal-title mb-3" id="modal_<%= $it %><%= $i %>_label">
+		  <i class="fa <%= $menu->{$it}->{ico} %> mr-3"></i>
+		  Block DN: <b><%= $dn %></b>
+	      </h4>
+	  </div>
+	  <form role="form" method="POST" class="formajaxer" action="/searchby/block">
+	      <div class="modal-footer">
+		  <div class="btn-group float-end">
+		      <button type="button" class="btn btn-sm btn-block btn-secondary umi-btn-event" data-bs-dismiss="modal">Close</button>
+		      <button type="submit" class="btn btn-sm btn-block btn-<%= $menu->{$it}->{col} %> umi-btn-event umi-btn-ajax"
+			      name="user_block" value="<%= $dn %>" data-bs-action="<%= $it %>">
+			  Yes, BLOCK
+		      </button>
+		  </div>
+	      </div>
+	      <div class="modal-error mx-5"></div>
+	  </form>
+      </div>
+  </div>
+</div>
+
+% $it = "reassign";
+<div class="modal border-1" id="modal_<%= $it %><%= $i %>" tabindex="-1"
+     aria-labelledby="modal_<%= $it %><%= $i %>_label" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+      <div class="modal-content border border-<%= $menu->{$it}->{col} %> border-1">
+	  <div class="modal-header bg-<%= $menu->{$it}->{col} %> row m-0">
+	  <h4 class="modal-title mb-3" id="modal_<%= $it %><%= $i %>_label">
+	      <i class="fa fa-<%= $menu->{$it}->{ico} %> mr-3"></i>
+	    Change root DN: <b><%= $dn %></b>
+	  </h4>
+	</div>
+      <form role="form" method="POST" action="/searchby/<%= $it %>" class="formajaxer">
+	<div class="modal-body clearfix form-group">
+	  <label for="dn_to_<%= $it %>_to" class="col-xs-2 text-right control-label">
+	    <abbr title="DN or just UID
+
+SERVICES:
+user root account DN user ID (here UID is &laquo;abc&raquo; while user root account DN is &laquo;uid=abc,ou=bla,dc=foo&raquo;) this object will be <%= $it %>ed to
+
+INVENTORY:
+above is applicable too and all is done under &laquo;ou=Composite,ou=hw,ou=Inventory,dc=umidb&raquo;
+">
+	      object ID, to <%= $it %> to:
+	    </abbr>
+	  </label>
+	  <div class="col-xs-10">
+	    <input type="text" class="input-sm form-control" id="dst_uid" name="dst_uid"
+		   placeholder="DN or UID of the recipient"
+		   title="&#xf071; DN or just UID
+
+&#xf085; SERVICES:
+user root account DN user ID (here UID is &laquo;abc&raquo; while user root account DN is &laquo;uid=abc,ou=bla,dc=foo&raquo;) this object will be <%= $it %>ed to
+
+&#xf02c; INVENTORY:
+above is applicable too and all is done under &laquo;ou=Composite,ou=hw,ou=Inventory,dc=umidb&raquo;
+">
+	  </div>
+	</div>
+	<div class="modal-footer">
+	    <div class="btn-group float-end">
+	    <button type="button" class="btn btn-sm btn-block btn-secondary umi-btn-event" data-bs-dismiss="modal">Close</button>
+	    <button type="submit" class="btn btn-sm btn-block bg-<%= $menu->{$it}->{col} %> umi-btn-event umi-btn-ajax"
+		    name="src_dn" value="<%= $dn %>" data-bs-action="<%= $it %>" >
+	      Yes, REASSIGN
+	    </button>
+	  </div>
+	</div>
+	<div class="modal-error mx-5"></div>
+      </form>
+      </div>
+  </div>
+</div>
+
+% $it = "moddn";
+<div class="modal border-1" id="modal_<%= $it %><%= $i %>" tabindex="-1"
+     aria-labelledby="modal_<%= $it %><%= $i %>_label" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+      <div class="modal-content border border-<%= $menu->{$it}->{col} %> border-1">
+	  <div class="modal-header bg-<%= $menu->{$it}->{col} %> row m-0">
+	  <h4 class="modal-title mb-3" id="modal_<%= $it %><%= $i %>_label">
+	      <i class="fa <%= $menu->{$it}->{ico} %> mr-3"></i>
+	    Modify DN:<br><b><%= $dn %></b>
+	  </h4>
+	</div>
+      <form role="form" method="POST" action="/searchby/<%= $it %>" class="formajaxer">
+	<div class="modal-body clearfix form-group">
+	  <label for="newrdn" class="col-xs-2 text-right control-label">
+	    <abbr title="This value should be a new RDN to assign to DN">
+	      newrdn:
+	    </abbr>
+	  </label>
+	  <div class="col-xs-10">
+	    <input type="text" class="input-sm form-control required" id="newrdn" name="newrdn"
+		   placeholder="uid=jhon.d"
+		   title="newrdn">
+	  </div>
+	  <label for="newsuperior" class="col-xs-2 text-right control-label">
+	    <abbr title="If given this value should be the DN of the new superior for  DN">
+	      newsuperior:
+	    </abbr>
+	  </label>
+	  <div class="col-xs-10">
+	    <input type="text" class="input-sm form-control" id="newsuperior" name="newsuperior"
+		   placeholder="authorizedService=ovpn@borg.startrek.in,uid=naf.nafus,ou=People,dc=umidb"
+		   title="newsuperior (need to be existent, will not be created)">
+	  </div>
+	</div>
+	<div class="modal-footer">
+	  <div>
+	    <button type="button" class="btn btn-secondary umi-btn-event" data-bs-dismiss="modal">Close</button>
+	    <button type="submit" class="btn bg-danger text-white umi-btn-event umi-btn-ajax"
+		    name="src_dn"
+		    value="<%= $dn %>" data-bs-action="refresh" >
+	      Yes, modify DN
+	    </button>
+	  </div>
+	</div>
+	<div class="modal-error mx-5"></div>
+      </form>
+      </div>
+  </div>
+</div>
+
+% $it = "ldif";
+<div class="modal border-1" id="modal_<%= $it %><%= $i %>" tabindex="-1"
+     aria-labelledby="modal_<%= $it %><%= $i %>_label" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+	<div class="modal-content border border-<%= $menu->{$it}->{col} %> border-1">
+	    <div class="modal-header bg-<%= $menu->{$it}->{col} %> row m-0">
+		<h4 class="modal-title mb-3" id="modal_<%= $it %><%= $i %>_label">
+		    <i class="fa <%= $menu->{$it}->{ico} %> mr-3"></i>
+		    LDIF of DN: <b><%= $dn %></b>
+		</h4>
+	    </div>
+	    <div class="modal-body">
+		<form role="form" method="POST" class="formajaxer" action="/tool/ldif-export">
+		    <div class="input-group mb-3">
+			<span class="input-group-text" id="ldap_<%= $it %><%= $i %>_label">Scope</span>
+			<select class="input-sm form-control custom-select"
+				name="scope" aria-label="Scope"
+				aria-describedby="ldap_<%= $it %><%= $i %>_label">
+			    <option value="sub">sub</option>
+			    <option value="children">children</option>
+			    <option value="one">one</option>
+			    <option value="base" selected="selected">base</option>
+			</select>
+		    </div>
+		    <div class="form-group">
+			<div class="custom-control custom-switch">
+			    <input type="checkbox"
+				   class="custom-control-input"
+				   name="sysinfo"
+				   id="modal_<%= $it %>_sysinfo_switch<%= $i %>">
+			    <label class="form-check-label"
+				   for="modal_<%= $it %>_sysinfo_switch<%= $i %>">
+				include system info
+			    </label>
+			</div>
+		    </div>
+		    <div class="btn-group float-end pr-3">
+			<button type="button" class="btn btn-secondary umi-btn-event" data-bs-dismiss="modal">Close</button>
+			<button type="submit" name="dn" value="<%= $dn %>"
+				onClick="$(modal_<%= $it %><%= $i %>).modal('hide')"
+				class="btn bg-<%= $menu->{$it}->{col} %> umi-btn-event umi-btn-logic">
+			    Get LDIF
+			</button>
+		    </div>
+		</form>
+	    </div>
+	</div>
+    </div>
+</div>
+
+<div class="modal" id="modal_vcard<%= $i %>"
+     tabindex="-1" role="dialog" aria-labelledby="modal_vcard<%= $i %>_label"
+     aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header bg-info">
+	<h4 class="modal-title text-white" id="modal_vcard<%= $i %>_label">
+	  <span class="fa fa-files-o fa-lg"></span>
+	  vCard of DN:<b><%= $dn %></b>
+	</h4>
+      </div>
+      <form role="form" method="POST" class="formajaxer">
+	<div class="modal-body">
+	  vCard file contains user image/s if any, while QR code not.<br><br>
+
+	  <div class="radio">
+	    <span class="fa fa-battery-quarter fa-lg col-xs-1 text-right"></span>
+	    <label>
+	      <input type="radio" name="vcard_type" id="ldap_vcard1" value="qr_max" checked>
+	      minimal info vCard (name, email/s, IM id/s and telephone number/s)
+	    </label>
+	  </div>
+	  
+	  <div class="radio">
+	    <span class="fa fa-battery-full fa-lg col-xs-1 text-right"></span>
+	    <label>
+	      <input type="radio" name="vcard_type" id="ldap_vcard2" value="qr_max" disabled>
+	      full info vCard
+	    </label>
+	  </div>
+	  
+	  <div class="custom-control custom-switch">
+	    <input type="checkbox"
+		   class="custom-control-input"
+		   name="vcard_translit"
+		   id="vcard_translit_switch<%= $i %>">
+	      <label class="custom-control-label"
+		     for="vcard_translit_switch<%= $i %>">
+		to translit all to latin1
+	      </label>
+	  </div>
+	</div>
+	<div class="modal-footer">
+	  <button type="button" class="btn btn-secondary umi-btn-event" data-bs-dismiss="modal">Close</button>
+	  <button type="submit"
+		  onClick="$(modal_vcard<%= $i %>).modal('hide')"
+		  class="btn bg-info text-white umi-btn-event umi-btn-logic"
+		  data-bs-umiact="/searchby/vcard_gen"
+		  name="vcard_dn"
+		  value="<%= $dn %>">
+	    Yes, to get vCard
+	  </button>
+	</div>
+      <div class="modal-footer"></div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="modal_refresh<%= $i %>"
+     tabindex="-1" role="dialog" aria-labelledby="modal_refresh<%= $i %>_label"
+     aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header bg-info">
+	<h4 class="modal-title text-white" id="modal_refresh<%= $i %>_label">
+	  <span class="fa fa-clock"></span>
+	  You are about to refresh TTL for:<b><%= $dn %></b>
+	</h4>
+      </div>
+      <form role="form" method="POST" action="/searchby/refresh" class="formajaxer">
+	<div class="modal-body clearfix form-group text-primary text-center">
+	  
+	  <blockquote>
+	    <p>
+	      ... the lifetime of dynamic objects with subordinates is
+	      prolonged <b>until all the dynamic subordinates expire</b>.
+	    </p>
+	    <footer>slapo-dds(5)</footer>
+	  </blockquote>
+	  
+	  <div class="form-group row">
+	    <label class="col-3 text-right font-weight-bold control-label atleastone"
+		   title="Object Expiration">
+	      Exp.
+	    </label>
+	    <div class="col-9">
+	      <div class="input-group date"
+		   id="modal_refresh_dtp<%= $i %>"
+		   data-bs-target-input="nearest">
+		<input name="requestTtl" type="text"
+		       title="Refresh TTL of this object (extended LDAPv3 operation as described in RFC2589)"
+		       class="form-control datetimepicker-input"
+		       data-bs-target="#modal_refresh_dtp<%= $i %>"/>
+		<div class="input-group-append"
+		     data-bs-target="#modal_refresh_dtp<%= $i %>"
+		     data-bs-toggle="datetimepicker">
+		  <div class="input-group-text"><i class="far fa-calendar-alt"></i></div>
+		</div>
+	      </div>
+	    </div>
+	  </div>
+
+	</div>  
+	<div class="modal-footer">
+	  <div>
+	    <button type="button" class="btn btn-secondary umi-btn-event" data-bs-dismiss="modal">Close</button>
+	    <button type="submit" class="btn bg-info umi-btn-event umi-btn-ajax"
+		    onClick="$(modal_refresh<%= $i %>).modal('hide')"
+		    name="dn_to_refresh"
+		    value="<%= $dn %>" data-bs-action="refresh" >
+	      Yes, I really want to set it and yes, I understand all consequences!
+	    </button>
+	  </div>
+	</div>
+      </form>
+<script type="text/javascript">
+ initDateTimePicker('#modal_refresh_dtp<%= $i %>');
+</script>
+    </div>
+  </div>
+</div>
