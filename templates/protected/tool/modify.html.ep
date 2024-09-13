@@ -19,7 +19,7 @@
 % my $i = 0;
 % my $id = '';
 <form method="POST" id="modify-tt-form" enctype="multipart/form-data" class="form-horizontal" action="/tool/modify">
-    <input type="hidden" name="dn" id="dn" value="<%= $entry->dn %>">
+    <input type="hidden" name="dn_to_modify" id="dn_to_modify" value="<%= $entry->dn %>">
     %# start: unused attributes of existent objectClass-es in the object
     <div class="form-group row mb-2">
         <label class="col-sm-3 text-end h6 fw-bold text-success text-uppercase">Unused Attributes:</label>
@@ -39,7 +39,7 @@
 		<div class="input-group input-group-sm">
 		    <span class="input-group-btn">
 			<button class="btn btn-secondary btn-sm btn-erase border" type="button" title="erase field value"
-				id="<%= $_ %>">
+				       id="<%= $_ %>">
 			    <i class="fa-regular fa-fw fa-trash-can"></i>
 			</button>
 		    </span>
@@ -54,95 +54,90 @@
 	</div>
     % }
     %# stop: unused attributes of existent objectClass-es in the object
-    
+
     % foreach my $a (sort($entry->attributes)) {
-    <div class="form-group row mb-2" title="title">
-	<label class="col-sm-3 text-end text-truncate h6 fw-bold"><%= $a %>:</label>
-	<div class="col-sm-9 controls">
-	    <div class="" title="">
-		% foreach my $v ($entry->get_value($a, asref => 1)) {
-		    % foreach (sort(@$v)) {
-			% $id = $a . '_' . $i;
-			<div class="input-group input-group-sm entry">
-			    % if ( $a =~ /^.*ertificat.*;binary/ ) {
-				<input type="file" class="form-control form-control-sm" name="<%= $a %>" id="<%= $id %>" accept=".der">
-			    % } elsif ( $a eq 'jpegPhoto' ) {
-			        <img src="data:image/jpg;base64,<%= Mojo::Util::b64_encode $_ %>" class="img-thumbnail" alt="<%= $entry->dn %>">
-		            % } else {
-				% if ( ! exists $aa->{$a}->{"single"} && (scalar @$v == 1 || scalar @$v == $i + 1)) {
-			            <span class="input-group-btn">
-			        	<button
-					    % if ( $a eq 'objectClass' ) {
-						class="btn btn-secondary btn-sm border"
-						data-bs-toggle="modal" data-bs-target="#modal-objectClass"
-					    % } else {
-						class="btn btn-secondary btn-sm btn-add element-add"
-					    % }
-			        	    id="<%= $id %>"
-			        	    type="button" title="click to add another <%= $a %> field value">
-			        	    <i class="fa-solid fa-fw <%= $a eq 'objectClass' ? 'fa-circle-plus' : 'fa-clone' %>"></i>
-			        	</button>
-			            </span>
-				% } else {				
-				    <span class="input-group-btn">
-					<button class="btn btn-secondary btn-sm btn-erase" type="button"
-						title="erase field value" id="<%= $id %>">
-					    <i class="fa-regular fa-fw fa-trash-can"></i>
-					</button>
-				    </span>
-				% }
-				% if ( $a eq 'grayPublicKey' ) {
-				    <textarea name="<%= $a %>" id="<%= $id %>"
-					      class="form-control" rows=5><%= $_ %></textarea>
-				% } else {
-		                    <input type="text" value="<%= $_ %>" name="<%= $a %>"
-					   id="val_<%= $id %>" class="form-control" title="">
-				% }
-		    % }
-			</div>
-			% $i++;
+	<div class="form-group row mb-2" title="title">
+	    <label class="col-sm-3 text-end text-truncate h6 fw-bold"><%= $a %>:</label>
+	    <div class="col-sm-9 controls">
+		<div class="" title="">
+		    % foreach my $v ($entry->get_value($a, asref => 1)) {
+			% foreach (sort(@$v)) {
+			    % $id = $a . '_' . $i;
+			    <div class="input-group input-group-sm entry">
+				% if ( $a =~ /^.*ertificat.*;binary/ ) {
+				    <input type="file" class="form-control form-control-sm" name="<%= $a %>" id="<%= $id %>" accept=".der">
+				% } elsif ( $a eq 'jpegPhoto' ) {
+			        <img src="data:image/jpg;base64,<%= Mojo::Util::b64_encode $_ %>"
+				     class="img-thumbnail" alt="<%= $entry->dn %>">
+		                % } else {
+				    % if ( ! exists $aa->{$a}->{"single"} && (scalar @$v == 1 || scalar @$v == $i + 1)) {
+			                <span class="input-group-btn">
+			            	    <button
+				    		% if ( $a eq 'objectClass' ) {
+				    		    class="btn btn-secondary btn-sm border"
+				    		    data-bs-toggle="modal" data-bs-target="#modal-objectClass"
+				    		% } else {
+				    		    class="btn btn-secondary btn-sm btn-add element-add"
+				    		% }
+			            		id="<%= $id %>" type="button" title="click to add another <%= $a %> field value">
+			            		<i class="fa-solid fa-fw <%= $a eq 'objectClass' ? 'fa-circle-plus' : 'fa-clone' %>"></i>
+			            	    </button>
+			                </span>
+				    % } else {
+				        <span class="input-group-btn">
+				    	<button class="btn btn-secondary btn-sm btn-erase" type="button"
+				    		       title="erase field value" id="<%= $id %>">
+				    	    <i class="fa-regular fa-fw fa-trash-can"></i>
+				    	</button>
+				        </span>
+				    % }
+				    % if ( $a eq 'grayPublicKey' ) {
+				        <textarea name="<%= $a %>" id="<%= $id %>" class="form-control" rows=5><%= $_ %></textarea>
+				    % } else {
+		                        <input type="text" value="<%= $_ %>" name="<%= $a %>" id="val_<%= $id %>" class="form-control" title="">
+				    % }
+			        % }
+			    </div>
+			    % $i++;
+                        % }
+		        % $i = 0;
                 % }
-		% $i = 0;
-    % }
+		</div>
 	    </div>
 	</div>
-    </div>
     % }
     <input type="submit" value="Submit" class="btn btn-success btn-block float-end fw-bold text-uppercase mt-3">
-
 </form>
 
 % my $moc;
 % my %at = map { $_ => 1 } $entry->attributes;
 % my $eoc = $entry->get_value('objectClass', asref => 1);
 % while (my ($k, $v) = each %$oc) {
-    % next if $v->{structural} == 1 ||
+    % next if (exists $v->{structural} && $v->{structural} == 1) ||
     %         $k =~ /^olc|^top|^subschema/ ||
-    %         grep {$c->log->debug($k.' <---> '.$_); $k eq $_ } @$eoc;
-    % $moc->{$k} = [ @{$v->{must} // []}, @{$v->{may} // []} ];
+    %         grep { $k eq $_ } @$eoc;
+    %# $moc->{$k} = [ @{$v->{must} // []}, @{$v->{may} // []} ];
+    % $moc->{$k} = $v->{must} if exists $v->{must};
     % @{$moc->{$k}} = grep {!$at{$_}} @{$moc->{$k}};
 % }
 % my $jsn = j( $moc );
 % my @options = map { '<option value="' . $_ . '">' . $_ . '</option>' } sort(keys(%$moc));
 
-<div class="modal" id="modal-objectClass">
-    <div class="modal-dialog border border-success">
-	<div class="modal-content border-0">
+<div class="modal" tabindex="-1" id="modal-objectClass">
+    <div class="modal-dialog modal-xl">
+	<div class="modal-content border border-success">
 	    <div class="modal-header bg-success">
-		<h4 id="modal-area-is-accounts" class="modal-title">
-		    <i class="fa-solid fa-shapes"></i> Add objectClass</h4>
+		<h4 class="modal-title"><i class="fa-solid fa-shapes"></i> Add objectClass</h4>
 	    </div>
 	    <div class="modal-body">
-		<form method="POST"
-		      id="modify-tt-form"
-		      enctype="multipart/form-data"
+		<form method="POST" id="modify-modal-form" enctype="multipart/form-data"
 		      class="form-horizontal formajaxer pt-3"
-		      action="/searchby/modify">
-		    <input type="hidden" name="dn" id="dn" value="<%= $entry->dn %>">
+		      action="/tool/modify">
+		    <input type="hidden" name="dn_to_modify" id="dn_to_modify" value="<%= $entry->dn %>">
 		    <div class="form-group row">
 			<label class="col-sm-3 text-end h6">objectClass:</label>
 			<div class="col-sm-9">
-			    <select class="form-select form-select-sm"
+			    <select class="form-select form-select-sm mb-2"
 				    name="add_objectClass" id="add_objectClass">
 				<option value=""> --- Choose An objectClass ---</option>
 				<%== join('', @options) %> <%# `==` prevents escaping %>
@@ -159,8 +154,8 @@
 			 var html = '';
 			 if ( selectedAttrs ) {
 			     html = selectedAttrs.map( function(attr){
-				 return '<div class="form-group row mb-2">'+
-					'<label class="col-sm-3 text-end text-truncate h6 fw-bold" title="'+attr+'">'+
+				 return '<div class="form-group row my-1">'+
+					'<label class="col-sm-3 text-end text-truncate h6 fs-6" title="'+attr+'">'+
 					attr+':</label>'+
 					'<div class="col-sm-9">'+
 					'<input type="text" name="add_'+attr+'" class="form-control input-sm">'+
@@ -170,13 +165,13 @@
 			 $('#objectClass-must').html(html);
 		     });
 		    </script>
-		    <div class=" text-end mt-2">
+		    <div class=" text-end mt-3">
 			<div class="btn-group">
 			    <button type="button" class="btn btn-sm btn-secondary umi-btn-event fw-bold text-uppercase"
 				    data-bs-dismiss="modal">Cancel
 			    </button>
 			    <button type="submit" onClick="$('#modal-objectClass').modal('hide')"
-				    class="btn btn-sm btn-success btn-block font-weight-bold text-uppercase umi-btn-event umi-btn-logic"
+				    class="btn btn-sm btn-success btn-block fw-bold text-uppercase umi-btn-event umi-btn-logic"
 				    data-umiact="/searchby/modify" name="" value="">
 				Add
 			    </button>

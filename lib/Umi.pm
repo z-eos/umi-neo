@@ -1,4 +1,4 @@
-# -*- mode: perl; eval(follow-mode); -*-
+# -*- mode: cperl; eval(follow-mode); -*-
 #
 
 package Umi;

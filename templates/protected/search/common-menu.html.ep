@@ -36,8 +36,7 @@
 		    </button>
 		% } else {
 		    <form role="form" method="POST" class="" action="<%= $menu->{$item}->{act} %>">
-			<input type="hidden" name="dn" value="<%= $dn %>">
-			<input type="hidden" name="dynamic_object" value="0">
+			<input type="hidden" name="dn_to_<%= $item %>" value="<%= $dn %>">
 			<button type="submit" title="" class="btn btn-sm" data-order="20">
 			    <i class="fa-solid fa-fw <%= $menu->{$item}->{ico} %> text-<%= $menu->{$item}->{col} %>"></i>
 			    <%= $item %>
