@@ -1,11 +1,10 @@
-[% # -*- mode: html; mode: follow -*- %]
+<% # -*- mode: html; mode: follow -*- %>
 
 <aside id="aside" class="collapse">
   <nav id="sidebar-right"
        class="text-light float-right [% c.session.settings.ui.aside == 0 ? 'folded' : '' %]"
        data-url-tree="/ldap_tree">
     <ul class="nav nav-pills nav-fill" role="tablist">
-      [% IF c.check_any_user_role('admin','coadmin') %]
       <li class="nav-item" title="LDAP tree">
 	<a class="nav-link text-white-50 active" data-bs-toggle="tab" href="#ldap-tree-tab" role="tab">
 	  <i class="fas fa-project-diagram"></i>
@@ -25,7 +24,6 @@
 	  <i class="fas fa-network-wired"></i>
 	</a>
       </li>
-      [% END %]
       
       <li class="nav-item" title="statistics">
 	<a class="nav-link text-white-50" data-bs-toggle="tab" href="#statistics" role="tab">
@@ -61,7 +59,6 @@
       </div>
       -->
 
-      [% IF c.check_any_user_role('admin','coadmin') %]
       <!-- === LDAP tree (neo) ===  -->
       <div class="tab-pane p-3 active" id="ldap-tree-tab" role="tabpanel">
 	<div class="callout m-0 py-2 text-white-50 text-center text-uppercase">
@@ -290,7 +287,6 @@
 	</div>
       </div>
       
-      [% END %]
       
       
       <!-- === STATISTICS ===  -->

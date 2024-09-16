@@ -1,0 +1,12 @@
+%= t h1 => 'User profile (authenticated)'
+
+%# if (defined(my $dump = flash('dump'))) {
+<pre>
+<%= b( $dump ); %>
+</pre>
+
+<pre>
+%= dumper { hash => $hash }
+</pre>
+
+%# }

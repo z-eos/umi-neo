@@ -1,0 +1,101 @@
+%# -*- mode: web; eval: (follow-mode) -*-
+% my $i = 0;
+% my $j = 0;
+% my $attr_val_class = "";
+
+<div class="row w-100 py-5">
+    <div class="col-xs-6 col-sm-6 col-md-3 col-lg-3">
+	<h3 class="fw-bold">
+	    <i class="fa-solid fa-search fa-lg text-muted"></i>
+	    Search Results
+	    <sup>
+		<abbr title="not all objects could be found via predefined search items, to search for all objects use advanced search menu item" class="initialism">
+		    <i class="fa fa-info-circle text-info"></i>
+		</abbr>
+	    </sup>
+	</h3>
+    </div>
+    <div class="col-xs-6 col-sm-6 col-md-9 col-lg-9">
+	<dl class="row font-monospace text-muted umi-text-xs">
+	    <dt class="col-1">base:</dt>  <dd class="col-11 text-break"><%= $search_arg->{base}   %></dd>
+	    <dt class="col-1">filter:</dt><dd class="col-11 text-break"><%= $search_arg->{filter} %></dd>
+	</dl>
+    </div>
+</div>
+
+%# vh-100 is important, without it dropwown are not shown for collapsed rows
+<div class="container-fluid vh-100">
+    % my ($col, $cn, $ct, $mn, $mt);
+    % for my $dn (reverse(keys(%$searchres))) {
+	% $col = h_dn_color($dn);
+	<div class="card border-<%= $col %>" id="card-<%= $i %>">
+
+	    <div class="card-header bg-<%= $col %> p-0 m-0 fs-6">
+		<div class="btn-group z-10" role="group">
+		    <button class="btn" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-<%= $i %>"
+			    aria-expanded="false" aria-controls="collapse-<%= $i %>">
+			<i class="fa-solid fa-caret-right"></i>
+		    </button>
+		    %= include 'protected/search/common-menu', dn => $dn, i => $i
+		    %= form_for '/search/common' => (method => 'POST') => begin
+			%= hidden_field 'ldap_subtree' => "$dn"
+			%= submit_button "DN", class => 'btn'
+		    % end
+		    %= form_for '/search/common' => (method => 'POST') => begin
+			%= hidden_field 'ldap_subtree' => "$dn"
+			%= t 'button' , type => 'submit', class => 'btn fw-bold', h_rewrite_dn($dn)
+		    % end
+		</div>
+		% $ct = substr($searchres->{$dn}->{createtimestamp}->[0], 0, -1);
+		% $cn = substr($searchres->{$dn}->{creatorsname}->[0], 4, index($searchres->{$dn}->{creatorsname}->[0], ",")-4);
+		% $mt = substr($searchres->{$dn}->{modifytimestamp}->[0], 0, -1);
+		% $mn = substr($searchres->{$dn}->{modifiersname}->[0], 4, index($searchres->{$dn}->{modifiersname}->[0], ",")-4);
+		<dl class="row umi-text-tiny font-monospace float-end m-0 pe-2 pt-1">
+		    <dt class="col-sm-4 m-0 p-0" title="created GMT: <%= $ct %> by <%= $cn %>"></dt><dd class="col-sm-8 m-0 p-0"><i class="fa-solid fa-hourglass-start"></i> <%= $ct %> <b><%= $cn %></b></li></dd>
+		    <dt class="col-sm-4 m-0 p-0" title="modified, GMT: <%= $mt %> by <%= $mn %>"></dt><dd class="col-sm-8 m-0 p-0"><i class="fa-solid fa-hourglass-half"></i> <%= $mt %> <b><%= $mn %></b></li></dd>
+		</dl>
+		
+	    </div>
+
+	    <div class="collapse" id="collapse-<%= $i %>">
+		<div class="card card-body">
+
+		    <div class="row">
+			<div class="col-3 text-end fw-bold fs-6">dn</div>
+			<div class="col-9"><%= $dn %></div>
+		    </div>
+		    
+		    % for my $attr (sort(keys( %{$searchres->{$dn}} ))) {
+
+			<div class="row">
+			    <div class="col-3 text-end fw-bold fs-6"><%= $attr %></div>
+			    <div class="col-9">
+
+				<div class="row">
+				    % for my $attr_val (sort(@{$searchres->{$dn}->{$attr}})) {
+					% if ($attr eq "jpegphoto") {
+					    <div class="col-12 font-monospace">
+						<img src="data:image/jpg;base64,<%= Mojo::Util::b64_encode $attr_val %>"
+						     class="img-thumbnail" alt="<%= $dn %>">
+					    </div>	      
+					% } else {
+					    <div class="col-12 font-monospace pb-1"><%= $attr_val; %></div>
+					% }
+					% $j++
+				    % }
+				</div>
+
+			    </div>
+			</div>
+
+		    % }
+
+		</div>
+	    </div>
+
+	</div>
+	%= include 'protected/search/common-modals', dn => $dn, i => $i
+
+	% $i++
+    % }
+</div>

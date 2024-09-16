@@ -1,6 +1,11 @@
-[% # -*- mode: web; -*- %]
+<% # -*- mode: web; -*- %>
 
-[% IF c.check_any_user_role ('admin', 'coadmin', 'operator') %]
+% my $account = $c->current_user;
+
+<!-- sidebar start -->
+
+<% if ($account) { %>
+<% # %>[% IF c.check_any_user_role ('admin', 'coadmin', 'operator') %] %>
 <div class="modal modal-warning" id="modal-is-accounts"
      role="dialog" aria-labelledby="modal-area-is-accounts">
   <div class="modal-dialog modal-sm border border-warning" role="document">
@@ -15,7 +20,7 @@
 	This will select info of all accounts, in one single,huge,big,fat and heavy table.
       </div>
       <div class="modal-footer" id="sidebar-modal-1">
-	<button type="button" class="btn btn-secondary border-0" data-dismiss="modal">Cancel</button>
+	<button type="button" class="btn btn-secondary border-0" data-bs-dismiss="modal">Cancel</button>
 	<a href="/stat_acc" class="btn btn-secondary border-0 bg-warning text-uppercase">
 	  Yes
 	</a>
@@ -24,73 +29,69 @@
   </div>
 </div>
 
-[% END %]
-
+<% #  %>[% END %] %>
+<% } %>
 
 <nav id="sidebar-left" class="collapse [% c.session.settings.ui.sidebar == 0 ? 'folded' : '' %]">
 
     <ul id="sidebar-left-menu" class="nav flex-column">
 
-      [% IF c.check_any_user_role ('admin', 'coadmin', 'operator') %]
-      <li class="nav-item">
-	<a href="#submenuAnalyze"
-	   data-toggle="collapse"
-	   aria-expanded="false"
-	   aria-controls="submenuAnalyze"
-	   class="nav-link text-white-50 umi-text-truncate-noelipsis">
-	  <i class="fas fa-lg fa-fw fa-flask"></i>
-	  <div class="sidebar-left-item d-inline-flex">
-	    <b class="text-uppercase">Analyze</b>
-	  </div>
-	</a>
-	<ul class="nav flex-column collapse ml-4 p-0" id="submenuAnalyze">
-          <li class="nav-item">
-	    <a class="text-light nav-link" href="#modal-is-accounts" data-toggle="modal">
-	      <i class="fas fa-id-card"></i>
-	      Accounts
-	    </a>
-	  </li>
-          <li class="nav-item">
-	    <a class="text-light nav-link" href="/abstrstataccgroups"
-	       tabindex="2"
-	       title="Acc &harr; Group">
-	      <i class="fas fa-users"></i>
-	      Usr<i class="fas fa-arrows-alt-h m-0 mx-1"></i>Grp
-	    </a>
-	  </li>
-          <li class="nav-item">
-	    <a class="text-light nav-link" href="/servermta"
-	       tabindex="2"
-	       title="All MTAs info in one single table">
-	      <i class="fas fa-mail-bulk"></i>
-	      MTA
-	    </a>
-	  </li>
-	  [% IF c.session.settings.sidebar.mikrotik %]
-          <li class="nav-item">
-	    <a class="text-light nav-link" href="/mikrotik"
-	       tabindex="2"
-	       title="CAPsMAN registrations">
-	      <i class="fas fa-broadcast-tower"></i>
-	      CAPs reg
-	    </a>
-	  </li>
-          <li class="nav-item">
-	    <a class="text-light nav-link" href="/mikrotikpsk"
-	       tabindex="2"
-	       title="all corp SSID-s PSK-s">
-	      <i class="fas fa-wifi"></i>
-	      CAPs PSK
-	    </a>
-	  </li>
-	  [% END %]
-	</ul>
-      </li>
-      [% END %]
+	<!-- <li class="nav-item">
+	     <a href="#submenuAnalyze"
+	     data-bs-toggle="collapse"
+	     aria-expanded="false"
+	     aria-controls="submenuAnalyze"
+	     class="nav-link text-white-50 umi-text-truncate-noelipsis">
+	     <i class="fas fa-lg fa-fw fa-flask"></i>
+	     <div class="sidebar-left-item d-inline-flex">
+	     <b class="text-uppercase">Analyze</b>
+	     </div>
+	     </a>
+	     <ul class="nav flex-column collapse ml-4 p-0" id="submenuAnalyze">
+             <li class="nav-item">
+	     <a class="text-light nav-link" href="#modal-is-accounts" data-bs-toggle="modal">
+	     <i class="fas fa-id-card"></i>
+	     Accounts
+	     </a>
+	     </li>
+             <li class="nav-item">
+	     <a class="text-light nav-link" href="/abstrstataccgroups"
+	     tabindex="2"
+	     title="Acc &harr; Group">
+	     <i class="fas fa-users"></i>
+	     Usr<i class="fas fa-arrows-alt-h m-0 mx-1"></i>Grp
+	     </a>
+	     </li>
+             <li class="nav-item">
+	     <a class="text-light nav-link" href="/servermta"
+	     tabindex="2"
+	     title="All MTAs info in one single table">
+	     <i class="fas fa-mail-bulk"></i>
+	     MTA
+	     </a>
+	     </li>
+             <li class="nav-item">
+	     <a class="text-light nav-link" href="/mikrotik"
+	     tabindex="2"
+	     title="CAPsMAN registrations">
+	     <i class="fas fa-broadcast-tower"></i>
+	     CAPs reg
+	     </a>
+	     </li>
+             <li class="nav-item">
+	     <a class="text-light nav-link" href="/mikrotikpsk"
+	     tabindex="2"
+	     title="all corp SSID-s PSK-s">
+	     <i class="fas fa-wifi"></i>
+	     CAPs PSK
+	     </a>
+	     </li>
+	     </ul>
+	     </li> -->
       
       <li class="nav-item">
 	<a href="#submenuTools"
-	   data-toggle="collapse"
+	   data-bs-toggle="collapse"
 	   aria-expanded="false"
 	   class="nav-link text-white-50 umi-text-truncate-noelipsis">
 	  <i class="fas fa-lg fa-fw fa-toolbox"></i>
@@ -100,42 +101,41 @@
 	</a>
 	<ul class="nav flex-column collapse ml-4 p-0" id="submenuTools">
           <li class="nav-item">
-	    <a class="text-light nav-link" href="/onboarding">
+	    <a class="text-light nav-link disabled" href="/onboarding">
 	      <i class="fas fa-fw fa-baby"></i>
 	      Onboarding
 	    </a>
 	  </li>
           <li class="nav-item">
-	    <a class="text-light nav-link" href="/toolpwdgen">
+	    <a class="text-light nav-link" href="/tool/pwdgen">
 	      <i class="fas fa-fw fa-fingerprint"></i>
 	      Pwdgen
 	    </a>
 	  </li>
           <li class="nav-item">
-	    <a class="text-light nav-link" href="/toolsshkeygen">
+	    <a class="text-light nav-link" href="/tool/keygen/ssh">
 	      <i class="fas fa-fw fa-key"></i>
 	      SSH keygen
 	    </a>
 	  </li>
           <li class="nav-item">
-	    <a class="text-light nav-link" href="/toolgpgkeygen">
+	    <a class="text-light nav-link" href="/tool/gpgkeygen">
 	      <i class="fas fa-fw fa-lock"></i>
 	      GPG keygen
 	    </a>
 	  </li>
           <li class="nav-item">
-	    <a class="text-light nav-link" href="/toolqr">
+	    <a class="text-light nav-link" href="/tool/qrcode">
 	      <i class="fas fa-fw fa-qrcode"></i>
 	      QR
 	    </a>
 	  </li>
           <li class="nav-item">
-	    <a class="text-light nav-link" href="/tooltranslit">
+	    <a class="text-light nav-link" href="/tool/translit">
 	      <i class="fas fa-fw fa-language"></i>
 	      Translit
 	    </a>
 	  </li>
-	  [% IF c.check_user_roles('admin') %]
 	  <li class="nav-item">
 	    <a class="text-light nav-link" href="/sysinfo">
 	      <i class="fas fa-fw fa-info-circle"></i>
@@ -146,19 +146,17 @@
 	    <a class="text-light nav-link" href="test"><i class="fas fa-fw fa-code">&nbsp;</i>Test Code</a>
 	  </li>
           <li class="nav-item">
-	    <a class="text-light nav-link" href="/toolimportldif">
+	    <a class="text-light nav-link" href="/tool/ldif-import">
 	      <i class="fas fa-fw fa-file-import"></i>
 	      LDIF Import
 	    </a>
 	  </li>
-	  [% END %]
 	</ul>
       </li>
 
-      [% IF c.check_any_user_role ('admin', 'coadmin', 'acl-w-people', 'acl-w-organizations', 'acl-w-inventory', 'dhcp') %]
       <li class="nav-item">
 	<a href="#submenuObjects"
-	   data-toggle="collapse"
+	   data-bs-toggle="collapse"
 	   aria-expanded="false"
 	   class="nav-link text-white-50 umi-text-truncate-noelipsis">
 	  <i class="fas fa-lg fa-fw fa-magic"></i>
@@ -167,23 +165,18 @@
 	  </div>
 	</a>
 	<ul class="nav flex-column collapse ml-4 p-0" id="submenuObjects">
-	  [% IF c.check_any_user_role ('admin', 'coadmin', 'acl-w-people') %]
           <li class="nav-item">
 	    <a class="text-light nav-link" href="/userall" tabindex="2">
 	      <i class="fas fa-fw fa-user"></i>
 	      User
 	    </a>
 	  </li>
-	  [% END %]
-	  [% IF c.check_any_user_role ('admin', 'coadmin', 'dhcp') %]
           <li class="nav-item disabled">
 	    <a class="text-light nav-link" href="/dhcp" tabindex="7">
               <i class="fas fa-fw fa-network-wired"></i>
               DHCP
 	    </a>
 	  </li>
-	  [% END %]
-	  [% IF c.check_user_roles('admin') %]
           <li class="nav-item">
 	    <a class="text-light nav-link" href="/sudo" tabindex="5">
               <i class="fas fa-fw fa-user-secret"></i>
@@ -209,7 +202,7 @@
 	    </a>
 	  </li>
           <li class="nav-item">
-	    <a class="text-light nav-link" href="/toolimportgpg">
+	    <a class="text-light nav-link" href="/tool/importgpg">
 	      <i class="fas fa-fw fa-file-import"></i>
 	      GPG key Import
 	    </a>
@@ -232,33 +225,27 @@
 		DNS</del>
 	    </a>
 	  </li>
-	  [% END %]
-	  [% IF c.check_any_user_role ('admin', 'coadmin', 'acl-w-organizations') %]
           <li class="nav-item">
 	    <a class="text-light nav-link" href="/org" tabindex="4">
               <i class="fas fa-fw fa-building"></i>
               Org
 	    </a>
 	  </li>
-	  [% END %]
-	  [% IF c.check_any_user_role ('admin', 'coadmin', 'acl-w-inventory')  %]
           <li class="nav-item">
 	    <a class="text-light nav-link" href="/inventory" tabindex="4">
               <i class="fas fa-fw fa-pen-nib"></i>
               Inventory
 	    </a>
 	  </li>
-	  [% END %]
 	  
 	</ul>
       </li>
-      [% END %]
 
       <li class="nav-item divider"></li>
       
       <li class="nav-item">
 	<a href="#submenuInfo"
-	   data-toggle="collapse"
+	   data-bs-toggle="collapse"
 	   aria-expanded="false"
 	   class="nav-link text-white-50 umi-text-truncate-noelipsis">
 	  <i class="fas fa-lg fa-fw fa-info"></i>
@@ -277,48 +264,8 @@
 	    <a class="text-light nav-link" href="https://github.com/z-eos/umi/wiki"><i class="fab fa-fw fa-wikipedia-w"></i> UMI wiki</a>
 	  </li>
 	  <li class="nav-item">
-	    <a class="text-light nav-link" href="[% helper_cfg('cfg_local','header','help', 'item2', 'url') %]">
-	      <i class="fas fa-fw [% helper_cfg('cfg_local','header','help', 'item2', 'ico') %]"></i>
-	    [% helper_cfg('cfg_local','header','help', 'item2', 'txt') %]</a>
-	  </li>
-	  <li class="nav-item">
 	    <a class="text-light nav-link" href="#chat" ><i class="fas fa-fw fa-comment-alt"></i> chat</a>
 	    
-	    <script>
-	     /* CONVERSEJS https://conversejs.org */
-	     
-	     var is_chat = false;
-	     
-	     $('[href="#chat"]').on('click', function(e){
-	       $('head').append('<link rel="stylesheet" type="text/css" media="screen" href="/static/converse.js/css/converse.css">');
-	       $('<script src="/static/converse.js/converse.js"></' + 'script>').appendTo(document.body);
-	    
-	       e.preventDefault();
-
-	       if (!is_chat) {
-		 converse.initialize({
-		   allow_chat_pending_contacts: true,
-		   allow_registration: false,
-		   /* auto_join_rooms: [
-		      'tech_support@conference.im.ibs.dn.ua',
-		      ], */
-		   bosh_service_url: 'https://im.ibs.dn.ua:5281/bosh',
-		   i18n: 'en',
-		   keepalive: true,
-		   message_carbons: true,
-		   roster_groups: true,
-		   show_controlbox_by_default: true,
-		   show_send_button: true,
-		   strict_plugin_dependencies: false,
-		   //   view_mode: 'fullscreen',
-		   //   debug: true,
-		   xhr_user_search: false
-		 });
-	       }
-	       
-	       is_chat = true;
-	     });
-	    </script>
 	    
 	    </li>
 	  <li class="nav-item">
@@ -328,5 +275,6 @@
       </li>      
     </ul>
 
-</nav> <!-- sidebar -->
+</nav>
+<!-- sidebar end -->
 

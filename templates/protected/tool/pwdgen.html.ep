@@ -1,0 +1,317 @@
+<style>
+ /* --- ALG ----------------------------------------------------- */
+ .alg.none        .calg                      { display: none; }
+ .alg.appleid     .calg:not(.on-appleid)     { display: none; }
+ .alg.default     .calg:not(.on-default)     { display: none; }
+ .alg.ntlm        .calg:not(.on-ntlm)        { display: none; }
+ .alg.securityq   .calg:not(.on-securityq)   { display: none; }
+ .alg.web16       .calg:not(.on-web16)       { display: none; }
+ .alg.web32       .calg:not(.on-web32)       { display: none; }
+ .alg.wifi        .calg:not(.on-wifi)        { display: none; }
+ .alg.xkcd        .calg:not(.on-xkcd)        { display: none; }
+ .alg.classic     .calg:not(.on-classic)     { display: none; }
+ .alg.userdefined .calg:not(.on-userdefined) { display: none; }
+ /* --- PADDING ------------------------------------------------- */
+ .pad.none        .cpad                        { display: none; }
+ .pad.fixed       .cpad:not(.on-padd-fixed)    { display: none; }
+ .pad.adaptive    .cpad:not(.on-padd-adaptive) { display: none; }
+ .pad.char        .cpad:not(.on-padd-char)     { display: none; }
+ /* --- PADDING CHARACTER --------------------------------------- */
+ .pch.none        .cpch                              { display: none; }
+ .pch.char        .cpch:not(.on-padd-char-char)      { display: none; }
+ .pch.random      .cpch:not(.on-padd-char-random)    { display: none; }
+ .pch.separator   .cpch:not(.on-padd-char-separator) { display: none; }
+ /* --- SEPARATOR ----------------------------------------------- */
+ .sep.none        .csep                     { display: none; }
+ .sep.char        .csep:not(.on-sep-char)   { display: none; }
+ .sep.random      .csep:not(.on-sep-random) { display: none; }
+ /* ---------------------------------------------------
+    conditional un/hiding for elements
+    --------------------------------------------------- */
+ .show-none      .conditional-input                    { display: none; }
+ .show-appleid   .conditional-input:not(.on-appleid)   { display: none; }
+ .show-default   .conditional-input:not(.on-default)   { display: none; }
+ .show-ntlm      .conditional-input:not(.on-ntlm)      { display: none; }
+ .show-securityq .conditional-input:not(.on-securityq) { display: none; }
+ .show-web16     .conditional-input:not(.on-web16)     { display: none; }
+ .show-web32     .conditional-input:not(.on-web32)     { display: none; }
+ .show-wifi      .conditional-input:not(.on-wifi)      { display: none; }
+ .show-xkcd      .conditional-input:not(.on-xkcd)      { display: none; }
+ .show-classic   .conditional-input:not(.on-classic)   { display: none; }
+ /* ------------------------------------------------------------- */
+ .show-none          .cond-input-padd                        { display: none; }
+ .show-padd-fixed    .cond-input-padd:not(.on-padd-fixed)    { display: none; }
+ .show-padd-adaptive .cond-input-padd:not(.on-padd-adaptive) { display: none; }
+ .show-padd-char     .cond-input-padd:not(.on-padd-char)     { display: none; }
+ /* ------------------------------------------------------------- */
+ .show-none                .cond-input-padd-char                              { display: none; }
+ .show-padd-char-char      .cond-input-padd-char:not(.on-padd-char-char)      { display: none; }
+ .show-padd-char-random    .cond-input-padd-char:not(.on-padd-char-random)    { display: none; }
+ .show-padd-char-separator .cond-input-padd-char:not(.on-padd-char-separator) { display: none; }
+ /* ------------------------------------------------------------- */
+ .show-none       .cond-input-sep                     { display: none; }
+g .show-sep-char   .cond-input-sep:not(.on-sep-char)   { display: none; }
+ .show-sep-random .cond-input-sep:not(.on-sep-random) { display: none; }
+</style>
+
+<h3 class="fw-bold py-5">
+    <i class="fa fa-unlock-alt fa-lg m-3 text-muted"></i>
+    Password Generator Form
+    <small>
+	<em class="font-monospace text-muted fs-6">
+	    ( XKCD stuff is described <a href="https://xkpasswd.net/s/" target="_blank">here</a>)
+	</em>
+    </small>
+</h3>
+
+% my ($en_blind, $en_seen, $ico, $selected);
+% my $par = stash('pwdgen_params');
+% my $pwd = stash('pwdgen');
+<!-- <div id="result" class="alert alert-info" role="alert">
+     <i class="fa-solid fa-triangle-exclamation pe-3"></i></i><pre><%= dumper $pwd %></pre>
+     </div>     -->
+% if (defined $pwd && %$pwd) {
+    % if ( $pwd->{stats}->{password_entropy_blind_min} < 150 ||
+    % $pwd->{stats}->{password_entropy_blind_max} < 250 ) {
+	% $en_blind = 'danger';
+    % } else {
+	% $en_blind = 'success';
+    % }
+    % if ( $pwd->{stats}->{password_entropy_seen} > 52 ) {
+	% $en_seen = 'success';
+    % } else {
+	% $en_seen = 'danger';
+    % }
+    % if ($en_blind eq 'success' and $en_seen eq 'success') {
+	% $ico = 'success';
+    % } else {
+	% $ico = 'danger';
+    % }
+    <div id="result" class="alert alert-success" role="alert">
+	<i class="fa-solid fa-triangle-exclamation pe-3"></i></i><%= $pwd->{clear}; %>
+    </div>
+    <div class="form-text text-end mb-3">
+	<div class="text-muted text-monospace" aria-label="Statistics" aria-describedby="button-addon2">
+	    <i class="fas fa-info-circle text-<%= $ico %> me-2"></i>
+	    Entropy: blind (brute-force) <b class="text-<%= $en_blind %>">
+		<%= $pwd->{stats}->{password_entropy_blind} =%>
+	    </b> bits & seen (given dict and config) <b class="text-<%= $en_seen %>"><%= $pwd->{stats}->{password_entropy_seen} %></b>
+	    <small>
+		<em class="">(keep blind entropy above 150 & seen above 52 bits)</em>
+		<button type="button" class="btn btn-link" data-bs-toggle="collapse" href="#pwdStatus"
+			      role=«button" aria-expanded="false" aria-controls="pwdStatus">
+		    <i class="fa-regular fa-rectangle-list"></i>
+		</button>
+	    </small>
+	</div>
+	<div class="collapse" id="pwdStatus">
+	    <div class="card card-body"><small><pre class="text-muted text-monospace"><%= $pwd->{status} %></pre></small></div>
+	</div>
+    </div>
+% } else {
+    <!-- <div id="result" class="alert alert-info" role="alert">
+	 <i class="fa-solid fa-triangle-exclamation pe-3"></i></i>FIRST RUN
+	 </div>     -->
+% }
+
+<form id="formPwdgen" class="form-horizonal pwdgen" method="post" enctype="multipart/form-data" action="/tool/pwdgen">
+    <div id="pwd_operations" class="row target-container calg">
+	<!-- PRESET -->
+	<div class="row input-group m-0" aria-describedby="pwd_algHelpBlock">
+	    <span class="input-group-text fw-bold text-uppercase col-2" for="pwd_alg">Preset</span>
+	    <select name="pwd_alg" id="pwd_alg" aria-describedby="pwd_algHelpBlock" class="custom-select form-control" title="Password algorythm">
+		% my $m = 0;
+		% my $alg = { APPLEID   => "APPLEID (example: @74,animal,forget,angry,55@)",
+		%             DEFAULT   => "DEFAULT (example: ++78-COUNTRY-once-SATURN-48++)",
+		%             NTLM      => "NTLM (example: 4-sIGHT-hORSE@)",
+		%             SECURITYQ => "SECURITYQ (example: state basket Texas spend rhythm warm?)",
+		%             WEB16     => "WEB16 (example: swim^word^YEAR^05)",
+		%             WEB32     => "WEB32 (example: |70~world~KISS~dried~MARK~15|)",
+		%             WIFI      => "WIFI (example: 8241_GREAT_FRACTION_fell_feel_quick_REAL_7834~~~~~~~~~~~~~~~~~~)",
+		%             XKCD      => "XKCD (example: ALLOW-CLOTH-LANGUAGE-UNCLE-BROKEN)" };
+		% foreach my $k (sort(keys(%$alg))) {
+		  <option value="<%= $k %>" id="pwd_alg.<%= $m %>"
+			  <%= (! $par->{pwd_alg} && $k eq 'XKCD') || ($par->{pwd_alg} && $par->{pwd_alg} eq $k) ? 'selected="selected"' : '' %>
+			  ><%= $alg->{$k} %></option>
+		    % $m++;
+		% }
+	    </select>
+        </div>
+    </div>
+    <small id="pwd_algHelpBlock" class="form-text text-muted"></small>
+
+    <div class="row calg on-appleid on-default on-ntlm on-securityq on-web16 on-web32 on-wifi on-xkcd my-3">
+	<!-- NUMBER OF WORDS -->
+	<div class="input-group">
+            <span class="input-group-text fw-bold text-uppercase col-2" for="xk_num_words">Number Of Words</span>
+            <select name="xk_num_words" id="xk_num_words" class="custom-select form-control" title="Number Of Words In Password">
+		% for my $i (3 .. 10) {
+		    % if ($par->{xk_num_words} && $par->{xk_num_words} == $i ) {
+			% $selected="selected=\"selected\""
+		    % } else {
+			% $selected=""
+		    % }
+		    <option value="<%= $i %>" id="xk_num_words.<%= $i - 3 %>" <%= $selected %>><%= $i %></option>
+		% }
+            </select>
+	    <!-- </div>
+		 <div class="input-group"> -->
+	    <!-- LEN MIN / MAX -->
+	    <span class="input-group-text fw-bold text-uppercase col-2" for="xk_word_length_min">Len min/max</span>
+	    <select name="xk_word_length_min" id="xk_word_length_min" class="custom-select form-control" title="Word Length Min">
+		% for my $i (4 .. 13) {
+		    <option value="<%= $i %>" id="xk_word_length_min.<%= $i - 4 %>"
+			<%= $par->{xk_word_length_min} == $i ? 'selected="selected"' : '' %>
+			><%= $i %></option>
+		% }
+	    </select>
+	    <select name="xk_word_length_max" id="xk_word_length_max" class="custom-select form-control" title="Word Length Max">
+		% for my $i (4 .. 13) {
+		    % $selected = "";
+		    % if ($par->{xk_word_length_max} && $par->{xk_word_length_max} == $i ) {
+			% $selected="selected=\"selected\""
+		    % } else {
+			% $selected=""
+		    % }
+		    <option value="<%= $i %>" id="xk_word_length_max.<%= $i - 4 %>" <%= $selected %>><%= $i %></option>
+		% }
+	    </select>
+	</div>
+	<!-- CASE TRANSFORMATION -->
+        <div class="input-group my-3">
+	    <span class="input-group-text fw-bold text-uppercase col-2" for="xk_case_transform">Case Transformation</span>
+	    <select name="xk_case_transform" id="xk_case_transform" class="custom-select form-control" title="Case Transformation">
+		% $m = 0;
+		% my $case_tr = { ALTERNATE  => "ALTERNATE (example: alternating WORD case)",
+		%                 CAPITALISE => "CAPITALISE (example: Capitalise First Letter)",
+		%                 INVERT     => "INVERT (example: cAPITALISE eVERY lETTER eXCEPT tHe fIRST)",
+		%                 LOWER      => "LOWER (example: lower case)",
+		%                 NONE       => "NONE (example: -none-)",
+		%                 RANDOM     => "RANDOM (example: EVERY word randomly CAPITALISED or NOT)",
+		%                 UPPER      => "UPPER (example: UPPER CASE)" };
+		% foreach my $k (sort(keys(%$case_tr))) {
+		    <option value="<%= $k %>" id="xk_case_transform<%= $m %>"
+			<%= $par->{xk_case_transform} && $par->{xk_case_transform} eq $k ? 'selected="selected"' : '' %>><%= $case_tr->{$k} %></option>
+		    % $m++
+		% }
+	    </select>
+        </div>
+	<!-- SEPARATOR -->
+	<div id="sep" class="row form-group target-container csep my-3">
+	    <div class="input-group">
+		<!-- SEPARATOR SELECTOR -->
+		<span class="input-group-text fw-bold text-uppercase col-2" for="xk_separator_character">Separator</span>
+		<select name="xk_separator_character" id="xk_separator_character" class="custom-select form-control" title="Separator">
+		    % $m = 0;
+		    % my $sc = ['NONE', 'CHAR', 'RANDOM'];
+		    % foreach (@$sc) {
+			<option value="<%= $_ %>" id="xk_separator_character.<%= $m %>"
+			    <%= $par->{xk_separator_character} eq $_ ? 'selected="selected"' : '' %>
+			    ><%= $_ %></option>
+			% $m++
+		    % }
+		    <!-- <option value="NONE" id="xk_separator_character.0">NONE</option>
+			 <option value="CHARACTER" id="xk_separator_character.1">CHARACTER</option>
+			 <option value="RANDOM" id="xk_separator_character.2">RANDOM</option> -->
+		</select>
+		<!-- SEPARATOR CHARACTER -->
+                <input type="text" name="xk_separator_character_char" id="xk_separator_character_char"
+		       value="" class="text-center text-monospace form-control"
+		       aria-describedby="sepCharHelpBlock"
+		       title="Separator Character one of: !&quot;#$%&amp;'()*+,-./:;<=>?@[\]^_{|}~">
+		<small id="sepCharHelpBlock" class="form-text text-muted"></small>
+		<!-- SEPARATOR ALPHABETH -->
+                <input type="text" name="xk_separator_character_random" id="xk_separator_character_random"
+		       value="" class="text-center text-monospace form-control"
+		       title="Separator Character Alphabet: !&quot;#$%&amp;'()*+,-./:;<=>?@[\]^_{|}~">
+	    </div>
+	</div>
+	<!-- PADDING DIGITS -->
+	<div class="row form-group my-3">
+	    <div class="input-group">
+		<span class="input-group-text fw-bold text-uppercase col-2" for="xk_padding_digits_before">Padding Digits</span>
+		<select name="xk_padding_digits_before" id="xk_padding_digits_before" class="custom-select form-control"
+			title="Padding Digits From the Left">
+                    % for my $i (0 .. 5) {
+			<option value="<%= $i %>" id="xk_padding_digits_before.<%= $i %>"><%= $i %></option>
+                    % }
+		</select>
+		<select name="xk_padding_digits_after" id="xk_padding_digits_after" class="custom-select form-control"
+			title="Padding Digits From the Right">
+                    % for my $i (0 .. 5) {
+			<option value="<%= $i %>" id="xk_padding_digits_after.<%= $i %>"><%= $i %></option>
+                    % }
+		</select>
+	    </div>
+	</div>
+	
+	<div id="padd" class="target-container cpad my-3">
+	    <div class="row form-group">
+		<!-- PADDING TYPE -->
+		<div class="input-group">
+                    <span class="input-group-text fw-bold text-uppercase col-2" for="xk_padding_type">Padding Type</span>
+                    <select name="xk_padding_type" id="xk_padding_type" class="custom-select form-control" title="Padding Type">
+			<option value="NONE" id="xk_padding_type.0">NONE</option>
+			<option value="FIXED" id="xk_padding_type.1">FIXED</option>
+			<option value="ADAPTIVE" id="xk_padding_type.2">ADAPTIVE</option>
+		    </select>
+		</div>
+		<div class="row form-group">
+		    <div class="row form-group cpad on-padd-fixed">
+			<!-- SYMBOLS LEFT / RIGHT -->
+			<div class="input-group cpad on-padd-fixed">
+			    <span class="input-group-text fw-bold text-uppercase"
+				  for="xk_padding_characters_before">Symbols left/right</span>
+			    <select name="xk_padding_characters_before" id="xk_padding_characters_before"
+					  class="custom-select form-control"
+					  title="Padding Symbols From the Left">
+				% for my $i (0 .. 5) {
+				    <option value="<%= $i %>" id="xk_padding_characters_before.<%= $i %>"><%= $i %></option>
+				% }
+			    </select>
+			    <select name="xk_padding_characters_after" id="xk_padding_characters_after"
+					  class="custom-select form-control" title="Padding Symbols From the Right">
+				% for my $i (0 .. 5) {
+				    <option value="<%= $i %>" id="xk_padding_characters_after.<%= $i %>"><%= $i %></option>
+				% }
+			    </select>
+			</div>
+		    </div>
+		    <!-- TO LENGTH -->
+		    <div class="input-group cpad on-padd-adaptive">
+			<span class="input-group-text text-right fw-bold" for="xk_pad_to_length">To Length</span>
+			<input type="text" name="xk_pad_to_length" id="xk_pad_to_length" size="3" maxlength="3" value=""
+			       class="text-center text-monospace fw-bold form-control" max="999" min="8"
+			       title="Padding To Length">
+		    </div>
+		    <div class="row form-group cpad on-padd-fixed on-padd-adaptive">
+			<div id="padd-char" class="target-container cpch">
+			    <!-- PADDING CHARACTER -->
+			    <div class="input-group">
+				<span class="input-group-text text-right fw-bold" for="xk_padding_character">Padding Character</span>
+				<select name="xk_padding_character" id="xk_padding_character" class="custom-select form-control" title="Separator">
+				    <option value="SEPARATOR" id="xk_padding_character.0" selected="selected">Separator Character</option>
+				    <option vlue="CHAR" id="xk_padding_character.1">Specified Character</option>
+				    <option value="RANDOM" id="xk_padding_character.2">Random Alphabet</option>
+				</select>
+				<input type="text" name="xk_padding_character_separator" id="xk_padding_character_separator"
+				       maxlength="1" value="" class="text-center text-monospace fw-bold form-control"
+				       title="Padding Character">
+				<input type="text" name="xk_padding_character_random" id="xk_padding_character_random"
+				       value="" class="text-center text-monospace fw-bold input-sm form-control"
+				       title="Padding Character Alphabet: !&quot;#$%&amp;'()*+,-./:;<=>?@[\]^_{|}~">
+			    </div>
+			</div>
+		    </div>
+		</div>
+	    </div>
+	</div>
+	<small id="sepCharHelpBlock" class="form-text text-muted"></small>
+
+	<div class="row">
+            <div class="col-4"></div>
+            <input type="submit" name="aux_submit" id="aux_submit" value="Submit" class="btn btn-success col-4 my-5 mr-2 fw-bold text-uppercase">      <div class="col-4"></div>
+	</div>
+	
+    </div>
+</form>

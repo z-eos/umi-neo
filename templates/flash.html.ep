@@ -1,0 +1,16 @@
+% if (defined(my $message = flash('message'))) {
+  % my $status = flash('status');
+  % my $class = "";
+  % if ( $status eq 'error') {
+  %   $class = "danger";
+  % } elsif ( $status eq 'ok') {
+  %   $class = "success";
+  % } elsif ( $status eq 'warn') {
+  %   $class = "warning";
+  % }
+
+  <div id="flash" class="alert alert-<%= $class; %>" role="alert">
+    <i class="fa-solid fa-triangle-exclamation pe-3"></i></i><%= $message; %>
+  </div>
+
+% }

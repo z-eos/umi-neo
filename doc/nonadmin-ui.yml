@@ -1,0 +1,42 @@
+personality:
+  name_last: !!str Pupkin
+  name_fist: !!str Vasya
+  position: !!str developer
+  email: !!str vas@pup.kin
+  telephone: !!str 322223
+
+  project:
+    name: !!str Horns-n-Hooves
+      role:
+        - !!str developer
+      host_acl:
+        - !!str dev.foo.bar
+      service_acl:
+        sudo:
+          - !!str
+        sargon:
+          - !!str
+        github:
+          - !!str dfdgsdfg
+        gitlab:
+          - !!str sdfgsdfg
+        jenkins:
+          - !!str dfgdfg
+        docker:
+          - !!str fghghj
+
+project:
+  name: !!str Horns-n-Hooves
+  customer: !!str customer01
+  servers:
+    - !!str db.foo.bar
+    - !!str dev.foo.bar
+  repositories:
+    github:
+      - !!str dfdgsdfg
+    gitlab:
+      - !!str sdfgsdfg
+    jenkins:
+      - !!str dfgdfg
+    docker:
+      - !!str fghghj

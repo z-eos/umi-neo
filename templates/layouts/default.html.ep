@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="description" content='UMI is intended to be rather flexible, though still "high level" (for use by not qualified personell), LDAP stored data, "simple" and "user-friendly" UI. https://github.com/z-eos/umi'>
+    <meta name="author" content="">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <title><%= title %></title>
+
+    <link rel="icon" type="image/x-icon" href="/assets/images/favicon.png">
+
+    <link rel="stylesheet" href="/assets/css/fontawesome/all.min.css"/>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+
+    <link href="/assets/css/umi.css" rel="stylesheet" type="text/css">
+  </head>
+  <body>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <noscript>
+      <div class="alert alert-danger text-center h1 mt-5 mx-5"
+	   role="alert" style="margin-bottom: 1100px;">
+	<h1 class="alert-heading">
+	  <i class="fas fa-skull"></i>
+	  ERROR
+	  <i class="fas fa-skull"></i>
+	</h1>
+	<hr>
+	<h2>JavaScript is disabled in your browser.</h2>
+	<h2>Enable JavaScript!</h2>
+      </div>
+    </noscript>
+
+    <!-- div class="outmost-wrapper" -->
+
+      <% if ($c->is_user_authenticated) { %>
+	%= include 'header'
+      <% } %>
+
+      <div class="container-fluid wrapper">
+	<% if ($c->is_user_authenticated) { %>
+	  %= include 'sidebar'
+	<% } %>
+	<main class="container-fluid flex-grow-1 mb-3 w-25" id="workingfield">
+	  
+	  %= include 'flash'
+	  %= content
+
+	</main>
+	<% if ($c->is_user_authenticated) { %>
+	  %= include 'aside'
+	<% } %>
+      </div>
+    <!-- /div -->
+
+    <script>
+     <!-- dark/light theme switch -->
+     document.getElementById('bd-theme').addEventListener('click',()=>{
+       if (document.documentElement.getAttribute('data-bs-theme') == 'dark') {
+         document.documentElement.setAttribute('data-bs-theme','light')
+       } else {
+         document.documentElement.setAttribute('data-bs-theme','dark')
+       }
+     })
+    </script>
+
+    <!-- UMI SCRIPTS -->
+    <script src="/assets/js/umi-common.js"></script>
+    <script src="/assets/js/umi-tool-qrcode.js"></script>
+    <script src="/assets/js/umi-tool-keygen-ssh.js"></script>
+    <script src="/assets/js/umi-tool-pwdgen.js"></script>
+    <script src="/assets/js/umi-tool-modify.js"></script>
+
+  </body>
+</html>
