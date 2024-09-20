@@ -4,7 +4,7 @@
 package Umi::Helpers::Common;
 
 use Mojo::Base 'Mojolicious::Plugin';
-use Mojo::Util;
+use Mojo::Util qw( b64_encode encode );
 
 use MIME::Base64 qw(decode_base64 encode_base64);
 use Crypt::HSXKPasswd;
@@ -15,8 +15,6 @@ use GD::Barcode::QRcode;
 use Try::Tiny;
 use POSIX qw(strftime :sys_wait_h);
 use IPC::Run qw(run);
-
-use Data::Printer caller_info => 1;
 
 sub register {
 
@@ -29,6 +27,20 @@ sub register {
 		     my ($c, $text) = @_;
 		     return uc($text);
 		 });
+
+    $app->helper(
+		 h_ldap_err => sub {
+		     my ($c, $message, $search_arg) = @_;
+		     return sprintf("
+ERROR: %s
+code: %s; text: %s
+base: %s
+filter: %s\n", $message->error_name, $message->code,
+				    $message->error_text,
+				    $search_arg->{base},
+				    $search_arg->{filter}
+				   );
+		   });
 
     $app->helper(
 		 h_pad_base64 => sub {
@@ -84,7 +96,7 @@ sub register {
 				mod => $args->{mod} || 1,
 			       };
 
-		     utf8::encode($arg->{txt}); # without it non latin in QR is broken
+		     $arg->{txt} = encode 'UTF-8', $arg->{txt}; # without it non latin in QR is broken
 
 		     # log_debug { np($arg->{txt}) };
 		     $arg->{ops} = {
@@ -95,13 +107,13 @@ sub register {
 			 $arg->{ver}            = $args->{ver};
 			 $arg->{ops}->{Version} = $arg->{ver};
 		     }
-		     p $arg;
+
 		     try {
 			 $arg->{gd} = GD::Barcode::QRcode->new( "$arg->{txt}", $arg->{ops} )->plot();
 			 $arg->{white} = $arg->{gd}->colorClosest(255,255,255);
 			 $arg->{gd}->transparent($arg->{white});
 			 $arg->{gd}->interlaced('true');
-			 $arg->{ret}->{qr} = encode_base64($arg->{gd}->png);
+			 $arg->{ret}->{qr} = b64_encode $arg->{gd}->png;
 		     }
 		     catch { $arg->{ret}->{error} = $_ . ' (in general max size is about 1660 characters of Latin1 codepage)'; };
 
@@ -329,7 +341,7 @@ wrapper for ssh-keygen(1)
 			      ref($modified_ref->{$key}) eq 'ARRAY') {
 		       my $arr_diff = $self->h_array_diff($original_ref->{$key},
 							  $modified_ref->{$key});
-		       p $arr_diff;
+
 		       if ( @{$arr_diff->{added}} != 0 || @{$arr_diff->{removed}} != 0 ) {
 			 if (@{$arr_diff->{removed}} != 0) {
 			   @{$modified_ref->{$key}} = grep {$_ ne ''} @{$modified_ref->{$key}};

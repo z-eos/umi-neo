@@ -3,16 +3,15 @@
 package Umi::Controller::Protected;
 
 use Mojo::Base 'Umi::Controller', -signatures;
-use Mojo::Util qw(b64_encode);
+use Mojo::Util qw(b64_encode dumper);
 
 use Umi::Ldap;
 
 sub homepage ($self) {
-  my $session_data = $self->session;
   $self->render(
-		template => 'protected/home' =>
-		session  => $self->dumper($session_data) =>
-		current_user => $self->dumper($self->current_user) =>
+		template => 'protected/home',
+		session  => $self->session,
+		current_user => $self->helpers->current_user,
 		config => $self->{app}->{cfg}
 	       );
 }
@@ -25,15 +24,22 @@ sub profile  ($self) {
   my $search_arg = { base => $self->{app}->{cfg}->{ldap}->{base}->{acc_root},
 		     filter => sprintf("(uid=%s)", $self->session('uid')),
 		     scope => 'one' };
-  my $search = $ldap->search(	$search_arg );
+
+  my $search = $ldap->search( $search_arg );
   if ( $search->code ) {
-    $self->log->error(
-		      sprintf("Protected.pm: profile(): code: %s; message: %s; text: %s",
+    $self->h_log(
+		 sprintf("\n\n
+Protected.pm: profile(): search:\n
+ERROR message: %s\n
+code: %s; errname: %s; text: %s; desc: %s\n
+options: %s\n",
+			      $search->error,
 			      $search->code,
 			      $search->error_name,
-			      $search->error_text
+			      $search->error_text,
+			      $search->error_desc,
+			      $self->dumper($search_arg)
 			     ));
-    return undef;
   }
 
   $self->render(template => 'protected/profile' =>
@@ -59,12 +65,12 @@ sub ldif_export    ($self) {
   p $search_arg;
   my $search = $ldap->search( $search_arg );
   if ( $search->code ) {
-    $self->log->error(
-		      sprintf("Protected.pm: ldif_export(): code: %s; message: %s; text: %s",
-			      $search->code,
-			      $search->error_name,
-			      $search->error_text
-			     ));
+    $self->h_log(
+		 sprintf("Protected.pm: ldif_export(): code: %s; message: %s; text: %s",
+			 $search->code,
+			 $search->error_name,
+			 $search->error_text
+			));
   }
 
   my $ldif;
@@ -109,7 +115,6 @@ sub keygen_ssh ($self) {
 		      );
 }
 
-use Data::Printer caller_info => 1;
 sub modify ($self) {
   my $par = $self->req->params->to_hash;
   # p $par;
@@ -125,8 +130,8 @@ sub modify ($self) {
 		     filter => '(objectClass=*)',
 		     attrs => []};
   my $s = $ldap->search( $search_arg );
-  $self->log->error(sprintf("Protected.pm: modify(): code: %s; message: %s; text: %s",
-			    $s->code, $s->error_name, $s->error_text )) if $s->code;
+  $self->h_log(sprintf("Protected.pm: modify(): code: %s; message: %s; text: %s",
+		       $s->code, $s->error_name, $s->error_text )) if $s->code;
 
   # `UNUSED ATTRIBUTES` select element
   my $schema = $ldap->schema;
@@ -138,7 +143,7 @@ sub modify ($self) {
 
   if ( keys %$par == 1 ) {
     # here we've just clicked, search result  menu `modify` button
-    $self->log->debug('~~~~~-> MODIFY: SEARCH RESULT MENU CHOOSEN');
+    $self->h_log('~~~~~-> MODIFY: SEARCH RESULT MENU CHOOSEN');
     my ($e_orig, $e_tmp);
     foreach ($s->entry->attributes) {
       $e_tmp = $s->entry->get_value($_, asref => 1);
@@ -152,17 +157,18 @@ sub modify ($self) {
     # p $e_orig;
   } elsif (exists $par->{add_objectClass}) {
     # new objectClass addition is chosen
-    $self->log->debug('~~~~~-> MODIFY: ADD OBJECTCLASS');
-    p $par;
+    $self->h_log('~~~~~-> MODIFY: ADD OBJECTCLASS');
+    $self->h_log($par);
     # $s = $ldap->search( $search_arg );
-    # $self->log->error(sprintf("Protected.pm: modify(): code: %s; message: %s; text: %s",
+    # $self->h_log(sprintf("Protected.pm: modify(): code: %s; message: %s; text: %s",
     # 			      $s->code, $s->error_name, $s->error_text )) if $s->code;
   } else {
     # form modification made
-    $self->log->debug('~~~~~-> MODIFY: FORM CHANGED?');
+    $self->h_log('~~~~~-> MODIFY: FORM CHANGED?');
     delete $par->{dn_to_modify};
+    delete $par->{attr_unused};
     my $diff = $self->h_hash_diff( $self->session->{e_orig}, $par);
-    p $diff;
+    $self->h_log($diff);
     my ($add, $delete, $replace, $changes);
     if ( %{$diff->{added}} ) {
       push @$add, $_ => $diff->{added}->{$_} foreach (keys(%{$diff->{added}}));
@@ -176,7 +182,7 @@ sub modify ($self) {
       push @$replace, $_ => $diff->{changed}->{$_}->{new} foreach (keys(%{$diff->{changed}}));
       push @$changes, replace => $replace;
     }
-    p $changes;
+    $self->h_log($changes);
   }
 
   $self->stash(entry => $s->entry, aa => \%aa, as => \%as, oc => \%oc, attr_unused => \@attr_unused);

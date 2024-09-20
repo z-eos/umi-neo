@@ -3,13 +3,13 @@
     <a class="navbar-brand" href="/">
       <img src="/assets/images/umi-logo.50x50.png" width="30" height="30" alt="logo">
     </a>
-    <button class="border-0" type="button"
+    <button class="btn border-0" type="button"
 	    data-bs-toggle="collapse"
 	    data-bs-target="#sidebar-left"
 	    aria-controls="sidebar-left"
 	    aria-expanded="true"
 	    aria-label="Toggle sidebar navigation">
-      <i class="fas fa-bars"></i>
+      <i class="fa-solid fa-bars"></i>
     </button>
     
     <div class="collapse navbar-collapse" id="navbarSupportedContent">
@@ -19,12 +19,12 @@
       <ul class="navbar-nav me-auto my-2 my-lg-0 navbar-nav-scroll">
         <li class="nav-item dropdown">
           <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-	    <i class="fa fa-lg fa-fw fa-user-alt"></i>
-	    <% if ($c->is_user_authenticated) { %>
-	      <%= $c->session('uid') %>
-	    <% } %>
+	    <i class="fa-solid fa-fw fa-user-alt"></i>
+	    % if ($c->is_user_authenticated) {
+	      %= $c->session('uid');
+	    % }
           </a>
-          <ul class="dropdown-menu dropdown-menu-end dropdown-menu-lg-start">
+          <ul class="dropdown-menu dropdown-menu-end">
 	    <li>
 	      <a class="dropdown-item" href="/profile">
 		<i class="fa-regular fa-id-card"></i>
@@ -44,19 +44,19 @@
 	    </li>          
 	    <li><hr class="dropdown-divider"></li>
 	    <li><a class="dropdown-item" href="/logout">
-	      <i class="fas fa-lg fa-fw fa-sign-out-alt"></i>
+	      <i class="fa-solid fa-fw fa-sign-out-alt"></i>
 	      LogOut</a></li>
           </ul>
         </li>
       </ul>
       
-      <button class="border-0" type="button"
+      <button class="btn border-0" type="button"
 	      data-bs-toggle="collapse"
 	      data-bs-target="#aside"
 	      aria-controls="aside"
 	      aria-expanded="true"
 	      aria-label="Toggle aside navigation">
-	<i class="fas fa-bars"></i>
+	<i class="fa-solid fa-bars"></i>
       </button>
 
     </div>

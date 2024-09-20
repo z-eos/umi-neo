@@ -27,7 +27,7 @@ use Net::LDAP::Util qw(
 			time_to_generalizedTime
 		     );
 
-use Data::Printer;
+use Try::Tiny;
 
 sub new {
   my ($class, $app, $uid, $pwd) = @_;
@@ -36,35 +36,104 @@ sub new {
 	   app => $app,
 	   uid => $uid,
 	   pwd => $pwd,
-	   log => Mojo::Log->new
 	  }, $class;
-  return $self;
-}
 
-sub ldap ($self) {
+  my $cf = $self->{app}->{cfg}->{ldap};
+  $self->{app}->h_log('Umi::Ldap->ldap() HAS BEEN CALLED');
 
-  $self->{log}->debug('Umi::Ldap->ldap() HAS BEEN CALLED');
-
-  my $ldap = Net::LDAP->new( $self->{app}->{cfg}->{ldap}->{conn}->{host} );
+  my $ldap = Net::LDAP->new( $cf->{conn}->{host} );
   if ( ! defined $ldap ) {
-    $self->{log}->error("Error connecting to $self->app->{cfg}->{ldap}->{store}->{ldap_server}: $@");
+    $self->{app}->h_log("Error connecting to $cf->{conn}->{host}: $@");
     return undef;
   }
     
-  my $m = $ldap->bind(
-		      sprintf("uid=%s,%s",
+  my $m = $ldap->bind(sprintf("uid=%s,%s",
 			      $self->{uid},
-			      $self->{app}->{cfg}->{ldap}->{base}->{acc_root}),
+			      $cf->{base}->{acc_root}),
 		      password => $self->{pwd},
 		      version  => 3,);
   if ( $m->is_error ) {
-    $self->log->error(
-		      sprintf("code: %s; mesg: %s; txt: %s", $m->code, $m->error_name, $m->error_text)
-		     );
-    return undef;
+    $self->{app}->h_log(sprintf("Ldap.pm: ldap(): code: %s; mesg: %s; txt: %s",
+				$m->code, $m->error_name, $m->error_text) );
+      return $m;
   }
 
-  return $ldap;
+  if ( exists $cf->{conn}->{start_tls} ) {
+    # $self->{log}->debug(dumper($cf->{conn}->{start_tls}));
+    $m = try {
+      $ldap->start_tls(
+		       verify     => $cf->{conn}->{start_tls}->{verify},
+		       cafile     => $cf->{conn}->{start_tls}->{cafile},
+		       checkcrl   => $cf->{conn}->{start_tls}->{checkcrl},
+		       sslversion => $cf->{conn}->{start_tls}->{sslversion},
+		      );
+    }
+    catch {
+      $self->{app}->h_log("Net::LDAP start_tls error: $@") if $m->error;
+      return $m;
+    }
+  }
+  # $self->{log}->debug(dumper($mesg));
+
+  $self->{ldap} = $ldap;
+
+  return $self;
+}
+
+# sub new {
+#   my ($class, $app, $uid, $pwd) = @_;
+#   my $self =
+#     bless {
+# 	   app => $app,
+# 	   uid => $uid,
+# 	   pwd => $pwd,
+# 	  }, $class;
+#   return $self;
+# }
+
+# sub ldap ($self) {
+#   my $cf = $self->{app}->{cfg}->{ldap};
+#   $self->{app}->h_log('Umi::Ldap->ldap() HAS BEEN CALLED');
+
+#   my $ldap = Net::LDAP->new( $cf->{conn}->{host} );
+#   if ( ! defined $ldap ) {
+#     $self->{app}->h_log("Error connecting to $cf->{conn}->{host}: $@");
+#     return undef;
+#   }
+    
+#   my $m = $ldap->bind(sprintf("uid=%s,%s",
+# 			      $self->{uid},
+# 			      $cf->{base}->{acc_root}),
+# 		      password => $self->{pwd},
+# 		      version  => 3,);
+#   if ( $m->is_error ) {
+#     $self->{app}->h_log(sprintf("Ldap.pm: ldap(): code: %s; mesg: %s; txt: %s",
+# 				$m->code, $m->error_name, $m->error_text) );
+#       return $m;
+#   }
+
+#   if ( exists $cf->{conn}->{start_tls} ) {
+#     # $self->{log}->debug(dumper($cf->{conn}->{start_tls}));
+#     $m = try {
+#       $ldap->start_tls(
+# 		       verify     => $cf->{conn}->{start_tls}->{verify},
+# 		       cafile     => $cf->{conn}->{start_tls}->{cafile},
+# 		       checkcrl   => $cf->{conn}->{start_tls}->{checkcrl},
+# 		       sslversion => $cf->{conn}->{start_tls}->{sslversion},
+# 		      );
+#     }
+#     catch {
+#       $self->{app}->h_log("Net::LDAP start_tls error: $@") if $m->error;
+#       return $m;
+#     }
+#   }
+#   # $self->{log}->debug(dumper($mesg));
+
+#   return $ldap;
+# }
+
+sub ldap ($self) {
+  return $self->{ldap};
 }
 
 sub search {
@@ -80,7 +149,7 @@ sub search {
      sizelimit => $a->{sizelimit} // $cf->{defaults}->{sizelimit},
     };
 
-  #$self->{log}->debug(dumper($o));
+  # $self->{log}->debug(dumper($o));
 
   return $self->ldap->search( %{$o} );
 }

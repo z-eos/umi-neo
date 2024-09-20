@@ -2,7 +2,7 @@
 
 <aside id="aside" class="collapse">
   <nav id="sidebar-right"
-       class="text-light float-right [% c.session.settings.ui.aside == 0 ? 'folded' : '' %]"
+       class="text-light float-right"
        data-url-tree="/ldap_tree">
     <ul class="nav nav-pills nav-fill" role="tablist">
       <li class="nav-item" title="LDAP tree">

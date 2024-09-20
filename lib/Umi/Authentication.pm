@@ -1,8 +1,8 @@
+# -*- mode: cperl; eval: (follow-mode) -*-
+
 package Umi::Authentication;
 
-use Mojo::Base qw< -base -signatures >;
-
-use Umi::Ldap;
+use Mojo::Base qw( -base -signatures );
 
 sub new {
     my ($class, $app, $stash) = @_;
@@ -12,16 +12,13 @@ sub new {
 }
 
 sub load_user ($self, $uid) {
-    $self->{app}->{log}->debug("LOAD_USER() HAS BEEN CALLED");
+    # $self->{app}->h_log("Authentication.pm: load_user() HAS BEEN CALLED");
     return $uid
 }
 
 sub validate_user ($self, $username, $password, $extra) {
-    $self->{app}->{log}->debug("VALIDATE_USER() HAS BEEN CALLED");
-
-    my $ldap = Umi::Ldap->new( $self->{app}, $username, $password );
-    
-    return $username if defined $ldap;
+    $self->{app}->h_log("Authentication.pm: validate_user() HAS BEEN CALLED");
+    return $username if $extra->{ldap}->isa('Net::LDAP');
 }
 
 1;

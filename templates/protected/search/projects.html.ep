@@ -1,0 +1,200 @@
+%# -*- mode: web; eval: (follow-mode) -*-
+% my $i = 0;
+% my $j = 0;
+% my $attr_val_class = "";
+
+<div class="row w-100 py-5">
+  <div class="col-xs-6 col-sm-6 col-md-3 col-lg-3">
+    <h3 class="">
+      <i class="fa-solid fa-folder-tree text-muted px-3"></i>
+      Projects
+      <sup>
+	<abbr title="not all objects could be found via predefined search items, to search for all objects use advanced search menu item" class="initialism">
+	  <i class="fa fa-info-circle text-info"></i>
+	</abbr>
+      </sup>
+    </h3>
+  </div>
+</div>
+
+%# vh-100 is important, without it dropwown are not shown for collapsed rows
+<div class="container-fluid vh-100">
+  % my ($col, $cn, $ct, $mn, $mt, $v);
+  % for my $en (reverse(keys(%$entries))) {
+    % $v = $entries->{$en};
+    % $col = 'secondary';
+    <div class="card border-<%= $col %>" id="card-<%= $i %>">
+
+      <div class="card-header bg-<%= $col %> p-0 m-0 fs-6">
+	<div class="btn-group z-10" role="group">
+	  <button class="btn" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-<%= $i %>"
+		  aria-expanded="false" aria-controls="collapse-<%= $i %>">
+	    <i class="fa-solid fa-caret-right"></i>
+	  </button>
+	  %#= include 'protected/search/common-menu', dn => $en, i => $i
+	  %= form_for '/search/common' => (method => 'POST') => begin
+	    %= hidden_field 'ldap_subtree' => "$en"
+	    %= t 'button' , type => 'submit', class => 'btn fw-bold', $en
+	  % end
+	</div>
+	% $ct = substr($v->{sprintf("cn=%s,%s",$en,$base_proj)}->{createtimestamp}->[0], 0, -1);
+	% $cn = substr($v->{sprintf("cn=%s,%s",$en,$base_proj)}->{creatorsname}->[0], 4, index($v->{sprintf("cn=%s,%s",$en,$base_proj)}->{creatorsname}->[0], ",")-4);
+	% $mt = substr($v->{sprintf("cn=%s,%s",$en,$base_proj)}->{modifytimestamp}->[0], 0, -1);
+	% $mn = substr($v->{sprintf("cn=%s,%s",$en,$base_proj)}->{modifiersname}->[0], 4, index($v->{sprintf("cn=%s,%s",$en,$base_proj)}->{modifiersname}->[0], ",")-4);
+	<dl class="row umi-text-tiny font-monospace float-end m-0 pe-2 pt-1">
+	  <dt class="col-sm-4 m-0 p-0" title="created GMT: <%= $ct %> by <%= $cn %>"></dt><dd class="col-sm-8 m-0 p-0"><i class="fa-solid fa-hourglass-start"></i> <%= $ct %> <b><%= $cn %></b></li></dd>
+	  <dt class="col-sm-4 m-0 p-0" title="modified, GMT: <%= $mt %> by <%= $mn %>"></dt><dd class="col-sm-8 m-0 p-0"><i class="fa-solid fa-hourglass-half"></i> <%= $mt %> <b><%= $mn %></b></li></dd>
+	</dl>
+	
+      </div>
+
+      <div class="collapse" id="collapse-<%= $i %>">
+	<div class="card card-body">
+
+	  <div class="row">
+	    <div class="col-1 text-end h4"><i class="fa-solid fa-lg fa-fw fa-compass-drafting" title="Project Name"></i></div>
+	    <div class="col-11 h4"><%= $en %></div>
+	    
+	    <div class="col-1 text-end"><i class="fa-solid fa-comments" title="description"></i></div>
+	    <div class="col-11">
+	      <%= $v->{sprintf("cn=%s,%s",$en,$base_proj)}->{description}->[0] %>
+	    </div>
+
+	    <div class="col-1 text-end">
+	      <i class="fa-solid fa-people-group" title="team"></i>
+	    </div>
+	    <div class="col-11">
+	      <dl class="row">
+		% for my $role (sort(keys(%{$v->{group}}))) {
+		  % next if $role =~ m/\Q^cn=$role,/;
+		  <dt class="col-sm-1 text-end pe-0">
+		    <%= substr($role,3+length($en)+1,index($role,',')-length($role)) %>:
+		  </dt>
+		  <dd class="col-sm-11 my-0">
+		    <ul class="list-unstyled my-0">
+		      %# foreach my $p (@{$v->{group}->{sprintf("cn=%s_pm,ou=group,%s", $en, $base_proj)}->{memberuid}}) {
+		      % my $name;
+		      % foreach my $p (@{$v->{group}->{$role}->{memberuid}}) {
+			% $name = $v->{team}->{sprintf("uid=%s,%s", $p, $base_acc)}->{givenname}->[0] . " " . $v->{team}->{sprintf("uid=%s,%s", $p, $base_acc)}->{sn}->[0];
+			<li>
+			  <details open="">
+			    <summary class="fw-bold">
+			      <%= $name =%>
+			    </summary>
+			    <small class="text-muted">
+			      <div class="d-flex">
+				<div style="width: 110px;">
+				  <img src="data:image/jpg;base64,<%= Mojo::Util::b64_encode $v->{team}->{sprintf("uid=%s,%s", $p, $base_acc)}->{jpegphoto}->[0] %>""
+				       class="img-thumbnail object-fit-cover"
+				       width="100" alt="<%= $name %>">
+				</div>
+				<div class="flex-shrink-1">
+				  <ul class="list-unstyled fa-ul my-0">
+				    <li>
+				      <span class="fa-li">
+					<i class="fa-regular fa-envelope" title="email"></i>
+				      </span>
+				      %= link_to $v->{team}->{sprintf("uid=%s,%s", $p, $base_acc)}->{mail}->[0] => 'mailto:' . $v->{team}->{sprintf("uid=%s,%s", $p, $base_acc)}->{mail}->[0]
+				      <%#  = $v->{team}->{sprintf("uid=%s,%s", $p, $base_acc)}->{mail}->[0] =%>
+				    </li>
+
+				    <li>
+				      <span class="fa-li">
+					<i class="fa-regular fa-id-card" title="uid"></i>
+				      </span>
+				      <%= $v->{team}->{sprintf("uid=%s,%s", $p, $base_acc)}->{uid}->[0] =%>
+				    </li>
+				  </ul>
+				</div>
+			      </div>
+			    </small>
+			  </details>
+			</li>
+		      % }
+		    </ul>
+		  </dd>
+		% }		
+	      </dl>
+	    </div>
+	    
+	    <div class="col-1 text-end">
+	      <i class="fa-solid fa-globe" title="domains"></i>
+	    </div>
+	    <div class="col-11 font-monospace">
+	      <ul class="list-unstyled">
+		% foreach (sort(@{$v->{sprintf("cn=%s,%s",$en,$base_proj)}->{associateddomain}})) {
+		  <li><%= $_ %></li>
+		% }
+	      </ul>		
+	    </div>
+
+	    <div class="col-1 text-end">
+	      <i class="fa-solid fa-server" title="server"></i>
+	    </div>
+	    <div class="col-11">
+	      <ul class="list-unstyled">
+		% foreach (sort(keys(%{$v->{machines}}))) {
+		  <li>
+		    <details>
+		      <summary class="font-monospace">
+			<%= $v->{machines}->{$_}->{cn}->[0] =%>
+		      </summary>
+		      <small class="text-muted">
+			<dl class="row">
+			  <dt class="col-sm-1 text-end">hosting:</dt>
+			  <dd class="col-sm-11">
+			    <%= $v->{machines}->{$_}->{grayhostingid}->[0] =%>
+			  </dd>
+			  <dt class="col-sm-1 text-end">instance:</dt>
+			  <dd class="col-sm-11">
+			    <%= $v->{machines}->{$_}->{grayinstanceid}->[0] =%>
+			  </dd>
+			  <dt class="col-sm-1 text-end">type:</dt>
+			  <dd class="col-sm-11">
+			    <%= $v->{machines}->{$_}->{grayinstancetype}->[0] =%>
+			  </dd>
+			  <dt class="col-sm-1 text-end">ip:</dt>
+			  <dd class="col-sm-11">
+			    <%= $v->{machines}->{$_}->{iphostnumber}->[0] =%>
+			  </dd>
+			</dl>
+		      </small>
+		    </details>
+		  </li>
+		% }
+	      </ul>		
+	    </div>
+	    
+	    <div class="col-1 text-end"><i class="fa-solid fa-code-pull-request" title="repositories"></i></div>
+	    <div class="col-11">
+	      % foreach (sort(@{$v->{sprintf("cn=repository,cn=%s,%s",$en,$base_proj)}->{labeleduri}})) {
+		<a href="<%= $_ %>"
+		   title="<%= $_ %>"
+		   target="_blank" role="button"
+		   class="btn btn-secondary">
+		  % my $brand = "bars";
+		  % if ($_ =~ /gitlab/) {
+		    % $brand = "gitlab";
+		  % } elsif ($_ =~ /portus/) {
+		    % $brand = "docker";
+	          % } elsif ($_ =~ /jenkins/) {
+	            % $brand = "jenkins";
+  		  % } elsif ($_ =~ /portus/) {
+  		    % $brand = "docker";
+		  % } elsif ($_ =~ /atlas/) {
+		    % $brand = "confluence";
+		  % }
+		  <i class="fa-brands fa-<%= $brand %>"></i></a>
+	      % }
+	    </div>
+	    
+	  </div>
+	</div>
+      </div>
+
+    </div>
+    %#= include 'protected/search/common-modals', dn => $en, i => $i
+
+    % $i++
+  % }
+</div>

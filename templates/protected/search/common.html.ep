@@ -66,6 +66,7 @@
 		    </div>
 		    
 		    % for my $attr (sort(keys( %{$searchres->{$dn}} ))) {
+			% next if $attr eq 'createtimestamp' || $attr eq 'creatorsname' || $attr eq 'modifytimestamp' || $attr eq 'modifiersname';
 
 			<div class="row">
 			    <div class="col-3 text-end fw-bold fs-6"><%= $attr %></div>
