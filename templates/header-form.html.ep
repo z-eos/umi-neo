@@ -24,20 +24,20 @@
 	   accesskey="s"
 	   title="Shortcut key to focus here: s (FF: Alt-Shift-s; Chrome: Alt-s)
 
-	   &bull; default sort criteria is by name (First/Last Name, uid and cn)
-	   &bull; for each search criteria, objectClass=* is used if empty
-	   &bull; use * as substring
-	   &bull; narrow search results for non &laquo;by ...&raquo; presets, by providing attribute in filter, like: uid=*dreii.*
-	   &bull; to search in access log, use base [% helper_cfg('cfg_local','ldap_crud_db_log') %>">
+		 &bull; default sort criteria is by name (First/Last Name, uid and cn)
+		 &bull; for each search criteria, objectClass=* is used if empty
+		 &bull; use * as substring
+		 &bull; narrow search results for non &laquo;by ...&raquo; presets, by providing attribute in filter, like: uid=*dreii.*
+		 &bull; to search in access log, use base <%#  helper_cfg('cfg_local','ldap_crud_db_log') %>">
 
-    <input type="hidden" name="ldap_base_case" id="ldap_base_case" >
-   
+    <input type="hidden" name="search_base_case" id="search_base_case" >
+    
     <div class="btn-group">
-      <button type="submit"
+      %# --- DEFAULT, SEARCH_BY_NAME BUTTON
+      <button type="submit" title="Search &laquo;by name&raquo;"
 	      class="btn btn-secondary"
-	      onClick="$('#ldap_base_case').val(this.value);$('#search_filter').focus()"
-              value="search_by_name" tabindex="13"
-              title="Search &laquo;by name&raquo;">
+	      onClick="$('#search_base_case').val(this.value);$('#search_filter').focus()"
+              value="search_by_name" tabindex="13" >
         <i class="fas fa-search"></i>
       </button>
       
@@ -56,41 +56,45 @@
 
       <div class="dropdown-menu z-10 position-absolute">
 
-	  % my $b = { name => 'user',
-	  %           email => 'envelope',
-	  %           jid => 'lightbulb',
-	  %           ip => 'network-wired',
-	  %           mac => 'barcode',
-	  %           sn => 'qrcode',
-	  %           telephone => 'phone',
-	  %           gpg => 'key', };
-	  % for my $k (sort(keys(%$b))) {
-	      <button type="submit" class="<%= $menu_item %><%= $color %>"
-		      onClick="$('#ldap_base_case').val(this.value);$('#search_filter').focus()"
-		      value="search_by_<%= $k %>"
-		      title="">
-		  <i class="<%= $icon_class %> fa-<%= $b->{$k} %>"></i> by <%= $k %>
-	      </button>
-	  % }
-
-	  <button type="submit" class="<%= $menu_item %>"
-		  onClick="$('#ldap_base_case').val(this.value);$('#search_filter').focus()"
-		  value="search_global"
-		  title="base: "><% # c.session.ldap.base.db %>">
-	      <i class="fas fa-fw fa-database"></i> GLOBAL
+	%# --- SEARCH BY ATTRIBUTE BUTTONS
+	% my $b = { name => 'user',
+	%           email => 'envelope',
+	%           jid => 'lightbulb',
+	%           ip => 'network-wired',
+	%           mac => 'barcode',
+	%           sn => 'qrcode',
+	%           telephone => 'phone',
+	%           gpg => 'key', };
+	% for my $k (sort(keys(%$b))) {
+	  <button type="submit" class="<%= $menu_item %><%= $color %>"
+		  onClick="$('#search_base_case').val(this.value);$('#search_filter').focus()"
+		  value="search_by_<%= $k %>"
+		  title="">
+	    <i class="<%= $icon_class %> fa-<%= $b->{$k} %>"></i> by <%= $k %>
 	  </button>
+	% }
 
+	%# --- GLOBAL SEARCH BUTTON
+	<button type="submit" class="<%= $menu_item %>"
+		      onClick="$('#search_base_case').val(this.value);$('#search_filter').focus()"
+		      value="search_global"
+		      title="base: "><% # c.session.ldap.base.db %>">
+	  <i class="fas fa-fw fa-database"></i> GLOBAL
+	</button>
+
+	%# --- SEARCH BY ONE-LEVEL-UNDER-DC BUTTONS
 	% $icon_class = "fa-solid text-info";
 	% $color = "text-info";
 	% $b = $c->app->{cfg}->{ldap}->{base};
 	% delete $b->{dc};
-	  % for my $k (sort(keys( %$b ))) {
-	      % next if $k eq 'dc' || $k =~ /acc_/;
-	    <button type="submit" class="<%= $menu_item %><%= $color %>"
-		    name="search_base" value="<%= $b->{$k} %>"
-		    title="base: <%= $b->{$k} %>">
-		<i class="<%= $icon_class %> fa-tag"></i> <%= $k %>
-	    </button>
+	% for my $k (sort(keys( %$b ))) {
+	  % next if $k eq 'dc' || $k =~ /acc_/;
+	  <button type="submit" class="<%= $menu_item %><%= $color %>"
+		  onClick="$('#search_base_case').val(this.value);$('#search_filter').focus()"
+		  name="search_base" value="<%= $b->{$k} %>"
+		  title="base: <%= $b->{$k} %>">
+	    <i class="<%= $icon_class %> fa-tag"></i> <%= $k %>
+	  </button>
 	% }
 
       </div>

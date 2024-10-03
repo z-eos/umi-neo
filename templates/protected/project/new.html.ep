@@ -1,0 +1,118 @@
+%# -*- mode: web; eval: (follow-mode) -*-
+
+<h3 class="fw-bold p-5">
+  <i class="fas fa-compass-drafting fa-lg mr-3 text-muted"></i>
+  New Project <small><em class="text-muted font-monospace"></em></small>
+</h3>
+<hr>
+
+% my $em = stash->{employees};
+% my $p = stash->{project_new_params};
+% my $option_checked = '';
+%= form_for '/project/new' => {class => "form-horizontal"} => (method => 'POST') => begin
+
+  <div class="row mb-3">
+    %= label_for proj_name => (class => 'col-sm-2 col-form-label text-end fw-bold') => begin
+      Name:
+    % end
+    <div class="col-sm-10">
+      %= text_field 'proj_name', class => 'form-control', id => 'proj_name', placeholder => 'Short name to be used for technical needs mostly'
+    </div>
+  </div>
+
+  <div class="row mb-3">
+    %= label_for inputProjDescr => (class => 'col-sm-2 col-form-label text-end fw-bold') => begin
+      Description:
+    % end
+    <div class="col-sm-10">
+      %= text_area proj_descr => (cols => 3, class => 'form-control', placeholder => 'Short description') => begin
+	<%= exists $p->{proj_descr} ? $p->{proj_descr} : '' =%>
+      % end
+    </div>
+  </div>
+
+  % my @team = qw(team_pm team_tl team_back team_front team_qa team_devops);
+  % foreach (@team) {
+    % $option_checked .= sprintf("#%s option:checked {\n     background-color: #808080;\n}\n\n", $_);
+    <div class="row mb-3">
+      %= label_for 'input_' . $_ => (class => 'col-sm-2 col-form-label text-end fw-bold text-uppercase') => begin
+	<%= substr($_,5) %>:
+      % end
+      <div class="col-sm-10">
+	%= select_field $_ => $em, id => $_, class => 'form-select', multiple => 'multiple'
+      </div>
+    </div>
+  % }
+
+  %= submit_button 'Submit', class => 'btn btn-success font-weight-bold text-uppercase text-end'
+
+% end
+
+<style>
+  <%= $option_checked %>
+</style>
+
+% if ( stash->{'mojo.validation'}->{error} ) {
+  <script>
+   % while (my ($k, $v) = each %{stash->{'mojo.validation'}->{error}}) {
+     $('#<%= $k %>').addClass('is-invalid').after('<div id="<%= $k %>ValidationFeedback" class="invalid-feedback"></div>');
+     % if (scalar(@$v) == 1) {
+     $('#<%= $k %>ValidationFeedback').text('<%= $v->[0] %>');
+     % } else {
+     $('#<%= $k %>ValidationFeedback').text('is not <%= $v->[0] %>: <%= $v->[2] %>');
+     % }
+   % }
+  </script>
+% }
+
+<pre><%= dumper stash->{'mojo.validation'}->{error} if %{stash->{'mojo.validation'}->{error}} %></pre>
+
+<script>
+ $('select').select2({
+   placeholder: {
+     id: -1,
+     text: "➔"
+   },
+   allowClear: true,
+   theme: "classic"
+ });
+
+</script>
+
+%# <form action="/projects/new" class="form-horizontal" id="form732" method="post">
+%# 
+%#   <div class="row mb-3">
+%#     <label for="inputProjName" class="col-sm-2 col-form-label text-end fw-bold">Name:</label>
+%#     <div class="col-sm-10">
+%#       <input type="text" class="form-control" id="inputProjName" placeholder="Project Name" name="proj_name" value="<%= exists $p->{proj_name} ? $p->{proj_name} : '' %>">
+%#     </div>
+%#   </div>
+%# 
+%#   <div class="row mb-3">
+%#     <label for="inputProjDescr" class="col-sm-2 col-form-label text-end fw-bold">Description:</label>
+%#     <div class="col-sm-10">
+%#       <textarea class="form-control" id="inputProjDescr" rows="3" placeholder="Project Description" name="proj_descr">
+%# 	<%= exists $p->{proj_descr} ? $p->{proj_descr} : '' =%>
+%#       </textarea>
+%#     </div>
+%#   </div>
+%# 
+%#   % my @team = qw(team_pm team_tl team_backend team_frontend team_qa);
+%#   % foreach (@team) {
+%#     <div class="row mb-3">
+%#       <label for="inputBackend" class="col-sm-2 col-form-label fw-bold text-end text-uppercase"><%= substr($_,5) %>:</label>
+%#       <div class="col-sm-10">
+%# 	<select id="inputBackend" name="<%= $_ %>" class="form-select">
+%# 	  <option selected>Choose...</option>
+%# 	  % foreach my $k (sort(keys(%$em))) {
+%# 	    % my $e = exists $p->{$_} && $em->{$k} eq $p->{$_} ? 'selected=""' : ''; 
+%# 	    <option value="<%= $em->{$k} %>" <%= $e %>><%= $k %></option>
+%# 	  % }
+%# 	</select>
+%#       </div>
+%#     </div>
+%#   % }
+%# 
+%#   <input type="submit" value="Submit" class="btn btn-success font-weight-bold text-uppercase text-end">
+%# 
+%# </form>

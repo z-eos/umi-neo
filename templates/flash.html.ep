@@ -9,8 +9,25 @@
   %   $class = "warning";
   % }
 
-  <div id="flash" class="alert alert-<%= $class; %> mt-4 " role="alert">
-    <i class="fa-solid fa-triangle-exclamation pe-3"></i></i><%= $message; %>
+  <div id="flash" class="alert alert-<%= $class %> mt-4 " role="alert">
+    <i class="fa-solid fa-triangle-exclamation pe-3"></i></i><%== $message; %>
+  </div>
+
+% }
+
+% if (defined(my $message = stash->{message})) {
+  % my $status = stash->{status};
+  % my $class = "";
+  % if ( $status eq 'error') {
+  %   $class = "danger";
+  % } elsif ( $status eq 'ok') {
+  %   $class = "success";
+  % } elsif ( $status eq 'warn') {
+  %   $class = "warning";
+  % }
+
+  <div id="flash" class="alert alert-<%= $class %> mt-4 " role="alert">
+    <i class="fa-solid fa-triangle-exclamation pe-3"></i></i><%== $message; %>
   </div>
 
 % }

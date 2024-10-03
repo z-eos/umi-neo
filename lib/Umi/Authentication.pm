@@ -5,7 +5,7 @@ package Umi::Authentication;
 use Mojo::Base qw( -base -signatures );
 
 sub new {
-    my ($class, $app, $stash) = @_;
+    my ($class, $app) = @_;
     my $self = bless {}, $class;
     $self->{app} = $app;
     return $self;

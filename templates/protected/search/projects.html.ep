@@ -20,7 +20,7 @@
 %# vh-100 is important, without it dropwown are not shown for collapsed rows
 <div class="container-fluid vh-100">
   % my ($col, $cn, $ct, $mn, $mt, $v);
-  % for my $en (reverse(keys(%$entries))) {
+  % for my $en (sort(keys(%$entries))) {
     % $v = $entries->{$en};
     % $col = 'secondary';
     <div class="card border-<%= $col %>" id="card-<%= $i %>">
@@ -41,14 +41,18 @@
 	% $cn = substr($v->{sprintf("cn=%s,%s",$en,$base_proj)}->{creatorsname}->[0], 4, index($v->{sprintf("cn=%s,%s",$en,$base_proj)}->{creatorsname}->[0], ",")-4);
 	% $mt = substr($v->{sprintf("cn=%s,%s",$en,$base_proj)}->{modifytimestamp}->[0], 0, -1);
 	% $mn = substr($v->{sprintf("cn=%s,%s",$en,$base_proj)}->{modifiersname}->[0], 4, index($v->{sprintf("cn=%s,%s",$en,$base_proj)}->{modifiersname}->[0], ",")-4);
-	<dl class="row umi-text-tiny font-monospace float-end m-0 pe-2 pt-1">
-	  <dt class="col-sm-4 m-0 p-0" title="created GMT: <%= $ct %> by <%= $cn %>"></dt><dd class="col-sm-8 m-0 p-0"><i class="fa-solid fa-hourglass-start"></i> <%= $ct %> <b><%= $cn %></b></li></dd>
-	  <dt class="col-sm-4 m-0 p-0" title="modified, GMT: <%= $mt %> by <%= $mn %>"></dt><dd class="col-sm-8 m-0 p-0"><i class="fa-solid fa-hourglass-half"></i> <%= $mt %> <b><%= $mn %></b></li></dd>
-	</dl>
+	<ul class="list-unstyled fa-ul umi-text-tiny font-monospace float-end m-0 pe-2 pt-1">
+	  <li title="created GMT: <%= $ct %> by <%= $cn %>">
+	    <span class="fa-li"><i class="fa-solid fa-hourglass-start"></i></span><%= $ct %> <b><%= $cn %></b>
+	  </li>
+	  <li title="modified, GMT: <%= $mt %> by <%= $mn %>">
+	    <span class="fa-li"><i class="fa-solid fa-hourglass-half"></i></span><%= $mt %> <b><%= $mn %></b>
+	  </li>
+	</ul>
 	
       </div>
 
-      <div class="collapse" id="collapse-<%= $i %>">
+      <div class="collapse<%= keys(%$entries) == 1 ? ' show' : '' %>" id="collapse-<%= $i %>">
 	<div class="card card-body">
 
 	  <div class="row">
@@ -68,7 +72,7 @@
 		% for my $role (sort(keys(%{$v->{group}}))) {
 		  % next if $role =~ m/\Q^cn=$role,/;
 		  <dt class="col-sm-1 text-end pe-0">
-		    <%= substr($role,3+length($en)+1,index($role,',')-length($role)) %>:
+		    <%= substr($role,3+length($en)+1,index($role,',')-length($role)) =%>:
 		  </dt>
 		  <dd class="col-sm-11 my-0">
 		    <ul class="list-unstyled my-0">
@@ -84,9 +88,11 @@
 			    <small class="text-muted">
 			      <div class="d-flex">
 				<div style="width: 110px;">
-				  <img src="data:image/jpg;base64,<%= Mojo::Util::b64_encode $v->{team}->{sprintf("uid=%s,%s", $p, $base_acc)}->{jpegphoto}->[0] %>""
-				       class="img-thumbnail object-fit-cover"
-				       width="100" alt="<%= $name %>">
+				  <picture>
+				    <img src="data:image/jpg;base64,<%= Mojo::Util::b64_encode $v->{team}->{sprintf("uid=%s,%s", $p, $base_acc)}->{jpegphoto}->[0] %>""
+					 class="img-thumbnail object-fit-cover"
+					 width="100" alt="<%= $name %>">
+				  </picture>
 				</div>
 				<div class="flex-shrink-1">
 				  <ul class="list-unstyled fa-ul my-0">
@@ -102,7 +108,8 @@
 				      <span class="fa-li">
 					<i class="fa-regular fa-id-card" title="uid"></i>
 				      </span>
-				      <%= $v->{team}->{sprintf("uid=%s,%s", $p, $base_acc)}->{uid}->[0] =%>
+				      <a href="/profile/<%= $v->{team}->{sprintf("uid=%s,%s", $p, $base_acc)}->{uid}->[0] %>"><%= $v->{team}->{sprintf("uid=%s,%s", $p, $base_acc)}->{uid}->[0] %></a>
+
 				    </li>
 				  </ul>
 				</div>
@@ -113,7 +120,7 @@
 		      % }
 		    </ul>
 		  </dd>
-		% }		
+		% }
 	      </dl>
 	    </div>
 	    
@@ -122,8 +129,10 @@
 	    </div>
 	    <div class="col-11 font-monospace">
 	      <ul class="list-unstyled">
-		% foreach (sort(@{$v->{sprintf("cn=%s,%s",$en,$base_proj)}->{associateddomain}})) {
-		  <li><%= $_ %></li>
+		% if ( exists $v->{sprintf("cn=%s,%s",$en,$base_proj)}->{associateddomain} ) {
+		  % foreach (sort(@{$v->{sprintf("cn=%s,%s",$en,$base_proj)}->{associateddomain}})) {
+		    <li class="user-select-all"><%= $_ %></li>
+		  % }
 		% }
 	      </ul>		
 	    </div>
@@ -136,7 +145,7 @@
 		% foreach (sort(keys(%{$v->{machines}}))) {
 		  <li>
 		    <details>
-		      <summary class="font-monospace">
+		      <summary class="font-monospace user-select-all">
 			<%= $v->{machines}->{$_}->{cn}->[0] =%>
 		      </summary>
 		      <small class="text-muted">
@@ -146,7 +155,7 @@
 			    <%= $v->{machines}->{$_}->{grayhostingid}->[0] =%>
 			  </dd>
 			  <dt class="col-sm-1 text-end">instance:</dt>
-			  <dd class="col-sm-11">
+			  <dd class="col-sm-11 user-select-all">
 			    <%= $v->{machines}->{$_}->{grayinstanceid}->[0] =%>
 			  </dd>
 			  <dt class="col-sm-1 text-end">type:</dt>
@@ -154,7 +163,7 @@
 			    <%= $v->{machines}->{$_}->{grayinstancetype}->[0] =%>
 			  </dd>
 			  <dt class="col-sm-1 text-end">ip:</dt>
-			  <dd class="col-sm-11">
+			  <dd class="col-sm-11 user-select-all">
 			    <%= $v->{machines}->{$_}->{iphostnumber}->[0] =%>
 			  </dd>
 			</dl>
@@ -167,25 +176,29 @@
 	    
 	    <div class="col-1 text-end"><i class="fa-solid fa-code-pull-request" title="repositories"></i></div>
 	    <div class="col-11">
-	      % foreach (sort(@{$v->{sprintf("cn=repository,cn=%s,%s",$en,$base_proj)}->{labeleduri}})) {
-		<a href="<%= $_ %>"
-		   title="<%= $_ %>"
-		   target="_blank" role="button"
-		   class="btn btn-secondary">
-		  % my $brand = "bars";
-		  % if ($_ =~ /gitlab/) {
-		    % $brand = "gitlab";
-		  % } elsif ($_ =~ /portus/) {
-		    % $brand = "docker";
-	          % } elsif ($_ =~ /jenkins/) {
-	            % $brand = "jenkins";
-  		  % } elsif ($_ =~ /portus/) {
-  		    % $brand = "docker";
-		  % } elsif ($_ =~ /atlas/) {
-		    % $brand = "confluence";
-		  % }
-		  <i class="fa-brands fa-<%= $brand %>"></i></a>
-	      % }
+	      % if ( exists $v->{sprintf("cn=repository,cn=%s,%s",$en,$base_proj)}->{labeleduri} ) {
+		% foreach (sort(@{$v->{sprintf("cn=repository,cn=%s,%s",$en,$base_proj)}->{labeleduri}})) {
+		  <a href="<%= $_ %>"
+		     title="<%= $_ %>"
+		     target="_blank" role="button"
+		     class="btn btn-secondary">
+		    % my $brand = "bars";
+		    % if ($_ =~ /gitlab/) {
+		      % $brand = "fa-brands fa-gitlab";
+		    % } elsif ($_ =~ /portus/) {
+		    % $brand = "fa-brands fa-docker"; }
+		    % elsif ($_ =~ /jenkins/) {
+		      % $brand = "fa-brands fa-jenkins"; }
+		      % elsif ($_ =~ /portus/) {
+			% $brand = "fa-brands fa-docker"; }
+			% elsif ($_ =~ /atlas/) {
+			  % $brand = "fa-brands fa-confluence"; }
+			  % elsif ($_ =~ /testrai/) {
+			    % $brand = "fa-solid fa-stethoscope";
+			  % }
+			  <i class="<%= $brand %>"></i></a>
+			% }
+		      % }
 	    </div>
 	    
 	  </div>

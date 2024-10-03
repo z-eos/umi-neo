@@ -1,0 +1,21 @@
+%# -*- mode: web; eval: (follow-mode) -*-
+% if ( exists stash->{debug} ) {
+  % my $status = { ok => 'success',
+    % warn => 'warning',
+    % error => 'danger',
+    % debug => 'info' };
+  % my $ico = { ok => 'circle-check',
+    % warn => 'triangle-exclamation',
+    % error => 'circle-exclamation',
+    % debug => 'circle-info' };
+  % foreach my $k (sort(keys(%{stash->{debug}}))) {
+    <div id="message" class="alert alert-<%= $status->{$k} %> mt-4 ">
+      <i class="fa-solid fa-<%= $ico->{$k} %> pe-3"></i>
+      <ul>
+	% foreach (@{stash->{debug}->{$k}}) {
+	  <li><%== $_ %></li>li>
+	% }
+      </ul>
+    </div>
+  % }
+% }

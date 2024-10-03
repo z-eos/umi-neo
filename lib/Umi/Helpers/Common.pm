@@ -35,10 +35,12 @@ sub register {
 ERROR: %s
 code: %s; text: %s
 base: %s
-filter: %s\n", $message->error_name, $message->code,
+filter: %s
+attrs: %s\n", $message->error_name, $message->code,
 				    $message->error_text,
 				    $search_arg->{base},
-				    $search_arg->{filter}
+				    exists $search_arg->{filter} ? $search_arg->{filter} : '(objectClass=*)',
+				    exists $search_arg->{attrs} ? join(" ", @{$search_arg->{attrs}}) : 'NONE',
 				   );
 		   });
 
@@ -251,7 +253,7 @@ wrapper for ssh-keygen(1)
 		     my @arr = split(//, $par->{xk_separator_character_random});
 		     $p->{xk}->{separator_alphabet} = \@arr;
 
-		     p $p;
+		     #p $p;
 		     if (! defined $p->{pwd} || $p->{pwd} eq '') {
 			 ### password generation (not verification)
 			 if ( defined $p->{palg} ) {
@@ -262,14 +264,14 @@ wrapper for ssh-keygen(1)
 			     # all alg use same config structure, so here we fetch default
 			     # config for pwd_alg and overwrite options with form input
 			     my $xk_cf = Crypt::HSXKPasswd->preset_config( $p->{palg} );
-			     p $xk_cf;
+			     # p $xk_cf;
 			     foreach (keys %{$xk_cf}) {
 				 $xk_cf->{$_} = $p->{xk}->{$_} if exists $p->{xk}->{$_};
 				 #$xk_cf->{$_} = $par->{'xk_'.$_} if exists $par->{'xk_'.$_};
 			     }
 			     $xk_cf->{separator_alphabet} = $p->{xk}->{separator_alphabet}
 				 if $p->{xk}->{separator_character} eq 'RANDOM';
-			     p $xk_cf;
+			     #p $xk_cf;
 			     my $xk = Crypt::HSXKPasswd->new( config => $xk_cf );
 			     $p->{pwd}->{clear}    = $xk->password( $p->{pnum} );
 			     %{$p->{pwd}->{stats}} = $xk->stats();

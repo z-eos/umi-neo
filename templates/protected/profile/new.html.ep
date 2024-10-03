@@ -1,0 +1,79 @@
+%# -*- mode: web; eval: (follow-mode) -*-
+
+<h3 class="fw-bold p-4">
+  <i class="fas fa-user-plus fa-lg me-3 text-muted"></i>
+  New User <small><em class="text-muted font-monospace"></em></small>
+</h3>
+
+%= form_for '/profile/new' => {class => "form-horizontal"} => (method => 'POST') => begin
+
+  <div class="input-group mb-3">    
+    %= label_for user_first_name => 'First Name:', class => 'input-group-text'
+    %= text_field 'user_first_name', class => 'form-control', id => 'user_first_name', placeholder => 'First name of the employee', title => 'First name of the employee'
+  </div>
+  <div class="input-group mb-3">
+    %= label_for user_last_name => 'Last Name:', class => 'input-group-text'
+    %= text_field 'user_last_name', class => 'form-control', id => 'user_last_name', placeholder => 'Last name of the employee', title => 'Last name of the employee'
+  </div>
+
+  <div class="input-group mb-3">
+    %= label_for title => 'Title:', class => 'input-group-text'
+    %= text_field 'title', class => 'form-control', id => 'title', placeholder => 'Employee title', title => 'Employee title'
+  </div>
+  
+  <div class="input-group mb-3">
+    <span class="input-group-text">Birth:</span>
+    %= text_field 'birth', class => 'form-control', id => 'birth', title => 'Employee birth date', placeholder => 'Employee birth date'
+      <span class="input-group-text"><i class="fa-regular fa-calendar"></i></span>
+  </div>
+
+  <div class="input-group mb-3">
+    <span class="input-group-text">Employee Location:</span>
+    %= text_field 'city', class => 'form-control', id => 'city', placeholder => 'City', title => 'Employee city'
+    %= text_field 'country', class => 'form-control', id => 'country', placeholder => 'Country', title => 'Employee country'
+  </div>
+
+  %= submit_button 'Submit', class => 'btn btn-success font-weight-bold text-uppercase text-end'
+
+% end
+
+% if ( stash->{'mojo.validation'}->{error} ) {
+  <script>
+   % while (my ($k, $v) = each %{stash->{'mojo.validation'}->{error}}) {
+     $('#<%= $k %>').addClass('is-invalid').after('<div id="<%= $k %>ValidationFeedback" class="invalid-feedback"></div>');
+     % if (scalar(@$v) == 1) {
+     $('#<%= $k %>ValidationFeedback').text('<%= $v->[0] %>');
+     % } else {
+     $('#<%= $k %>ValidationFeedback').text('is not <%= $v->[0] %>: <%= $v->[2] %>');
+     % }
+   % }
+  </script>
+% }
+
+  
+<script>
+ document.addEventListener('DOMContentLoaded', function () {
+   const picker = new tempusDominus.TempusDominus(document.getElementById('birth'), {
+     display: {
+       viewMode: 'calendar',
+       components: {
+         calendar: true,
+         date: true,
+         month: true,
+         year: true,
+         decades: true,
+         clock: false,
+         hours: false,
+         minutes: false,
+         seconds: false
+       },
+       buttons: {
+	 today: true
+       }
+     },
+     localization: {
+       format: 'yyyy-MM-dd'
+     }
+   });
+ });
+</script>

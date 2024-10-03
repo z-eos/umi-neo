@@ -1,12 +1,93 @@
-%= t h1 => 'User profile (authenticated)'
+%# -*- mode: web; eval: (follow-mode) -*-
+
+%= t 'h1', class => 'mt-3 mb-4', 'User profile'
+
+% use Net::LDAP::Util qw(generalizedTime_to_time);
+% use POSIX qw(strftime);
+
+% my ($dn, $v);
+% foreach $dn (sort keys %$hash) {
+  % $v = $hash->{$dn};
+  <div class="card my-3">
+    <div class="row g-0 mt-3">
+      <div class="col-md-4">
+	<picture>
+	  <img src="data:image/jpg;base64,<%= Mojo::Util::b64_encode $v->{jpegphoto}->[0] %>""
+	       class="img-thumbnail img-fluid float-end" style="max-width: 300px;"
+	       alt="<%= $dn %>">
+	</picture>
+      </div>
+      <div class="col-md-8">
+	<div class="card-body">
+          <h4 class="card-title fw-bold"><%= $v->{gecos}->[0] %></h5>
+	    <dl class="row card-text">
+	      % my @items = qw(title description mail birthdate uid);
+	      % foreach (@items) {
+		<dt class="col-sm-2 text-end"><%= $_ %></dt>
+		<dd class="col-sm-10 user-select-all"><%= exists $v->{$_} ? $v->{$_}->[0] : 'unavailable' %></dd>
+	      % }
+	      <dt class="col-sm-2 text-end">Email</dt>
+	      <dd class="col-sm-10 user-select-all"><%== exists $v->{mail} ? sprintf('<a href="mailto:%s">%s</a>', $v->{mail}->[0], $v->{mail}->[0]) : 'unavailable' %></dd>
+
+	      <dt class="col-sm-2 text-end">Location</dt>
+	      <dd class="col-sm-10 user-select-all"><%= exists $v->{l} ? $v->{l}->[0] : 'unavailable' %>, <%= exists $v->{registeredaddress} ? $v->{registeredaddress}->[0] : 'unavailable' %></dd>
+
+	      <dt class="col-sm-2 text-end">Hire Date</dt>
+	      <dd class="col-sm-10 user-select-all"><%= strftime( "%F", localtime(generalizedTime_to_time($v->{createtimestamp}->[0]))) %></dd>
+
+	      <dt class="col-sm-2 text-end">groups</dt>
+	      <dd class="col-sm-10">
+		% if ( exists $groups->{$dn} ) {
+		  % foreach (sort(@{$groups->{$dn}})) {
+		    <span class="badge text-bg-secondary fw-normal"><%= $_ %></span>
+		  % }
+		% }
+	      </dd>
+
+	      <dt class="col-sm-2 text-end">servers</dt>
+	      <dd class="col-sm-10">
+		% if ( exists $servers->{$dn} ) {
+		  <form role="form" id="searchMachine" method="POST" action="/search/common">
+		    <input type="hidden" name="search_base_case" class="search_base_case" value="">
+
+		    % foreach (sort(@{$servers->{$dn}})) {
+		      <span title="<%== $server_alive->{$dn}->{$_} ? '' : 'absent in machines (probably old stuff)' %>">
+		    <button type="submit"
+			    class="btn btn-<%= $server_alive->{$dn}->{$_} ? 'secondary' : 'danger disabled' %> btn-sm mb-1"
+			    style="--bs-btn-font-size: .75rem;"
+			    data-filter="<%= 'cn=' . $_ . ',' . $search_base_case %>"
+			    onClick="$('.search_base_case').val($(this).data('filter')); $('#searchMachine').submit();">
+		      <%= $_ %>
+		    </button>
+		      </span>
+		  % }
+		  </form>
+		% }
+	      </dd>
+
+	      <dt class="col-sm-2 text-end">projects</dt>
+	      <dd class="col-sm-10">
+		% if ( exists $projects->{$dn} ) {
+		  % foreach (@{$projects->{$dn}}) {
+		    <span class="badge text-bg-secondary fw-normal"><a href="/projects/<%= substr($_, 0, index($_, ':')) %>"><%= $_ %></a></span>
+		  % }
+		% }
+	      </dd>
+	    </dl>
+            <p class="card-text"><small class="text-body-secondary umi-text-tiny">
+	      Last updated <%= strftime( "%F %T", localtime(generalizedTime_to_time($v->{modifytimestamp}->[0]))) %> by <a href="/profile/<%= $modifiersname->{uid}->[0] %>"><%= $modifiersname->{$dn}->{gecos}->[0] %></a>
+	    </small></p>
+	</div>
+      </div>
+    </div>
+  </div>
+
+% }
 
 %# if (defined(my $dump = flash('dump'))) {
-<pre>
-<%= b( $dump ); %>
-</pre>
+%# <pre>
+%# <%= b( $dump ); %>
+%# </pre>
 
-<pre>
-%= dumper { hash => $hash }
-</pre>
 
 %# }

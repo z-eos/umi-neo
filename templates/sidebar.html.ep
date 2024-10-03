@@ -101,7 +101,7 @@
 	    </a>
 	    <ul class="nav flex-column collapse ml-4 p-0" id="submenuManage">
 		<li class="nav-item">
-		    <a class="text-light nav-link" href="/projects">
+		    <a class="text-light nav-link" href="/project">
 			<i class="fa-solid fa-fw fa-folder-tree"></i>
 			Projects
 		    </a>
@@ -157,7 +157,7 @@
 		    </a>
 		</li>
 		<li class="nav-item">
-		    <a class="text-light nav-link" href="/sysinfo">
+		    <a class="text-light nav-link" href="/tool/sysinfo">
 			<i class="fas fa-fw fa-info-circle"></i>
 			System Info
 		    </a>

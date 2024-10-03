@@ -1,0 +1,133 @@
+/* Main container for Select2 single selection */
+.select2-container .select2-selection--single {
+  background-color: var(--bs-body-bg); /* Background color for the selection area */
+  border: var(--bs-border-width) solid var(--bs-border-color); /* Border width and color */
+  color: var(--bs-body-color); /* Text color for selected item */
+}
+
+/* Arrow appearance in the dropdown */
+.select2-container .select2-selection--single .select2-selection__arrow b {
+  border-color: #fff transparent transparent transparent;  /* Arrow color (white in this case) */
+}
+
+/* Selection area for multiple selections */
+.select2-container .select2-selection--multiple {
+  background-color: var(--bs-body-bg); /* Background color for the selection area */
+  border: var(--bs-border-width) solid var(--bs-border-color); /* Border width and color */
+  color: var(--bs-body-color); /* Text color for selected items */
+}
+
+/* Tags in the multi-selection field */
+.select2-container .select2-selection--multiple .select2-selection__choice {
+  background-color: var(--bs-body-bg); /* Background color for each selected tag */
+  border: var(--bs-border-width) solid var(--bs-border-color); /* Border width and color for the tags */
+  color: var(--bs-body-color); /* Text color for the tags */
+}
+
+/* Dropdown menu */
+.select2-container .select2-dropdown {
+  background-color: var(--bs-body-bg); /* Background color for the dropdown menu */
+  border: var(--bs-border-width) solid var(--bs-border-color); /* Border width and color for the dropdown */
+  color: var(--bs-body-color); /* Text color for the dropdown items */
+}
+
+/* Individual items in the dropdown list */
+.select2-container .select2-results__option {
+  background-color: var(--bs-body-bg); /* Background color for each item */
+  color: var(--bs-body-color); /* Text color for each item */
+}
+
+/* Highlighted item when hovered or navigated with keyboard */
+.select2-container .select2-results__option--highlighted {
+  background-color: var(--bs-tertiary-bg);  /* Background color for the highlighted item */
+  color: var(--bs-body-color); /* Text color for the highlighted item */
+}
+
+/* Style change when the element is focused */
+.select2-container--focus .select2-selection {
+  border-color: #777; /* Border color when focused */
+}
+
+/* Highlighted item in the classic theme (with focus) */
+.select2-container--classic .select2-results__option--highlighted[aria-selected] {
+  background-color: var(--bs-tertiary-bg); /* Background color for highlighted item in classic theme */
+  border: var(--bs-border-width) solid var(--bs-border-color); /* Border width and color */
+  color: var(--bs-body-color); /* Text color for the highlighted item */
+}
+
+/* Dropdown border in classic theme when it's open */
+.select2-container--classic.select2-container--open .select2-dropdown {
+  border-color: var(--bs-border-width) solid var(--bs-border-color); /* Border color when dropdown is open */
+}
+
+/* Multiple selection field's border in classic theme when dropdown is open */
+.select2-container--classic.select2-container--open .select2-selection--multiple {
+  border: var(--bs-border-width) solid var(--bs-border-color); /* Border for multiple selection field */
+}
+
+/* Search input field in Select2 */
+.select2-search__field {
+  background: inherit; /* Inherits background color from the parent container */
+}
+
+.select2-container .select2-selection__placeholder {
+    color: var(--bs-gray-500); /* Placeholder color to match Bootstrap's gray */
+}
+
+.select2-container--focus .select2-selection {
+    outline: 0;
+    box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25); /* Bootstrap's focus shadow */
+}
+
+.select2-container .select2-search--dropdown .select2-search__field {
+    background-color: var(--bs-body-bg); /* Match background to dark theme */
+    color: var(--bs-body-color);         /* Text color to match body */
+    border: var(--bs-border-width) solid var(--bs-border-color); /* Border color */
+}
+
+.select2-container--disabled .select2-selection {
+    background-color: var(--bs-dark);  /* Slightly darker background */
+    opacity: 0.65;                     /* Reduced opacity */
+    color: var(--bs-gray-600);         /* Disabled text color */
+}
+
+.select2-container .select2-results__option:hover {
+    background-color: var(--bs-secondary-bg); /* A subtle background color for hover */
+    color: var(--bs-body-color);               /* Ensure the text color remains consistent */
+}
+
+.select2-selection__choice__remove {
+    color: var(--bs-body-color);    /* Color of the "×" button */
+    opacity: 0.75;
+}
+.select2-selection__choice__remove:hover {
+    color: var(--bs-danger);        /* Change color on hover to indicate action */
+}
+
+.select2-container .select2-selection__arrow b {
+    border-color: var(--bs-gray-500) transparent transparent transparent; /* Subtle arrow color */
+}
+
+.select2-results__option.loading-results {
+    background-color: var(--bs-body-bg);  /* Match background */
+    color: var(--bs-info);                /* Text color for loading indication */
+}
+
+/* clear button ("x" icon) on the select box when a value is selected */
+.select2-container--classic .select2-selection--multiple .select2-selection__clear {
+  display: inline-flex;
+  color: var(--bs-danger);
+  cursor: auto;
+}
+
+.select2-container--classic .select2-selection--multiple .select2-selection__choice__remove {
+  color: var(--bs-danger);
+  font-weight: bold;
+  cursor: auto;
+}
+
+.select2-container--classic .select2-selection--multiple .select2-selection__choice__remove:hover {
+  color: var(--bs-danger);
+  font-weight: bold;
+  cursor: auto;
+}
