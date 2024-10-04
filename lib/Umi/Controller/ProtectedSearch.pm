@@ -167,7 +167,7 @@ sub search_projects  ($self) {
   my $search_arg = { base => $self->{app}->{cfg}->{ldap}->{base}->{project},
 		     filter => sprintf("(cn=%s)", $self->stash->{proj}),
 		     scope => 'one',
-		     attrs => ['cn'] };
+		     attrs => [qw(cn createTimestamp creatorsName modifiersName modifyTimestamp)] };
   my $search = $ldap->search( $search_arg );
   $self->{app}->h_log( $self->{app}->h_ldap_err($search, $search_arg) ) if $search->code;
 
@@ -222,7 +222,7 @@ sub search_projects  ($self) {
 	  {sprintf("cn=%s,%s",$proj,$self->{app}->{cfg}->{ldap}->{base}->{project})}->
 	  {associateddomain}
 	})) {
-	$self->h_log($_);
+	# $self->h_log($_);
 	$search_arg = { base => $self->{app}->{cfg}->{ldap}->{base}->{machines},
 			filter => sprintf("(cn=*%s)", $_),
 			attrs => ['*'], };
@@ -234,7 +234,7 @@ sub search_projects  ($self) {
     }
   }
 
-  # $self->h_log($entries);
+  #$self->h_log($entries);
 
   $self->render(
 		template => 'protected/search/projects',

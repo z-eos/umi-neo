@@ -1,12 +1,12 @@
 %# -*- mode: web; eval: (follow-mode) -*-
-% my $i = 0;
+% my $i =
 % my $j = 0;
 % my $attr_val_class = "";
 
 <div class="row w-100 py-5">
   <div class="col-xs-6 col-sm-6 col-md-3 col-lg-3">
     <h3 class="">
-      <i class="fa-solid fa-folder-tree text-muted px-3"></i>
+      <i class="fa-solid fa-folder-tree fa-2xl text-muted px-3"></i>
       Projects
       <sup>
 	<abbr title="not all objects could be found via predefined search items, to search for all objects use advanced search menu item" class="initialism">
@@ -22,6 +22,7 @@
   % my ($col, $cn, $ct, $mn, $mt, $v);
   % for my $en (sort(keys(%$entries))) {
     % $v = $entries->{$en};
+    <!-- pre><%# = dumper $v %></pre-->
     % $col = 'secondary';
     <div class="card border-<%= $col %>" id="card-<%= $i %>">
 
@@ -56,78 +57,101 @@
 	<div class="card card-body">
 
 	  <div class="row">
-	    <div class="col-1 text-end h4"><i class="fa-solid fa-lg fa-fw fa-compass-drafting" title="Project Name"></i></div>
-	    <div class="col-11 h4"><%= $en %></div>
+	    <div class="col-1 text-end h4 py-4"><i class="fa-solid fa-lg fa-fw fa-compass-drafting fa-2xl" title="Project Name"></i></div>
+	    <div class="col-11 h4 py-4"><%= $en %></div>
 	    
-	    <div class="col-1 text-end"><i class="fa-solid fa-comments" title="description"></i></div>
-	    <div class="col-11">
+	    <div class="col-1 text-end py-4">
+	      <i class="fa-solid fa-feather-pointed fa-xl" title="description"></i></div>
+	    <div class="col-11 py-4">
 	      <%= $v->{sprintf("cn=%s,%s",$en,$base_proj)}->{description}->[0] %>
 	    </div>
 
-	    <div class="col-1 text-end">
-	      <i class="fa-solid fa-people-group" title="team"></i>
+	    <div class="col-1 text-end pt-4">
+	      <i class="fa-solid fa-people-roof fa-xl" title="team"></i>
 	    </div>
-	    <div class="col-11">
+	    <div class="col-11 pt-4">
 	      <dl class="row">
 		% for my $role (sort(keys(%{$v->{group}}))) {
 		  % next if $role =~ m/\Q^cn=$role,/;
-		  <dt class="col-sm-1 text-end pe-0">
-		    <%= substr($role,3+length($en)+1,index($role,',')-length($role)) =%>:
+		  <dt class="col-sm-1 text-end pe-2">
+		    % my $team_role = substr($role,3+length($en)+1,index($role,',')-length($role));
+		    % if ($team_role eq 'devops' ) {
+		      <i class="fa-solid fa-lg fa-user-doctor" title="DevOps"></i>
+		    % }
+		    % elsif ($team_role eq 'back' ) {
+		      <i class="fa-solid fa-lg fa-flask-vial" title="BackEnd"></i>
+		    % }
+		    % elsif ($team_role eq 'front' ) {
+		      <i class="fa-solid fa-lg fa-palette" title="FrontEnd"></i>
+                    % }
+		    % elsif ($team_role eq 'qa' ) {
+                      <i class="fa-solid fa-lg fa-bug-slash" title="QA"></i>
+		    % }
+		    % elsif ($team_role eq 'pm' ) {
+		      <i class="fa-solid fa-lg fa-person-military-pointing" title="ProjectManager"></i>
+		    % }
+		    % elsif ($team_role eq 'tl' ) {
+		      <i class="fa-solid fa-lg fa-person-through-window" title="TeamLead"></i>
+		    % }
+		    % else {
+		      <%= $team_role =%>:
+		    % }
 		  </dt>
 		  <dd class="col-sm-11 my-0">
-		    <ul class="list-unstyled my-0">
+		    <div class="row row-cols-1 row-cols-md-2 g-4">
+
 		      %# foreach my $p (@{$v->{group}->{sprintf("cn=%s_pm,ou=group,%s", $en, $base_proj)}->{memberuid}}) {
 		      % my $name;
 		      % foreach my $p (@{$v->{group}->{$role}->{memberuid}}) {
 			% $name = $v->{team}->{sprintf("uid=%s,%s", $p, $base_acc)}->{givenname}->[0] . " " . $v->{team}->{sprintf("uid=%s,%s", $p, $base_acc)}->{sn}->[0];
-			<li>
-			  <details open="">
-			    <summary class="fw-bold">
-			      <%= $name =%>
-			    </summary>
-			    <small class="text-muted">
-			      <div class="d-flex">
-				<div style="width: 110px;">
-				  <picture>
-				    <img src="data:image/jpg;base64,<%= Mojo::Util::b64_encode $v->{team}->{sprintf("uid=%s,%s", $p, $base_acc)}->{jpegphoto}->[0] %>""
-					 class="img-thumbnail object-fit-cover"
-					 width="100" alt="<%= $name %>">
-				  </picture>
-				</div>
-				<div class="flex-shrink-1">
-				  <ul class="list-unstyled fa-ul my-0">
-				    <li>
-				      <span class="fa-li">
-					<i class="fa-regular fa-envelope" title="email"></i>
-				      </span>
-				      %= link_to $v->{team}->{sprintf("uid=%s,%s", $p, $base_acc)}->{mail}->[0] => 'mailto:' . $v->{team}->{sprintf("uid=%s,%s", $p, $base_acc)}->{mail}->[0]
-				      <%#  = $v->{team}->{sprintf("uid=%s,%s", $p, $base_acc)}->{mail}->[0] =%>
-				    </li>
 
-				    <li>
-				      <span class="fa-li">
-					<i class="fa-regular fa-id-card" title="uid"></i>
-				      </span>
-				      <a href="/profile/<%= $v->{team}->{sprintf("uid=%s,%s", $p, $base_acc)}->{uid}->[0] %>"><%= $v->{team}->{sprintf("uid=%s,%s", $p, $base_acc)}->{uid}->[0] %></a>
+			<div class="col">
+			  <div class="card mb-3 p-2">
+			    <div class="row g-0">
+			      <div class="col-md-4">
+				<img src="data:image/jpg;base64,<%= Mojo::Util::b64_encode $v->{team}->{sprintf("uid=%s,%s", $p, $base_acc)}->{jpegphoto}->[0] %>""
+				     class="img-thumbnail object-fit-cover"
+				     width="100" alt="<%= $name %>">
+			      </div>
+			      <div class="col-md-8">
+				<div class="card-body">
+				  <h5 class="card-title fw-bold"><%= $name =%></h5>
+				  
+				  <small class="card-text">
+				    <ul class="list-unstyled fa-ul my-0">
+				      <li>
+					<span class="fa-li">
+					  <i class="fa-regular fa-envelope" title="email"></i>
+					</span>
+					%= link_to $v->{team}->{sprintf("uid=%s,%s", $p, $base_acc)}->{mail}->[0] => 'mailto:' . $v->{team}->{sprintf("uid=%s,%s", $p, $base_acc)}->{mail}->[0]
+					<%#  = $v->{team}->{sprintf("uid=%s,%s", $p, $base_acc)}->{mail}->[0] =%>
+				      </li>
 
-				    </li>
-				  </ul>
+				      <li>
+					<span class="fa-li">
+					  <i class="fa-regular fa-id-card" title="uid"></i>
+					</span>
+					<a href="/profile/<%= $v->{team}->{sprintf("uid=%s,%s", $p, $base_acc)}->{uid}->[0] %>"><%= $v->{team}->{sprintf("uid=%s,%s", $p, $base_acc)}->{uid}->[0] %></a>
+				      </li>
+				    </ul>
+				  </small>
 				</div>
 			      </div>
-			    </small>
-			  </details>
-			</li>
+			    </div>
+			  </div>
+			</div>
 		      % }
-		    </ul>
+		    </div>
 		  </dd>
 		% }
 	      </dl>
 	    </div>
-	    
-	    <div class="col-1 text-end">
-	      <i class="fa-solid fa-globe" title="domains"></i>
+
+	    %# DOMAINS
+	    <div class="col-1 text-end pt-4">
+	      <i class="fa-solid fa-globe fa-xl" title="domains"></i>
 	    </div>
-	    <div class="col-11 font-monospace">
+	    <div class="col-11 font-monospace pt-4">
 	      <ul class="list-unstyled">
 		% if ( exists $v->{sprintf("cn=%s,%s",$en,$base_proj)}->{associateddomain} ) {
 		  % foreach (sort(@{$v->{sprintf("cn=%s,%s",$en,$base_proj)}->{associateddomain}})) {
@@ -137,10 +161,11 @@
 	      </ul>		
 	    </div>
 
-	    <div class="col-1 text-end">
-	      <i class="fa-solid fa-server" title="server"></i>
+	    %# SERVERS (MACHINES)
+	    <div class="col-1 text-end pt-4">
+	      <i class="fa-solid fa-server fa-xl" title="server"></i>
 	    </div>
-	    <div class="col-11">
+	    <div class="col-11 pt-4">
 	      <ul class="list-unstyled">
 		% foreach (sort(keys(%{$v->{machines}}))) {
 		  <li>
@@ -173,9 +198,12 @@
 		% }
 	      </ul>		
 	    </div>
-	    
-	    <div class="col-1 text-end"><i class="fa-solid fa-code-pull-request" title="repositories"></i></div>
-	    <div class="col-11">
+
+	    %# REPOSITORIES/LINKS/DOC
+	    <div class="col-1 text-end pt-4">
+	      <i class="fa-solid fa-code-pull-request fa-xl" title="repositories"></i>
+	    </div>
+	    <div class="col-11 pt-4">
 	      % if ( exists $v->{sprintf("cn=repository,cn=%s,%s",$en,$base_proj)}->{labeleduri} ) {
 		% foreach (sort(@{$v->{sprintf("cn=repository,cn=%s,%s",$en,$base_proj)}->{labeleduri}})) {
 		  <a href="<%= $_ %>"
@@ -183,22 +211,15 @@
 		     target="_blank" role="button"
 		     class="btn btn-secondary">
 		    % my $brand = "bars";
-		    % if ($_ =~ /gitlab/) {
-		      % $brand = "fa-brands fa-gitlab";
-		    % } elsif ($_ =~ /portus/) {
-		    % $brand = "fa-brands fa-docker"; }
-		    % elsif ($_ =~ /jenkins/) {
-		      % $brand = "fa-brands fa-jenkins"; }
-		      % elsif ($_ =~ /portus/) {
-			% $brand = "fa-brands fa-docker"; }
-			% elsif ($_ =~ /atlas/) {
-			  % $brand = "fa-brands fa-confluence"; }
-			  % elsif ($_ =~ /testrai/) {
-			    % $brand = "fa-solid fa-stethoscope";
-			  % }
-			  <i class="<%= $brand %>"></i></a>
-			% }
-		      % }
+		    % if ($_ =~ /gitlab/)     { $brand = "fa-brands fa-gitlab"; }
+		    % elsif ($_ =~ /portus/)  { $brand = "fa-brands fa-docker"; }
+		    % elsif ($_ =~ /jenkins/) { $brand = "fa-brands fa-jenkins"; }
+		    % elsif ($_ =~ /portus/)  { $brand = "fa-brands fa-docker"; }
+		    % elsif ($_ =~ /atlas/)   { $brand = "fa-brands fa-confluence"; }
+		    % elsif ($_ =~ /testrai/) { $brand = "fa-solid fa-stethoscope"; }
+		    <i class="<%= $brand %>"></i></a>
+		% }
+	      % }
 	    </div>
 	    
 	  </div>

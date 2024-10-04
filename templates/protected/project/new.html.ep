@@ -76,43 +76,4 @@
    allowClear: true,
    theme: "classic"
  });
-
 </script>
-
-%# <form action="/projects/new" class="form-horizontal" id="form732" method="post">
-%# 
-%#   <div class="row mb-3">
-%#     <label for="inputProjName" class="col-sm-2 col-form-label text-end fw-bold">Name:</label>
-%#     <div class="col-sm-10">
-%#       <input type="text" class="form-control" id="inputProjName" placeholder="Project Name" name="proj_name" value="<%= exists $p->{proj_name} ? $p->{proj_name} : '' %>">
-%#     </div>
-%#   </div>
-%# 
-%#   <div class="row mb-3">
-%#     <label for="inputProjDescr" class="col-sm-2 col-form-label text-end fw-bold">Description:</label>
-%#     <div class="col-sm-10">
-%#       <textarea class="form-control" id="inputProjDescr" rows="3" placeholder="Project Description" name="proj_descr">
-%# 	<%= exists $p->{proj_descr} ? $p->{proj_descr} : '' =%>
-%#       </textarea>
-%#     </div>
-%#   </div>
-%# 
-%#   % my @team = qw(team_pm team_tl team_backend team_frontend team_qa);
-%#   % foreach (@team) {
-%#     <div class="row mb-3">
-%#       <label for="inputBackend" class="col-sm-2 col-form-label fw-bold text-end text-uppercase"><%= substr($_,5) %>:</label>
-%#       <div class="col-sm-10">
-%# 	<select id="inputBackend" name="<%= $_ %>" class="form-select">
-%# 	  <option selected>Choose...</option>
-%# 	  % foreach my $k (sort(keys(%$em))) {
-%# 	    % my $e = exists $p->{$_} && $em->{$k} eq $p->{$_} ? 'selected=""' : ''; 
-%# 	    <option value="<%= $em->{$k} %>" <%= $e %>><%= $k %></option>
-%# 	  % }
-%# 	</select>
-%#       </div>
-%#     </div>
-%#   % }
-%# 
-%#   <input type="submit" value="Submit" class="btn btn-success font-weight-bold text-uppercase text-end">
-%# 
-%# </form>

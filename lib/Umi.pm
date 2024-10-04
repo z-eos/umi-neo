@@ -208,6 +208,7 @@ sub _startup_routes ($self) {
   ### only starting with v.1.0.6 — $...->requires(has_priv => ['r-people,r-group', {cmp => 'and'}])->...;
   ###
 
+  ## PROFILE
   $protected_root
     ->get( '/profile/new')
     ->requires(has_priv => ['w-people', {cmp => 'and'}])
@@ -231,14 +232,38 @@ sub _startup_routes ($self) {
     ->get( '/profile/:uid' => [ uid => qr/[^\/]+/ ])
     ->to('protected#profile', uid => '');
 
-  $protected_root->get( '/project/new')->to('protected#project_new');
-  $protected_root->post('/project/new')->to('protected#project_new');
-  $protected_root->get( '/project/:proj')->to('search#search_projects', proj => '*');
-  $protected_root->post('/project/:proj')->to('search#search_projects', proj => '*');
+  ## PROJECT
+  $protected_root
+    ->get( '/project/new')
+    ->to('protected#project_new');
 
+  $protected_root
+    ->post('/project/new')
+    ->to('protected#project_new');
+
+  $protected_root
+    ->get( '/project/modify/:proj' => [ proj => qr/[^\/]+/ ])
+    ->requires(has_priv => ['w-people', {cmp => 'and'}])
+    ->to('protected#project_modify', proj => '');
+
+  $protected_root
+    ->post('/project/modify')
+    ->requires(has_priv => ['w-people', {cmp => 'and'}])
+    ->to('protected#project_modify');
+
+  $protected_root
+    ->get( '/project/:proj')
+    ->to('search#search_projects', proj => '*');
+
+  $protected_root
+    ->post('/project/:proj')
+    ->to('search#search_projects', proj => '*');
+
+  ## SEARCH
   $protected_root->get( '/search/common')->to('search#search_common');
   $protected_root->post('/search/common')->to('search#search_common');
 
+  ## TOOLs
   $protected_root->get( '/tool/ldif-export')->to('protected#ldif_export');
   $protected_root->post('/tool/ldif-export')->to('protected#ldif_export');
 

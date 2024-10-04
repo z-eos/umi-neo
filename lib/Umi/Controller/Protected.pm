@@ -278,7 +278,6 @@ sub project_new ($self) {
   my $employees;
   foreach my $k (keys(%$e)) {
     next if ! exists $e->{$k}->{givenname} || ! exists $e->{$k}->{sn};
-    # $employees->{$e->{$k}->{sn}->[0] . " " . $e->{$k}->{givenname}->[0]} = $e->{$k}->{uid}->[0];
     push @$employees, [ $e->{$k}->{sn}->[0] . " " . $e->{$k}->{givenname}->[0] => $e->{$k}->{uid}->[0] ];
   }
   my $es;
@@ -289,15 +288,15 @@ sub project_new ($self) {
   $self->h_log($par);
   $self->stash(project_new_params => $par, employees => $es);
 
-  # my $v = $self->validation;
-  # return $self->render(template => 'protected/project/new') unless $v->has_data;
+  my $v = $self->validation;
+  return $self->render(template => 'protected/project/new') unless $v->has_data;
 
-  # $v->required('proj_name')->size(3, 100)->like(qr/^[A-Za-z0-9.-_]+$/);
-  # # $self->h_log($v->error('proj_name'));
-  # $v->error(team_pm => ['Select at least one person.']) if ! exists $par->{team_pm};
-  # $v->error(team_backend => ['Select at least one person.']) if ! exists $par->{team_backend};
-  # $v->error(team_frontend => ['Select at least one person.']) if ! exists $par->{team_frontend};
-  # $v->error(team_qa => ['Select at least one person.']) if ! exists $par->{team_qa};
+  $v->required('proj_name')->size(3, 100)->like(qr/^[A-Za-z0-9.-_]+$/);
+  # $self->h_log($v->error('proj_name'));
+  $v->error(team_pm => ['Select at least one person.']) if ! exists $par->{team_pm};
+  $v->error(team_backend => ['Select at least one person.']) if ! exists $par->{team_backend};
+  $v->error(team_frontend => ['Select at least one person.']) if ! exists $par->{team_frontend};
+  $v->error(team_qa => ['Select at least one person.']) if ! exists $par->{team_qa};
 
   $search_arg = { base => $self->{app}->{cfg}->{ldap}->{base}->{project},
 		  filter => "(cn=" . $par->{proj_name} . ")",
@@ -305,11 +304,11 @@ sub project_new ($self) {
 		  attrs => ['cn'] };
   $search = $ldap->search( $search_arg );
   $self->{app}->h_log( $self->{app}->h_ldap_err($search, $search_arg) ) if $search->code;
-  # $v->error(proj_name => ['Project with such name exists']) if $search->count > 0;
+  $v->error(proj_name => ['Project with such name exists']) if $search->count > 0;
 
   my $attrs = {
 	       objectClass => $self->{app}->{cfg}->{ldap}->{objectClass}->{project},
-	       cn => $par->{proj_name},
+	       cn => lc $par->{proj_name},
 	       description => $par->{proj_descr},
 	       associatedDomain => 'unknown'
 	      };
@@ -483,6 +482,143 @@ sub profile_modify ($self) {
   $self->stash(debug_status => $msg->{status}, debug_message => $msg->{message});
 
   $self->render(template => 'protected/profile/modify');
+}
+
+sub project_modify ($self) {
+  my $from_form = $self->req->params->to_hash;
+  #$self->h_log($from_form);
+
+  my $proj = $self->stash->{proj} // $from_form->{proj_to_modify} // '';
+  $from_form->{proj_to_modify} = $self->stash->{proj} if exists $self->stash->{proj};
+  #$self->h_log($from_form);
+
+  my $ldap = Umi::Ldap->new( $self->{app}, $self->session('uid'), $self->session('pwd') );
+
+  ### PROJECT OBJECT
+  my $search_arg = { base => $self->{app}->{cfg}->{ldap}->{base}->{project},
+		     filter => '(cn=' . $proj .')',
+		     scope => 'one',
+		     attrs => [qw(cn description)]};
+  my $search = $ldap->search( $search_arg );
+  $self->h_log( $self->{app}->h_ldap_err($search, $search_arg) ) if $search->code;
+  my $from_ldap;
+  if ($search->count) {
+    %{$from_ldap->{proj}->{obj}} = map { $_ => ref($search->entry->get_value($_)) eq 'ARRAY' ? [$search->entry->get_value($_)] : $search->entry->get_value($_) } $search->entry->attributes;
+    $from_ldap->{proj}->{dn} = $search->entry->dn;
+  }
+
+  ### PROJECT GROUPS
+  $from_ldap->{groups} = {};
+  $search_arg = { base => sprintf("ou=group,%s", $self->{app}->{cfg}->{ldap}->{base}->{project}),
+		  filter => '(cn=' . $proj . '*)', };
+  $search = $ldap->search( $search_arg );
+  $self->{app}->h_log( $self->{app}->h_ldap_err($search, $search_arg) ) if $search->code;
+  $from_ldap->{groups}->{$_->get_value('cn')} = $_->get_value('memberUid', asref => 1)
+    foreach ($search->entries);
+
+  ### EMPLOYEES:TEAM MEMBERS SELECT ELEMENTS
+  $search_arg =
+    { base => $self->{app}->{cfg}->{ldap}->{base}->{acc_root},
+      filter => sprintf("(&(uid=*)(!(gidNumber=%s)))",
+			$self->{app}->{cfg}->{ldap}->{defaults}->{group_blocked_gidnumber}),
+      scope => "one",
+      attrs => [qw(uid givenName sn)] };
+  $search = $ldap->search( $search_arg );
+  $self->h_log( $self->{app}->h_ldap_err($search, $search_arg) ) if $search->code;
+  my $e_str = $search->as_struct;
+  my ($team, $employees, $employees_sorted);
+  foreach my $g (keys(%{$from_ldap->{groups}})) {
+    foreach my $k (keys(%$e_str)) {
+      next if ! exists $e_str->{$k}->{givenname} || ! exists $e_str->{$k}->{sn};
+      my $gecos = $e_str->{$k}->{sn}->[0] . " " . $e_str->{$k}->{givenname}->[0];
+      if ( grep {$e_str->{$k}->{uid}->[0] eq $_} @{$from_ldap->{groups}->{$g}} ) {
+	push @$team, [ $gecos => $e_str->{$k}->{uid}->[0], selected => 'selected' ];
+      } else {
+	push @$team, [ $gecos => $e_str->{$k}->{uid}->[0] ];
+      }
+    }
+    @{$from_ldap->{employees}->{$g}} = sort {$a->[0] cmp $b->[0]} @$team;
+    $team = undef;
+  }
+
+  foreach my $k (keys(%$e_str)) {
+    next if ! exists $e_str->{$k}->{givenname} || ! exists $e_str->{$k}->{sn};
+    push @$team, [ $e_str->{$k}->{sn}->[0] . " " . $e_str->{$k}->{givenname}->[0] => $e_str->{$k}->{uid}->[0] ];
+  }
+  @{$from_ldap->{employees}->{asis}} = sort {$a->[0] cmp $b->[0]} @$team;
+
+  ### REST
+
+  #$self->h_log($from_ldap->{groups});
+  $self->stash(from_ldap => $from_ldap);
+
+  $self->h_log($from_form);
+  $self->stash(from_form => $from_form);
+
+  $self->stash( proj => $self->stash->{proj}, from_ldap => $self->stash->{from_ldap}, project_team_roles => $self->{app}->{cfg}->{ldap}->{defaults}->{project_team_roles} );
+
+  my $v = $self->validation;
+  return $self->render(template => 'protected/project/modify') unless $v->has_data;
+
+  my $re = qr/^[a-z0-9_.\-]+$/;
+  $v->required('cn')->size(1, 50)->like($re);
+
+  my ($diff, $add, $delete, $replace, $changes, $chg);
+  $diff = $self->h_hash_diff( $from_ldap->{proj}->{obj},
+			      { cn => $from_form->{cn},
+				description => $from_form->{description} } );
+  #$self->h_log($diff);
+  if ( %{$diff->{added}} ) {
+    push @$add, $_ => $diff->{added}->{$_} foreach (keys(%{$diff->{added}}));
+    push @$changes, add => $add;
+  }
+  if ( %{$diff->{removed}} ) {
+    push @$delete, $_ => [] foreach (keys(%{$diff->{removed}}));
+    push @$changes, delete => $delete;
+  }
+  if ( %{$diff->{changed}} ) {
+    push @$replace, $_ => $diff->{changed}->{$_}->{new} foreach (keys(%{$diff->{changed}}));
+    push @$changes, replace => $replace;
+  }
+  $chg->{proj} = $changes if defined $changes;
+  $diff = $add = $delete = $replace = $changes = undef;
+
+  # $self->h_log($self->{app}->{cfg}->{ldap}->{defaults}->{project_team_roles});
+
+  foreach my $team_role (@{$self->{app}->{cfg}->{ldap}->{defaults}->{project_team_roles}}) {
+    my $ldap_group_name = $from_ldap->{proj}->{obj}->{cn} . '_' . $team_role;
+    if ( ! exists $from_form->{$team_role} && ! exists $from_ldap->{groups}->{ $ldap_group_name } ) {
+      next;
+    } elsif ( ! exists $from_form->{$team_role} && exists $from_ldap->{groups}->{ $ldap_group_name } ) {
+      push @$changes, delete => [memberUid => []];
+    } elsif ( exists $from_form->{$team_role} && ! exists $from_ldap->{groups}->{ $ldap_group_name } ) {
+      push @$changes, add =>
+	[ memberUid => ref($from_form->{$team_role}) ne 'ARRAY' ? [ $from_form->{$team_role} ] : $from_form->{$team_role} ];
+    } else {
+      # $self->h_log($from_ldap->{groups}->{ $ldap_group_name });
+      # $self->h_log($from_form->{$team_role});
+      $diff = $self
+	->h_array_diff( $from_ldap->{groups}->{ $ldap_group_name },
+			ref($from_form->{$team_role}) ne 'ARRAY' ? [$from_form->{$team_role}] : $from_form->{$team_role});
+      $self->h_log($diff);
+      if ( @{$diff->{added}} ) {
+	push @$add, memberUid => $diff->{added};
+	push @$changes, add => $add;
+      }
+      if ( @{$diff->{removed}} ) {
+	push @$delete, memberUid => [];
+	push @$changes, delete => $delete;
+      }
+    }
+    $chg->{group}->{$team_role} = $changes if defined $changes;;
+    $diff = $add = $delete = $replace = $changes = undef;
+
+    # my $msg = $ldap->modify($from_ldap->{$proj}->{dn}, $changes);
+    # $self->stash(debug_status => $msg->{status}, debug_message => $msg->{message});
+  }
+  $self->h_log($chg);
+
+  $self->render(template => 'protected/project/modify');
 }
 
 1;
