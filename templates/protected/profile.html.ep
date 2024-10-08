@@ -8,19 +8,34 @@
 % my ($dn, $v);
 % foreach $dn (sort keys %$hash) {
   % $v = $hash->{$dn};
-  <div class="card my-3">
+  % my $card_col = '';
+  % if ($group_blocked_gidnumber eq $v->{gidnumber}->[0]) {
+    % $card_col = 'danger';
+  % }
+  <div class="card <%= 'border-' . $card_col if $card_col ne '' %> my-3">
     <div class="row g-0 mt-3">
       <div class="col-md-4">
 	<picture>
 	  <img src="data:image/jpg;base64,<%= Mojo::Util::b64_encode $v->{jpegphoto}->[0] %>""
-	       class="img-thumbnail img-fluid float-end" style="max-width: 300px;"
+	       class="img-thumbnail img-fluid <%= 'border-' . $card_col if $card_col ne '' %> float-end" style="max-width: 300px;"
 	       alt="<%= $dn %>">
 	</picture>
       </div>
       <div class="col-md-8">
 	<div class="card-body">
-          <h4 class="card-title fw-bold"><%= $v->{gecos}->[0] %></h5>
-	    <dl class="row card-text">
+          <h4 class="card-title fw-bold <%= 'text-' . $card_col if $card_col ne '' %>"><%= $v->{gecos}->[0] %>
+	    <a href="/profile/modify/<%= $v->{uid}->[0] %>" class="btn btn-sm btn-secondary">
+	      <i class="fa-solid fa-gears"></i>
+	    </a>
+	  </h4>
+
+	  <dl class="row card-text">
+
+	    % if ($card_col eq 'danger') {
+	      <dt class="col-sm-2 text-end text-danger">Status:</dt>
+	      <dd class="col-sm-10 user-select-all text-danger">disabled</dd>
+	    % }
+
 	      % my @items = qw(title description mail birthdate uid);
 	      % foreach (@items) {
 		<dt class="col-sm-2 text-end"><%= $_ %></dt>
@@ -35,36 +50,38 @@
 	      <dt class="col-sm-2 text-end">Hire Date</dt>
 	      <dd class="col-sm-10 user-select-all"><%= strftime( "%F", localtime(generalizedTime_to_time($v->{createtimestamp}->[0]))) %></dd>
 
-	      <dt class="col-sm-2 text-end">groups</dt>
-	      <dd class="col-sm-10">
-		% if ( exists $groups->{$dn} ) {
-		  % foreach (sort(@{$groups->{$dn}})) {
-		    <span class="badge text-bg-secondary fw-normal"><%= $_ %></span>
+	      % if (is_role 'admin,coadmin', {cmp => 'or'}) {
+		<dt class="col-sm-2 text-end">groups</dt>
+		<dd class="col-sm-10">
+		  % if ( exists $groups->{$dn} ) {
+		    % foreach (sort(@{$groups->{$dn}})) {
+		      <span class="badge text-bg-secondary fw-normal"><%= $_ %></span>
+		    % }
 		  % }
-		% }
-	      </dd>
+		</dd>
 
-	      <dt class="col-sm-2 text-end">servers</dt>
-	      <dd class="col-sm-10">
-		% if ( exists $servers->{$dn} ) {
-		  <form role="form" id="searchMachine" method="POST" action="/search/common">
-		    <input type="hidden" name="search_base_case" class="search_base_case" value="">
+		<dt class="col-sm-2 text-end">servers</dt>
+		<dd class="col-sm-10">
+		  % if ( exists $servers->{$dn} ) {
+		    <form role="form" id="searchMachine" method="POST" action="/search/common">
+		      <input type="hidden" name="search_base_case" class="search_base_case" value="">
 
-		    % foreach (sort(@{$servers->{$dn}})) {
-		      <span title="<%== $server_alive->{$dn}->{$_} ? '' : 'absent in machines (probably old stuff)' %>">
-		    <button type="submit"
-			    class="btn btn-<%= $server_alive->{$dn}->{$_} ? 'secondary' : 'danger disabled' %> btn-sm mb-1"
-			    style="--bs-btn-font-size: .75rem;"
-			    data-filter="<%= 'cn=' . $_ . ',' . $search_base_case %>"
-			    onClick="$('.search_base_case').val($(this).data('filter')); $('#searchMachine').submit();">
-		      <%= $_ %>
-		    </button>
-		      </span>
+		      % foreach (sort(@{$servers->{$dn}})) {
+			<span title="<%== $server_alive->{$dn}->{$_} ? '' : 'absent in machines (probably old stuff)' %>">
+			  <button type="submit"
+				  class="btn btn-<%= $server_alive->{$dn}->{$_} ? 'secondary' : 'danger disabled' %> btn-sm mb-1"
+				  style="--bs-btn-font-size: .75rem;"
+				  data-filter="<%= 'cn=' . $_ . ',' . $search_base_case %>"
+				  onClick="$('.search_base_case').val($(this).data('filter')); $('#searchMachine').submit();">
+			    <%= $_ %>
+			  </button>
+			</span>
+		      % }
+		    </form>
 		  % }
-		  </form>
-		% }
-	      </dd>
-
+		</dd>
+	      % }
+	      
 	      <dt class="col-sm-2 text-end">projects</dt>
 	      <dd class="col-sm-10">
 		% if ( exists $projects->{$dn} ) {
@@ -75,7 +92,7 @@
 	      </dd>
 	    </dl>
             <p class="card-text"><small class="text-body-secondary umi-text-tiny">
-	      Last updated <%= strftime( "%F %T", localtime(generalizedTime_to_time($v->{modifytimestamp}->[0]))) %> by <a href="/profile/<%= $modifiersname->{uid}->[0] %>"><%= $modifiersname->{$dn}->{gecos}->[0] %></a>
+	      Last updated <%= strftime( "%F %T", localtime(generalizedTime_to_time($v->{modifytimestamp}->[0]))) %> by <a href="/profile/<%= $modifiersname->{$dn}->{uid}->[0] %>"><%= $modifiersname->{$dn}->{gecos}->[0] %></a>
 	    </small></p>
 	</div>
       </div>

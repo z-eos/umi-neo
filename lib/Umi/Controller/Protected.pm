@@ -19,22 +19,26 @@ sub homepage ($self) {
 	       );
 }
 
-sub other    ($self) { $self->render(template => 'protected/other') }
+sub other ($self) { $self->render(template => 'protected/other'); }
 
-sub profile  ($self) {
+sub profile ($self) {
+  my $par = $self->req->params->to_hash;
+  my $uid = $par->{uid} // $self->stash->{uid} // '';
+  $self->h_log($uid);
 
   my $ldap = Umi::Ldap->new( $self->{app}, $self->session('uid'), $self->session('pwd') );
 
-  #$self->{app}->h_log($self->stash('uid'));
   my $filter;
-  if ($self->stash->{uid} eq 'all') {
+  if ($uid eq 'all') {
     $filter = '(uid=*)';
-  } elsif ($self->stash->{uid} eq 'disabled') {
-    $filter = sprintf("(&(uid=*)(gidNumber=%s))", $self->{app}->{cfg}->{ldap}->{defaults}->{group_blocked_gidnumber});
-  } elsif ($self->stash->{uid} eq 'active') {
-    $filter = sprintf("(&(uid=*)(!(gidNumber=%s)))", $self->{app}->{cfg}->{ldap}->{defaults}->{group_blocked_gidnumber});
-  } elsif ($self->stash->{uid} ne '') {
-    $filter = sprintf("(uid=%s)", $self->stash->{uid});
+  } elsif ($uid eq 'disabled') {
+    $filter = sprintf("(&(uid=*)(gidNumber=%s))",
+		      $self->{app}->{cfg}->{ldap}->{defaults}->{group_blocked_gidnumber});
+  } elsif ($uid eq 'active') {
+    $filter = sprintf("(&(uid=*)(!(gidNumber=%s)))",
+		      $self->{app}->{cfg}->{ldap}->{defaults}->{group_blocked_gidnumber});
+  } elsif ($uid ne '') {
+    $filter = sprintf("(uid=%s)", $uid);
   } else {
     $filter = sprintf("(uid=%s)", $self->session('uid'));
   }
@@ -46,63 +50,67 @@ sub profile  ($self) {
   $self->{app}->h_log( $self->{app}->h_ldap_err($search, $search_arg) ) if $search->code;
   my $profiled_user = $search->as_struct;
 
-  my ($modifiersname, $groups, $s, $servers, $server_alive, $projects);
+  my ($modifiersname, $groups, $s, $servers, $server_alive, $p, $projects);
   while (my ($k, $v) = each %$profiled_user) {
     ### name of the last who modified this user root object
     $search_arg = { base => $v->{modifiersname}->[0], scope => 'base', attrs => ['gecos', 'uid'] };
     $search = $ldap->search( $search_arg );
     $modifiersname->{$k} = $search->as_struct->{$v->{modifiersname}->[0]};
 
-    ### list of all groups user is a member of
-    $search_arg = { base => $self->{app}->{cfg}->{ldap}->{base}->{group},
-		    filter => '(memberUid=' . $v->{uid}->[0] . ')',
-		    attrs => ['cn'] };
-    $search = $ldap->search( $search_arg );
-    my $g = $search->as_struct;
-    while (my ($kk, $vv) = each %$g) {
-      push @{$groups->{$k}}, $vv->{cn}->[0];
-    }
-
-    ### list of all servers available for the user
-    $search_arg = { base => 'ou=access,' . $self->{app}->{cfg}->{ldap}->{base}->{netgroup},
-		    filter => '(nisNetgroupTriple=*,' . $v->{uid}->[0] . ',*)',
-		    attrs => ['nisNetgroupTriple'] };
-    $search = $ldap->search( $search_arg );
-    $self->{app}->h_log( $self->{app}->h_ldap_err($search, $search_arg) ) if $search->code;
-    my $n = $search->as_struct;
-    my $t;
-    while (my ($kk, $vv) = each %$n) {
-      foreach (@{$vv->{nisnetgrouptriple}}) {
-	@$t = split(/,/, substr($_, 1, -1));
-	push @{$s->{$k}}, sprintf("%s.%s", $t->[0], $t->[2]);
-      }
-    }
-    @{$servers->{$k}} = do {
-      my %seen;
-      sort grep { !$seen{$_}++ } @{$s->{$k}};
-    };
-    foreach (@{$servers->{$k}}) {
-      $search_arg = { base => 'cn=' . $_ . ',' . $self->{app}->{cfg}->{ldap}->{base}->{machines},
+    ### only admins and coadmins need this info
+    $groups = $servers = $server_alive = {};
+    if ( $self->is_role('admin,coadmin', {cmp => 'or'}) ) {
+      ### list of all groups user is a member of
+      $search_arg = { base => $self->{app}->{cfg}->{ldap}->{base}->{group},
+		      filter => '(memberUid=' . $v->{uid}->[0] . ')',
 		      attrs => ['cn'] };
       $search = $ldap->search( $search_arg );
+      my $g = $search->as_struct;
+      while (my ($kk, $vv) = each %$g) {
+	push @{$groups->{$k}}, $vv->{cn}->[0];
+      }
+
+      ### list of all servers available for the user
+      $search_arg = { base => 'ou=access,' . $self->{app}->{cfg}->{ldap}->{base}->{netgroup},
+		      filter => '(nisNetgroupTriple=*,' . $v->{uid}->[0] . ',*)',
+		      attrs => ['nisNetgroupTriple'] };
+      $search = $ldap->search( $search_arg );
       $self->{app}->h_log( $self->{app}->h_ldap_err($search, $search_arg) ) if $search->code;
-      $server_alive->{$k}->{$_} = $search->count;
+      my $n = $search->as_struct;
+      my $t;
+      while (my ($kk, $vv) = each %$n) {
+	foreach (@{$vv->{nisnetgrouptriple}}) {
+	  @$t = split(/,/, substr($_, 1, -1));
+	  push @{$s->{$k}}, sprintf("%s.%s", $t->[0], $t->[2]);
+	}
+      }
+      @{$servers->{$k}} = do {
+	my %seen;
+	sort grep { !$seen{$_}++ } @{$s->{$k}};
+      };
+      foreach (@{$servers->{$k}}) {
+	$search_arg = { base => 'cn=' . $_ . ',' . $self->{app}->{cfg}->{ldap}->{base}->{machines},
+			attrs => ['cn'] };
+	$search = $ldap->search( $search_arg );
+	$self->{app}->h_log( $self->{app}->h_ldap_err($search, $search_arg) ) if $search->code && $search->code != 32;
+	$server_alive->{$k}->{$_} = $search->count;
+      }
     }
-    
+
     ### list of all projects user is a member of
     $search_arg = { base => 'ou=group,' . $self->{app}->{cfg}->{ldap}->{base}->{project},
 		    filter => '(memberUid=' . $v->{uid}->[0] . ')',
 		    attrs => ['cn'] };
     $search = $ldap->search( $search_arg );
     $self->{app}->h_log( $self->{app}->h_ldap_err($search, $search_arg) ) if $search->code;
-    my $p;
     $p = $search->as_struct;
     @{$projects->{$k}} = sort map { $p->{$_}->{cn}->[0] =~ s/_/:/r } keys(%$p);
   }
-
+  # $self->h_log($modifiersname);
   $self->render(template => 'protected/profile',
 		hash => $profiled_user,
 		groups => $groups,
+		group_blocked_gidnumber => $self->{app}->{cfg}->{ldap}->{defaults}->{group_blocked_gidnumber},
 		servers => $servers,
 		server_alive => $server_alive,
 		search_base_case => $self->{app}->{cfg}->{ldap}->{base}->{machines},
@@ -486,6 +494,7 @@ sub profile_modify ($self) {
 
 sub project_modify ($self) {
   my $from_form = $self->req->params->to_hash;
+  my $debug;
   #$self->h_log($from_form);
 
   my $proj = $self->stash->{proj} // $from_form->{proj_to_modify} // '';
@@ -503,7 +512,9 @@ sub project_modify ($self) {
   $self->h_log( $self->{app}->h_ldap_err($search, $search_arg) ) if $search->code;
   my $from_ldap;
   if ($search->count) {
-    %{$from_ldap->{proj}->{obj}} = map { $_ => ref($search->entry->get_value($_)) eq 'ARRAY' ? [$search->entry->get_value($_)] : $search->entry->get_value($_) } $search->entry->attributes;
+    %{$from_ldap->{proj}->{obj}} =
+      map { $_ => ref($search->entry->get_value($_)) eq 'ARRAY' ? [$search->entry->get_value($_)] : $search->entry->get_value($_) }
+      $search->entry->attributes;
     $from_ldap->{proj}->{dn} = $search->entry->dn;
   }
 
@@ -563,7 +574,7 @@ sub project_modify ($self) {
   my $re = qr/^[a-z0-9_.\-]+$/;
   $v->required('cn')->size(1, 50)->like($re);
 
-  my ($diff, $add, $delete, $replace, $changes, $chg);
+  my ($msg, $diff, $add, $delete, $replace, $changes, $chg);
   $diff = $self->h_hash_diff( $from_ldap->{proj}->{obj},
 			      { cn => $from_form->{cn},
 				description => $from_form->{description} } );
@@ -580,7 +591,13 @@ sub project_modify ($self) {
     push @$replace, $_ => $diff->{changed}->{$_}->{new} foreach (keys(%{$diff->{changed}}));
     push @$changes, replace => $replace;
   }
-  $chg->{proj} = $changes if defined $changes;
+
+  if (defined $changes) {
+    $msg = $ldap->modify($from_ldap->{proj}->{dn}, $changes);
+    ### !!! to push to debug_message rather than overwrite
+    push @{$debug->{$msg->{status}}}, $msg->{message};
+    $chg->{proj} = $changes;
+  }
   $diff = $add = $delete = $replace = $changes = undef;
 
   # $self->h_log($self->{app}->{cfg}->{ldap}->{defaults}->{project_team_roles});
@@ -610,15 +627,21 @@ sub project_modify ($self) {
 	push @$changes, delete => $delete;
       }
     }
-    $chg->{group}->{$team_role} = $changes if defined $changes;;
-    $diff = $add = $delete = $replace = $changes = undef;
 
-    # my $msg = $ldap->modify($from_ldap->{$proj}->{dn}, $changes);
-    # $self->stash(debug_status => $msg->{status}, debug_message => $msg->{message});
+    if (defined $changes) {
+      $msg = $ldap->modify(sprintf("cn=%s,%s",
+				   $ldap_group_name,
+				   $self->{app}->{cfg}->{ldap}->{base}->{project_groups}),
+			   $changes);
+      ### !!! to push to debug_message rather than overwrite
+      push @{$debug->{$msg->{status}}}, $msg->{message};
+      $chg->{group}->{$team_role} = $changes if defined $changes;;
+    }
+    $diff = $add = $delete = $replace = $changes = undef;
   }
   $self->h_log($chg);
 
-  $self->render(template => 'protected/project/modify');
+  $self->render(template => 'protected/project/modify', debug => $debug);
 }
 
 1;

@@ -160,12 +160,15 @@ sub search_common  ($self) {
 }
 
 sub search_projects  ($self) {
+  my $par = $self->req->params->to_hash;
+
   my $ldap = Umi::Ldap->new( $self->{app},
 			     $self->session('uid'),
 			     $self->session('pwd') );
-  # $self->h_log($ldap);
+  my $proj = $par->{proj} // $self->stash->{proj} // '';
+  $self->h_log($proj);
   my $search_arg = { base => $self->{app}->{cfg}->{ldap}->{base}->{project},
-		     filter => sprintf("(cn=%s)", $self->stash->{proj}),
+		     filter => sprintf("(cn=%s)", $proj),
 		     scope => 'one',
 		     attrs => [qw(cn createTimestamp creatorsName modifiersName modifyTimestamp)] };
   my $search = $ldap->search( $search_arg );
@@ -174,26 +177,26 @@ sub search_projects  ($self) {
   my @project_names;
   push @project_names, $_->get_value('cn') foreach ($search->entries());
   my $entries;
-  foreach my $proj (@project_names) {
+  foreach my $p (@project_names) {
     ### PROJECT
-    $search_arg = { base => sprintf("cn=%s,%s", $proj,
+    $search_arg = { base => sprintf("cn=%s,%s", $p,
 				    $self->{app}->{cfg}->{ldap}->{base}->{project}) };
     # $self->h_log($search_arg);
     $search = $ldap->search( $search_arg );
     $self->{app}->h_log( $self->{app}->h_ldap_err($search, $search_arg) ) if $search->code;
-    $entries->{$proj} = $search->as_struct;
+    $entries->{$p} = $search->as_struct;
 
     ### GROUPS
     $search_arg = { base => sprintf("ou=group,%s", $self->{app}->{cfg}->{ldap}->{base}->{project}),
-		    filter => sprintf("(cn=%s*)", $proj),
+		    filter => sprintf("(cn=%s*)", $p),
 		    attrs => ['*'], };
     # $self->h_log($search_arg);
     $search = $ldap->search( $search_arg );
     $self->{app}->h_log( $self->{app}->h_ldap_err($search, $search_arg) ) if $search->code;
-    $entries->{$proj}->{group} = $search->as_struct;
+    $entries->{$p}->{group} = $search->as_struct;
 
     ### TEAM
-    $entries->{$proj}->{team} = {};
+    $entries->{$p}->{team} = {};
     my @groups = $search->entries;
     foreach my $gr (@groups) {
       foreach my $mu (@{$gr->get_value('memberUid', asref => 1)}) {
@@ -207,29 +210,33 @@ sub search_projects  ($self) {
 	$self->{app}->h_log( $self->{app}->h_ldap_err($search, $search_arg) ) if $search->code;
 
 	# $self->h_log($search->as_struct);
-	%{$entries->{$proj}->{team}} = (%{$entries->{$proj}->{team}}, %{$search->as_struct});
+	%{$entries->{$p}->{team}} = (%{$entries->{$p}->{team}}, %{$search->as_struct});
       }
     }
 
     ### MACHINES
-    $entries->{$proj}->{machines} = {};
-    if ( exists $entries->{$proj}->
-	 {sprintf("cn=%s,%s",$proj,$self->{app}->{cfg}->{ldap}->{base}->{project})}->
-	 {associateddomain}
-       ) {
-      foreach (sort(@{
-	$entries->{$proj}->
-	  {sprintf("cn=%s,%s",$proj,$self->{app}->{cfg}->{ldap}->{base}->{project})}->
-	  {associateddomain}
-	})) {
-	# $self->h_log($_);
-	$search_arg = { base => $self->{app}->{cfg}->{ldap}->{base}->{machines},
-			filter => sprintf("(cn=*%s)", $_),
-			attrs => ['*'], };
-	# $self->h_log($search_arg);
-	$search = $ldap->search( $search_arg );
-	$self->{app}->h_log( $self->{app}->h_ldap_err($search, $search_arg) ) if $search->code;
-	%{$entries->{$proj}->{machines}} = (%{$entries->{$proj}->{machines}}, %{$search->as_struct});
+    if ( $self->is_role('admin') or  $self->is_role('coadmin') ) {
+      $entries->{$p}->{machines} = {};
+      if ( exists $entries->{$p}->
+	   {sprintf("cn=%s,%s",$p,$self->{app}->{cfg}->{ldap}->{base}->{project})}->
+	   {associateddomain}
+	 ) {
+	foreach (sort(@{
+	  $entries->{$p}->
+	    {sprintf("cn=%s,%s",$p,$self->{app}->{cfg}->{ldap}->{base}->{project})}->
+	    {associateddomain}
+	  })) {
+	  # $self->h_log($_);
+	  $search_arg = { base => $self->{app}->{cfg}->{ldap}->{base}->{machines},
+			  filter => sprintf("(cn=*%s)", $_),
+			  attrs => ['*'], };
+	  # $self->h_log($search_arg);
+	  $search = $ldap->search( $search_arg );
+	  $self->{app}->h_log( $self->{app}->h_ldap_err($search, $search_arg) ) if $search->code;
+	  %{$entries->{$p}->{machines}} = (%{$entries->{$p}->{machines}}, %{$search->as_struct});
+	}
+      } else {
+	$entries->{$p}->{machines} = {};
       }
     }
   }

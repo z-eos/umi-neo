@@ -6,16 +6,15 @@
 <div class="row w-100 py-5">
   <div class="col-xs-6 col-sm-6 col-md-3 col-lg-3">
     <h3 class="">
-      <i class="fa-solid fa-folder-tree fa-2xl text-muted px-3"></i>
+      <i class="fa-solid fa-folder-open fa-2xl text-muted px-3"></i>
       Projects
-      <sup>
-	<abbr title="not all objects could be found via predefined search items, to search for all objects use advanced search menu item" class="initialism">
-	  <i class="fa fa-info-circle text-info"></i>
-	</abbr>
-      </sup>
     </h3>
   </div>
 </div>
+
+%= link_to '/project/new' => (class => "btn", title => "Add new project") => begin
+  <i class="fa-solid fa-folder-plus"></i>
+% end
 
 %# vh-100 is important, without it dropwown are not shown for collapsed rows
 <div class="container-fluid vh-100">
@@ -32,11 +31,15 @@
 		  aria-expanded="false" aria-controls="collapse-<%= $i %>">
 	    <i class="fa-solid fa-caret-right"></i>
 	  </button>
-	  %#= include 'protected/search/common-menu', dn => $en, i => $i
-	  %= form_for '/search/common' => (method => 'POST') => begin
-	    %= hidden_field 'ldap_subtree' => "$en"
-	    %= t 'button' , type => 'submit', class => 'btn fw-bold', $en
-	  % end
+	  <a class="btn" href="/project/modify/<%= $en %>" title="Edit project &laquo;<%= $en %>&raquo;">
+	    <i class="fa-solid fa-gears"></i>
+	  </a>
+	  %= t 'button' , class => 'btn fw-bold border-0', $en
+	  %# = include 'protected/search/common-menu', dn => $en, i => $i
+	  %# = form_for '/search/common' => (method => 'POST') => begin
+	    %# = hidden_field 'ldap_subtree' => "$en"
+	    %# = t 'button' , type => 'submit', class => 'btn fw-bold', $en
+	  %# end
 	</div>
 	% $ct = substr($v->{sprintf("cn=%s,%s",$en,$base_proj)}->{createtimestamp}->[0], 0, -1);
 	% $cn = substr($v->{sprintf("cn=%s,%s",$en,$base_proj)}->{creatorsname}->[0], 4, index($v->{sprintf("cn=%s,%s",$en,$base_proj)}->{creatorsname}->[0], ",")-4);
@@ -162,43 +165,45 @@
 	    </div>
 
 	    %# SERVERS (MACHINES)
-	    <div class="col-1 text-end pt-4">
-	      <i class="fa-solid fa-server fa-xl" title="server"></i>
-	    </div>
-	    <div class="col-11 pt-4">
-	      <ul class="list-unstyled">
-		% foreach (sort(keys(%{$v->{machines}}))) {
-		  <li>
-		    <details>
-		      <summary class="font-monospace user-select-all">
-			<%= $v->{machines}->{$_}->{cn}->[0] =%>
-		      </summary>
-		      <small class="text-muted">
-			<dl class="row">
-			  <dt class="col-sm-1 text-end">hosting:</dt>
-			  <dd class="col-sm-11">
-			    <%= $v->{machines}->{$_}->{grayhostingid}->[0] =%>
-			  </dd>
-			  <dt class="col-sm-1 text-end">instance:</dt>
-			  <dd class="col-sm-11 user-select-all">
-			    <%= $v->{machines}->{$_}->{grayinstanceid}->[0] =%>
-			  </dd>
-			  <dt class="col-sm-1 text-end">type:</dt>
-			  <dd class="col-sm-11">
-			    <%= $v->{machines}->{$_}->{grayinstancetype}->[0] =%>
-			  </dd>
-			  <dt class="col-sm-1 text-end">ip:</dt>
-			  <dd class="col-sm-11 user-select-all">
-			    <%= $v->{machines}->{$_}->{iphostnumber}->[0] =%>
-			  </dd>
-			</dl>
-		      </small>
-		    </details>
-		  </li>
-		% }
-	      </ul>		
-	    </div>
-
+	    % if ( is_role 'admin,coadmin', {cmp => 'or'} ) {
+	      <div class="col-1 text-end pt-4">
+		<i class="fa-solid fa-server fa-xl" title="server"></i>
+	      </div>
+	      <div class="col-11 pt-4">
+		<ul class="list-unstyled">
+		  % foreach (sort(keys(%{$v->{machines}}))) {
+		    <li>
+		      <details>
+			<summary class="font-monospace user-select-all">
+			  <%= $v->{machines}->{$_}->{cn}->[0] =%>
+			</summary>
+			<small class="text-muted">
+			  <dl class="row">
+			    <dt class="col-sm-1 text-end">hosting:</dt>
+			    <dd class="col-sm-11">
+			      <%= $v->{machines}->{$_}->{grayhostingid}->[0] =%>
+			    </dd>
+			    <dt class="col-sm-1 text-end">instance:</dt>
+			    <dd class="col-sm-11 user-select-all">
+			      <%= $v->{machines}->{$_}->{grayinstanceid}->[0] =%>
+			    </dd>
+			    <dt class="col-sm-1 text-end">type:</dt>
+			    <dd class="col-sm-11">
+			      <%= $v->{machines}->{$_}->{grayinstancetype}->[0] =%>
+			    </dd>
+			    <dt class="col-sm-1 text-end">ip:</dt>
+			    <dd class="col-sm-11 user-select-all">
+			      <%= $v->{machines}->{$_}->{iphostnumber}->[0] =%>
+			    </dd>
+			  </dl>
+			</small>
+		      </details>
+		    </li>
+		  % }
+		</ul>		
+	      </div>
+	    % }
+	    
 	    %# REPOSITORIES/LINKS/DOC
 	    <div class="col-1 text-end pt-4">
 	      <i class="fa-solid fa-code-pull-request fa-xl" title="repositories"></i>
@@ -219,6 +224,8 @@
 		    % elsif ($_ =~ /testrai/) { $brand = "fa-solid fa-stethoscope"; }
 		    <i class="<%= $brand %>"></i></a>
 		% }
+	      % } else {
+	      <span class="font-monospace">unknown</span>
 	      % }
 	    </div>
 	    

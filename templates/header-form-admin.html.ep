@@ -40,8 +40,7 @@
               value="search_by_name" tabindex="13" >
         <i class="fas fa-search"></i>
       </button>
-      
-      % if ( is_role 'admin' || is_role 'coadmin' ) {
+
 	<div type="submit" 
 	     class="btn btn-secondary dropdown-toggle dropdown-toggle-split"
 	     data-bs-toggle="dropdown" 
@@ -103,7 +102,7 @@
 	   title="advanced search">
 	  <i class="fa fa-binoculars"></i>
 	</a>
-      % }
+
     </div>
   </div>
 </form>

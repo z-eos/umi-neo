@@ -95,7 +95,7 @@ sub err {
 	     desc          => ldap_error_desc($mesg),
 	     srv           => $mesg->server_error,
 	     caller        => $caller // 'main',
-	     matchedDN     => $mesg->{matchedDN},
+	     matchedDN     => $mesg->{matchedDN} // '',
 	     dn            => $dn // '',
 	     supplementary => '',
 	    };

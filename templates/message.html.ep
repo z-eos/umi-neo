@@ -13,7 +13,7 @@
       <i class="fa-solid fa-<%= $ico->{$k} %> pe-3"></i>
       <ul>
 	% foreach (@{stash->{debug}->{$k}}) {
-	  <li><%== $_ %></li>li>
+	  <li><%== $_ %></li>
 	% }
       </ul>
     </div>

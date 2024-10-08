@@ -1,8 +1,6 @@
+%# -*- mode: web; eval: (follow-mode); -*-
 <header class="navbar navbar-expand-lg bg-body-tertiary sticky-top flex-md-nowrap p-0" id="header">
-  <div class="container-fluid">
-    <a class="navbar-brand" href="/">
-      <img src="/assets/images/umi-logo.50x50.png" width="30" height="30" alt="logo">
-    </a>
+  <div class="container-fluid px-0">
     <button class="btn border-0" type="button"
 	    data-bs-toggle="collapse"
 	    data-bs-target="#sidebar-left"
@@ -11,10 +9,19 @@
 	    aria-label="Toggle sidebar navigation">
       <i class="fa-solid fa-bars"></i>
     </button>
+    <a class="navbar-brand" href="/">
+      <img src="/assets/images/umi-logo.50x50.png" width="30" height="30" alt="logo">
+    </a>
     
     <div class="collapse navbar-collapse" id="navbarSupportedContent">
       
+      % if ( is_role 'admin' || is_role 'coadmin' ) {
+      %= include 'header-form-admin'
+      % } elsif ( is_role 'hr' ) {
+      %= include 'header-form-hr'
+      % } else {
       %= include 'header-form'
+      % }
       
       <ul class="navbar-nav me-auto my-2 my-lg-0 navbar-nav-scroll">
         <li class="nav-item dropdown">
@@ -50,6 +57,7 @@
         </li>
       </ul>
       
+      % if ( is_role 'admin' || is_role 'coadmin' ) {
       <button class="btn border-0" type="button"
 	      data-bs-toggle="collapse"
 	      data-bs-target="#aside"
@@ -58,6 +66,7 @@
 	      aria-label="Toggle aside navigation">
 	<i class="fa-solid fa-bars"></i>
       </button>
-
+      % }
+      
     </div>
 </header>

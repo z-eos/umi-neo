@@ -37,58 +37,76 @@ sub startup ($self) {
   # exit from this "startup" method.
 
   ### authentication is performed in lib/Umi/Controller/Public.pm
-  $self->plugin(
-		Authentication => {
-				   load_user     => sub ($app, $uid) { $authn->load_user($uid) },
-				   validate_user => sub ($c, @A) { $authn->validate_user(@A)   },
-				  },
-	       );
+  $self->plugin('Authentication' =>
+		{
+		 load_user     => sub ($app, $uid) { $authn->load_user($uid) },
+		 validate_user => sub ($c, @A) { $authn->validate_user(@A)   },
+		});
 
-  ### DOESN'T WORK (yet?)
-  $self->plugin('Authorization' => {
-				    has_priv => sub {
-				      my ($self, $priv, $extradata) = @_;
-				      return 0 unless ($self->session('role'));
-				      my $privileges = $self->session('privileges');
-				      my @privs = split(/,/, $priv);
-				      p $priv; p $extradata; p $privileges; p @privs;
-				      if ( scalar(@privs) == 1 ) {
-					return 1 if exists $privileges->{$priv};
-				      } else {
-					if ( $extradata->{cmp} eq 'or' ) {
-					  foreach (@privs) {
-					    return 1 if exists $privileges->{$_};
-					  }
-					} elsif ( $extradata->{cmp} eq 'and' ) {
-					  my $i;
-					  foreach (@privs) {
-					    $i++ if exists $privileges->{$_};
-					  }
-					  return 1 if $i == scalar(@privs);
-					}
-				      }
-				      my $err = 'Not authorized';
-				      p $err;
-				      return 0;
-				    },
-				    is_role => sub {
-				      my ($self, $role, $extradata) = @_;
-				      return 0 unless ($self->session('role'));
-				      return 1 if $self->session('role') eq $role;
-				      return 0;
-				    },
-				    user_privs => sub {
-				      my ($self, $extradata) = @_;
-				      return [] unless ($self->session('role'));
-				      return keys(%{$self->session('privileges')});
-				    },
-				    user_role => sub {
-				      my ($self, $extradata) = @_;
-				      return $self->session('role');
-				    },
-				    ### doesn't work # 'fail_render' => { status => 401, text => 'not authorized' },
-				    #'fail_render' => { status => 401, template => 'not_found' },
-				   });
+  $self->plugin('Authorization' =>
+		{
+		 has_priv => sub {
+		   my ($self, $priv, $extradata) = @_;
+		   return 0 unless ($self->session('role'));
+		   my $privileges = $self->session('privileges');
+		   my @privs = split(/,/, $priv);
+		   # p $priv; p $extradata; p $privileges; p @privs;
+		   if ( scalar(@privs) == 1 ) {
+		     return 1 if exists $privileges->{$priv};
+		   } else {
+		     if ( $extradata->{cmp} eq 'or' ) {
+		       foreach (@privs) {
+			 return 1 if exists $privileges->{$_};
+		       }
+		     } elsif ( $extradata->{cmp} eq 'and' ) {
+		       my $i;
+		       foreach (@privs) {
+			 $i++ if exists $privileges->{$_};
+		       }
+		       return 1 if $i == scalar(@privs);
+		     }
+		   }
+		   #my $err = 'Privivege is not authorized';
+		   #p $err;
+		   return 0;
+		 },
+		 is_role => sub {
+		   my ($self, $role, $extradata) = @_;
+		   return 0 unless ($self->session('role'));
+		   my $r = $self->session('role');
+		   my @roles = split(/,/, $role);
+		   # p $priv; p $extradata; p $roles; p @privs;
+		   if ( scalar(@roles) == 1 ) {
+		     return 1 if $roles[0] eq $r;
+		   } else {
+		     if ( $extradata->{cmp} eq 'or' ) {
+		       foreach (@roles) {
+			 return 1 if $_ eq $r;
+		       }
+		     } elsif ( $extradata->{cmp} eq 'and' ) {
+		       my $i;
+		       foreach (@roles) {
+			 $i++ if $_ eq $r;
+		       }
+		       return 1 if $i == scalar(@roles);
+		     }
+		   }
+		   #my $err = 'Role is not authorized';
+		   #p $err;
+		   return 0;
+		 },
+		 user_privs => sub {
+		   my ($self, $extradata) = @_;
+		   return [] unless ($self->session('role'));
+		   return keys(%{$self->session('privileges')});
+		 },
+		 user_role => sub {
+		   my ($self, $extradata) = @_;
+		   return $self->session('role');
+		 },
+		 ### doesn't work # 'fail_render' => { status => 401, text => 'not authorized' },
+		 #'fail_render' => { status => 401, template => 'not_found' },
+		});
 
   $self->_startup_routes;
 
@@ -231,6 +249,10 @@ sub _startup_routes ($self) {
   $protected_root
     ->get( '/profile/:uid' => [ uid => qr/[^\/]+/ ])
     ->to('protected#profile', uid => '');
+
+  $protected_root
+    ->post('/profile')
+    ->to('protected#profile');
 
   ## PROJECT
   $protected_root
