@@ -23,7 +23,8 @@ sub validate_user ($self, $username, $password, $extra) {
     if ( $extra->{ldap}->isa('Net::LDAP') ) {
       return $username;
     } else {
-      $self->{app}->h_log($extra->{ldap});
+      # $self->{app}->h_log($extra->{ldap});
+      # $self->{app}->h_log( $self->{app}->h_ldap_err($extra->{ldap}, {}) );
     }
   } else {
       my $msg = 'ERROR: not defined $extra->{ldap}';

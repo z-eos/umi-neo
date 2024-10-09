@@ -11,12 +11,11 @@ use Mojolicious::Validator;
 use Umi::Ldap;
 
 sub homepage ($self) {
-  $self->render(
-		template => 'protected/home',
-		session  => $self->session,
-		current_user => $self->helpers->current_user,
-		config => $self->{app}->{cfg}
-	       );
+  if ($self->session('debug')) {
+    $self->stash( debug => $self->session('debug') );
+    delete $self->session->{debug};
+  }
+  $self->render( template => 'protected/home' );
 }
 
 sub other ($self) { $self->render(template => 'protected/other'); }
@@ -50,27 +49,24 @@ sub profile ($self) {
   $self->{app}->h_log( $self->{app}->h_ldap_err($search, $search_arg) ) if $search->code;
   my $profiled_user = $search->as_struct;
 
-  my ($modifiersname, $groups, $s, $servers, $server_alive, $p, $projects);
-  while (my ($k, $v) = each %$profiled_user) {
+  my ($modifiersname, $groups, $s, $servers, $server_alive, $p, $projects, $k, $kk, $v, $vv);
+  while (($k, $v) = each %$profiled_user) {
     ### name of the last who modified this user root object
     $search_arg = { base => $v->{modifiersname}->[0], scope => 'base', attrs => ['gecos', 'uid'] };
     $search = $ldap->search( $search_arg );
     $modifiersname->{$k} = $search->as_struct->{$v->{modifiersname}->[0]};
 
     ### only admins and coadmins need this info
-    $groups = $servers = $server_alive = {};
     if ( $self->is_role('admin,coadmin', {cmp => 'or'}) ) {
-      ### list of all groups user is a member of
+      ### GROUPS: list of all groups user is a member of
       $search_arg = { base => $self->{app}->{cfg}->{ldap}->{base}->{group},
 		      filter => '(memberUid=' . $v->{uid}->[0] . ')',
 		      attrs => ['cn'] };
       $search = $ldap->search( $search_arg );
       my $g = $search->as_struct;
-      while (my ($kk, $vv) = each %$g) {
-	push @{$groups->{$k}}, $vv->{cn}->[0];
-      }
+      push @{$groups->{$k}}, $vv->{cn}->[0] while (($kk, $vv) = each %$g);
 
-      ### list of all servers available for the user
+      ### SERVERS: list of all servers available for the user
       $search_arg = { base => 'ou=access,' . $self->{app}->{cfg}->{ldap}->{base}->{netgroup},
 		      filter => '(nisNetgroupTriple=*,' . $v->{uid}->[0] . ',*)',
 		      attrs => ['nisNetgroupTriple'] };
@@ -92,12 +88,12 @@ sub profile ($self) {
 	$search_arg = { base => 'cn=' . $_ . ',' . $self->{app}->{cfg}->{ldap}->{base}->{machines},
 			attrs => ['cn'] };
 	$search = $ldap->search( $search_arg );
-	$self->{app}->h_log( $self->{app}->h_ldap_err($search, $search_arg) ) if $search->code && $search->code != 32;
+	$self->h_log( $self->{app}->h_ldap_err($search, $search_arg) ) if $search->code && $search->code != 32;
 	$server_alive->{$k}->{$_} = $search->count;
       }
     }
 
-    ### list of all projects user is a member of
+    ### PROJECTS: list of all projects user is a member of
     $search_arg = { base => 'ou=group,' . $self->{app}->{cfg}->{ldap}->{base}->{project},
 		    filter => '(memberUid=' . $v->{uid}->[0] . ')',
 		    attrs => ['cn'] };

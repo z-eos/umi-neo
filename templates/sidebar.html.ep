@@ -1,4 +1,4 @@
-<% # -*- mode: web; eval: (follow-mode); -*- %>
+<%# -*- mode: web; eval: (follow-mode); -*- %>
 
 % my $account = $c->current_user;
 
@@ -10,7 +10,7 @@
        role="dialog" aria-labelledby="modal-area-is-accounts">
     <div class="modal-dialog modal-sm border border-warning" role="document">
       <div class="modal-content border-0">
-	<div class="modal-header bg-warning text-light">
+	<div class="modal-header bg-warning text-secondary">
 	  <h4 id="modal-area-is-accounts" class="modal-title">
 	    <i class="fas fa-exclamation-triangle"></i>
 	    <b>Are you really sure?</b>
@@ -49,13 +49,13 @@
 	 </a>
 	 <ul class="nav flex-column collapse ml-4 p-0" id="submenuAnalyze">
          <li class="nav-item">
-	 <a class="text-light nav-link" href="#modal-is-accounts" data-bs-toggle="modal">
+	 <a class="text-secondary nav-link" href="#modal-is-accounts" data-bs-toggle="modal">
 	 <i class="fas fa-id-card"></i>
 	 Accounts
 	 </a>
 	 </li>
          <li class="nav-item">
-	 <a class="text-light nav-link" href="/abstrstataccgroups"
+	 <a class="text-secondary nav-link" href="/abstrstataccgroups"
 	 tabindex="2"
 	 title="Acc &harr; Group">
 	 <i class="fas fa-users"></i>
@@ -63,7 +63,7 @@
 	 </a>
 	 </li>
          <li class="nav-item">
-	 <a class="text-light nav-link" href="/servermta"
+	 <a class="text-secondary nav-link" href="/servermta"
 	 tabindex="2"
 	 title="All MTAs info in one single table">
 	 <i class="fas fa-mail-bulk"></i>
@@ -71,7 +71,7 @@
 	 </a>
 	 </li>
          <li class="nav-item">
-	 <a class="text-light nav-link" href="/mikrotik"
+	 <a class="text-secondary nav-link" href="/mikrotik"
 	 tabindex="2"
 	 title="CAPsMAN registrations">
 	 <i class="fas fa-broadcast-tower"></i>
@@ -79,7 +79,7 @@
 	 </a>
 	 </li>
          <li class="nav-item">
-	 <a class="text-light nav-link" href="/mikrotikpsk"
+	 <a class="text-secondary nav-link" href="/mikrotikpsk"
 	 tabindex="2"
 	 title="all corp SSID-s PSK-s">
 	 <i class="fas fa-wifi"></i>
@@ -94,7 +94,7 @@
 	<a href="#submenuManage"
 	   data-bs-toggle="collapse"
 	   aria-expanded="false"
-	   class="nav-link umi-text-truncate-noelipsis">
+	   class="nav-link btn btn-link text-secondary umi-text-truncate-noelipsis">
 	  <i class="fa-solid fa-lg fa-fw fa-compass-drafting"></i>
 	  <div class="sidebar-left-item d-inline-flex">
 	    <b class="text-uppercase">Management</b>
@@ -102,7 +102,7 @@
 	</a>
 	<ul class="nav flex-column collapse show ml-4 p-0" id="submenuManage">
 	  <li class="nav-item">
-	    <a class="nav-link" href="/project">
+	    <a class="nav-link text-secondary" href="/project">
 	      <i class="fa-solid fa-fw fa-folder-tree"></i>
 	      Projects
 	    </a>
@@ -116,7 +116,7 @@
 	<a href="#submenuTools"
 	   data-bs-toggle="collapse"
 	   aria-expanded="false"
-	   class="nav-link text-white-50 umi-text-truncate-noelipsis">
+	   class="nav-link text-secondary umi-text-truncate-noelipsis">
 	  <i class="fas fa-lg fa-fw fa-toolbox"></i>
 	  <div class="sidebar-left-item d-inline-flex">
 	    <b class="text-uppercase">Tools</b>
@@ -124,52 +124,52 @@
 	</a>
 	<ul class="nav flex-column collapse ml-4 p-0" id="submenuTools">
 	  <li class="nav-item">
-	    <a class="text-light nav-link disabled" href="/onboarding">
+	    <a class="text-secondary nav-link disabled" href="/onboarding">
 	      <i class="fas fa-fw fa-baby"></i>
 	      Onboarding
 	    </a>
 	  </li>
 	  <li class="nav-item">
-	    <a class="text-light nav-link" href="/tool/pwdgen">
+	    <a class="text-secondary nav-link" href="/tool/pwdgen">
 	      <i class="fas fa-fw fa-fingerprint"></i>
 	      Pwdgen
 	    </a>
 	  </li>
 	  <li class="nav-item">
-	    <a class="text-light nav-link" href="/tool/keygen/ssh">
+	    <a class="text-secondary nav-link" href="/tool/keygen/ssh">
 	      <i class="fas fa-fw fa-key"></i>
 	      SSH keygen
 	    </a>
 	  </li>
 	  <li class="nav-item">
-	    <a class="text-light nav-link" href="/tool/gpgkeygen">
+	    <a class="text-secondary nav-link" href="/tool/gpgkeygen">
 	      <i class="fas fa-fw fa-lock"></i>
 	      GPG keygen
 	    </a>
 	  </li>
 	  <li class="nav-item">
-	    <a class="text-light nav-link" href="/tool/qrcode">
+	    <a class="text-secondary nav-link" href="/tool/qrcode">
 	      <i class="fas fa-fw fa-qrcode"></i>
 	      QR
 	    </a>
 	  </li>
 	  <li class="nav-item">
-	    <a class="text-light nav-link" href="/tool/translit">
+	    <a class="text-secondary nav-link" href="/tool/translit">
 	      <i class="fas fa-fw fa-language"></i>
 	      Translit
 	    </a>
 	  </li>
 	  <li class="nav-item">
-	    <a class="text-light nav-link" href="/tool/sysinfo">
+	    <a class="text-secondary nav-link" href="/tool/sysinfo">
 	      <i class="fas fa-fw fa-info-circle"></i>
 	      System Info
 	    </a>
 	  </li>
 	  <li class="nav-item">
-	    <a class="text-light nav-link" href="test"><i class="fas fa-fw fa-code">&nbsp;</i>Test Code</a>
+	    <a class="text-secondary nav-link" href="test"><i class="fas fa-fw fa-code">&nbsp;</i>Test Code</a>
 	  </li>
 	  <li class="nav-item">
-	    <a class="text-light nav-link" href="/tool/ldif-import">
+	    <a class="text-secondary nav-link" href="/tool/ldif-import">
 	      <i class="fas fa-fw fa-file-import"></i>
 	      LDIF Import
 	    </a>
@@ -181,7 +181,7 @@
 	<a href="#submenuObjects"
 	   data-bs-toggle="collapse"
 	   aria-expanded="false"
-	   class="nav-link text-white-50 umi-text-truncate-noelipsis">
+	   class="nav-link text-secondary umi-text-truncate-noelipsis">
 	  <i class="fas fa-lg fa-fw fa-magic"></i>
 	  <div class="sidebar-left-item d-inline-flex">
 	    <b class="text-uppercase">New Obj</b>
@@ -189,73 +189,73 @@
 	</a>
 	<ul class="nav flex-column collapse ml-4 p-0" id="submenuObjects">
 	  <li class="nav-item">
-	    <a class="text-light nav-link" href="/userall" tabindex="2">
+	    <a class="text-secondary nav-link" href="/userall" tabindex="2">
 	      <i class="fas fa-fw fa-user"></i>
 	      User
 	    </a>
 	  </li>
 	  <li class="nav-item disabled">
-	    <a class="text-light nav-link" href="/dhcp" tabindex="7">
+	    <a class="text-secondary nav-link" href="/dhcp" tabindex="7">
 	      <i class="fas fa-fw fa-network-wired"></i>
 	      DHCP
 	    </a>
 	  </li>
 	  <li class="nav-item">
-	    <a class="text-light nav-link" href="/sudo" tabindex="5">
+	    <a class="text-secondary nav-link" href="/sudo" tabindex="5">
 	      <i class="fas fa-fw fa-user-secret"></i>
 	      Sudo
 	    </a>
 	  </li>
 	  <li class="nav-item">
-	    <a class="text-light nav-link" href="/group" tabindex="3">
+	    <a class="text-secondary nav-link" href="/group" tabindex="3">
 	      <i class="fas fa-fw fa-users"> </i>
 	      Group
 	    </a>
 	  </li>
 	  <li class="nav-item">
-	    <a class="text-light nav-link" href="/abstrnisnetgroup" tabindex="3">
+	    <a class="text-secondary nav-link" href="/abstrnisnetgroup" tabindex="3">
 	      <i class="fas fa-fw fa-user-friends"> </i>
 	      NetGr abstr
 	    </a>
 	  </li>
 	  <li class="nav-item">
-	    <a class="text-light nav-link" href="/nisnetgroup" tabindex="3">
+	    <a class="text-secondary nav-link" href="/nisnetgroup" tabindex="3">
 	      <i class="fas fa-fw fa-user-friends"> </i>
 	      NetGr
 	    </a>
 	  </li>
 	  <li class="nav-item">
-	    <a class="text-light nav-link" href="/tool/importgpg">
+	    <a class="text-secondary nav-link" href="/tool/importgpg">
 	      <i class="fas fa-fw fa-file-import"></i>
 	      GPG key Import
 	    </a>
 	  </li>
 	  <li class="nav-item">
-	    <a class="text-light nav-link" href="/sargon" tabindex="3">
+	    <a class="text-secondary nav-link" href="/sargon" tabindex="3">
 	      <i class="fas fa-fw fa-dragon"> </i>
 	      Sargon
 	    </a>
 	  </li>
 	  <li class="nav-item">
-	    <a class="text-light nav-link" href="/gitacl" tabindex="5">
+	    <a class="text-secondary nav-link" href="/gitacl" tabindex="5">
 	      <i class="fab fa-fw fa-git"></i>
 	      GitACL
 	    </a>
 	  </li>
 	  <li class="nav-item disabled">
-	    <a class="text-light nav-link" href="#" tabindex="6">
+	    <a class="text-secondary nav-link" href="#" tabindex="6">
 	      <del><i class="fas fa-fw fa-globe"></i>
 		DNS</del>
 	    </a>
 	  </li>
 	  <li class="nav-item">
-	    <a class="text-light nav-link" href="/org" tabindex="4">
+	    <a class="text-secondary nav-link" href="/org" tabindex="4">
 	      <i class="fas fa-fw fa-building"></i>
 	      Org
 	    </a>
 	  </li>
 	  <li class="nav-item">
-	    <a class="text-light nav-link" href="/inventory" tabindex="4">
+	    <a class="text-secondary nav-link" href="/inventory" tabindex="4">
 	      <i class="fas fa-fw fa-pen-nib"></i>
 	      Inventory
 	    </a>
@@ -270,7 +270,7 @@
 	<a href="#submenuInfo"
 	   data-bs-toggle="collapse"
 	   aria-expanded="false"
-	   class="nav-link text-white-50 umi-text-truncate-noelipsis">
+	   class="nav-link text-secondary umi-text-truncate-noelipsis">
 	  <i class="fas fa-lg fa-fw fa-info"></i>
 	  <div class="sidebar-left-item d-inline-flex">
 	    <b class="text-uppercase">Info</b>
@@ -278,21 +278,21 @@
 	</a>
 	<ul class="nav flex-column collapse ml-4 p-0" id="submenuInfo">
 	  <li class="nav-item">
-	    <a class="text-light nav-link" href="/motto"><i class="fas fa-hand-spock"></i> user's motto</a>
+	    <a class="text-secondary nav-link" href="/motto"><i class="fas fa-hand-spock"></i> user's motto</a>
 	  </li>
 	  <li class="nav-item">
-	    <a class="text-light nav-link" href="/about"><i class="fas fa-question-circle"></i> help</a>
+	    <a class="text-secondary nav-link" href="/about"><i class="fas fa-question-circle"></i> help</a>
 	  </li>
 	  <li class="nav-item">
-	    <a class="text-light nav-link" href="https://github.com/z-eos/umi/wiki"><i class="fab fa-fw fa-wikipedia-w"></i> UMI wiki</a>
+	    <a class="text-secondary nav-link" href="https://github.com/z-eos/umi/wiki"><i class="fab fa-fw fa-wikipedia-w"></i> UMI wiki</a>
 	  </li>
 	  <li class="nav-item">
-	    <a class="text-light nav-link" href="#chat" ><i class="fas fa-fw fa-comment-alt"></i> chat</a>
+	    <a class="text-secondary nav-link" href="#chat" ><i class="fas fa-fw fa-comment-alt"></i> chat</a>
 	    
 	    
 	  </li>
 	  <li class="nav-item">
-	    <a class="text-white-50 nav-link" href="#"><i class="fas fa-fw fa-bug text-danger"></i> bug</a>
+	    <a class="text-secondary nav-link" href="#"><i class="fas fa-fw fa-bug text-danger"></i> bug</a>
 	  </li>
 	</ul>
       </li>

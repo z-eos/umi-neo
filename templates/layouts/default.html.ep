@@ -1,6 +1,6 @@
 %# -*- mode: web; eval: (follow-mode) -*-
 <!DOCTYPE html>
-<html lang="en" data-bs-theme="dark">
+<html lang="en" data-bs-theme="<%= exists $c->session->{data_bs_theme} ? $c->session->{data_bs_theme} : 'dark' %>">
   <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
@@ -31,12 +31,13 @@
     <!-- script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js"></script -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="/assets/js/select2.full.js"></script>
-
     <!-- Popperjs -->
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js" integrity="sha256-BRqBN7dYgABqtY9Hd4ynE+1slnEw+roEPFzQ7TRRfcg=" crossorigin="anonymous"></script>
     <!-- Tempus Dominus JavaScript -->
     <script src="https://cdn.jsdelivr.net/npm/@eonasdan/tempus-dominus@6.9.4/dist/js/tempus-dominus.min.js" crossorigin="anonymous"></script>
     <!-- script src="https://cdn.jsdelivr.net/npm/moment@2.29.1/moment.min.js"></script -->
+
+    <script src="/assets/js/bs-theme-switcher.js"></script>
     
     <noscript>
       <div class="alert alert-danger text-center h1 mt-5 mx-5"
@@ -50,7 +51,7 @@
 
     <!-- div class="outmost-wrapper" -->
 
-      <% if ($c->is_user_authenticated) { %>
+    <% if ($c->is_user_authenticated) { %>
 	%= include 'header'
       <% } %>
 
@@ -70,16 +71,6 @@
       </div>
     <!-- /div -->
 
-    <script>
-     <!-- dark/light theme switch -->
-     document.getElementById('bd-theme').addEventListener('click',()=>{
-       if (document.documentElement.getAttribute('data-bs-theme') == 'dark') {
-         document.documentElement.setAttribute('data-bs-theme','light')
-       } else {
-         document.documentElement.setAttribute('data-bs-theme','dark')
-       }
-     })
-    </script>
 
     <!-- UMI SCRIPTS -->
     <script src="/assets/js/umi-common.js"></script>

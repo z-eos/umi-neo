@@ -56,16 +56,15 @@ sub do_login ($self) {
 
       $self->set_user_session({ uid => $username,
 				pwd => $password,
+				debug => { ok => ["Successful login as $username"] },
 				user_obj => $user_obj,
 				role => $role,
 				privileges => \%privileges });
-      $self->stash({uid => $username => pwd => $password});
-      $self->stash(message => "Successful login as $username", status => 'ok');
       return $self->redirect_to('protected_root')
     }
   }
 
-  $self->stash(message => 'Authentication error', status => 'error');
+  $self->session( debug => { error => ['Authentication failed'] } );
   return $self->redirect_to('public_root')
 }
 
@@ -76,6 +75,10 @@ sub do_logout ($self) {
 }
 
 sub homepage ($self) {
+  if ($self->session('debug')) {
+    $self->stash( debug => $self->session('debug') );
+    delete $self->session->{debug};
+  }
   return $self->render(template => 'public/home');
 }
 

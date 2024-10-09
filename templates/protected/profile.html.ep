@@ -86,7 +86,7 @@
 	      <dd class="col-sm-10">
 		% if ( exists $projects->{$dn} ) {
 		  % foreach (@{$projects->{$dn}}) {
-		    <span class="badge text-bg-secondary fw-normal"><a href="/projects/<%= substr($_, 0, index($_, ':')) %>"><%= $_ %></a></span>
+		    <span class="badge text-bg-secondary fw-normal"><a href="/project/<%= substr($_, 0, index($_, ':')) %>"><%= $_ %></a></span>
 		  % }
 		% }
 	      </dd>

@@ -211,6 +211,7 @@ sub _startup_routes ($self) {
 	    }
 
 	    $c->log->debug('User is not authenticated, bouncing to public home');
+	    $self->stash({ debug => { error => ['Authentication failed'] }});
 	    $c->stash(is_user_authenticated => 0);
 	    $c->redirect_to('public_root');
 	    return 0;

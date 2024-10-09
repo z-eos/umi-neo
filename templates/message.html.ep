@@ -1,4 +1,6 @@
 %# -*- mode: web; eval: (follow-mode) -*-
+
+%# status => [ 'message', ... ]
 % if ( exists stash->{debug} ) {
   % my $status = { ok => 'success',
     % warn => 'warning',
