@@ -1,6 +1,6 @@
 %# -*- mode: web; eval: (follow-mode) -*-
 <!DOCTYPE html>
-<html lang="en" data-bs-theme="<%= exists $c->session->{data_bs_theme} ? $c->session->{data_bs_theme} : 'dark' %>">
+<html lang="en" data-bs-theme="dark">
   <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">

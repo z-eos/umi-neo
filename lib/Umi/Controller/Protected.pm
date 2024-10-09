@@ -27,6 +27,7 @@ sub profile ($self) {
 
   my $ldap = Umi::Ldap->new( $self->{app}, $self->session('uid'), $self->session('pwd') );
 
+  ### USER:
   my $filter;
   if ($uid eq 'all') {
     $filter = '(uid=*)';
@@ -37,7 +38,7 @@ sub profile ($self) {
     $filter = sprintf("(&(uid=*)(!(gidNumber=%s)))",
 		      $self->{app}->{cfg}->{ldap}->{defaults}->{group_blocked_gidnumber});
   } elsif ($uid ne '') {
-    $filter = sprintf("(uid=%s)", $uid);
+    $filter = sprintf("(|(uid=%s)(givenName=%s)(sn=%s))", $uid, $uid, $uid);
   } else {
     $filter = sprintf("(uid=%s)", $self->session('uid'));
   }

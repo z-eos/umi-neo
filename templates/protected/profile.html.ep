@@ -23,7 +23,7 @@
       </div>
       <div class="col-md-8">
 	<div class="card-body">
-          <h4 class="card-title fw-bold <%= 'text-' . $card_col if $card_col ne '' %>"><%= $v->{gecos}->[0] %>
+          <h4 class="card-title fw-bold <%= 'text-' . $card_col if $card_col ne '' %>"><%= $v->{gecos}->[0] ne '' ? $v->{gecos}->[0] : $v->{givenname}->[0] . ' ' . $v->{sn}->[0] %>
 	    <a href="/profile/modify/<%= $v->{uid}->[0] %>" class="btn btn-sm btn-secondary">
 	      <i class="fa-solid fa-gears"></i>
 	    </a>
