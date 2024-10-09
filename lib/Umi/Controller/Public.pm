@@ -21,6 +21,7 @@ sub do_login ($self) {
     # Umi::Authentication::validate_user() which is called by
     # Mojolicious::Plugin::Authentication::authenticate()
     my $ldap = Umi::Ldap->new( $self->{app}, $username, $password );
+    # $self->h_log($ldap);
     if ($self->authenticate($username, $password, {ldap => $ldap->ldap})) {
       my ($search_arg, $search, $user_obj, $role, %privileges);
 

@@ -89,27 +89,29 @@
 	 </ul>
 	 </li> -->
     
-    <li class="nav-item">
-      <a href="#submenuManage"
-	 data-bs-toggle="collapse"
-	 aria-expanded="false"
-	 class="nav-link text-white-50 umi-text-truncate-noelipsis">
-	<i class="fa-solid fa-lg fa-fw fa-compass-drafting"></i>
-	<div class="sidebar-left-item d-inline-flex">
-	  <b class="text-uppercase">Management</b>
-	</div>
-      </a>
-      <ul class="nav flex-column collapse show ml-4 p-0" id="submenuManage">
-	<li class="nav-item">
-	  <a class="text-light nav-link" href="/project">
-	    <i class="fa-solid fa-fw fa-folder-tree"></i>
-	    Projects
-	  </a>
-	</li>
-      </ul>
-    </li>
+    % if ( is_role 'admin,coadmin,hr', {cmp => 'or'} ) {
+      <li class="nav-item">
+	<a href="#submenuManage"
+	   data-bs-toggle="collapse"
+	   aria-expanded="false"
+	   class="nav-link umi-text-truncate-noelipsis">
+	  <i class="fa-solid fa-lg fa-fw fa-compass-drafting"></i>
+	  <div class="sidebar-left-item d-inline-flex">
+	    <b class="text-uppercase">Management</b>
+	  </div>
+	</a>
+	<ul class="nav flex-column collapse show ml-4 p-0" id="submenuManage">
+	  <li class="nav-item">
+	    <a class="nav-link" href="/project">
+	      <i class="fa-solid fa-fw fa-folder-tree"></i>
+	      Projects
+	    </a>
+	  </li>
+	</ul>
+      </li>
+    % }
 
-    % if ( is_role 'admin' || is_role 'coadmin' ) {
+    % if ( is_role 'admin,coadmin', {cmp => 'or'} ) {
       <li class="nav-item">
 	<a href="#submenuTools"
 	   data-bs-toggle="collapse"

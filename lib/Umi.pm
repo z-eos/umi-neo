@@ -10,6 +10,7 @@ use Mojo::Util qw( dumper );
 use Mojolicious::Plugin::Authentication;
 use Mojolicious::Plugin::Authorization;
 
+# ?? # use Mojolicious::Plugin::Syslog;
 use Data::Printer {
   caller_info => 1,
     # max_depth   => 3,
@@ -113,6 +114,7 @@ sub startup ($self) {
 }
 
 sub _startup_session ($self) {
+  ## ?? # Mojolicious::Plugin::ServerSession
   $self->helper(h_log => sub {
 		  my ($c, $data) = @_;
 		  if ($self->cfg->{debug}->{level} > 0) {

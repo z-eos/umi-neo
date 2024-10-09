@@ -46,7 +46,7 @@ sub new {
     $self->{app}->h_log("Error connecting to $cf->{conn}->{host}: $@");
     return undef;
   }
-    
+
   my $m = $ldap->bind(sprintf("uid=%s,%s",
 			      $self->{uid},
 			      $cf->{base}->{acc_root}),
@@ -55,7 +55,7 @@ sub new {
   if ( $m->is_error ) {
     $self->{app}->h_log(sprintf("Ldap.pm: ldap(): code: %s; mesg: %s; txt: %s",
 				$m->code, $m->error_name, $m->error_text) );
-      return $m;
+      $self->{ldap} = $m;
   }
 
   if ( exists $cf->{conn}->{start_tls} ) {
@@ -70,12 +70,18 @@ sub new {
     }
     catch {
       $self->{app}->h_log("Net::LDAP start_tls error: $@") if $m->error;
-      return $m;
+    } finally {
+      if (@_) {
+	$self->{ldap} = @_;
+      } else {
+	$self->{ldap} = $ldap;
+      }
     }
   }
-  # $self->{log}->debug(dumper($mesg));
 
-  $self->{ldap} = $ldap;
+  $self->{ldap} = $ldap if ! exists $self->{ldap};
+
+  # $self->{log}->debug(dumper($mesg));
 
   return $self;
 }
