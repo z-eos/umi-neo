@@ -53,18 +53,16 @@ sub startup ($self) {
 		   # p $priv; p $extradata; p $privileges; p @privs;
 		   if ( scalar(@privs) == 1 ) {
 		     return 1 if exists $privileges->{$priv};
-		   } else {
-		     if ( $extradata->{cmp} eq 'or' ) {
-		       foreach (@privs) {
-			 return 1 if exists $privileges->{$_};
-		       }
-		     } elsif ( $extradata->{cmp} eq 'and' ) {
-		       my $i;
-		       foreach (@privs) {
-			 $i++ if exists $privileges->{$_};
-		       }
-		       return 1 if $i == scalar(@privs);
+		   } elsif ( $extradata->{cmp} eq 'or' ) {
+		     foreach (@privs) {
+		       return 1 if exists $privileges->{$_};
 		     }
+		   } elsif ( $extradata->{cmp} eq 'and' ) {
+		     my $i;
+		     foreach (@privs) {
+		       $i++ if exists $privileges->{$_};
+		     }
+		     return 1 if $i == scalar(@privs);
 		   }
 		   #my $err = 'Privivege is not authorized';
 		   #p $err;
@@ -78,18 +76,16 @@ sub startup ($self) {
 		   # p $priv; p $extradata; p $roles; p @privs;
 		   if ( scalar(@roles) == 1 ) {
 		     return 1 if $roles[0] eq $r;
-		   } else {
-		     if ( $extradata->{cmp} eq 'or' ) {
-		       foreach (@roles) {
-			 return 1 if $_ eq $r;
-		       }
-		     } elsif ( $extradata->{cmp} eq 'and' ) {
-		       my $i;
-		       foreach (@roles) {
-			 $i++ if $_ eq $r;
-		       }
-		       return 1 if $i == scalar(@roles);
+		   } elsif ( $extradata->{cmp} eq 'or' ) {
+		     foreach (@roles) {
+		       return 1 if $_ eq $r;
 		     }
+		   } elsif ( $extradata->{cmp} eq 'and' ) {
+		     my $i;
+		     foreach (@roles) {
+		       $i++ if $_ eq $r;
+		     }
+		     return 1 if $i == scalar(@roles);
 		   }
 		   #my $err = 'Role is not authorized';
 		   #p $err;
@@ -168,9 +164,9 @@ sub _startup_session ($self) {
 }
 
 sub _startup_config ($self) {
-  $self->cfg($self->plugin('NotYAMLConfig'));
-  ### $self->plugin('StaticCache' => { even_in_dev => 1 });
-    
+  $self->cfg($self->plugin('NotYAMLConfig', {file => 'conf/umi.yml'}));
+  $self->plugin('StaticCache' => { even_in_dev => 0 });
+
   # # variables to be taken remapped from the environment
   # if (defined(my $remaps = $config->{remap_env})) {
   #    for my $definition (split m{,}mxs, $remaps) {

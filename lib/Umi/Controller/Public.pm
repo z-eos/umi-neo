@@ -22,7 +22,18 @@ sub do_login ($self) {
     # Mojolicious::Plugin::Authentication::authenticate()
     my $ldap = Umi::Ldap->new( $self->{app}, $username, $password );
     if ($self->authenticate($username, $password, {ldap => $ldap->ldap})) {
-      my ($search_arg, $search, $role, %privileges);
+      my ($search_arg, $search, $user_obj, $role, %privileges);
+
+      ### user's role
+      $search_arg = { base => $self->{app}->{cfg}->{ldap}->{base}->{acc_root},
+		      filter => '(uid=' . $username . ')',
+		      scope => 'one',
+		      attrs => [qw(uid givenName sn cn gecos title description)] };
+      $search = $ldap->search($search_arg);
+      $self->{app}->h_log( $self->{app}->h_ldap_err($search, $search_arg) ) if $search->code;
+      my ($k, $v) = each %{$search->as_struct};
+      $user_obj = $v;
+      $user_obj->{dn} = $k;
 
       ### user's role
       $search_arg = { base => $self->{app}->{cfg}->{ldap}->{base}->{system_role},
@@ -44,6 +55,7 @@ sub do_login ($self) {
 
       $self->set_user_session({ uid => $username,
 				pwd => $password,
+				user_obj => $user_obj,
 				role => $role,
 				privileges => \%privileges });
       $self->stash({uid => $username => pwd => $password});
