@@ -55,7 +55,7 @@
 	%= include 'header'
       <% } %>
 
-      <div class="container-fluid wrapper">
+      <div class="container-fluid px-0 wrapper">
 	<% if ($c->is_user_authenticated) { %>
 	  %= include 'sidebar'
 	<% } %>
