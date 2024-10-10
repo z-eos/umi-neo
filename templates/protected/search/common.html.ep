@@ -4,103 +4,124 @@
 % my $attr_val_class = "";
 
 <div class="row w-100 py-5">
-    <div class="col-xs-6 col-sm-6 col-md-3 col-lg-3">
-	<h3 class="fw-bold">
-	    <i class="fa-solid fa-search fa-lg text-muted"></i>
-	    Search Results
-	    <sup>
-		<abbr title="not all objects could be found via predefined search items, to search for all objects use advanced search menu item" class="initialism">
-		    <i class="fa fa-info-circle text-info"></i>
-		</abbr>
-	    </sup>
-	</h3>
-    </div>
-    <div class="col-xs-6 col-sm-6 col-md-9 col-lg-9">
-	<dl class="row font-monospace text-muted umi-text-xs">
-	    <dt class="col-1">base:</dt>  <dd class="col-11 text-break"><%= $search_arg->{base}   %></dd>
-	    <dt class="col-1">filter:</dt><dd class="col-11 text-break"><%= $search_arg->{filter} %></dd>
-	</dl>
-    </div>
+  <div class="col-xs-6 col-sm-6 col-md-3 col-lg-3">
+    <h3 class="fw-bold">
+      <i class="fa-solid fa-search fa-lg text-muted me-2"></i>
+      Search Results
+    </h3>
+  </div>
+  <div class="col-xs-6 col-sm-6 col-md-9 col-lg-9">
+    <dl class="row font-monospace text-muted umi-text-xs">
+      <dt class="col-1">base:</dt>  <dd class="col-11 text-break"><%= $search_arg->{base}   %></dd>
+      <dt class="col-1">filter:</dt><dd class="col-11 text-break"><%= $search_arg->{filter} %></dd>
+    </dl>
+  </div>
 </div>
 
 %# vh-100 is important, without it dropwown are not shown for collapsed rows
 <div class="container-fluid vh-100">
-    % my ($col, $cn, $ct, $mn, $mt);
-    % for my $e (@{$entries}) {
-	% $col = h_dn_color($e->dn);
-	<div class="card border-<%= $col %>" id="card-<%= $i %>">
+  % my ($col, $cn, $ct, $mn, $mt, $mps);
+  % for my $e (@{$entries}) {
+    
+    % $col = h_dn_color($e->dn);
+    % if ( $col eq 'warning' ) {  $mps = ' ms-3'; }
+    % elsif ($col eq 'success') { $mps = ' ms-4 ps-1'; }
+    % else { $mps = ''; }
 
-	    <div class="card-header bg-<%= $col %> p-0 m-0 fs-6">
-		<div class="btn-group z-10" role="group">
-		    <button class="btn" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-<%= $i %>"
-			    aria-expanded="false" aria-controls="collapse-<%= $i %>">
-		      <i class="fa-solid fa-caret-right"></i>
-		    </button>
-		    %= include 'protected/search/common-menu', dn => $e->dn, i => $i
-		    %= form_for '/search/common' => (method => 'POST') => begin
-		      %= hidden_field 'ldap_subtree' => $e->dn
-		      %= submit_button "DN", class => 'btn'
-		    % end
-		    %= form_for '/search/common' => (method => 'POST') => begin
-		      %= hidden_field 'ldap_subtree' => $e->dn
-		      %= t 'button' , type => 'submit', class => 'btn fw-bold', h_rewrite_dn($e->dn)
-		    % end
+    % my @dn_ico = ($e->dn =~ /authorizedService=([^,]+)\@/g);
+
+    %# extracting users root object dn
+    % my $root_usr_dn = '';
+    % my @rusr_dn = split(/uid=/, $e->dn);
+    % $root_usr_dn = 'uid=' . $rusr_dn[-1] if @rusr_dn > 1;
+    
+    <div class="card border-<%= $col %>" id="card-<%= $i %>">
+
+      <div class="card-header bg-<%= $col %> p-0 m-0 fs-6">
+	<div class="btn-group z-10" role="group">
+	  %# BURGER MENU
+	  <button class="btn" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-<%= $i %>"
+		  aria-expanded="false" aria-controls="collapse-<%= $i %>">
+	    <i class="fa-solid fa-caret-right"></i>
+	  </button>
+	  %= include 'protected/search/common-menu', dn => $e->dn, i => $i
+
+	  %# ICO after BURGER MENU
+	  %= form_for '/search/common' => (method => 'POST') => begin
+	  %= hidden_field 'ldap_subtree' => $root_usr_dn ne '' ? $root_usr_dn : $e->dn
+	  <button type="submit" class="btn">
+	    % if ($root_usr_dn ne '') {
+	      <i class="fa-solid fa-circle-user"></i>
+	    % } else {
+	    <i class="fa-solid fa-shapes"></i>
+            % }
+	  </button>
+	  % end
+
+	  %# REWRITTEN DN with ICO
+	  %= form_for '/search/common' => (method => 'POST') => begin
+	  %= hidden_field 'ldap_subtree' => $e->dn
+	  <button type="submit" class="btn fw-bold px-0">
+	    <%== scalar @dn_ico ? '<i class="' . app->{cfg}->{ui}->{ico}->{usvc}->{$dn_ico[0]} . $mps . ' me-1"></i>': '' %>
+	    <%= h_rewrite_dn($e->dn) %>
+	  </button>
+	  % end
+	</div>
+	% $ct = substr($e->get_value('createTimestamp'), 0, -1);
+	% $cn = substr($e->get_value('creatorsName'), 4, index($e->get_value('creatorsName'), ",")-4);
+	% $mt = substr($e->get_value('modifyTimestamp'), 0, -1);
+	% $mn = substr($e->get_value('modifiersName'), 4, index($e->get_value('modifiersName'), ",")-4);
+	<ul class="list-unstyled fa-ul umi-text-tiny font-monospace float-end m-0 pe-2 pt-1">
+	  <li title="created GMT: <%= $ct %> by <%= $cn %>">
+	    <span class="fa-li"><i class="fa-solid fa-hourglass-start"></i></span><%= $ct %> <b><%= $cn %></b>
+	  </li>
+	  <li title="modified, GMT: <%= $mt %> by <%= $mn %>">
+	    <span class="fa-li"><i class="fa-solid fa-hourglass-half"></i></span><%= $mt %> <b><%= $mn %></b>
+	  </li>
+	</ul>
+	
+      </div>
+
+      <div class="collapse" id="collapse-<%= $i %>">
+	<div class="card card-body">
+
+	  <div class="row">
+	    <div class="col-3 text-end fw-bold fs-6">dn</div>
+	    <div class="col-9"><%= $e->dn %></div>
+	  </div>
+	  
+	  % for my $attr (sort( $e->attributes )) {
+	    % next if $attr eq 'createTimestamp' || $attr eq 'creatorsName' || $attr eq 'modifyTimestamp' || $attr eq 'modifiersName';
+
+	    <div class="row">
+	      <div class="col-3 text-end fw-bold fs-6"><%= $attr %></div>
+	      <div class="col-9">
+
+		<div class="row">
+		  % for my $attr_val (@{$e->get_value($attr, asref => 1)}) {
+		    % if ($attr eq "jpegPhoto") {
+		      <div class="col-12 font-monospace">
+			<img src="data:image/jpg;base64,<%= Mojo::Util::b64_encode $attr_val %>"
+			     class="img-thumbnail" alt="<%= $e->dn %>">
+		      </div>	      
+		    % } else {
+		    <div class="col-12 font-monospace pb-1"><%= $attr_val; %></div>
+		  % }
+		  % $j++
+	  % }
 		</div>
-		% $ct = substr($e->get_value('createTimestamp'), 0, -1);
-		% $cn = substr($e->get_value('creatorsName'), 4, index($e->get_value('creatorsName'), ",")-4);
-		% $mt = substr($e->get_value('modifyTimestamp'), 0, -1);
-		% $mn = substr($e->get_value('modifiersName'), 4, index($e->get_value('modifiersName'), ",")-4);
-		<ul class="list-unstyled fa-ul umi-text-tiny font-monospace float-end m-0 pe-2 pt-1">
-		  <li title="created GMT: <%= $ct %> by <%= $cn %>">
-		    <span class="fa-li"><i class="fa-solid fa-hourglass-start"></i></span><%= $ct %> <b><%= $cn %></b>
-		  </li>
-		  <li title="modified, GMT: <%= $mt %> by <%= $mn %>">
-		    <span class="fa-li"><i class="fa-solid fa-hourglass-half"></i></span><%= $mt %> <b><%= $mn %></b>
-		  </li>
-		</ul>
-		
+
+	      </div>
 	    </div>
-
-	    <div class="collapse" id="collapse-<%= $i %>">
-		<div class="card card-body">
-
-		    <div class="row">
-			<div class="col-3 text-end fw-bold fs-6">dn</div>
-			<div class="col-9"><%= $e->dn %></div>
-		    </div>
-		    
-		    % for my $attr (sort( $e->attributes )) {
-			% next if $attr eq 'createTimestamp' || $attr eq 'creatorsName' || $attr eq 'modifyTimestamp' || $attr eq 'modifiersName';
-
-			<div class="row">
-			    <div class="col-3 text-end fw-bold fs-6"><%= $attr %></div>
-			    <div class="col-9">
-
-				<div class="row">
-				    % for my $attr_val (@{$e->get_value($attr, asref => 1)}) {
-					% if ($attr eq "jpegPhoto") {
-					    <div class="col-12 font-monospace">
-						<img src="data:image/jpg;base64,<%= Mojo::Util::b64_encode $attr_val %>"
-						     class="img-thumbnail" alt="<%= $e->dn %>">
-					    </div>	      
-					% } else {
-					    <div class="col-12 font-monospace pb-1"><%= $attr_val; %></div>
-					% }
-					% $j++
-				    % }
-				</div>
-
-			    </div>
-			</div>
 
 		    % }
 
-		</div>
-	    </div>
-
 	</div>
-	%= include 'protected/search/common-modals', dn => $e->dn, i => $i
+      </div>
 
-	% $i++
+    </div>
+    %= include 'protected/search/common-modals', dn => $e->dn, i => $i
+
+    % $i++
     % }
 </div>

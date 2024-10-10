@@ -48,7 +48,7 @@
 	    <b class="text-uppercase">Analyze</b>
 	  </div>
 	</a>
-	<ul class="nav flex-column collapse show ms-3 p-0" id="submenuAnalyze">
+	<ul class="nav flex-column collapse ms-3 p-0" id="submenuAnalyze">
           <li class="nav-item">
 	    <a class="nav-link btn btn-link text-secondary text-start" href="#modal-is-accounts" data-bs-toggle="modal">
 	      <i class="fas fa-id-card"></i>
@@ -187,7 +187,7 @@
 	    <b class="text-uppercase">New Obj</b>
 	  </div>
 	</a>
-	<ul class="nav flex-column collapse show ms-3 p-0" id="submenuObjects">
+	<ul class="nav flex-column collapse ms-3 p-0" id="submenuObjects">
 	  <li class="nav-item">
 	    <a class="nav-link btn btn-link text-secondary text-start disabled" href="/userall" tabindex="2">
 	      <i class="fas fa-fw fa-user"></i>
@@ -276,7 +276,7 @@
 	    <b class="text-uppercase">Info</b>
 	  </div>
 	</a>
-	<ul class="nav flex-column collapse show ms-3 p-0" id="submenuInfo">
+	<ul class="nav flex-column collapse ms-3 p-0" id="submenuInfo">
 	  <li class="nav-item">
 	    <a class="nav-link btn btn-link text-secondary text-start disabled" href="/motto"><i class="fas fa-hand-spock"></i> user's motto</a>
 	  </li>
@@ -297,8 +297,6 @@
 	</ul>
       </li>
     % }
-  </ul>
-
 </nav>
 <!-- sidebar end -->
 
