@@ -215,21 +215,21 @@ sub keygen_ssh ($self) {
 
 sub modify ($self) {
   my $par = $self->req->params->to_hash;
+  $self->h_log($par);
   # p $par;
   # my $v = $self->validation;
   # return $self->render(template => 'protected/tool/modify') unless $v->has_data;
   return $self->render(template => 'protected/tool/modify') unless %$par;
 
-  my $ldap = Umi::Ldap->new( $self->{app},
-			     $self->session('uid'),
-			     $self->session('pwd') );
+  my $ldap = Umi::Ldap->new( $self->{app}, $self->session('uid'), $self->session('pwd') );
 
   my $search_arg = { base => $par->{dn_to_modify},
 		     filter => '(objectClass=*)',
-		     attrs => []};
+		     scope => 'base',
+		     attrs => [] };
   my $s = $ldap->search( $search_arg );
-  $self->{app}->h_log( $self->{app}->h_ldap_err($s, $search_arg) ) if $s->code;
-
+  $self->h_log( $self->h_ldap_err($s, $search_arg) ) if $s->code;
+  $self->h_log( $s->as_struct );
   # `UNUSED ATTRIBUTES` select element
   my $schema = $ldap->schema;
   my %oc = map { $_->{name} => $_ } $schema->all_objectclasses;
@@ -238,10 +238,10 @@ sub modify ($self) {
 
   my @attr_unused = $self->h_attr_unused($s->entry, \%oc);
 
+  my ($e_orig, $e_tmp);
   if ( keys %$par == 1 ) {
     # here we've just clicked, search result  menu `modify` button
     $self->h_log('~~~~~-> MODIFY: SEARCH RESULT MENU CHOOSEN');
-    my ($e_orig, $e_tmp);
     foreach ($s->entry->attributes) {
       $e_tmp = $s->entry->get_value($_, asref => 1);
       if ( scalar @$e_tmp == 1 ) {
@@ -264,6 +264,10 @@ sub modify ($self) {
     $self->h_log('~~~~~-> MODIFY: FORM CHANGED?');
     delete $par->{dn_to_modify};
     delete $par->{attr_unused};
+    foreach (keys %$par) {
+      delete $par->{$_} if $par->{$_} eq '';
+    }
+    $self->h_log($par);
     my $diff = $self->h_hash_diff( $self->session->{e_orig}, $par);
     $self->h_log($diff);
     my ($add, $delete, $replace, $changes);
@@ -280,7 +284,25 @@ sub modify ($self) {
       push @$changes, replace => $replace;
     }
     $self->h_log($changes);
+
+    my $msg = $ldap->modify($s->entry->dn, $changes);
+    $self->stash(debug => {$msg->{status} => [ $msg->{message} ]});
+
   }
+
+  $s = $ldap->search( $search_arg );
+  foreach ($s->entry->attributes) {
+    $e_tmp = $s->entry->get_value($_, asref => 1);
+    if ( scalar @$e_tmp == 1 ) {
+      $e_orig->{$_} = $e_tmp->[0];
+    } else {
+      $e_orig->{$_} = $e_tmp;
+    }
+  }
+  $self->session->{e_orig} = $e_orig;
+  $self->h_log( $s->as_struct );
+  $self->{app}->h_log( $self->{app}->h_ldap_err($s, $search_arg) ) if $s->code;
+  @attr_unused = $self->h_attr_unused($s->entry, \%oc);
 
   $self->stash(entry => $s->entry, aa => \%aa, as => \%as, oc => \%oc, attr_unused => \@attr_unused);
 
@@ -502,7 +524,7 @@ sub profile_modify ($self) {
   $from_form->{$tmp_k} = $tmp_v;
 
   my $msg = $ldap->modify($dn, $changes);
-  $self->stash(debug_status => $msg->{status}, debug_message => $msg->{message});
+  $self->stash(debug => {$msg->{status} => [ $msg->{message} ]});
 
   $self->render(template => 'protected/profile/modify');
 }
