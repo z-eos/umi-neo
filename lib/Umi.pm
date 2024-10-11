@@ -282,7 +282,10 @@ sub _startup_routes ($self) {
 
   ## SEARCH
   $protected_root->get( '/search/common')->to('search#search_common');
-  $protected_root->post('/search/common')->to('search#search_common');
+  $protected_root->post('/search/common')->to('search#search_common')->name('search_common');
+
+  ## DELETE
+  $protected_root->post('/delete')->to('protected#delete');
 
   ## TOOLs
   $protected_root->get( '/tool/ldif-export')->to('protected#ldif_export');

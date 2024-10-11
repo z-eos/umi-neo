@@ -2,7 +2,7 @@
 
 package Umi::Controller::Protected;
 
-use Mojo::Base 'Umi::Controller', -signatures;
+use Mojo::Base 'Mojolicious::Controller', -signatures;
 use Mojo::Util qw(b64_encode dumper);
 use Mojo::JSON qw(decode_json encode_json to_json);
 
@@ -19,6 +19,24 @@ sub homepage ($self) {
 }
 
 sub other ($self) { $self->render(template => 'protected/other'); }
+
+sub delete ($self) {
+  my $par = $self->req->params->to_hash;
+  $self->h_log($par);
+
+  my $ldap = Umi::Ldap->new( $self->{app}, $self->session('uid'), $self->session('pwd') );
+  my $msg = $ldap->delete($par->{delete_dn},
+			  exists $par->{delete_recursive} && $par->{delete_recursive} eq 'on' ? 1 : 0);
+  $self->session( debug => $msg );
+
+  ### alas, this redirect by nature performs a GET request
+  return $self
+    ->redirect_to($self->url_for('search_common')
+		  ->query( search_base_case => $par->{search_base_case},
+			   search_filter => $par->{search_filter},
+			   ldap_subtree => $par->{ldap_subtree} )
+		 );
+}
 
 sub profile ($self) {
   my $par = $self->req->params->to_hash;

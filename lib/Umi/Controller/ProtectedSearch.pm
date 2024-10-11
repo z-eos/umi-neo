@@ -2,7 +2,7 @@
 
 package Umi::Controller::Search;
 
-use Mojo::Base 'Umi::Controller', -signatures;
+use Mojo::Base 'Mojolicious::Controller', -signatures;
 use Mojo::Util qw(b64_encode dumper);
 
 use Umi::Ldap;
@@ -30,9 +30,16 @@ sub search_common  ($self) {
   return $self->render(template => 'protected/search/common' =>
 		       search_arg => {} => searchres => {}) unless $v->has_data;
 
-  $self->{app}->h_log($self->req->params->pairs);
-  $self->{app}->h_log($self->req->params->to_hash);
+  if ($self->session('debug')) {
+    $self->stash( debug => $self->session('debug') );
+    $self->h_log($self->session('debug'));
+    delete $self->session->{debug};
+  }
+
+  # $self->h_log($self->req->params->pairs);
+  $self->h_log($self->req->params->to_hash);
   $p = $self->req->params->to_hash;
+  $p->{params_orig} = $self->req->params->to_hash;
   $sort_order = 'reverse';
   $filter_armor = '';
 
@@ -153,7 +160,7 @@ sub search_common  ($self) {
   # }
 
   my @entries = $search->sorted;
-  $self->stash(search_common_params => $p => search_arg => $search_arg);
+  $self->stash(search_common_params => $p, search_arg => $search_arg);
   $self->render( template => 'protected/search/common',
 		 entries => [ $search->sorted ] );
 

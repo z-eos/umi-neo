@@ -113,28 +113,28 @@ sub err {
     if $err->{supplementary} ne '';
   
   $err->{html} = sprintf( 'call from <b><em>%s</em></b>: <dl class="row mt-5">
-  <dt class="col-2 text-right">DN</dt>
+  <dt class="col-2 text-end">DN</dt>
   <dd class="col-10 text-monospace">%s</dd>
 
-  <dt class="col-2 text-right">admin note</dt>
+  <dt class="col-2 text-end">admin note</dt>
   <dd class="col-10 text-monospace">%s</dd>
 
-  <dt class="col-2 text-right">supplementary data</dt>
+  <dt class="col-2 text-end">supplementary data</dt>
   <dd class="col-10 text-monospace">%s</dd>
 
-  <dt class="col-2 text-right">code</dt>
+  <dt class="col-2 text-end">code</dt>
   <dd class="col-10 text-monospace">%s</dd>
 
-  <dt class="col-2 text-right">error name</dt>
+  <dt class="col-2 text-end">error name</dt>
   <dd class="col-10 text-monospace">%s</dd>
   
-  <dt class="col-2 text-right">error text</dt>
+  <dt class="col-2 text-end">error text</dt>
   <dd class="col-10 text-monospace"><em><small><pre><samp>%s</samp></pre></small></em></dd>
 
-  <dt class="col-2 text-right">error description</dt>
+  <dt class="col-2 text-end">error description</dt>
   <dd class="col-10 text-monospace">%s</dd>
  
-  <dt class="col-2 text-right">server_error</dt>
+  <dt class="col-2 text-end">server_error</dt>
   <dd class="col-10 text-monospace">%s</dd>
 </dl>',
 			  $caller,
@@ -242,5 +242,38 @@ sub last_num {
   return [ $res, $err ];
 }
 
+sub delete {
+  my ($self, $dn, $recursively) = @_;
+  $recursively = 0 if ! defined $recursively;
+  my ($entries, $msg, $return, $search);
+
+  # !! to add it latter # my $g_mod = $self->del_from_groups($dn);
+  # !! to add it latter # push @{$return->{error}}, $g_mod->{error} if defined $g_mod->{error};
+
+  if ($recursively) {
+    $search = $self->search({ base => $dn, filter => '(objectclass=*)' });
+    ## taken from perl-ldap/contrib/recursive-ldap-delete.pl
+    # delete the entries found in a sorted way:
+    # those with more "," (= more elements) in their DN, which are deeper in the DIT, first
+    # trick for the sorting: tr/,// returns number of , (see perlfaq4 for details)
+    @$entries = sort { $b->dn =~ tr/,// <=> $a->dn =~ tr/,// } $search->entries()
+  } else {
+    $entries = [ $dn ];
+  }
+
+  foreach my $e (@$entries) {
+    $msg = $self->ldap->delete($e);
+    # $self->{app}->h_log($self->err($msg));
+    if ( $msg->code == LDAP_SUCCESS ) {
+      $return = { ok => [ 'successfully deleted <mark class="bg-success">' . $dn . '</mark>' ] };
+    } elsif ( $msg->code == LDAP_NO_SUCH_OBJECT ) {
+      $return = { warn => [$self->err( $msg, 0, $dn )->{html}] };
+    } else {
+      $return = { error => [$self->err( $msg, 0, $dn )->{html}] };
+    }
+  }
+
+  return $return;
+}
 
 1;

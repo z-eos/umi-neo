@@ -1,5 +1,6 @@
 %# -*- mode: web; eval: (follow-mode) -*-
 
+% my $dn_orig = $dn;
 % $dn =~ s/,/, /g;
 
 %# data for menu is provided in menu template
@@ -8,35 +9,42 @@
 % my $it = "delete";
 <div class="modal border-1" id="modal_<%= $it %><%= $i %>" tabindex="-1"
      aria-labelledby="modal_<%= $it %><%= $i %>_label" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-	<div class="modal-content border border-<%= $menu->{$it}->{col} %> border-1">
-	    <div class="modal-header bg-<%= $menu->{$it}->{col} %> row m-0">
-		<h4 class="modal-title mb-3" id="modal_<%= $it %><%= $i %>_label">
-		    <i class="fa <%= $menu->{$it}->{ico} %> mr-3"></i> Object / hierarchy deletion</h4>
-		    <b class=""><%= $dn %></b>
-	    </div>
-	    <div class="modal-body">
-		<form role="form" method="POST" action="/searchby/<%= $it %>">
-		    <div class="form-check form-switch">
-			<input type="checkbox" class="form-check-input" role="switch"
-			       id="modal_<%= $it %>_switch<%= $i %>">
-			<label class="form-check-label" for="modal_<%= $it %>_switch<%= $i %>">
-			    recursive
-			</label>
-		    </div>
-		    <div class="modal-error mx-5"></div>
-		    <div class="btn-group float-end">
-			<button type="button" class="btn btn-sm btn-block btn-secondary umi-btn-event"
-			    data-bs-dismiss="modal">Close</button>
-			<button type="submit" class="btn btn-sm btn-block btn-<%= $menu->{$it}->{col} %> umi-btn-event umi-btn-ajax"
-				name="ldap_<%= $it %>" value="<%= $dn %>" data-bs-action="<%= $it %>">
-			    Yes, DELETE
-			</button>
-		    </div>
-		</form>
-	    </div>
-	</div>
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content border border-<%= $menu->{$it}->{col} %> border-1">
+      <div class="modal-header bg-<%= $menu->{$it}->{col} %> row m-0">
+	<h4 class="modal-title mb-3" id="modal_<%= $it %><%= $i %>_label">
+	  <i class="fa <%= $menu->{$it}->{ico} %> mr-3"></i> Object / hierarchy deletion
+	</h4>
+	<b class=""><%= $dn %></b>
+      </div>
+      <div class="modal-body">
+	<form role="form" method="POST" action="/<%= $it %>">
+	  % my $po = $search_common_params->{params_orig};
+	  %= hidden_field search_base_case => $po->{search_base_case}
+	  %= hidden_field search_filter => $po->{search_filter}
+	  %= hidden_field ldap_subtree => $po->{ldap_subtree}
+	  
+	  <div class="form-check form-switch">
+	    <input type="checkbox" class="form-check-input" role="switch"
+		   name="<%= $it %>_recursive"
+		   id="modal_<%= $it %>_switch<%= $i %>">
+	    <label class="form-check-label" for="modal_<%= $it %>_switch<%= $i %>">
+	      recursive
+	    </label>
+	  </div>
+	  <div class="modal-error mx-5"></div>
+	  <div class="btn-group float-end">
+	    <button type="button" class="btn btn-sm btn-secondary me-1"
+		    data-bs-dismiss="modal">Close</button>
+	    <button type="submit" class="btn btn-sm btn-block btn-<%= $menu->{$it}->{col} %>"
+		    name="<%= $it %>_dn" value="<%= $dn_orig %>" data-bs-action="<%= $it %>">
+	      Yes, DELETE
+	    </button>
+	  </div>
+	</form>
+      </div>
     </div>
+  </div>
 </div>
 
 % $it = "block";
