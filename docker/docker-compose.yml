@@ -1,0 +1,24 @@
+version: '3.4'
+
+networks:
+  umi:
+    driver: bridge
+
+services:
+  umi:
+    hostname: umi-neo
+    build:
+      dockerfile: docker/Dockerfile
+      context: ..
+    restart: unless-stopped
+    networks:
+      - umi
+    ports:
+      - "127.0.0.1:${UMI_PORT}:3000"
+    environment:
+      PIES_SYSLOG_SERVER: ${PIES_SYSLOG_SERVER:-/proc/1/fd/1}
+    volumes:
+      - conf:/umi/conf
+
+volumes:
+  conf:
