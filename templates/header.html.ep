@@ -44,12 +44,12 @@
 
 	      <ul class="list-unstyled" aria-labelledby="bd-theme-text" data-bs-popper="static">
 		<li>
-                  <button type="button" class="dropdown-item" data-bs-theme-value="light" aria-pressed="false">
+                  <button type="button" class="dropdown-item" data-bs-theme-value="light" aria-pressed="false" accesskey="l">
 		    <i class="fa-solid fa-fw fa-sun"></i><span class="ms-2">Light</span>
                   </button>
 		</li>
 		<li>
-                  <button type="button" class="dropdown-item" data-bs-theme-value="dark" aria-pressed="false">
+                  <button type="button" class="dropdown-item" data-bs-theme-value="dark" aria-pressed="false" accesskey="d">
 		    <i class="fa-solid fa-fw fa-moon"></i><span class="ms-2">Dark</span>
                   </button>
 		</li>

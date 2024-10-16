@@ -153,21 +153,21 @@
 	      QR
 	    </a>
 	  </li>
-	  <li class="nav-item">
-	    <a class="nav-link btn btn-link text-secondary text-start disabled" href="/tool/translit">
-	      <i class="fas fa-fw fa-language"></i>
-	      Translit
-	    </a>
-	  </li>
+	  <!-- <li class="nav-item">
+	       <a class="nav-link btn btn-link text-secondary text-start disabled" href="/tool/translit">
+	       <i class="fas fa-fw fa-language"></i>
+	       Translit
+	       </a>
+	       </li> -->
 	  <li class="nav-item">
 	    <a class="nav-link btn btn-link text-secondary text-start" href="/tool/sysinfo">
 	      <i class="fas fa-fw fa-info-circle"></i>
 	      System Info
 	    </a>
 	  </li>
-	  <li class="nav-item">
-	    <a class="nav-link btn btn-link text-secondary text-start disabled" href="test"><i class="fas fa-fw fa-code">&nbsp;</i>Test Code</a>
-	  </li>
+	  <!-- <li class="nav-item">
+	       <a class="nav-link btn btn-link text-secondary text-start disabled" href="test"><i class="fas fa-fw fa-code">&nbsp;</i>Test Code</a>
+	       </li> -->
 	  <li class="nav-item">
 	    <a class="nav-link btn btn-link text-secondary text-start" href="/tool/ldif-import">
 	      <i class="fas fa-fw fa-file-import"></i>
@@ -252,12 +252,6 @@
 	    <a class="nav-link btn btn-link text-secondary text-start disabled" href="/org" tabindex="4">
 	      <i class="fas fa-fw fa-building"></i>
 	      Org
-	    </a>
-	  </li>
-	  <li class="nav-item">
-	    <a class="nav-link btn btn-link text-secondary text-start disabled" href="/inventory" tabindex="4">
-	      <i class="fas fa-fw fa-pen-nib"></i>
-	      Inventory
 	    </a>
 	  </li>
 	  

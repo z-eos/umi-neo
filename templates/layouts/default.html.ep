@@ -24,6 +24,8 @@
 
     
     <link href="/assets/css/umi.css" rel="stylesheet" type="text/css">
+
+    <script src="/assets/js/fontawesome/all.min.js"></script>
     
   </head>
   <body>

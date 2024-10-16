@@ -41,7 +41,7 @@ sub delete ($self) {
 sub profile ($self) {
   my $par = $self->req->params->to_hash;
   my $uid = $par->{uid} // $self->stash->{uid} // '';
-  $self->h_log($uid);
+  # $self->h_log($uid);
 
   my $ldap = Umi::Ldap->new( $self->{app}, $self->session('uid'), $self->session('pwd') );
 
@@ -68,7 +68,7 @@ sub profile ($self) {
   $self->{app}->h_log( $self->{app}->h_ldap_err($search, $search_arg) ) if $search->code;
   my $profiled_user = $search->as_struct;
 
-  my ($modifiersname, $groups, $s, $servers, $server_alive, $p, $projects, $k, $kk, $v, $vv);
+  my ( $cf_svc, $groups, $k, $kk, $modifiersname, $p, $pgp, $pgp_e, $projects, $server_names, $server_alive, $servers, $service, $svc, $svc_details, $svc_msg, $v, $vv, );
   while (($k, $v) = each %$profiled_user) {
     ### name of the last who modified this user root object
     $search_arg = { base => $v->{modifiersname}->[0], scope => 'base', attrs => ['gecos', 'uid'] };
@@ -91,17 +91,17 @@ sub profile ($self) {
 		      attrs => ['nisNetgroupTriple'] };
       $search = $ldap->search( $search_arg );
       $self->{app}->h_log( $self->{app}->h_ldap_err($search, $search_arg) ) if $search->code;
-      my $n = $search->as_struct;
-      my $t;
-      while (my ($kk, $vv) = each %$n) {
+      my $netgroups = $search->as_struct;
+      my $tuple;
+      while (my ($kk, $vv) = each %$netgroups) {
 	foreach (@{$vv->{nisnetgrouptriple}}) {
-	  @$t = split(/,/, substr($_, 1, -1));
-	  push @{$s->{$k}}, sprintf("%s.%s", $t->[0], $t->[2]);
+	  @$tuple = split(/,/, substr($_, 1, -1));
+	  push @{$server_names->{$k}}, sprintf("%s.%s", $tuple->[0], $tuple->[2]);
 	}
       }
       @{$servers->{$k}} = do {
 	my %seen;
-	sort grep { !$seen{$_}++ } @{$s->{$k}};
+	sort grep { !$seen{$_}++ } @{$server_names->{$k}};
       };
       foreach (@{$servers->{$k}}) {
 	$search_arg = { base => 'cn=' . $_ . ',' . $self->{app}->{cfg}->{ldap}->{base}->{machines},
@@ -110,7 +110,60 @@ sub profile ($self) {
 	$self->h_log( $self->{app}->h_ldap_err($search, $search_arg) ) if $search->code && $search->code != 32;
 	$server_alive->{$k}->{$_} = $search->count;
       }
+      # $self->h_log($servers);
     }
+
+    ### SERVICES
+    $search_arg = { base => $k,
+		    scope => 'one',
+		    sizelimit => 0,
+		    filter => 'authorizedService=*',
+		    attrs => [ 'authorizedService'],};
+    $search = $ldap->search( $search_arg );
+    $self->h_log( $self->{app}->h_ldap_err($search, $search_arg) ) if $search->code && $search->code != 32;
+
+    foreach $svc (@{[$search->sorted( 'authorizedService' )]}) {
+      $svc_msg = $ldap->search( { base => $svc->dn, scope => 'children', });
+      $self->h_log( $self->{app}->h_ldap_err($search, $search_arg) ) if $search->code && $search->code != 32;
+      next if ! $svc_msg->count;
+
+      $cf_svc = $self->{app}->{cfg}->{ldap}->{authorizedService}->{(split('@', $svc->get_value('authorizedService')))[0]};
+
+      $svc_details = {
+		      branch_dn => $svc->dn,
+		      # authorizedService => $svc->get_value('authorizedService'),
+		      auth => $cf_svc->{auth},
+		      icon => $cf_svc->{icon},
+		      descr => $cf_svc->{descr},
+		     };
+
+      foreach my $e (@{[$svc_msg->sorted( 'authorizedService' )]}) {
+	# !!! WARNING may there be something except `cn` and `uid`?
+	# $svc_details->{leaf}->{$e->dn} = $e->get_value('uid') // $e->get_value('cn');
+	%{$svc_details->{obj}->{$e->dn}} =
+	  map { $_ => $e->get_value($_, asref => 1) } $e->attributes;
+      }
+      $service->{$svc->get_value('authorizedService')} = $svc_details;
+      undef $svc_details;
+    }
+    # $self->h_log($service);
+
+    ### GPG
+    $search_arg = { base => $self->{app}->{cfg}->{ldap}->{base}->{pgp},
+		    filter => sprintf("|(pgpUserID=*%s*)(pgpUserID=*%s*)(pgpUserID=*%s*)",
+			  $v->{givenname}->[0],
+			  $v->{sn}->[0],
+			  $v->{mail}->[0]) };
+    $search = $ldap->search( $search_arg );
+    $self->h_log( $self->{app}->h_ldap_err($search, $search_arg) ) if $search->code && $search->code != 32;
+    $pgp_e = $search->as_struct;
+    foreach (keys %$pgp_e) {
+      $pgp->{$pgp_e->{$_}->{pgpuserid}->[0]} = {
+					   keyid  => $pgp_e->{$_}->{pgpkeyid}->[0],
+					   key    => $pgp_e->{$_}->{pgpkey}->[0],
+					  };
+    }
+    #$self->h_log($pgp);
 
     ### PROJECTS: list of all projects user is a member of
     $search_arg = { base => 'ou=group,' . $self->{app}->{cfg}->{ldap}->{base}->{project},
@@ -126,7 +179,9 @@ sub profile ($self) {
 		hash => $profiled_user,
 		groups => $groups,
 		group_blocked_gidnumber => $self->{app}->{cfg}->{ldap}->{defaults}->{group_blocked_gidnumber},
+		pgp => $pgp,
 		servers => $servers,
+		services => $service,
 		server_alive => $server_alive,
 		search_base_case => $self->{app}->{cfg}->{ldap}->{base}->{machines},
 		projects => $projects,
@@ -173,20 +228,97 @@ sub sysinfo    ($self) {
   $s{all_objectclasses} = \%oc;
   $s{all_attributes} = \%aa;
   $s{all_syntaxes} = \%as;
-  return $self->render(template => 'protected/tool/sysinfo',
-		       schema => encode_json(\%s),
-		       last_num => $ldap->last_num({base => $self->{app}->{cfg}->{ldap}->{base}->{acc_root},
-						    filter_by => 'uid',
-						    attr => 'uidNumber' }) );
+  return $self->render( template => 'protected/tool/sysinfo',
+		        schema => encode_json(\%s),
+		        last_num => $ldap->last_num({ base => $self->{app}->{cfg}->{ldap}->{base}->{acc_root},
+						      filter_by => 'uid',
+						      attr => 'uidNumber' }) );
 }
 
 sub pwdgen ($self) {
-  my $v = $self->validation;
-  return $self->render(template => 'protected/tool/pwdgen') unless $v->has_data;
-
   my $par = $self->req->params->to_hash;
-  $self->stash(pwdgen_params => $par);
-  return $self->render(template => 'protected/tool/pwdgen' => pwdgen => $self->h_pwdgen($par));
+  $self->h_log($par);
+
+  ### call from another place (first run)
+  if (exists $par->{pwd_vrf} && $par->{pwd_vrf} ne '' && ! exists $self->session->{pw}->{vrf}) {
+    $self->stash({ pwd_vrf => $par->{pwd_vrf} });
+    $self->session({ pw => { vrf => $par->{pwd_vrf} } });
+    # delete $par->{pwd_vrf};
+  }
+  if (exists $par->{pwd_chg_dn} && $par->{pwd_chg_dn} ne '' && ! exists $self->session->{pw}->{chg}) {
+    $self->stash({ pwd_chg_dn  => $par->{pwd_chg_dn},
+		   pwd_chg_rdn => $par->{pwd_chg_rdn},
+		   pwd_chg_svc => $par->{pwd_chg_svc} });
+    $self->session({ pw => { chg => { dn  => $par->{pwd_chg_dn},
+				      svc => $par->{pwd_chg_svc},
+				      rdn => $par->{pwd_chg_rdn} } } });
+    $self->req->params->remove;
+    delete $par->{pwd_chg_dn};
+    delete $par->{pwd_chg_rdn};
+    delete $par->{pwd_chg_svc};
+  }
+  # $self->h_log($self->session->{pwd_chg});
+  # $self->h_log($par);
+
+  return $self->render( template => 'protected/tool/pwdgen' ) unless exists $par->{pwd_alg} || exists $par->{pwd_vrf};
+
+  #   # $v->has_data;
+  my $v = $self->validation;
+  $v->required('pwd_alg');
+  # # $self->h_log($v->error('proj_name'));
+  # # $v->error(team_pm => ['Select at least one person.']) if ! exists $par->{team_pm};
+
+  # if (exists $par->{pwd_chg_dn} && $par->{pwd_chg_dn} eq '' && exists $self->session->{pwd_chg}) {
+  if ( exists $self->session->{pw}->{vrf} ) {
+    $self->stash({ pwd_vrf => $self->session->{pw}->{vrf} });
+    $par->{pwd_vrf} = $self->session->{pw}->{vrf};
+    delete $self->session->{pw}->{vrf};
+  }
+  if ( exists $self->session->{pw}->{chg} ) {
+    $self->h_log($self->session->{pw}->{chg});
+    $self->stash({ pwd_chg_dn  => $self->session->{pw}->{chg}->{dn},
+		   pwd_chg_rdn => $self->session->{pw}->{chg}->{rdn},
+		   pwd_chg_svc => $self->session->{pw}->{chg}->{svc} });
+    delete $self->session->{pw}->{chg};
+  }
+
+  my $pwdgen = $self->h_pwdgen($par);
+  $self->h_log($pwdgen);
+
+  my ($ldap, $search, $search_arg, $pwd_from_ldap, $match, $mesg);
+  if (exists $self->stash->{pwd_chg_dn}) {
+    $ldap = Umi::Ldap->new( $self->{app}, $self->session('uid'), $self->session('pwd') );
+    if (exists $self->stash->{pwd_vrf}) {
+      ### password verification against LDAP
+      $search_arg = { base => $self->stash->{pwd_chg_dn}, attrs => ['userPassword'] };
+      $search = $ldap->search( $search_arg );
+      $pwd_from_ldap = $search->entry->get_value('userPassword');
+      $self->h_log($pwd_from_ldap);
+      $match = $pwd_from_ldap eq $pwdgen->{ssha} ? 1 : 0;
+      $self->stash({debug => { $match ? 'ok' : 'warn' => [ 'password: ' . $pwdgen->{clear}, $match ? 'match' : 'does not match' ]}});
+    } else {
+      ### userPassword attribute modification
+      $mesg = $ldap->modify( $self->stash->{pwd_chg_dn}, [ replace => [ 'userPassword' => $pwdgen->{ssha}, ], ] );
+      $self->h_log($mesg );
+      # $self->h_log( $self->{app}->h_ldap_err($mesg, undef) ) if $mesg->code;
+      $self->stash({debug => { $mesg->{status} => [ $mesg->{message},
+						    'new password: <span class="badge text-bg-secondary user-select-all">' .
+						    $pwdgen->{clear} .
+						    '</span>' ]
+			     }});
+    }
+  } else {
+    $self->stash({debug => { $pwdgen->{stats}->{passwords_generated} > 0
+			     ? 'ok' : 'warn' => [ 'new password: <span class="badge text-bg-secondary user-select-all">' .
+						  $pwdgen->{clear} .
+						  '</span>' ]
+			   }});
+  }
+
+
+  return $self->render(template => 'protected/tool/pwdgen',
+		       pwdgen_params => $par,
+		       pwdgen => $pwdgen);
 }
 
 sub qrcode ($self) {
@@ -204,7 +336,7 @@ sub keygen_ssh ($self) {
 
   my $par = $self->req->params->to_hash;
   $self->stash(kg_ssh_params => $par);
-  return $self->render(template => 'protected/tool/keygen/ssh' =>
+  return $self->render(template => 'protected/tool/keygen/ssh',
 		       key => {
 			       ssh => $self->h_keygen_ssh($par),
 			       name => { real => 'name will be here',

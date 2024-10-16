@@ -227,7 +227,7 @@ wrapper for ssh-keygen(1)
 		     my $cf = $app->{cfg}->{tool}->{pwdgen} // undef;
 		     my $p =
 			 {
-			  pwd => $par->{pwd} // undef,
+			  pwd => $par->{pwd_vrf} // undef,
 			  xk => {
 				 case_transform            => $par->{xk_case_transform} // 'RANDOM',
 				 num_words                 => $par->{xk_num_words} // 5,
@@ -244,12 +244,14 @@ wrapper for ssh-keygen(1)
 			  pnum => $par->{pwd_num} // $cf->{pnum} || 1,
 			  palg => $par->{pwd_alg} // $cf->{palg} // $cf->{xk}->{preset_default} || 'XKCD',
 			 };
-		 
-		     if ($par->{xk_separator_character} eq 'CHAR') {
-			 $p->{xk}->{separator_character} = $par->{xk_separator_character_char};
-		     } elsif ($par->{xk_separator_character} eq 'RANDOM' && length($par->{xk_separator_character_random}) == 1) {
-			 $par->{separator_character_random} .= $par->{separator_character_random};
+
+		     if ($p->{xk}->{separator_character} eq 'CHAR') {
+		       $p->{xk}->{separator_character} = $par->{xk_separator_character_char};
+		     } elsif ($p->{xk}->{separator_character} eq 'RANDOM' && length($par->{xk_separator_character_random}) == 1) {
+		       # !!! WARNING need to verify
+		       $par->{xk_separator_character_random} .= $par->{xk_separator_character_random};
 		     }
+
 		     my @arr = split(//, $par->{xk_separator_character_random});
 		     $p->{xk}->{separator_alphabet} = \@arr;
 

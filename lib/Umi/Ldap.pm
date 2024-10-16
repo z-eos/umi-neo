@@ -39,7 +39,7 @@ sub new {
 	  }, $class;
 
   my $cf = $self->{app}->{cfg}->{ldap};
-  $self->{app}->h_log('Umi::Ldap->ldap() HAS BEEN CALLED');
+  # $self->{app}->h_log('Umi::Ldap->ldap() HAS BEEN CALLED');
 
   my $ldap = Net::LDAP->new( $cf->{conn}->{host} );
   if ( ! defined $ldap ) {
