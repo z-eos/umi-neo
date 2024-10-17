@@ -29,12 +29,12 @@ sub do_login ($self) {
       $search_arg = { base => $self->{app}->{cfg}->{ldap}->{base}->{acc_root},
 		      filter => '(uid=' . $username . ')',
 		      scope => 'one',
-		      attrs => [qw(uid givenName sn cn gecos title description)] };
+		      attrs => [qw(uid givenName sn cn gecos mail title description)] };
       $search = $ldap->search($search_arg);
       $self->{app}->h_log( $self->{app}->h_ldap_err($search, $search_arg) ) if $search->code;
-      my ($k, $v) = each %{$search->as_struct};
-      $user_obj = $v;
-      $user_obj->{dn} = $k;
+      my $e = $search->entry; # $self->h_log($e);
+      %$user_obj = map { lc($_) => $e->get_value($_) } $e->attributes;
+      $user_obj->{dn} = $e->dn;
 
       ### user's role
       $search_arg = { base => $self->{app}->{cfg}->{ldap}->{base}->{system_role},

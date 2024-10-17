@@ -88,9 +88,6 @@
 </div>
 
 <pre id="ldif">
-  <%= dumper stash->{last_num} =%>
-</pre>
-<pre id="ldif">
   <%# = dumper stash->{all_attributes} =%>
 </pre>
 <pre id="ldif">

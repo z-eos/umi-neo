@@ -20,41 +20,44 @@
 % my $id = '';
 <form method="POST" id="modify-tt-form" enctype="multipart/form-data" class="form-horizontal" action="/tool/modify">
   <input type="hidden" name="dn_to_modify" id="dn_to_modify" value="<%= $entry->dn %>">
-  %# start: unused attributes of existent objectClass-es in the object
-  <div class="form-group row mb-2">
-    <label class="col-sm-3 text-end h6 fw-bold text-success text-uppercase">Unused Attributes:</label>
-    <div class="col-sm-9">
-      <select class="form-select form-select-sm" name="attr_unused" id="attr_unused"> <%# multiple size="3" %>
-	<option value="" selected> --- Choose An Attribute ---</option>
-	% foreach (sort(@{$attr_unused})) {
-	  <option value="<%= $_ %>"><%= $_ %></option>
-	% }
-      </select>
-    </div>
-  </div>
-  % foreach (@{$attr_unused}) {
-    <div id="<%= $_ %>" class="form-group attr-unused row mb-2 d-none">
-      <label class="col-sm-3 text-end h6 fw-bold text-success"><%= $_ %>:</label>
+  <input type="hidden" name="attr_to_modify" id="attr_to_modify" value="<%= stash('attr_to_modify') %>">
+  % if ( ! defined $attr_to_modify ) {
+    %# start: unused attributes of existent objectClass-es in the object
+    <div class="form-group row mb-2">
+      <label class="col-sm-3 text-end h6 fw-bold text-success text-uppercase">Unused Attributes:</label>
       <div class="col-sm-9">
-	<div class="input-group input-group-sm">
-	  <span class="input-group-btn">
-	    <button class="btn btn-secondary btn-sm btn-erase border" type="button" title="erase field value"
-		    id="<%= $_ %>">
-	      <i class="fa-regular fa-fw fa-trash-can"></i>
-	    </button>
-	  </span>
-	  % if ($_ eq 'mu-sieveOnReceive') {
-	    <textarea name="<%= $_ %>" class="form-control" rows=2 placeholder="sieve script to be put here"></textarea>
-	  % } else {
-	  <input type=text value="" id="<%= $_ %>" name="<%= $_ %>" class="form-control"
-		 placeholder="<%= $aa->{$_}->{desc} %>">
-  % }
-	</div>
+	<select class="form-select form-select-sm" name="attr_unused" id="attr_unused"> <%# multiple size="3" %>
+	  <option value="" selected> --- Choose An Attribute ---</option>
+	  % foreach (sort(@{$attr_unused})) {
+	    <option value="<%= $_ %>"><%= $_ %></option>
+	  % }
+	</select>
       </div>
     </div>
+    % foreach (@{$attr_unused}) {
+      <div id="<%= $_ %>" class="form-group attr-unused row mb-2 d-none">
+	<label class="col-sm-3 text-end h6 fw-bold text-success"><%= $_ %>:</label>
+	<div class="col-sm-9">
+	  <div class="input-group input-group-sm">
+	    <span class="input-group-btn">
+	      <button class="btn btn-secondary btn-sm btn-erase border" type="button" title="erase field value"
+		      id="<%= $_ %>">
+		<i class="fa-regular fa-fw fa-trash-can"></i>
+	      </button>
+	    </span>
+	    % if ($_ eq 'mu-sieveOnReceive') {
+	      <textarea name="<%= $_ %>" class="form-control" rows=2 placeholder="sieve script to be put here"></textarea>
+	    % } else {
+	      <input type=text value="" id="<%= $_ %>" name="<%= $_ %>" class="form-control"
+		     placeholder="<%= $aa->{$_}->{desc} %>">
+	    % }
+	  </div>
+	</div>
+      </div>
     % }
     %# stop: unused attributes of existent objectClass-es in the object
-
+  % }
+  
     % foreach my $a (sort($entry->attributes)) {
       <div class="form-group row mb-2" title="title">
 	<label class="col-sm-3 text-end text-truncate h6 fw-bold"><%= $a %>:</label>
@@ -91,7 +94,7 @@
 	              </span>
                     % }
 
-                    % if ( $a eq 'grayPublicKey' ) {
+                    % if ( $a eq 'grayPublicKey' || $a eq 'sshPublicKey') {
 		      %= text_area $a => $e, rows => 5, class => "form-control", id => $id
                     % } else {
 		      %# WARNING: tag works incorrectly

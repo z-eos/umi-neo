@@ -15,15 +15,16 @@
     
     <div class="collapse navbar-collapse" id="navbarSupportedContent">
       
-      % if ( is_role 'admin' || is_role 'coadmin' ) {
+      % if ( is_role 'admin,coadmin', {cmp => 'or'} ) {
       %= include 'header-form-admin'
       % } elsif ( is_role 'hr' ) {
       %= include 'header-form-hr'
       % } else {
-      %= include 'header-form'
+      <div class="w-100"></div>
+      %# = include 'header-form'
       % }
       
-      <ul class="navbar-nav me-auto my-2 my-lg-0 navbar-nav-scroll">
+      <ul class="navbar-nav me-auto my-2 my-lg-0 navbar-nav-scroll float-end">
         <li class="nav-item dropdown">
           <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
 	    <i class="fa-solid fa-fw fa-user-alt"></i>
@@ -63,7 +64,7 @@
 	    </li>          
 	    <li><hr class="dropdown-divider"></li>
 	    <li>
-	      <a class="dropdown-item" href="/logout">
+	      <a class="dropdown-item" href="/logout" accesskey="o">
 		<i class="fa-solid fa-fw fa-sign-out-alt"></i><span class="ms-2">LogOut</span>
 	      </a>
 	    </li>
@@ -71,7 +72,7 @@
         </li>
       </ul>
       
-      % if ( is_role 'admin' || is_role 'coadmin' ) {
+      % if ( is_role 'admin,coadmin', {cmp => 'or'} ) {
       <button class="btn border-0 text-secondary" type="button"
 	      data-bs-toggle="collapse"
 	      data-bs-target="#aside"

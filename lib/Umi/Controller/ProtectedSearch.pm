@@ -172,7 +172,10 @@ sub search_projects  ($self) {
   my $ldap = Umi::Ldap->new( $self->{app},
 			     $self->session('uid'),
 			     $self->session('pwd') );
-  my $proj = $par->{proj} // $self->stash->{proj} // '';
+
+  my $proj = $par->{proj} // $self->stash->{proj};
+  $proj = '*' if $proj eq 'all';
+
   $self->h_log($proj);
   my $search_arg = { base => $self->{app}->{cfg}->{ldap}->{base}->{project},
 		     filter => sprintf("(cn=%s)", $proj),

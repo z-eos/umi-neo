@@ -19,7 +19,7 @@ use IPC::Run qw(run);
 sub register {
 
     ### BEGINNING OF REGISTER
-    
+
     my ($self, $app) = @_;
 
     $app->helper(
@@ -36,10 +36,10 @@ ERROR: %s
 code: %s; text: %s
 base: %s
 filter: %s
-attrs: %s\n", $message->error_name, $message->code,
-				    $message->error_text,
-				    $search_arg->{base},
-				    exists $search_arg->{filter} ? $search_arg->{filter} : '(objectClass=*)',
+attrs: %s\n", $message->error_name, $message->code // 'NO_MESSAGE_CODE',
+				    $message->error_text // 'NO_MESSAGE_ERROR_TEXT',
+				    $search_arg->{base} // 'NO_BASE',
+				    $search_arg->{filter} // '(objectClass=*)',
 				    exists $search_arg->{attrs} ? join(" ", @{$search_arg->{attrs}}) : 'NONE',
 				   );
 		   });
@@ -135,9 +135,11 @@ wrapper for ssh-keygen(1)
     $app->helper(
 		 h_keygen_ssh => sub  {
 		     my ( $self, $args ) = @_;
-		     my $arg = { type => $args->{key_type} || 'RSA',
-				 bits => $args->{bits} || 2048,
-				 name => $args->{name} };
+		     my $arg = {
+				type => $args->{key_type} // 'RSA',
+				bits => $args->{bits} // 2048,
+				name => $args->{name}
+			       };
 
 		     my (@ssh, $res, $fh, $key_file, $kf);
 		     my $to_which = 'ssh-keygen';
@@ -170,7 +172,19 @@ wrapper for ssh-keygen(1)
 		     my $date = strftime("%Y%m%d%H%M%S", localtime);
 
 		     push @ssh, '-t', $arg->{type}, '-N', '', '-f', $key_file,
-			 '-C', qq/$self->{a}->{re}->{sshpubkey}->{comment} $arg->{name}->{real} ( $arg->{name}->{email} ) on $date/;
+		       '-C', sprintf("%s %s (%s) on %s",
+				     $self->{a}->{re}->{sshpubkey}->{comment} // 'Umi generated for',
+
+				     $self->session->{user_obj}->{gecos}
+				     // sprintf("%s %s",
+						$self->session->{user_obj}->{givenname},
+						$self->session->{user_obj}->{sn})
+				     // 'noname',
+
+				     $arg->{name}->{email} // $self->session->{user_obj}->{mail} // 'noemail',
+
+				     $date);
+
 		     $arg->{opt} = \@ssh;
 
 		     my ($stdout, $stderr);

@@ -67,6 +67,7 @@ sub profile ($self) {
   my $search = $ldap->search( $search_arg );
   $self->{app}->h_log( $self->{app}->h_ldap_err($search, $search_arg) ) if $search->code;
   my $profiled_user = $search->as_struct;
+  # $self->h_log($profiled_user);
 
   my ( $cf_svc, $groups, $k, $kk, $modifiersname, $p, $pgp, $pgp_e, $projects, $server_names, $server_alive, $servers, $service, $svc, $svc_details, $svc_msg, $v, $vv, );
   while (($k, $v) = each %$profiled_user) {
@@ -143,25 +144,25 @@ sub profile ($self) {
 	%{$svc_details->{obj}->{$e->dn}} =
 	  map { $_ => $e->get_value($_, asref => 1) } $e->attributes;
       }
-      $service->{$svc->get_value('authorizedService')} = $svc_details;
+      $service->{$k}->{$svc->get_value('authorizedService')} = $svc_details;
       undef $svc_details;
     }
     # $self->h_log($service);
 
     ### GPG
-    $search_arg = { base => $self->{app}->{cfg}->{ldap}->{base}->{pgp},
-		    filter => sprintf("|(pgpUserID=*%s*)(pgpUserID=*%s*)(pgpUserID=*%s*)",
-			  $v->{givenname}->[0],
-			  $v->{sn}->[0],
-			  $v->{mail}->[0]) };
+    $filter = sprintf("(|(pgpUserID=*%s*)", $v->{sn}->[0]);
+    $filter .= sprintf("(pgpUserID=*%s*)", $v->{mail}->[0]) if exists $v->{mail};
+    $filter .= ')';
+    $search_arg = { base => $self->{app}->{cfg}->{ldap}->{base}->{pgp}, filter => $filter };
     $search = $ldap->search( $search_arg );
     $self->h_log( $self->{app}->h_ldap_err($search, $search_arg) ) if $search->code && $search->code != 32;
     $pgp_e = $search->as_struct;
     foreach (keys %$pgp_e) {
-      $pgp->{$pgp_e->{$_}->{pgpuserid}->[0]} = {
-					   keyid  => $pgp_e->{$_}->{pgpkeyid}->[0],
-					   key    => $pgp_e->{$_}->{pgpkey}->[0],
-					  };
+      $pgp->{$k}->{$pgp_e->{$_}->{pgpuserid}->[0]} =
+	{
+	 keyid  => $pgp_e->{$_}->{pgpkeyid}->[0],
+	 key    => $pgp_e->{$_}->{pgpkey}->[0],
+	};
     }
     #$self->h_log($pgp);
 
@@ -174,7 +175,7 @@ sub profile ($self) {
     $p = $search->as_struct;
     @{$projects->{$k}} = sort map { $p->{$_}->{cn}->[0] =~ s/_/:/r } keys(%$p);
   }
-  # $self->h_log($modifiersname);
+  # $self->h_log($profiled_user);
   $self->render(template => 'protected/profile',
 		hash => $profiled_user,
 		groups => $groups,
@@ -229,10 +230,7 @@ sub sysinfo    ($self) {
   $s{all_attributes} = \%aa;
   $s{all_syntaxes} = \%as;
   return $self->render( template => 'protected/tool/sysinfo',
-		        schema => encode_json(\%s),
-		        last_num => $ldap->last_num({ base => $self->{app}->{cfg}->{ldap}->{base}->{acc_root},
-						      filter_by => 'uid',
-						      attr => 'uidNumber' }) );
+		        schema => encode_json(\%s) );
 }
 
 sub pwdgen ($self) {
@@ -283,7 +281,7 @@ sub pwdgen ($self) {
   }
 
   my $pwdgen = $self->h_pwdgen($par);
-  $self->h_log($pwdgen);
+  # $self->h_log($pwdgen);
 
   my ($ldap, $search, $search_arg, $pwd_from_ldap, $match, $mesg);
   if (exists $self->stash->{pwd_chg_dn}) {
@@ -345,8 +343,16 @@ sub keygen_ssh ($self) {
 		      );
 }
 
+=head1 modify
+
+method to modify whole oject or some definite attribute (if parameter
+attr_to_modify exists)
+
+=cut
+
 sub modify ($self) {
   my $par = $self->req->params->to_hash;
+  my $attr_to_modify = exists $par->{attr_to_modify} ? $par->{attr_to_modify} : undef;
   $self->h_log($par);
   # p $par;
   # my $v = $self->validation;
@@ -358,20 +364,26 @@ sub modify ($self) {
   my $search_arg = { base => $par->{dn_to_modify},
 		     filter => '(objectClass=*)',
 		     scope => 'base',
-		     attrs => [] };
+		     attrs => defined $attr_to_modify ? [$par->{attr_to_modify}] : [] };
   my $s = $ldap->search( $search_arg );
   $self->h_log( $self->h_ldap_err($s, $search_arg) ) if $s->code;
   $self->h_log( $s->as_struct );
-  # `UNUSED ATTRIBUTES` select element
-  my $schema = $ldap->schema;
-  my %oc = map { $_->{name} => $_ } $schema->all_objectclasses;
-  my %aa = map { $_->{name} => $_ } $schema->all_attributes;
-  my %as = map { $_->{name} => $_ } $schema->all_syntaxes;
 
-  my @attr_unused = $self->h_attr_unused($s->entry, \%oc);
+  # `UNUSED ATTRIBUTES` select element
+  my ($schema, %oc, %aa, %as, @attr_unused);
+  if ( ! defined $attr_to_modify ) {
+    $schema = $ldap->schema;
+    %oc = map { $_->{name} => $_ } $schema->all_objectclasses;
+    %aa = map { $_->{name} => $_ } $schema->all_attributes;
+    %as = map { $_->{name} => $_ } $schema->all_syntaxes;
+    @attr_unused = $self->h_attr_unused($s->entry, \%oc);
+  }
+
+  $self->stash({ attr_to_modify => $par->{attr_to_modify} })
+    if defined $attr_to_modify;
 
   my ($e_orig, $e_tmp);
-  if ( keys %$par == 1 ) {
+  if ( keys %$par == 2 ) {
     # here we've just clicked, search result  menu `modify` button
     $self->h_log('~~~~~-> MODIFY: SEARCH RESULT MENU CHOOSEN');
     foreach ($s->entry->attributes) {
@@ -395,6 +407,7 @@ sub modify ($self) {
     # form modification made
     $self->h_log('~~~~~-> MODIFY: FORM CHANGED?');
     delete $par->{dn_to_modify};
+    delete $par->{attr_to_modify};
     delete $par->{attr_unused};
     foreach (keys %$par) {
       delete $par->{$_} if $par->{$_} eq '';
@@ -415,8 +428,8 @@ sub modify ($self) {
       push @$replace, $_ => $diff->{changed}->{$_}->{new} foreach (keys(%{$diff->{changed}}));
       push @$changes, replace => $replace;
     }
-    $self->h_log($changes);
 
+    $self->h_log($changes);
     my $msg = $ldap->modify($s->entry->dn, $changes);
     $self->stash(debug => {$msg->{status} => [ $msg->{message} ]});
 
@@ -434,9 +447,11 @@ sub modify ($self) {
   $self->session->{e_orig} = $e_orig;
   $self->h_log( $s->as_struct );
   $self->{app}->h_log( $self->{app}->h_ldap_err($s, $search_arg) ) if $s->code;
-  @attr_unused = $self->h_attr_unused($s->entry, \%oc);
+  if ( ! defined $attr_to_modify ) {
+    @attr_unused = $self->h_attr_unused($s->entry, \%oc);
+  }
 
-  $self->stash(entry => $s->entry, aa => \%aa, as => \%as, oc => \%oc, attr_unused => \@attr_unused);
+  $self->stash(entry => $s->entry, aa => \%aa, as => \%as, oc => \%oc, attr_unused => \@attr_unused, attr_to_modify => $attr_to_modify);
 
   return $self->render(template => 'protected/tool/modify');
 }

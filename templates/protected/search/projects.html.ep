@@ -12,9 +12,11 @@
   </div>
 </div>
 
-%= link_to '/project/new' => (class => "btn", title => "Add new project") => begin
-  <i class="fa-solid fa-folder-plus"></i>
-% end
+% if ( is_role 'admin,coadmin,hr', {cmp => 'or'} ) {
+  %= link_to '/project/new' => (class => "btn", title => "Add new project") => begin
+    <i class="fa-solid fa-folder-plus"></i>
+  % end
+% }
 
 %# vh-100 is important, without it dropwown are not shown for collapsed rows
 <div class="container-fluid vh-100">
@@ -31,9 +33,11 @@
 		  aria-expanded="false" aria-controls="collapse-<%= $i %>">
 	    <i class="fa-solid fa-caret-right"></i>
 	  </button>
-	  <a class="btn" href="/project/modify/<%= $en %>" title="Edit project &laquo;<%= $en %>&raquo;">
-	    <i class="fa-solid fa-gears"></i>
-	  </a>
+	  % if ( is_role 'admin,coadmin,hr', {cmp => 'or'} ) {
+	    <a class="btn" href="/project/modify/<%= $en %>" title="Edit project &laquo;<%= $en %>&raquo;">
+	      <i class="fa-solid fa-gears"></i>
+	    </a>
+	  % }
 	  %= t 'button' , class => 'btn fw-bold border-0', $en
 	  %# = include 'protected/search/common-menu', dn => $en, i => $i
 	  %# = form_for '/search/common' => (method => 'POST') => begin

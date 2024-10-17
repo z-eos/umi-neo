@@ -222,32 +222,38 @@ sub _startup_routes ($self) {
   $protected_root->get('/other')->to('protected#other');
 
   ###
-  ### only starting with v.1.0.6 — $...->requires(has_priv => ['r-people,r-group', {cmp => 'and'}])->...;
+  ### mod Authorization only starting with v.1.0.6 — $...->requires(has_priv => ['r-people,r-group', {cmp => 'and'}])->...;
   ###
 
   ## PROFILE
   $protected_root
     ->get( '/profile/new')
-    ->requires(has_priv => ['w-people', {cmp => 'and'}])
+    ->requires(is_role => ['admin,coadmin,hr', {cmp => 'or'}])
     ->to('protected#profile_new');
 
   $protected_root
     ->post('/profile/new')
+    ->requires(is_role => ['admin,coadmin,hr', {cmp => 'or'}])
     ->to('protected#profile_new');
 
   $protected_root
     ->get( '/profile/modify/:uid' => [ uid => qr/[^\/]+/ ])
-    ->requires(has_priv => ['w-people', {cmp => 'and'}])
+    ->requires(is_role => ['admin,coadmin,hr', {cmp => 'or'}])
     ->to('protected#profile_modify', uid => '');
 
   $protected_root
     ->post('/profile/modify')
-    ->requires(has_priv => ['w-people', {cmp => 'and'}])
+    ->requires(is_role => ['admin,coadmin,hr', {cmp => 'or'}])
     ->to('protected#profile_modify');
 
   $protected_root
     ->get( '/profile/:uid' => [ uid => qr/[^\/]+/ ])
+    ->requires(is_role => ['admin,coadmin,hr', {cmp => 'or'}])
     ->to('protected#profile', uid => '');
+
+  $protected_root
+    ->get( '/profile')
+    ->to('protected#profile');
 
   $protected_root
     ->post('/profile')
@@ -256,46 +262,67 @@ sub _startup_routes ($self) {
   ## PROJECT
   $protected_root
     ->get( '/project/new')
+    ->requires(is_role => ['admin,coadmin,hr', {cmp => 'or'}])
     ->to('protected#project_new');
-
   $protected_root
     ->post('/project/new')
+    ->requires(is_role => ['admin,coadmin,hr', {cmp => 'or'}])
     ->to('protected#project_new');
 
   $protected_root
     ->get( '/project/modify/:proj' => [ proj => qr/[^\/]+/ ])
-    ->requires(has_priv => ['w-people', {cmp => 'and'}])
+    ->requires(is_role => ['admin,coadmin,hr', {cmp => 'or'}])
     ->to('protected#project_modify', proj => '');
 
   $protected_root
     ->post('/project/modify')
-    ->requires(has_priv => ['w-people', {cmp => 'and'}])
+    ->requires(is_role => ['admin,coadmin,hr', {cmp => 'or'}])
     ->to('protected#project_modify');
 
   $protected_root
     ->get( '/project/:proj')
     ->to('search#search_projects', proj => '*');
-
   $protected_root
     ->post('/project/:proj')
     ->to('search#search_projects', proj => '*');
 
   ## SEARCH
-  $protected_root->get( '/search/common')->to('search#search_common');
-  $protected_root->post('/search/common')->to('search#search_common')->name('search_common');
+  $protected_root
+    ->get( '/search/common')
+    ->requires(is_role => ['admin,coadmin,hr', {cmp => 'or'}])
+    ->to('search#search_common');
+  $protected_root
+    ->post('/search/common')
+    ->requires(is_role => ['admin,coadmin,hr', {cmp => 'or'}])
+    ->to('search#search_common')->name('search_common');
 
   ## DELETE
-  $protected_root->post('/delete')->to('protected#delete');
+  $protected_root
+    ->post('/delete')
+    ->requires(is_role => ['admin,coadmin', {cmp => 'or'}])
+    ->to('protected#delete');
 
   ## TOOLs
   $protected_root->get( '/tool/ldif-export')->to('protected#ldif_export');
   $protected_root->post('/tool/ldif-export')->to('protected#ldif_export');
 
-  $protected_root->get( '/tool/ldif-import')->to('protected#ldif_import');
-  $protected_root->post('/tool/ldif-import')->to('protected#ldif_import');
+  $protected_root
+    ->get( '/tool/ldif-import')
+    ->requires(is_role => ['admin,coadmin,hr', {cmp => 'or'}])
+    ->to('protected#ldif_import');
+  $protected_root
+    ->post('/tool/ldif-import')
+    ->requires(is_role => ['admin,coadmin,hr', {cmp => 'or'}])
+    ->to('protected#ldif_import');
 
-  $protected_root->get( '/tool/modify')->to('protected#modify');
-  $protected_root->post('/tool/modify')->to('protected#modify');
+  $protected_root
+    ->get( '/tool/modify')
+    ->requires(is_role => ['admin,coadmin,hr', {cmp => 'or'}])
+    ->to('protected#modify');
+  $protected_root
+    ->post('/tool/modify')
+    ->requires(is_role => ['admin,coadmin,hr', {cmp => 'or'}])
+    ->to('protected#modify');
 
   $protected_root->get( '/tool/pwdgen')->to('protected#pwdgen');
   $protected_root->post('/tool/pwdgen')->to('protected#pwdgen');
@@ -306,7 +333,10 @@ sub _startup_routes ($self) {
   $protected_root->get( '/tool/keygen/ssh')->to('protected#keygen_ssh');
   $protected_root->post('/tool/keygen/ssh')->to('protected#keygen_ssh');
 
-  $protected_root->get( '/tool/sysinfo')->to('protected#sysinfo');
+  $protected_root
+    ->get( '/tool/sysinfo')
+    ->requires(is_role => ['admin,coadmin,hr', {cmp => 'or'}])
+    ->to('protected#sysinfo');
 
   # default to 404 for anything that has not been handled explicitly.
   # This is probably reinventing a wheel already present in Mojolicious

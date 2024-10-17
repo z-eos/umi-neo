@@ -65,7 +65,7 @@
     Password Generator Form
     <small>
       <em class="font-monospace text-muted fs-6">
-	( XKCD stuff description is <a href="https://xkpasswd.net/s/" target="_blank">here</a>)
+	(FYI: <a href="https://xkpasswd.net/s/" target="_blank" title="XKCD stuff description is here">XKCD</a>)
       </em>
     </small>
   </h3>
