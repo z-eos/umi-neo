@@ -1,14 +1,14 @@
 %# -*- mode: web; eval: (follow-mode) -*-
 
 % my $menu = {
-    %      "profile"  => { act => "/profile", title => "", btn => "", ico => "fa-address-card", col => "info" },
-    %      "block"    => { act => "modal",    title => "", btn => "", ico => "fa-user-slash",   col => "danger" },
-    %      "new_svc"  => { act => "/profile", title => "", btn => "", ico => "fa-user-gear",    col => "success" },
-    %      "password" => { act => "/profile", title => "", btn => "", ico => "fa-fingerprint",  col => "danger" },
-    %      "delete"   => { act => "modal",    title => "", btn => "", ico => "fa-skull",        col => "danger" },
-    %      "moddn"    => { act => "modal",    title => "", btn => "", ico => "fa-crown",        col => "danger" },
-    %      "reassign" => { act => "modal",    title => "", btn => "", ico => "fa-retweet",      col => "danger" },
-    %      "modify"   => { act => "/tool/modify", title => "", btn => "", ico => "fa-hammer",       col => "warning" },
+  %      "profile"  => { act => "/profile", title => "", btn => "", ico => "fa-address-card", col => "info" },
+  %      "block"    => { act => "modal",    title => "", btn => "", ico => "fa-user-slash",   col => "danger" },
+  %      "new_svc"  => { act => "/profile", title => "", btn => "", ico => "fa-user-gear",    col => "success" },
+  %      "password" => { act => "/profile", title => "", btn => "", ico => "fa-fingerprint",  col => "danger" },
+  %      "delete"   => { act => "modal",    title => "", btn => "", ico => "fa-skull",        col => "danger" },
+  %      "moddn"    => { act => "modal",    title => "", btn => "", ico => "fa-crown",        col => "danger" },
+  %      "reassign" => { act => "modal",    title => "", btn => "", ico => "fa-retweet",      col => "danger" },
+  %      "modify"   => { act => "/tool/modify", title => "", btn => "", ico => "fa-hammer",       col => "warning" },
     %      "group"    => { act => "/profile", title => "", btn => "", ico => "fa-users-gear",   col => "warning" },
     %      "image"    => { act => "/profile", title => "", btn => "", ico => "fa-image",        col => "warning" },
     %      "ldif"     => { act => "modal",    title => "", btn => "", ico => "fa-code",         col => "info" },

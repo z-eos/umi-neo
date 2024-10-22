@@ -6,21 +6,29 @@ package Umi::Helpers::Common;
 use Mojo::Base 'Mojolicious::Plugin';
 use Mojo::Util qw( b64_encode encode );
 
-use MIME::Base64 qw(decode_base64 encode_base64);
 use Crypt::HSXKPasswd;
 use File::Temp qw/ tempfile tempdir :POSIX /;
 use File::Which qw(which);
-use GD;
 use GD::Barcode::QRcode;
-use Try::Tiny;
-use POSIX qw(strftime :sys_wait_h);
+use GD;
 use IPC::Run qw(run);
+use MIME::Base64 qw(decode_base64 encode_base64);
+use Net::CIDR::Set;
+use Net::LDAP::Util qw(ldap_explode_dn);
+use POSIX qw(strftime :sys_wait_h);
+use Try::Tiny;
 
 sub register {
 
     ### BEGINNING OF REGISTER
 
     my ($self, $app) = @_;
+
+    my $re = {
+	      ip    => '(?:(?:[0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}(?:[0-9]|[1-9][0-9]|1[0-9]{2}|2[0-5][0-9])',
+	      net3b => '(?:(?:[0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){2}',
+	      net2b => '(?:(?:[0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){1}',
+	     };
 
     $app->helper(
 		 header_form_subsearch_button => sub {
@@ -53,17 +61,78 @@ attrs: %s\n", $message->error_name, $message->code // 'NO_MESSAGE_CODE',
 		     return $to_pad;
 		 });
 
+=head2 h_is_ascii
+
+checks whether the argument is ASCII
+
+returns 0 if it is and 1 if not
+
+=cut
+
     $app->helper(
-		 is_ascii => sub {
+		 h_is_ascii => sub {
 		     my ($self, $arg) = @_;
-		     return defined $arg && $arg ne '' && $arg !~ /^[[:ascii:]]+$/ ? 1 : 0;
+		     return $arg // '' ne '' && $arg !~ /^[[:ascii:]]+$/ ? 1 : 0;
+		 });
+
+=head2 h_is_ip
+
+checks whether the argument is ASCII
+
+returns 0 if it is and 1 if not
+
+=cut
+
+    $app->helper(
+		 h_is_ip => sub {
+		     my ($self, $arg) = @_;
+		     return $arg // '' ne '' && $arg =~ /^$re->{ip}$/ ? 1 : 0;
+		 });
+
+=head2 ipam_dec2ip
+
+decimal IP to a dotted IP converter
+
+stolen from http://ddiguru.com/blog/25-ip-address-conversions-in-perl
+
+=cut
+
+    $app->helper(
+		 h_ipam_dec2ip => sub {
+		   my ($self, $arg) = @_;
+		   return join '.', unpack 'C4', pack 'N', $arg;
+		 });
+
+=head2 h_ipam_ip2dec
+
+dotted IP to a decimal IP converter
+
+stolen from http://ddiguru.com/blog/25-ip-address-conversions-in-perl
+
+=cut
+
+    $app->helper(
+		 h_ipam_ip2dec => sub {
+		   my ($self, $arg) = @_;
+		   $arg //= '0.0.0.0';
+		   return unpack N => pack 'C4' => split /\./ => $arg;
 		 });
 
     $app->helper(
-		 is_ip => sub {
-		     my ($self, $arg) = @_;
-		     return defined $arg && $arg ne '' && $arg =~ /^$self->{a}->{re}->{ip}$/ ? 1 : 0;
+		 h_ipam_msk_ip2dec => sub {
+		   my ($self, $arg) = @_;
+		   $arg //= '0.0.0.0';
+		   return (unpack 'B*' => pack 'N' => $self->h_ipam_ip2dec($arg)) =~ tr/1/1/;
 		 });
+
+    # most left attribute in dn
+    $app->helper(
+		 h_get_rdn => sub {
+		   my ($self, $dn) = @_;
+		   return (split(/=/, $dn))[0];
+		 });
+
+
 
     # MAC address normalyzer
     $app->helper(
@@ -105,10 +174,9 @@ attrs: %s\n", $message->error_name, $message->code // 'NO_MESSAGE_CODE',
 				    Ecc        => $arg->{ecc},
 				    ModuleSize => $arg->{mod},
 				   };
-		     if ( defined $args->{ver} ) {
-			 $arg->{ver}            = $args->{ver};
-			 $arg->{ops}->{Version} = $arg->{ver};
-		     }
+
+		     $arg->{ver} = $arg->{ops}->{Version} = $args->{ver}
+		       if defined $args->{ver};
 
 		     try {
 			 $arg->{gd} = GD::Barcode::QRcode->new( "$arg->{txt}", $arg->{ops} )->plot();
@@ -151,20 +219,18 @@ wrapper for ssh-keygen(1)
 			 return $res;
 		     }
 
-		     if ( $arg->{type} eq 'RSA' ) {
-			 $arg->{type} = 'rsa';
-			 push @ssh, '-b', $arg->{bits};
-		     } elsif ( $arg->{type} eq 'Ed25519' ) {
-			 $arg->{type} = 'ed25519';
-		     } elsif ( $arg->{type} eq 'ECDSA256' ) {
-			 $arg->{type} = 'ecdsa';
-			 push @ssh, '-b', 256;
-		     } elsif ( $arg->{type} eq 'ECDSA384' ) {
-			 $arg->{type} = 'ecdsa';
-			 push @ssh, '-b', 384;
-		     } elsif ( $arg->{type} eq 'ECDSA521' ) {
-			 $arg->{type} = 'ecdsa';
-			 push @ssh, '-b', 521;
+		     # values of select element in form ssh-keygen
+		     my %type_map = (
+				     'RSA'      => ['rsa', $arg->{bits}],
+				     'Ed25519'  => ['ed25519', undef],
+				     'ECDSA256' => ['ecdsa', 256],
+				     'ECDSA384' => ['ecdsa', 384],
+				     'ECDSA521' => ['ecdsa', 521],
+				    );
+
+		     if (my $mapping = $type_map{$arg->{type}}) {
+		       $arg->{type} = $mapping->[0];
+		       push @ssh, '-b', $mapping->[1] if defined $mapping->[1];
 		     }
 
 		     (undef, $key_file) = tempfile('/tmp/.umi-ssh.XXXXXX', OPEN => 0, CLEANUP => 1);
@@ -181,7 +247,9 @@ wrapper for ssh-keygen(1)
 						$self->session->{user_obj}->{sn})
 				     // 'noname',
 
-				     $arg->{name}->{email} // $self->session->{user_obj}->{mail} // 'noemail',
+				     $arg->{name}->{email}
+				     // $self->session->{user_obj}->{mail}
+				     // 'noemail',
 
 				     $date);
 

@@ -18,14 +18,9 @@
 
     <link href="/assets/css/select2.min.css" rel="stylesheet" />
     <link href="/assets/css/umi-select2.css" rel="stylesheet" />
-    <!-- link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/zebra_datepicker@latest/dist/css/bootstrap/zebra_datepicker.min.css" -->
-    <!-- Tempus Dominus Styles -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@eonasdan/tempus-dominus@6.9.4/dist/css/tempus-dominus.min.css" crossorigin="anonymous">
-
     
     <link href="/assets/css/umi.css" rel="stylesheet" type="text/css">
-
-    <script src="/assets/js/fontawesome/all.min.js"></script>
     
   </head>
   <body>
@@ -57,7 +52,7 @@
 	%= include 'header'
       <% } %>
 
-      <div class="container-fluid px-0 wrapper">
+      <div class="container-fluid px-0 wrapper" id="outerwrapper">
 	<% if ($c->is_user_authenticated) { %>
 	  %= include 'sidebar'
 	<% } %>
@@ -67,9 +62,9 @@
 	  %= content
 
 	</main>
-	<% if ($c->is_user_authenticated) { %>
+	% if (is_role 'admin,coadmin', {cmp => 'or'}) {
 	  %= include 'aside'
-	<% } %>
+	% }
       </div>
     <!-- /div -->
 
@@ -80,6 +75,10 @@
     <script src="/assets/js/umi-tool-keygen-ssh.js"></script>
     <script src="/assets/js/umi-tool-pwdgen.js"></script>
     <script src="/assets/js/umi-tool-modify.js"></script>
+
+    <script src="/assets/js/vue.js"></script>
+    <script src="/assets/js/ldap-tree/ldap-tree.js"></script>
+    <script src="/assets/js/ldap-tree/ipam-tree.js"></script>
 
   </body>
 </html>

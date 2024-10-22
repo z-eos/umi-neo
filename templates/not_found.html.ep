@@ -1,8 +1,7 @@
 %# -*- mode: web; eval: (follow-mode) -*-
 
-%# my $name = ''
-%# $c->session->{user_obj}->{gecos} // $c->session->{user_obj}->{givenname} // ''
-%# <pre><%= dumper stash %></pre>
+%# <pre class="umi-text-tiny"><%= dumper $c->req %></pre>
+
 <section class="py-3 py-md-5 min-vh-100 d-flex justify-content-center align-items-center">
   <div class="container">
     <div class="row">
@@ -13,8 +12,12 @@
 	    <i class="fa-solid fa-2x fa-sad-tear text-warning-emphasis"></i>
 	    <i class="fa-solid fa-2x fa-4 fa-flip-horizontal"></i>
           </h2>
-          <h3 class="h2 mb-2">Oops, <%# = $name %>! You're lost.</h3>
-          <p class="mb-5">The page you are looking for was not found.</p>
+          <h3 class="h2 mb-2">Oops, <%= $c->session->{user_obj}->{givenname} // 'dear' %>! You're lost.</h3>
+          <p class="mb-2">The page you are looking for was not found.</p>
+          <p class="text-secondary mb-2 umi-text-tiny font-monospace user-select-all">
+	    <%= sprintf("%s %s://%s:%s%s", $c->req->method, $c->req->url->base->scheme, $c->req->url->base->host, $c->req->url->base->port, $c->req->url->path) %><br />
+	    <%= 'query pairs: ' . dumper($c->req->url->query->pairs) if @{$c->req->url->query->pairs} %>
+	  </p>
         </div>
       </div>
     </div>

@@ -25,3 +25,37 @@ function downloadString(text, fileType, fileName) {
   setTimeout(function() { URL.revokeObjectURL(a.href); }, 1500);
 }
 
+// Function to handle storing and applying the collapse state
+function manageCollapseState(elementId) {
+    var sidebarElement = document.getElementById(elementId);
+
+    // Function to set the initial state based on local storage
+    function setInitialState() {
+        const savedState = localStorage.getItem(elementId + 'State');
+        if (savedState === 'collapsed') {
+            sidebarElement.classList.remove('show');  // Ensure it's collapsed
+        } else {
+            sidebarElement.classList.add('show');  // Ensure it's expanded
+        }
+    }
+
+    // Apply the stored state when the document is ready
+    document.addEventListener('DOMContentLoaded', function () {
+        setInitialState();
+    });
+
+    // Listen for the collapse event to save the current state
+    sidebarElement.addEventListener('hidden.bs.collapse', function () {
+        localStorage.setItem(elementId + 'State', 'collapsed');
+    });
+
+    sidebarElement.addEventListener('shown.bs.collapse', function () {
+        localStorage.setItem(elementId + 'State', 'expanded');
+    });
+}
+
+// Call the function with the ID of the element you want to track
+manageCollapseState('sidebar-left');
+
+// If you want to track another element (e.g., an aside)
+manageCollapseState('aside');

@@ -30,7 +30,7 @@
       </div>
       <div class="">
 	<div class="card-body">
-          <h4 class="card-title fw-bold <%= 'text-' . $card_col if $card_col ne '' %>"><%= $v->{gecos}->[0] ne '' ? $v->{gecos}->[0] : $v->{givenname}->[0] . ' ' . $v->{sn}->[0] %>
+          <h4 class="card-title fw-bold bg-secondary px-5 pt-1 <%= 'text-' . $card_col if $card_col ne '' %>"><%= $v->{gecos}->[0] ne '' ? $v->{gecos}->[0] : $v->{givenname}->[0] . ' ' . $v->{sn}->[0] %>
 	    <a href="/profile/modify/<%= $v->{uid}->[0] %>" class="btn btn-sm btn-secondary">
 	      <i class="fa-solid fa-gears"></i>
 	    </a>
@@ -39,8 +39,8 @@
 	  <dl class="row card-text">
 
 	    % if ($card_col eq 'danger') {
-	      <dt class="col-sm-1 text-end text-danger">Status:</dt>
-	      <dd class="col-sm-11 user-select-all text-danger">disabled</dd>
+	      <dt class="col-sm-1 text-end text-danger py-2" title="status"><i class="fa-solid fa-handshake-slash fa-fw fa-2x"></i></dt>
+	      <dd class="col-sm-11 user-select-all text-danger py-2 text-uppercase">disabled</dd>
 	    % }
 
 	    <dt class="col-sm-1 text-end" title="title"><i class="fa-lg fa-regular fa-address-card"></i></dt>
@@ -114,7 +114,7 @@
 			            <%= $services->{$_}->{obj}->{$l}->{uid}->[0] // $services->{$dn}->{$_}->{obj}->{$l}->{cn}->[0] %>
 				  </button>
 				</form>
-			      % } elsif ($services->{$_}->{auth}) {
+			      % } elsif ($services->{$dn}->{$_}->{auth}) {
 			      <form id="searchMachine" method="POST" action="/tool/pwdgen">
 			        <input type="hidden" name="pwd_chg_dn"  value="<%= $l %>">
 			        <input type="hidden" name="pwd_chg_svc" value="<%= $_ %>">

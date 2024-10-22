@@ -352,8 +352,9 @@ attr_to_modify exists)
 
 sub modify ($self) {
   my $par = $self->req->params->to_hash;
-  my $attr_to_modify = exists $par->{attr_to_modify} ? $par->{attr_to_modify} : undef;
-  $self->h_log($par);
+  my $attr_to_modify = exists $par->{attr_to_modify} && $par->{attr_to_modify} ne '' ? $par->{attr_to_modify} : undef;
+  my $dn_to_modify = $par->{dn_to_modify};
+  #$self->h_log($par);
   # p $par;
   # my $v = $self->validation;
   # return $self->render(template => 'protected/tool/modify') unless $v->has_data;
@@ -363,11 +364,13 @@ sub modify ($self) {
 
   my $search_arg = { base => $par->{dn_to_modify},
 		     filter => '(objectClass=*)',
-		     scope => 'base',
-		     attrs => defined $attr_to_modify ? [$par->{attr_to_modify}] : [] };
+		     scope => 'base' };
+  $search_arg->{attrs} = [$attr_to_modify] if defined $attr_to_modify;
+  #$self->h_log( $search_arg );
+
   my $s = $ldap->search( $search_arg );
   $self->h_log( $self->h_ldap_err($s, $search_arg) ) if $s->code;
-  $self->h_log( $s->as_struct );
+  # $self->h_log( $s->as_struct );
 
   # `UNUSED ATTRIBUTES` select element
   my ($schema, %oc, %aa, %as, @attr_unused);
@@ -383,9 +386,9 @@ sub modify ($self) {
     if defined $attr_to_modify;
 
   my ($e_orig, $e_tmp);
-  if ( keys %$par == 2 ) {
+  if ( keys %$par < 3 ) {
     # here we've just clicked, search result  menu `modify` button
-    $self->h_log('~~~~~-> MODIFY: SEARCH RESULT MENU CHOOSEN');
+    $self->h_log('~~~~~-> MODIFY: FIRST RUN (search result menu choosen)');
     foreach ($s->entry->attributes) {
       $e_tmp = $s->entry->get_value($_, asref => 1);
       if ( scalar @$e_tmp == 1 ) {
@@ -412,7 +415,8 @@ sub modify ($self) {
     foreach (keys %$par) {
       delete $par->{$_} if $par->{$_} eq '';
     }
-    $self->h_log($par);
+
+    #$self->h_log($par);
     my $diff = $self->h_hash_diff( $self->session->{e_orig}, $par);
     $self->h_log($diff);
     my ($add, $delete, $replace, $changes);
@@ -435,7 +439,10 @@ sub modify ($self) {
 
   }
 
+  $search_arg->{base} = $dn_to_modify;
+  #$self->h_log( $search_arg );
   $s = $ldap->search( $search_arg );
+  #$self->h_log( $s->as_struct );
   foreach ($s->entry->attributes) {
     $e_tmp = $s->entry->get_value($_, asref => 1);
     if ( scalar @$e_tmp == 1 ) {
@@ -445,13 +452,15 @@ sub modify ($self) {
     }
   }
   $self->session->{e_orig} = $e_orig;
-  $self->h_log( $s->as_struct );
   $self->{app}->h_log( $self->{app}->h_ldap_err($s, $search_arg) ) if $s->code;
-  if ( ! defined $attr_to_modify ) {
-    @attr_unused = $self->h_attr_unused($s->entry, \%oc);
-  }
+  @attr_unused = $self->h_attr_unused($s->entry, \%oc) if ! defined $attr_to_modify;
 
-  $self->stash(entry => $s->entry, aa => \%aa, as => \%as, oc => \%oc, attr_unused => \@attr_unused, attr_to_modify => $attr_to_modify);
+  $self->stash(entry => $s->entry,
+	       aa => \%aa, as => \%as, oc => \%oc,
+	       attr_unused => \@attr_unused,
+	       attr_to_modify => $attr_to_modify,
+	       #dn_to_modify => $attr_to_modify
+	      );
 
   return $self->render(template => 'protected/tool/modify');
 }

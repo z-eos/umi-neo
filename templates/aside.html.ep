@@ -1,43 +1,37 @@
-<% # -*- mode: html; mode: follow -*- %>
+<% # -*- mode: web; mode: follow -*- %>
 
-<aside id="aside" class="collapse">
+<aside id="aside" class="collapse show">
   <nav id="sidebar-right"
        class="text-light float-right"
        data-url-tree="/ldap_tree">
     <ul class="nav nav-pills nav-fill" role="tablist">
+      
       <li class="nav-item" title="LDAP tree">
-	<a class="nav-link text-white-50 active" data-bs-toggle="tab" href="#ldap-tree-tab" role="tab">
-	  <i class="fas fa-project-diagram"></i>
+	<a class="nav-link active" data-bs-toggle="tab" href="#ldap-tree-tab" role="tab">
+	  <i class="fa-solid fa-project-diagram"></i>
 	</a>
       </li>
-
-      <!-- untill tree neo tested
-      <li class="nav-item" title="LDAP tree">
-	<a class="nav-link text-white-50" data-bs-toggle="tab" href="#tree" role="tab">
-	  <i class="fas fa-tree"></i><sup>v.0.9</sup>
-	</a>
-      </li>
-      -->
 
       <li class="nav-item" title="IPAM">
-	<a class="nav-link text-white-50" data-bs-toggle="tab" href="#ipam-tab" role="tab">
-	  <i class="fas fa-network-wired"></i>
+	<a class="nav-link" data-bs-toggle="tab" href="#ipam-tab" role="tab">
+	  <i class="fa-solid fa-network-wired"></i>
 	</a>
       </li>
       
-      <li class="nav-item" title="statistics">
-	<a class="nav-link text-white-50" data-bs-toggle="tab" href="#statistics" role="tab">
-	  <i class="fas fa-chart-pie"></i>
-	</a>
-      </li>
+      <!-- <li class="nav-item" title="statistics"> -->
+      <!-- 	<a class="nav-link" data-bs-toggle="tab" href="#statistics" role="tab"> -->
+      <!-- 	  <i class="fa-solid fa-chart-pie"></i> -->
+      <!-- 	</a> -->
+      <!-- </li> -->
+      <!-- <li class="nav-item"> -->
+      <!-- 	<a class="nav-link" data-bs-toggle="tab" href="#messages" role="tab"> -->
+      <!-- 	  <i class="fa-solid fa-globe"></i> -->
+      <!-- 	</a> -->
+      <!-- </li> -->
+
       <li class="nav-item">
-	<a class="nav-link text-white-50" data-bs-toggle="tab" href="#messages" role="tab">
-	  <i class="fas fa-globe"></i>
-	</a>
-      </li>
-      <li class="nav-item">
-	<a class="nav-link text-white-50" data-bs-toggle="tab" href="#settings" role="tab">
-	  <i class="fas fa-cogs"></i>
+	<a class="nav-link" data-bs-toggle="tab" href="#settings" role="tab">
+	  <i class="fa-solid fa-cogs"></i>
 	</a>
       </li>
     </ul>
@@ -46,131 +40,127 @@
     <div class="tab-content">
 
       <!-- === LDAP tree ===  -->
-      <!-- untill tree neo tested
-      <div class="tab-pane" id="tree" role="tabpanel">
-	[% # IF c.check_user_roles('admin') %]
-	<div class="callout m-0 py-2 text-white-50 text-center text-uppercase">
-          <small><b>LDAP tree</b></small>
-	</div>
-	<div id="App">
-	  <tree :tree="tree"></tree>
-	</div>
-	[% # END %]
-      </div>
-      -->
+      <script type="text/x-template" id="item-template">
+	<li>
+	  <div class="ldap-tree-point"> <!-- d-flex align-items-start"> -->
+	    <div class="umi-text-xs me-1" v-if="isFolder"
+		 @click.exact="toggleItem"
+		 @click.ctrl.exact="toggleTree">
+	      <i class="fa-solid fa-plus" v-if="!item.isOpen"></i>
+	      <i class="fa-solid fa-minus" v-else></i>
+	    </div>
+	    <div class="umi-text-xs me-1" v-if="!isFolder"> 
+	      <!-- <i class="fa-solid fa-code-commit"></i> -->
+	      <span>&bull;</span>
+	    </div>
+	    <div :class="{'fw-bold': item.isOpen, '': !item.isOpen}"
+		 @click.exact="showItem(0)"
+		 @click.ctrl.exact="showItem(1)">
+	      {{ item.name }}
+	    </div>
+	  </div>	 
+	  <ul class="font-monospace ldap-tree" v-show="item.isOpen" v-if="isFolder">
+	    <ldap-tree-item class="ldap-tree-item"
+			    v-for="(child, index) in item.children"
+			    :key="index"
+			    :item="child">
+	    </ldap-tree-item>
+	  </ul>
+	</li>
+      </script>
 
-      <!-- === LDAP tree (neo) ===  -->
-      <div class="tab-pane p-3 active" id="ldap-tree-tab" role="tabpanel">
-	<div class="callout m-0 py-2 text-white-50 text-center text-uppercase">
+      <div class="tab-pane active" id="ldap-tree-tab" role="tabpanel">
+	
+	<div class="callout m-0 py-2 text-center text-uppercase">
 	  <button type="button"
-		  class="btn border-0 text-white-50"
+		  class="btn border-0 fw-bold"
 		  title="CLICK FOR HELP"
 		  data-bs-toggle="collapse"
-		  data-target="#collapseExample"
+		  data-bs-target="#collapseExample"
 		  aria-expanded="false"
 		  aria-controls="collapseExample">
-            <b>
-	      LDAP tree
-	      <sup>
-		<i class="fas fa-question-circle"></i>
-	      </sup>
-	    </b>
+	    LDAP tree
+	      <sup><i class="fa-solid fa-question-circle"></i></sup>
 	  </button>
 	</div>
 	<div class="collapse" id="collapseExample">
-	  <div class="text-white-50 umi-text-tiny pb-3">
-	    <b>NOTE:</b> search result is in accordance with the filter shown on the top of the result page.
+	  <div class=" umi-text-tiny pb-3">
+	    <b>NOTE:</b> search result is in accordance
+	    with the filter shown on the top of the result page.
 	  </div>
-	  <dl class="row text-white-50 umi-text-tiny mx-3">
+	  <dl class="row umi-text-tiny mx-3">
 	    <dt class="col-sm-3 text-right">Click</dt>
 	    <dd class="col-sm-9 mb-0 pb-0">
-	      <ul class="my-0 py-0 ml-0 pl-0 list-unstyled">
-		<li>on <i class="fas fa-plus-circle""></i>/<i class="fas fa-minus-circle""></i> to expand/collapse item</li>
+	      <ul class="my-0 py-0 me-0 pe-0 list-unstyled">
+		<li>
+		  on <i class="fa-solid fa-plus"></i>
+		  /<i class="fa-solid fa-minus"></i> to expand/collapse item
+		</li>
 		<li>on item to search it</li>
 	      </ul>
 	    </dd>
-	    <dt class="pt-0 mt-0 col-sm-3 text-right">Ctrl+Click</dt>
+	    <dt class="pt-0 mt-0 col-sm-3 text-end">Ctrl+Click</dt>
 	    <dd class="col-sm-9">
-	      <ul class="my-0 py-0 ml-0 pl-0 list-unstyled">
-		<li>on <i class="fas fa-plus-circle""></i>/<i class="fas fa-minus-circle""></i> to expand/collapse whole branch</li>
+	      <ul class="my-0 py-0 ms-0 ps-0 list-unstyled">
+		<li>
+		  on <i class="fa-solid fa-plus"></i>
+		  /<i class="fa-solid fa-minus"></i>
+		  to expand/collapse whole branch
+		</li>
 		<li>on item searches whole branch</li>
 	      </ul>
 	  </dl>
 	</div>
 	
-	<script type="text/x-template" id="item-template">
-	  <li>
-	    <div class="ldap-tree-point">
-	      <div class="umi-text-xs mr-1" v-if="isFolder"
-		   @click.exact="toggleItem"
-		   @click.ctrl.exact="toggleTree">
-		<i class="fas fa-plus-circle text-white-50" v-if="!item.isOpen"></i>
-		<i class="fas fa-minus-circle"              v-if="item.isOpen"></i>
-	</div>
-	<div class="umi-text-xs mr-1" v-if="!isFolder"> 
-		<i class="fas fa-minus text-white-50"></i>
-	      </div>
-	      <div :class="{'font-weight-bold': item.isOpen, 'text-white-50': !item.isOpen}"
-		   @click.exact="showItem(0)"
-		   @click.ctrl.exact="showItem(1)">
-		{{ item.name }}
-	      </div>
-	    </div>	 
-	    <ul class="text-monospace ldap-tree" v-show="item.isOpen" v-if="isFolder">
-	      <ldap-tree-item class="ldap-tree-item"
-			      v-for="(child, index) in item.children"
-			      :key="index"
-			      :item="child">
-	      </ldap-tree-item>
-	    </ul>
-	  </li>
-	</script>
-	
-	<ul class="text-monospace ldap-tree" id="ldap-tree">
-	  <li class="border-bottom border-secondary mb-2">
-	    <i class="fas fa-sync-alt text-white-50"
+	<ul class="font-monospace ldap-tree text-secondary" id="ldap-tree">
+	  
+          <li class="">
+            <i class="fa-solid fa-arrows-spin"
 	       :class="{ 'fa-spin': loading }"
 	       @click.exact="getTreeData()"
 	       title="reload the tree">
-	    </i>
-	  </li>
+            </i>
+          </li>
+
 	  <ldap-tree-item class="ldap-tree-item"
 			  :item="tree"
 			  @make-folder="makeFolder">
 	  </ldap-tree-item>
+
 	</ul>
+
       </div>
 
       
       <!-- === IPAM ===  -->
-      <div class="tab-pane p-3" id="ipam-tab" role="tabpanel">
-	<div class="callout m-0 py-2 text-white-50 text-center text-uppercase">
-	  <button class="btn border-0 text-white-50"
+      <div class="tab-pane" id="ipam-tab" role="tabpanel">
+	<div class="callout m-0 py-2 text-center text-uppercase">
+	  <button class="btn border-0"
 		  type="button"
 		  title="CLICK FOR HELP"
 		  data-bs-toggle="collapse"
-		  data-target="#collapseIpaHelp"
+		  data-bs-target="#collapseIpaHelp"
 		  aria-expanded="false"
 		  aria-controls="collapseIpaHelp">
-            <b>IPAM<sup><i class="fas fa-question-circle"></i></sup></b>
+            <b>IPAM<sup><i class="fa-solid fa-question-circle"></i></sup></b>
 	  </button>
 	</div>
 	<div class="collapse" id="collapseIpaHelp">
-	  <div class="text-white-50 umi-text-tiny pb-3">
+	  <div class=" umi-text-tiny pb-3">
 	    <b>NOTE:</b> search result is in accordance with the filter shown on the top of the result page.
 	  </div>
-	  <dl class="row text-white-50 umi-text-tiny mx-3">
+	  <dl class="row umi-text-tiny mx-3">
 	    <dt class="col-sm-3 text-right">Click</dt>
 	    <dd class="col-sm-9 mb-0 pb-0">
 	      <ul class="my-0 py-0 ml-0 pl-0 list-unstyled">
-		<li>on <i class="fas fa-plus-circle""></i>/<i class="fas fa-minus-circle""></i> to expand/collapse item</li>
+		<li>on <i class="fa-solid fa-plus""></i>/<i class="fa-solid fa-minus"></i> to expand/collapse item</li>
 		<li>on <b>item</b> to search it<sup class="text-pink">*</sup></li>
 	      </ul>
 	    </dd>
 	    <dt class="pt-0 mt-0 col-sm-3 text-right">Ctrl+Click</dt>
 	    <dd class="col-sm-9">
 	      <ul class="my-0 py-0 ml-0 pl-0 list-unstyled">
-		<li>on <i class="fas fa-plus-circle""></i>/<i class="fas fa-minus-circle""></i> to expand/collapse whole branch<sup class="text-pink">*</sup></li>
+		<li>on <i class="fa-solid fa-plus""></i>/<i class="fa-solid fa-minus"></i> to expand/collapse whole branch<sup class="text-pink">*</sup></li>
 		<li>on <b>item</b> searches whole branch</li>
 	      </ul>
 	    </dd>
@@ -183,9 +173,9 @@
 	      <ul class="my-0 py-0 ml-0 pl-0 list-unstyled">
 		<li>on <b>item</b> launch DNS resolve of that IP address,
 		  to color and mark the <b>item</b> with
-		  <i class="fas fa-globe text-success"></i>,
-		  <i class="fas fa-globe text-warning"></i> or
-		  <i class="fas fa-globe text-danger"></i>
+		  <i class="fa-solid fa-globe text-success"></i>,
+		  <i class="fa-solid fa-globe text-warning"></i> or
+		  <i class="fa-solid fa-globe text-danger"></i>
 		  according to the results of the resolve
 		</li>
 	      </ul>
@@ -197,11 +187,11 @@
 	  <div id="ip-copied-toast" class="toast border border-success" data-delay="2000"
 	       style="position: absolute; top: 20px; right: 20px;"
 	       role="alert" aria-live="assertive" aria-atomic="true">
-	    <div class="toast-header bg-info text-white font-weight-bold">
-	      <i class="fas fa-clipboard mr-4"></i>
+	    <div class="toast-header bg-info text-white fw-bold">
+	      <i class="fa-solid fa-clipboard mr-4"></i>
 	      IP Copied
 	    </div>
-	    <div id="ip-copied" class="toast-body text-gray text-center font-weight-bold">
+	    <div id="ip-copied" class="toast-body text-center fw-bold">
 	    </div>
 	  </div>
 
@@ -211,15 +201,15 @@
 		<div class="umi-text-xs mr-1" v-if="isIpaFolder"
 		     @click.exact="toggleIpaItem"
 		     @click.ctrl.exact="toggleIpaTree"> 
-		  <i class="fas fa-plus-circle text-white-50" v-if="!ipaitem.isOpen"></i>
-		  <i class="fas fa-minus-circle"              v-if="ipaitem.isOpen"></i>
+		  <i class="fa-solid fa-plus" v-if="!ipaitem.isOpen"></i>
+		  <i class="fa-solid fa-minus" v-else></i>
 		</div>
 		
 		<div class="umi-text-xs mr-1" v-if="!isIpaFolder"> 
-		  <i class="fas text-white-50"
+		  <i class="fa-solid"
 		     :class="{
-			     'font-weight-bold': ipaitem.isOpen,
-			     'text-white-50': !ipaitem.isOpen,
+			     'fw-bold': ipaitem.isOpen,
+			     '': !ipaitem.isOpen,
 			     'fa-minus': !ipaitem.host,
 			     'text-success fa-globe': ipaitem.host && ipaitem.host.indexOf('.') !== -1,
 			     'text-danger  fa-globe': ipaitem.host === 'query timed out',
@@ -228,8 +218,8 @@
 			     }"></i>
 		</div>
 
-		<div :class="{ 'font-weight-bold': ipaitem.isOpen,
-			     'text-white-50': !ipaitem.isOpen,
+		<div :class="{ 'fw-bold': ipaitem.isOpen,
+			     '': !ipaitem.isOpen,
 			     'text-success': ipaitem.host && ipaitem.host.indexOf('.') !== -1,
 			     'text-danger': ipaitem.host === 'query timed out',
 			     'text-warning': ipaitem.host && ipaitem.host === 'NXDOMAIN',
@@ -248,19 +238,19 @@
 	      <div class="faddr ldap-tree-point ml-4 text-info" v-if="faddr && faddr.children && faddr.children.length"
 		   @click.exact="isOpenFaddr = !isOpenFaddr">
 		<div class="umi-text-xs mr-2">
-		  <i class="fas fa-plus-circle"  v-if="!isOpenFaddr"></i>
-		  <i class="fas fa-minus-circle" v-if="isOpenFaddr"></i>
+		  <i class="fa-solid fa-plus"  v-if="!isOpenFaddr"></i>
+		  <i class="fa-solid fa-minus" v-else></i>
 		</div>
 		unused {{faddr.children.length}} ip
 	      </div>
-	      <ul class="text-monospace ldap-tree text-info" v-if="faddr && faddr.children && faddr.children.length && isOpenFaddr">
+	      <ul class="font-monospace ldap-tree text-info" v-if="faddr && faddr.children && faddr.children.length && isOpenFaddr">
 		<li class="faddr-leaf ldap-tree-item ml-4" v-for="(child, index) in faddr.children"
 		    @click.exact="copyText();"
 		    data-bs-toggle="popover" data-placement="top"
 		    title="click to copy to clipboard"
 		    :key="index">{{child.dn}}</li>
 	      </ul>
-	      <ul class="text-monospace ldap-tree" v-if="isIpaFolder && ipaitem.isOpen">
+	      <ul class="font-monospace ldap-tree" v-if="isIpaFolder && ipaitem.isOpen">
 		<ipam-tree-item class="ldap-tree-item"
 				v-for="(child, index) in ipaitem.children"
 	   			:key="index"
@@ -270,9 +260,9 @@
 	    </li>
 	  </script>
 
-	  <ul class="text-monospace ldap-tree" id="ipam-tree">
+	  <ul class="font-monospace text-secondary ldap-tree" id="ipam-tree">
 	    <li class="border-bottom border-secondary mb-2">
-	      <i class="fas fa-sync-alt text-white-50"
+	      <i class="fa-solid fa-arrows-spin"
 		 :class="{ 'fa-spin': loading }"
 		 @click.exact="getIpaTreeData()"
 		 title="reload the tree">
@@ -289,62 +279,62 @@
       
       
       
-      <!-- === STATISTICS ===  -->
-      <div class="tab-pane p-3" id="statistics" role="tabpanel">
-	<div id="stat-to" class="message">
-	</div>
-      </div>
+      <!-- <\!-- === STATISTICS ===  -\-> -->
+      <!-- <div class="tab-pane p-3" id="statistics" role="tabpanel"> -->
+      <!-- 	<div id="stat-to" class="message"> -->
+      <!-- 	</div> -->
+      <!-- </div> -->
 
       
-      <!-- === MESSAGES ===  -->
-      <div class="tab-pane p-3" id="messages" role="tabpanel">
-	<div class="message">
-          <div>
-            <small class="text-muted">Lukasz Holeczek</small>
-            <small class="text-muted float-right mt-1">1:52 PM</small>
-          </div>
-          <div class="text-truncate font-weight-bold">Lorem ipsum dolor sit amet</div>
-          <small class="text-muted">Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt...</small>
-	</div>
-	<hr>
-	<div class="message">
-          <div class="py-3 pb-5 mr-3 float-left">
-          </div>
-          <div>
-            <small class="text-muted">Lukasz Holeczek</small>
-            <small class="text-muted float-right mt-1">1:52 PM</small>
-          </div>
-          <div class="text-truncate font-weight-bold">Lorem ipsum dolor sit amet</div>
-          <small class="text-muted">Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt...</small>
-	</div>
-	<hr>
-	<div class="message">
-          <div class="py-3 pb-5 mr-3 float-left">
-          </div>
-          <div>
-            <small class="text-muted">Lukasz Holeczek</small>
-            <small class="text-muted float-right mt-1">1:52 PM</small>
-          </div>
-          <div class="text-truncate font-weight-bold">Lorem ipsum dolor sit amet</div>
-          <small class="text-muted">Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt...</small>
-	</div>
-	<hr>
-	<div class="message">
-          <div class="py-3 pb-5 mr-3 float-left">
-          </div>
-          <div>
-            <small class="text-muted">Lukasz Holeczek</small>
-            <small class="text-muted float-right mt-1">1:52 PM</small>
-          </div>
-          <div class="text-truncate font-weight-bold">Lorem ipsum dolor sit amet</div>
-          <small class="text-muted">Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt...</small>
-	</div>
-      </div>
+      <!-- <\!-- === MESSAGES ===  -\-> -->
+      <!-- <div class="tab-pane p-3" id="messages" role="tabpanel"> -->
+      <!-- 	<div class="message"> -->
+      <!--     <div> -->
+      <!--       <small class="text-muted">Lukasz Holeczek</small> -->
+      <!--       <small class="text-muted float-right mt-1">1:52 PM</small> -->
+      <!--     </div> -->
+      <!--     <div class="text-truncate fw-bold">Lorem ipsum dolor sit amet</div> -->
+      <!--     <small class="text-muted">Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt...</small> -->
+      <!-- 	</div> -->
+      <!-- 	<hr> -->
+      <!-- 	<div class="message"> -->
+      <!--     <div class="py-3 pb-5 mr-3 float-left"> -->
+      <!--     </div> -->
+      <!--     <div> -->
+      <!--       <small class="text-muted">Lukasz Holeczek</small> -->
+      <!--       <small class="text-muted float-right mt-1">1:52 PM</small> -->
+      <!--     </div> -->
+      <!--     <div class="text-truncate fw-bold">Lorem ipsum dolor sit amet</div> -->
+      <!--     <small class="text-muted">Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt...</small> -->
+      <!-- 	</div> -->
+      <!-- 	<hr> -->
+      <!-- 	<div class="message"> -->
+      <!--     <div class="py-3 pb-5 mr-3 float-left"> -->
+      <!--     </div> -->
+      <!--     <div> -->
+      <!--       <small class="text-muted">Lukasz Holeczek</small> -->
+      <!--       <small class="text-muted float-right mt-1">1:52 PM</small> -->
+      <!--     </div> -->
+      <!--     <div class="text-truncate fw-bold">Lorem ipsum dolor sit amet</div> -->
+      <!--     <small class="text-muted">Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt...</small> -->
+      <!-- 	</div> -->
+      <!-- 	<hr> -->
+      <!-- 	<div class="message"> -->
+      <!--     <div class="py-3 pb-5 mr-3 float-left"> -->
+      <!--     </div> -->
+      <!--     <div> -->
+      <!--       <small class="text-muted">Lukasz Holeczek</small> -->
+      <!--       <small class="text-muted float-right mt-1">1:52 PM</small> -->
+      <!--     </div> -->
+      <!--     <div class="text-truncate fw-bold">Lorem ipsum dolor sit amet</div> -->
+      <!--     <small class="text-muted">Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt...</small> -->
+      <!-- 	</div> -->
+      <!-- </div> -->
 
       
       <!-- === SETTINGS ===  -->
       <div class="tab-pane p-3 text-light" id="settings" role="tabpanel">
-	<div class="callout m-0 py-2 text-white-50 text-center text-uppercase">
+	<div class="callout m-0 py-2 text-center text-uppercase">
 	  <b>Settings</b>
 	</div>
 	<form role="form" id="settings-save" class="settings-save" method="POST" action="/settings_save">
@@ -418,7 +408,7 @@
 	  
 	  <div>
 	    <button type="submit" class="btn btn-success col-12">
-	      <i class="fas fa-save fa-lg"></i>
+	      <i class="fa-solid fa-save fa-lg"></i>
 	      Save
 	    </button>
 	  </div>

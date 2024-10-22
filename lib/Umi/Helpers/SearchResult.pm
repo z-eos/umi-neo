@@ -35,6 +35,7 @@ sub register {
     $app->helper(
 		 h_attr_unused => sub {
 		   my ($c, $e, $s) = @_;
+		   # p $e;
 		   my $au;
 		   foreach my $oc (@{$e->get_value('objectClass', asref => 1)}) {
 		     # p $oc;

@@ -13,7 +13,7 @@ sub do_login ($self) {
     my $username = $self->param('username');
     my $password = $self->param('password');
 
-    $self->h_log(sprintf("DEBUG: uid<%s> pwd<%s>", $username, $password));
+    # $self->h_log(sprintf("DEBUG: uid<%s> pwd<%s>", $username, $password));
 
     ## NB
     # the very authentication is a result of bind with credentials provided

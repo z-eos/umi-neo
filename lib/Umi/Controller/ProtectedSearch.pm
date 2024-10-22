@@ -161,9 +161,14 @@ sub search_common  ($self) {
 
   my @entries = $search->sorted;
   $self->stash(search_common_params => $p, search_arg => $search_arg);
-  $self->render( template => 'protected/search/common',
-		 entries => [ $search->sorted ] );
-
+  if ( exists $p->{no_layout} ) {
+    $self->render( template => 'protected/search/common',
+		   layout => undef,
+		   entries => [ $search->sorted ] );
+  } else {
+    $self->render( template => 'protected/search/common',
+		   entries => [ $search->sorted ] );
+  }
 }
 
 sub search_projects  ($self) {

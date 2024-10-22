@@ -86,7 +86,7 @@
 	  %# --- SEARCH BY ONE-LEVEL-UNDER-DC BUTTONS
 	  % $icon_class = "fa-solid text-info";
 	  % $color = "text-info";
-	  % $b = $c->app->{cfg}->{ldap}->{base};
+	  % %$b = %{$c->app->{cfg}->{ldap}->{base}};
 	  % delete $b->{dc};
 	  % for my $k (sort(keys( %$b ))) {
 	    % next if $k eq 'dc' || $k =~ /acc_/;
