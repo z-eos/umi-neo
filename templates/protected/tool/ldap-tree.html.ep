@@ -1,0 +1,85 @@
+%# -*- mode: web; eval: (follow-mode) -*-
+
+%# <pre><%= dumper $json_tree =%></pre>
+
+<!-- === LDAP tree (neo) ===  -->
+<div class="tab-pane p-3 active" id="ldap-tree-tab" role="tabpanel">
+  <div class="callout m-0 py-2 text-center text-uppercase">
+    <button type="button"
+	    class="btn border-0 text-white-50"
+	    title="CLICK FOR HELP"
+	    data-bs-toggle="collapse"
+	    data-target="#collapseExample"
+	    aria-expanded="false"
+	    aria-controls="collapseExample">
+      <b>
+	LDAP tree
+	<sup>
+	  <i class="fas fa-question-circle"></i>
+	</sup>
+      </b>
+    </button>
+  </div>
+  <div class="collapse" id="collapseExample">
+    <div class="text-white-50 umi-text-tiny pb-3">
+      <b>NOTE:</b> search result is in accordance with the filter shown on the top of the result page.
+    </div>
+    <dl class="row text-white-50 umi-text-tiny mx-3">
+      <dt class="col-sm-3 text-right">Click</dt>
+      <dd class="col-sm-9 mb-0 pb-0">
+	<ul class="my-0 py-0 ml-0 pl-0 list-unstyled">
+	  <li>on <i class="fas fa-plus-circle""></i>/<i class="fas fa-minus-circle""></i> to expand/collapse item</li>
+	  <li>on item to search it</li>
+	</ul>
+      </dd>
+      <dt class="pt-0 mt-0 col-sm-3 text-right">Ctrl+Click</dt>
+      <dd class="col-sm-9">
+	<ul class="my-0 py-0 ml-0 pl-0 list-unstyled">
+	  <li>on <i class="fas fa-plus-circle""></i>/<i class="fas fa-minus-circle""></i> to expand/collapse whole branch</li>
+	  <li>on item searches whole branch</li>
+	</ul>
+    </dl>
+  </div>
+
+  <script type="text/x-template" id="item-template">
+    <li>
+      <div class="ldap-tree-point">
+	<div class="umi-text-xs mr-1" v-if="isFolder"
+	     @click.exact="toggleItem"
+	     @click.ctrl.exact="toggleTree">
+	  <i class="fa-solid fa-plus-circle" v-if="!item.isOpen"></i>
+	  <i class="fa-solid fa-minus-circle"              v-if="item.isOpen"></i>
+	</div>
+	<div class="umi-text-xs mr-1" v-if="!isFolder"> 
+	  <i class="fa-solid fa-minus"></i>
+	</div>
+	<div :class="{'fw-bold': item.isOpen, '': !item.isOpen}"
+	     @click.exact="showItem(0)"
+	     @click.ctrl.exact="showItem(1)">
+	  {{ item.name }}
+	</div>
+      </div>	 
+      <ul class="text-monospace ldap-tree" v-show="item.isOpen" v-if="isFolder">
+	<ldap-tree-item class="ldap-tree-item"
+			v-for="(child, index) in item.children"
+			:key="index"
+			:item="child">
+	</ldap-tree-item>
+      </ul>
+    </li>
+  </script>
+  
+  <ul class="text-monospace ldap-tree" id="ldap-tree">
+    <li class="border-bottom border-secondary mb-2">
+      <i class="fa-solid fa-sync-alt"
+	 :class="{ 'fa-spin': loading }"
+	 @click.exact="getTreeData()"
+	 title="reload the tree">
+      </i>
+    </li>
+    <ldap-tree-item class="ldap-tree-item"
+		    :item="tree"
+		    @make-folder="makeFolder">
+    </ldap-tree-item>
+  </ul>
+</div>
