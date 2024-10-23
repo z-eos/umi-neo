@@ -837,4 +837,34 @@ sub project_modify ($self) {
   $self->render(template => 'protected/project/modify', debug => $debug);
 }
 
+sub resolve ($self) {
+  my $p = $self->req->params->to_hash;
+  my $a = { query => { A   => $p->{a}   // '',
+		       PTR => $p->{ptr} // '',
+		       MX  => $p->{mx}  // '', }, };
+
+  my $res;
+  while ( my($k, $v) = each %{$a->{query}} ) {
+    next if $v eq '';
+    $res = ref($v) eq 'ARRAY' ? $v : [ $v ];
+
+    push @{$a->{reply}}, $self->h_dns_resolver({ type  => $k,
+						 debug => 0,
+						 name  => $_ })
+      foreach (@{$res});
+  }
+
+  foreach (@{$a->{reply}}) {
+    push @{$a->{body}}, $_->{success}         if exists $_->{success};
+    push @{$a->{body}}, $_->{error}->{errstr} if exists $_->{error};
+  }
+
+  # $self->h_log($_) foreach (@{$a->{body}});
+
+  $self->render( #template => 'protected/tool/resolv',
+		 layout => undef,
+		 text => join("\n", @{$a->{body}}) // '' );
+}
+
+
 1;

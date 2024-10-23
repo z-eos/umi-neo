@@ -1,5 +1,5 @@
 %# -*- mode: web; eval: (follow-mode); -*-
-<header class="navbar navbar-expand-lg bg-body-tertiary sticky-top flex-md-nowrap p-0" id="header">
+<nav class="navbar navbar-expand-md bg-body-tertiary sticky-top flex-md-nowrap p-0" id="header">
   <div class="container-fluid px-0">
     <button class="btn border-0 text-secondary" type="button"
 	    data-bs-toggle="collapse"
@@ -84,4 +84,4 @@
       % }
       
     </div>
-</header>
+</nav>

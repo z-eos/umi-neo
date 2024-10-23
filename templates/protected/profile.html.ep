@@ -91,7 +91,7 @@
 
 	      %# SERVICES
 	      % if ( defined $services ) {
-		<dt class="col-sm-1 text-end" title="services"><i class="fa-lg fa-solid fa-list-ol"></i></dt>
+		<dt class="col-sm-1 text-end" title="services"><i class="fa-lg fa-solid fa-bell-concierge"></i></dt>
 		<dd class="col-sm-11">
 		  <details open="">
 		    <summary>services</summary>

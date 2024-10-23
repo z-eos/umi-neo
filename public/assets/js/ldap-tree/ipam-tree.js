@@ -56,7 +56,7 @@ Vue.component('ipam-tree-item', {
 			'(umiOvpnCfgIroute='             + this.ipaitem.dn + '*)' +
 			'(ipHostNumber='                 + this.ipaitem.dn + ')'  +
 			'&search_scope=sub';
-		    console.log('re match: url: '+url)
+		    console.debug('re match: url: '+url)
 		} else {
 		    url =
 			'/search/common?no_layout=1' +
@@ -66,13 +66,13 @@ Vue.component('ipam-tree-item', {
 			'(umiOvpnCfgIroute='             + this.ipaitem.dn + '*)' +
 			'(ipHostNumber='                 + this.ipaitem.dn + '*)' +
 			'&search_scope=sub';
-		    console.log('re do not match: url: '+url)
+		    console.debug('re do not match: url: '+url)
 		}
 		$.ajax({
 		    url: url,
 		    success: function (html) {
 			$('#workingfield').html(html);
-			handleResponce();
+			// handleResponce();
 		    }
 		});
 	    } else {
@@ -84,7 +84,7 @@ Vue.component('ipam-tree-item', {
 			    // console.log('faddr is string')
 			    faddr = JSON.parse(faddr)
 			} else if (typeof faddr === 'object') {
-			    // console.log('faddr is object')
+			    console.log('faddr is object')
 			    faddr = faddr.json_tree
 			} else {
 			    console.error("Data has unusable format - ", typeof faddr)
@@ -103,7 +103,7 @@ Vue.component('ipam-tree-item', {
 	    if ( item.host || item.dn.split(".").length < 4 ) {
 		return;
 	    }
-	    var url = '/resolve_this?ptr=' + item.dn;
+	    var url = '/tool/resolve?ptr=' + item.dn;
 	    $.ajax({
 		url: url,
 		success: function (host) {
@@ -128,11 +128,11 @@ var ipamTree = new Vue({
 
     data: function () {
         return { ipamtree: {},
-		 loading: true }
+		 loading: false }
     },
     
     mounted: function () {
-        this.getIpaTreeData();
+        // this.getIpaTreeData();
     },
 
     methods: {
@@ -162,7 +162,7 @@ var ipamTree = new Vue({
 		    // Assuming a function to process the data
 		    sortIpaRecursively(data);
 		    // Update the tree with the new data
-		    _this.tree = data;
+		    _this.ipamtree = data;
 		    _this.hover = false;
 		    _this.loading = false;
 		} else {

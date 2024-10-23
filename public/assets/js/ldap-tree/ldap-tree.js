@@ -96,7 +96,7 @@ var ldapTree = new Vue({
     },
 
     mounted: function () {
-        this.getTreeData();
+        // this.getTreeData();
     },
     
     methods: {

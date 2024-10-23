@@ -303,16 +303,23 @@ sub _startup_routes ($self) {
     ->to('protected#delete');
 
   ## TOOLs
+  ### aside
+  $protected_root
+    ->get( '/tool/ldap-tree')
+    ->requires(is_role => ['admin,coadmin', {cmp => 'or'}])
+    ->to('ldaptree#obj');
+
   $protected_root
     ->get( '/tool/ipa-tree')
     ->requires(is_role => ['admin,coadmin', {cmp => 'or'}])
     ->to('ldaptree#ipa');
 
   $protected_root
-    ->get( '/tool/ldap-tree')
+    ->get( '/tool/resolve')
     ->requires(is_role => ['admin,coadmin', {cmp => 'or'}])
-    ->to('ldaptree#obj');
+    ->to('protected#resolve');
 
+  ### sidebar
   $protected_root->get( '/tool/ldif-export')->to('protected#ldif_export');
   $protected_root->post('/tool/ldif-export')->to('protected#ldif_export');
 

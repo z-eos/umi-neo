@@ -45,6 +45,7 @@
     </div>
 
     <div class="row">
-	    <input type="submit" value="Submit" class="btn btn-success btn-block font-weight-bold text-uppercase">
+      <input type="submit" value="Submit" class="btn btn-success btn-block font-weight-bold text-uppercase">
     </div>
 </form>
+<script src="/assets/js/umi-tool-qrcode.js"></script>

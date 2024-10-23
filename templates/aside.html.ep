@@ -59,7 +59,7 @@
 	      {{ item.name }}
 	    </div>
 	  </div>	 
-	  <ul class="font-monospace ldap-tree" v-show="item.isOpen" v-if="isFolder">
+	  <ul class="font-monospace ldap-tree navbar-nav-scroll" v-show="item.isOpen" v-if="isFolder">
 	    <ldap-tree-item class="ldap-tree-item"
 			    v-for="(child, index) in item.children"
 			    :key="index"
@@ -120,6 +120,7 @@
 	       @click.exact="getTreeData()"
 	       title="reload the tree">
             </i>
+	    <i class="fa-solid fa-left-long"></i> click to re/load
           </li>
 
 	  <ldap-tree-item class="ldap-tree-item"
@@ -201,12 +202,12 @@
 		<div class="umi-text-xs mr-1" v-if="isIpaFolder"
 		     @click.exact="toggleIpaItem"
 		     @click.ctrl.exact="toggleIpaTree"> 
-		  <i class="fa-solid fa-plus" v-if="!ipaitem.isOpen"></i>
-		  <i class="fa-solid fa-minus" v-else></i>
+		  <i class="fa-solid fa-plus me-1" v-if="!ipaitem.isOpen"></i>
+		  <i class="fa-solid fa-minus me-1" v-else></i>
 		</div>
 		
 		<div class="umi-text-xs mr-1" v-if="!isIpaFolder"> 
-		  <i class="fa-solid"
+		  <i class="fa-solid me-1"
 		     :class="{
 			     'fw-bold': ipaitem.isOpen,
 			     '': !ipaitem.isOpen,
@@ -261,12 +262,13 @@
 	  </script>
 
 	  <ul class="font-monospace text-secondary ldap-tree" id="ipam-tree">
-	    <li class="border-bottom border-secondary mb-2">
+	    <li class="">
 	      <i class="fa-solid fa-arrows-spin"
 		 :class="{ 'fa-spin': loading }"
 		 @click.exact="getIpaTreeData()"
 		 title="reload the tree">
 	      </i>
+	      <i class="fa-solid fa-left-long"></i> click to re/load
 	    </li>
 	    <ipam-tree-item class="ipam-tree-item"
 			    :ipaitem="ipamtree"
