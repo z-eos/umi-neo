@@ -39,7 +39,7 @@ Vue.component('ipam-tree-item', {
 		this.isOpen = true
 	    }
 	},
-	showIpaItem: function (scope) {
+	showIpaItem: async function (scope) {
 	    // console.log(this.ipaitem.dn);
 	    var url;
 	    var re    = /^(?!0)(?!.*\.$)((1?\d?\d|25[0-5]|2[0-4]\d)(\.|$)){3}$/;
@@ -56,7 +56,7 @@ Vue.component('ipam-tree-item', {
 			'(umiOvpnCfgIroute='             + this.ipaitem.dn + '*)' +
 			'(ipHostNumber='                 + this.ipaitem.dn + ')'  +
 			'&search_scope=sub';
-		    console.debug('re match: url: '+url)
+		    console.debug('IPAM: re match: url: '+url)
 		} else {
 		    url =
 			'/search/common?no_layout=1' +
@@ -66,56 +66,77 @@ Vue.component('ipam-tree-item', {
 			'(umiOvpnCfgIroute='             + this.ipaitem.dn + '*)' +
 			'(ipHostNumber='                 + this.ipaitem.dn + '*)' +
 			'&search_scope=sub';
-		    console.debug('re do not match: url: '+url)
+		    console.debug('IPAM: re do not match: url: '+url)
 		}
-		$.ajax({
-		    url: url,
-		    success: function (html) {
-			$('#workingfield').html(html);
-			// handleResponce();
-		    }
-		});
+		// $.ajax({
+		//     url: url,
+		//     success: function (html) {
+		// 	$('#workingfield').html(html);
+		// 	// handleResponce();
+		//     }
+		// });
+		try {
+		    const response = await fetch(url); // Make the HTTP request
+		    const html = await response.text(); // Await the HTML response
+		    document.getElementById('workingfield').innerHTML = html; // Inject the HTML
+		    // handleResponce(); // Uncomment if you have this function
+		} catch (error) {
+		    console.error('IPAM: Error fetching data:', error); // Error handling
+		}
 	    } else {
 		url = '/tool/ipa-tree?naddr=' + this.ipaitem.dn;
-		$.ajax({
-		    url: url,
-		    success: function(faddr) {
-			if (typeof faddr === 'string') {
-			    // console.log('faddr is string')
-			    faddr = JSON.parse(faddr)
-			} else if (typeof faddr === 'object') {
-			    console.log('faddr is object')
-			    faddr = faddr.json_tree
-			} else {
-			    console.error("Data has unusable format - ", typeof faddr)
-			    return
-			}
-			sortIpaRecursively(faddr);
-			_this.faddr = faddr;
-			// console.log(faddr)
+		console.log(url)
+		// $.ajax({
+		//     url: url,
+		//     success: function(faddr) {
+		// 	if (typeof faddr === 'string') {
+		// 	    // console.log('faddr is string')
+		// 	    faddr = JSON.parse(faddr)
+		// 	} else if (typeof faddr === 'object') {
+		// 	    console.log('faddr is object')
+		// 	    faddr = faddr.json_tree
+		// 	} else {
+		// 	    console.error("Data has unusable format - ", typeof faddr)
+		// 	    return
+		// 	}
+		// 	sortIpaRecursively(faddr);
+		// 	_this.faddr = faddr;
+		// 	// console.log(faddr)
+		//     }
+		// });
+		try {
+		    const response = await fetch(url); // Make the HTTP request
+		    let faddr = await response.json(); // Await JSON response
+
+		    if (typeof faddr === 'object') {
+			console.log('IPAM: faddr is object');
+			// faddr = faddr.json_tree;
+			sortIpaRecursively(faddr); // Assuming this is defined elsewhere
+			_this.faddr = faddr; // Set the component's `faddr` data
+		    } else {
+			console.error('IPAM: Data has unusable format:', typeof faddr);
+			return;
 		    }
-		});
+		} catch (error) {
+		    console.error('IPAM: Error fetching faddr:', error); // Error handling
+		}
 	    }
 	},
-	resolveThis: function () {
+	resolveThis: async function () {
 	    var item = this.ipaitem;
 	    // console.log(item.isOpen);
 	    if ( item.host || item.dn.split(".").length < 4 ) {
 		return;
 	    }
 	    var url = '/tool/resolve?ptr=' + item.dn;
-	    $.ajax({
-		url: url,
-		success: function (host) {
-		    // if ( host.indexOf('<') == -1) {
-		    // 	item.host = host;
-		    // } else {
-		    // 	item.host = 'NXDOMAIN';
-		    // }
-		    item.host = host;
-		    // console.log(host);
-		}
-	    });
+	    try {
+		const response = await fetch(url); // Make the HTTP request
+		const host = await response.text(); // Await the host name
+		item.host = host; // Set the resolved host
+		// console.log(host);
+	    } catch (error) {
+		console.error('IPAM: Error resolving item:', error); // Error handling
+	    }
 	    // console.log('showItem scope:', scope);
 	}
     }

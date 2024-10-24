@@ -111,16 +111,18 @@
 	      </ul>
 	  </dl>
 	</div>
-	
+
+	<!-- the very LDAP tree start -->
 	<ul class="font-monospace ldap-tree text-secondary" id="ldap-tree">
 	  
           <li class="">
-            <i class="fa-solid fa-arrows-spin"
-	       :class="{ 'fa-spin': loading }"
-	       @click.exact="getTreeData()"
-	       title="reload the tree">
-            </i>
-	    <i class="fa-solid fa-left-long"></i> click to re/load
+	    <button type="button" class="btn btn-secondary btn-sm" title="re/load tree">
+              <i class="fa-solid fa-arrows-rotate"
+		 :class="{ 'fa-spin': loading }"
+		 @click.exact="getTreeData()"
+		 title="reload the tree">
+              </i>
+	    </button>
           </li>
 
 	  <ldap-tree-item class="ldap-tree-item"
@@ -129,6 +131,7 @@
 	  </ldap-tree-item>
 
 	</ul>
+	<!-- the very LDAP tree end -->
 
       </div>
 
@@ -199,14 +202,14 @@
 	  <script type="text/x-template" id="ipam-template">
 	    <li>
 	      <div class="ldap-tree-point">
-		<div class="umi-text-xs mr-1" v-if="isIpaFolder"
+		<div class="umi-text-xs me-1" v-if="isIpaFolder"
 		     @click.exact="toggleIpaItem"
 		     @click.ctrl.exact="toggleIpaTree"> 
 		  <i class="fa-solid fa-plus me-1" v-if="!ipaitem.isOpen"></i>
 		  <i class="fa-solid fa-minus me-1" v-else></i>
 		</div>
 		
-		<div class="umi-text-xs mr-1" v-if="!isIpaFolder"> 
+		<div class="umi-text-xs me-1" v-if="!isIpaFolder"> 
 		  <i class="fa-solid me-1"
 		     :class="{
 			     'fw-bold': ipaitem.isOpen,
@@ -238,7 +241,7 @@
 	      </div>
 	      <div class="faddr ldap-tree-point ml-4 text-info" v-if="faddr && faddr.children && faddr.children.length"
 		   @click.exact="isOpenFaddr = !isOpenFaddr">
-		<div class="umi-text-xs mr-2">
+		<div class="umi-text-xs me-2">
 		  <i class="fa-solid fa-plus"  v-if="!isOpenFaddr"></i>
 		  <i class="fa-solid fa-minus" v-else></i>
 		</div>
@@ -247,35 +250,38 @@
 	      <ul class="font-monospace ldap-tree text-info" v-if="faddr && faddr.children && faddr.children.length && isOpenFaddr">
 		<li class="faddr-leaf ldap-tree-item ml-4" v-for="(child, index) in faddr.children"
 		    @click.exact="copyText();"
-		    data-bs-toggle="popover" data-placement="top"
+		    data-bs-toggle="popover" data-bs-placement="top"
 		    title="click to copy to clipboard"
 		    :key="index">{{child.dn}}</li>
 	      </ul>
 	      <ul class="font-monospace ldap-tree" v-if="isIpaFolder && ipaitem.isOpen">
 		<ipam-tree-item class="ldap-tree-item"
-				v-for="(child, index) in ipaitem.children"
+				       v-for="(child, index) in ipaitem.children"
 	   			:key="index"
-				:ipaitem="child">
+				       :ipaitem="child">
 		</ipam-tree-item>
 	      </ul>
 	    </li>
 	  </script>
 
+	  <!-- the very IPA tree start -->
 	  <ul class="font-monospace text-secondary ldap-tree" id="ipam-tree">
-	    <li class="">
-	      <i class="fa-solid fa-arrows-spin"
-		 :class="{ 'fa-spin': loading }"
-		 @click.exact="getIpaTreeData()"
-		 title="reload the tree">
-	      </i>
-	      <i class="fa-solid fa-left-long"></i> click to re/load
+	    <li class="mb-1">
+	      <button type="button" class="btn btn-secondary btn-sm" title="re/load tree">
+		<i class="fa-solid fa-arrows-rotate"
+		   :class="{ 'fa-spin': loading }"
+		   @click.exact="getIpaTreeData()"
+		   title="reload the tree">
+		</i>
+	      </button>
 	    </li>
 	    <ipam-tree-item class="ipam-tree-item"
 			    :ipaitem="ipamtree"
 			    @make-folder="makeIpaFolder">
 	    </ipam-tree-item>
 	  </ul>
-	  
+	  <!-- the very IPA tree end -->
+
 	</div>
       </div>
       
@@ -300,7 +306,7 @@
       <!-- 	</div> -->
       <!-- 	<hr> -->
       <!-- 	<div class="message"> -->
-      <!--     <div class="py-3 pb-5 mr-3 float-left"> -->
+      <!--     <div class="py-3 pb-5 me-3 float-left"> -->
       <!--     </div> -->
       <!--     <div> -->
       <!--       <small class="text-muted">Lukasz Holeczek</small> -->
@@ -311,7 +317,7 @@
       <!-- 	</div> -->
       <!-- 	<hr> -->
       <!-- 	<div class="message"> -->
-      <!--     <div class="py-3 pb-5 mr-3 float-left"> -->
+      <!--     <div class="py-3 pb-5 me-3 float-left"> -->
       <!--     </div> -->
       <!--     <div> -->
       <!--       <small class="text-muted">Lukasz Holeczek</small> -->
@@ -322,7 +328,7 @@
       <!-- 	</div> -->
       <!-- 	<hr> -->
       <!-- 	<div class="message"> -->
-      <!--     <div class="py-3 pb-5 mr-3 float-left"> -->
+      <!--     <div class="py-3 pb-5 me-3 float-left"> -->
       <!--     </div> -->
       <!--     <div> -->
       <!--       <small class="text-muted">Lukasz Holeczek</small> -->

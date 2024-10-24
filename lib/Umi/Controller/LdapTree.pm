@@ -51,8 +51,9 @@ is expected to be first 3 bytes of one single /24 network)
 
 =cut
 
-sub ipa {
-  my ( $self, $args ) = @_;
+sub ipa ($self) {
+  my $p = $self->req->params->to_hash;
+  $self->h_log( $p );
 
   my $re = {
 	     ip    => '(?:(?:[0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}(?:[0-9]|[1-9][0-9]|1[0-9]{2}|2[0-5][0-9])',
@@ -62,13 +63,13 @@ sub ipa {
 
 
 
-  my $arg = { svc    => $args->{svc}    // 'ovpn',
-              naddr  => $args->{naddr}  // '',
-              fqdn   => $args->{fqdn}   // '*',
-              base   => $args->{base}   // $self->{app}->{cfg}->{ldap}->{base}->{ovpn},
-              filter => $args->{filter} // '(&(objectClass=umiOvpnCfg)(cn=*))',
-              scope  => $args->{scope}  // 'base',
-              attrs  => $args->{attrs}  // [ 'cn', 'umiOvpnCfgServer', 'umiOvpnCfgRoute' ],
+  my $arg = { svc    => $p->{svc}    // 'ovpn',
+              naddr  => $p->{naddr}  // '',
+              fqdn   => $p->{fqdn}   // '*',
+              base   => $p->{base}   // $self->{app}->{cfg}->{ldap}->{base}->{ovpn},
+              filter => $p->{filter} // '(&(objectClass=umiOvpnCfg)(cn=*))',
+              scope  => $p->{scope}  // 'base',
+              attrs  => $p->{attrs}  // [ 'cn', 'umiOvpnCfgServer', 'umiOvpnCfgRoute' ],
             };
   my $return;
   $return->{arg} = $arg;
@@ -174,12 +175,13 @@ sub ipa {
     } elsif ( $arg->{naddr} =~ /$re->{net2b}/ ) {
       $net_sufix = '.0.0/16';
     }
-    # log_debug { $arg->{naddr} . ' - ' . $net_sufix };
+    $self->h_log( $arg->{naddr} . ' - ' . $net_sufix );
     my $ipa_this = Net::CIDR::Set->new;
     $ipa_this->add($arg->{naddr} . $net_sufix);
     my $xset = $ipa_this->diff($ipa);
-    # log_debug { np(@{[$xset->as_address_array]}) };
+    $self->h_log(@{[$xset->as_address_array]});
     $ipa = $xset;
+    $self->h_log($ipa->as_address_array);
   }
 
   my $ipa_tree = Umi::Noder->new();
@@ -196,7 +198,7 @@ sub ipa {
   $return->{ipa} = length($arg->{naddr}) > 0 ? $as_hash->{children}->[0]->{children}->[0]->{children}->[0] : $as_hash;
   $return->{ipa} = {} if ! defined $return->{ipa};
 
-  #$self->h_log($return->{ipa});
+  # $self->h_log($return->{ipa});
 
   $self->render(json => $return->{ipa});
 }

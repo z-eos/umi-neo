@@ -361,6 +361,7 @@ sub as_json_ipa {
   my $ptr;
   my $host;
 
+  use Data::Printer caller_info => 1;
   push @ar, [ '', $self, $hroot ];
   while (my $e = shift @ar) {
     if ($e->[1]->has_subnodes) {
@@ -369,6 +370,8 @@ sub as_json_ipa {
 			 dn       => join('.', reverse split(/,/, $e->[1]->dn // '')),
 			 isOpen   => \0,
 			 children => $ch };
+      my $aa = join('.', reverse split(/,/, $e->[1]->dn // ''));
+      # p $aa;
       while (my ($k, $v) = each %{$e->[1]->{subnode}}) {
 	push @ar, [ $k, $v, $ch ];
       }
@@ -379,6 +382,7 @@ sub as_json_ipa {
 			 free => \0,
 			 host => '',
 			 dn   => $ip };
+      # p $ip;
     }
   }
 
@@ -389,7 +393,7 @@ sub as_json_ipa {
   $hroot->[0]{dn}     = 'networks';
   $hroot->[0]{name}   = 'networks';
   $hroot->[0]{isOpen} = \1;
-  
+
   return $hroot->[0];
 }
 
