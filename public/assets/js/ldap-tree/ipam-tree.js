@@ -68,13 +68,6 @@ Vue.component('ipam-tree-item', {
 			'&search_scope=sub';
 		    console.debug('IPAM: re do not match: url: '+url)
 		}
-		// $.ajax({
-		//     url: url,
-		//     success: function (html) {
-		// 	$('#workingfield').html(html);
-		// 	// handleResponce();
-		//     }
-		// });
 		try {
 		    const response = await fetch(url); // Make the HTTP request
 		    const html = await response.text(); // Await the HTML response
@@ -86,24 +79,6 @@ Vue.component('ipam-tree-item', {
 	    } else {
 		url = '/tool/ipa-tree?naddr=' + this.ipaitem.dn;
 		console.log(url)
-		// $.ajax({
-		//     url: url,
-		//     success: function(faddr) {
-		// 	if (typeof faddr === 'string') {
-		// 	    // console.log('faddr is string')
-		// 	    faddr = JSON.parse(faddr)
-		// 	} else if (typeof faddr === 'object') {
-		// 	    console.log('faddr is object')
-		// 	    faddr = faddr.json_tree
-		// 	} else {
-		// 	    console.error("Data has unusable format - ", typeof faddr)
-		// 	    return
-		// 	}
-		// 	sortIpaRecursively(faddr);
-		// 	_this.faddr = faddr;
-		// 	// console.log(faddr)
-		//     }
-		// });
 		try {
 		    const response = await fetch(url); // Make the HTTP request
 		    let faddr = await response.json(); // Await JSON response
@@ -254,3 +229,219 @@ function selectText() {
         window.getSelection().addRange(range);
     }
 }
+
+
+/* v3 */
+// import { createApp, reactive, ref } from 'vue';
+
+// // define the tree-item component
+// const IpamTreeItem = {
+//     template: '#ipam-template',
+//     props: {
+//         ipaitem: Object,
+//         faddr: Object
+//     },
+//     setup(props, { emit }) {
+//         const isOpen = ref(props.ipaitem && props.ipaitem.isOpen);
+//         const isOpenFaddr = ref(false);
+
+//         const isIpaFolder = computed(() => {
+//             return props.ipaitem && props.ipaitem.children && props.ipaitem.children.length;
+//         });
+
+//         const toggleIpaItem = () => {
+//             if (isIpaFolder.value) {
+//                 props.ipaitem.isOpen = !props.ipaitem.isOpen;
+//             }
+//         };
+
+//         const setIpaState = (branch, isOpen) => {
+//             if (branch.children) {
+//                 branch.isOpen = isOpen;
+//                 branch.children.forEach(child => setIpaState(child, isOpen));
+//             }
+//         };
+
+//         const toggleIpaTree = () => {
+//             if (isIpaFolder.value) {
+//                 setIpaState(props.ipaitem, !props.ipaitem.isOpen);
+//             }
+//         };
+
+//         const makeIpaFolder = () => {
+//             if (!isIpaFolder.value) {
+//                 emit('make-folder', props.ipaitem);
+//                 isOpen.value = true;
+//             }
+//         };
+
+//         const showIpaItem = async (scope) => {
+//             let url;
+//             const re = /^(?!0)(?!.*\.$)((1?\d?\d|25[0-5]|2[0-4]\d)(\.|$)){3}$/;
+//             const _this = this;
+//             if (!re.test(props.ipaitem.dn) || (re.test(props.ipaitem.dn) && scope)) {
+//                 const re2 = /^(?!0)(?!.*\.$)((1?\d?\d|25[0-5]|2[0-4]\d)(\.|$)){4}$/;
+//                 if (re2.test(props.ipaitem.dn)) {
+//                     url =
+//                         '/search/common?no_layout=1' +
+//                         '&search_base_case=search_global&search_filter=|' +
+//                         '(dhcpStatements=fixed-address ' + props.ipaitem.dn + ')' +
+//                         '(umiOvpnCfgIfconfigPush=' + props.ipaitem.dn + '*)' +
+//                         '(umiOvpnCfgIroute=' + props.ipaitem.dn + '*)' +
+//                         '(ipHostNumber=' + props.ipaitem.dn + ')' +
+//                         '&search_scope=sub';
+//                     console.debug('IPAM: re match: url: ' + url);
+//                 } else {
+//                     url =
+//                         '/search/common?no_layout=1' +
+//                         '&search_base_case=search_global&search_filter=|' +
+//                         '(dhcpStatements=fixed-address ' + props.ipaitem.dn + '*)' +
+//                         '(umiOvpnCfgIfconfigPush=' + props.ipaitem.dn + '*)' +
+//                         '(umiOvpnCfgIroute=' + props.ipaitem.dn + '*)' +
+//                         '(ipHostNumber=' + props.ipaitem.dn + '*)' +
+//                         '&search_scope=sub';
+//                     console.debug('IPAM: re do not match: url: ' + url);
+//                 }
+//                 try {
+//                     const response = await fetch(url);
+//                     const html = await response.text();
+//                     document.getElementById('workingfield').innerHTML = html;
+//                 } catch (error) {
+//                     console.error('IPAM: Error fetching data:', error);
+//                 }
+//             } else {
+//                 url = '/tool/ipa-tree?naddr=' + props.ipaitem.dn;
+//                 console.log(url);
+//                 try {
+//                     const response = await fetch(url);
+//                     const faddr = await response.json();
+
+//                     if (typeof faddr === 'object') {
+//                         console.log('IPAM: faddr is object');
+//                         sortIpaRecursively(faddr);
+//                         props.faddr = faddr;
+//                     } else {
+//                         console.error('IPAM: Data has unusable format:', typeof faddr);
+//                         return;
+//                     }
+//                 } catch (error) {
+//                     console.error('IPAM: Error fetching faddr:', error);
+//                 }
+//             }
+//         };
+
+//         const resolveThis = async () => {
+//             const item = props.ipaitem;
+//             if (item.host || item.dn.split('.').length < 4) {
+//                 return;
+//             }
+//             const url = '/tool/resolve?ptr=' + item.dn;
+//             try {
+//                 const response = await fetch(url);
+//                 const host = await response.text();
+//                 item.host = host;
+//             } catch (error) {
+//                 console.error('IPAM: Error resolving item:', error);
+//             }
+//         };
+
+//         return {
+//             isOpen,
+//             isOpenFaddr,
+//             isIpaFolder,
+//             toggleIpaItem,
+//             setIpaState,
+//             toggleIpaTree,
+//             makeIpaFolder,
+//             showIpaItem,
+//             resolveThis
+//         };
+//     }
+// };
+
+// // Main app initialization
+// const app = createApp({
+//     setup() {
+//         const ipamtree = reactive({});
+//         const loading = ref(false);
+
+//         const makeIpaFolder = (ipaitem) => {
+//             ipaitem.children = reactive([]);
+//         };
+
+//         const getIpaTreeData = async () => {
+//             loading.value = true;
+//             try {
+//                 const response = await fetch('/tool/ipa-tree');
+//                 if (!response.ok) {
+//                     throw new Error('IPA Network response was not ok');
+//                 }
+//                 const data = await response.json();
+//                 if (typeof data === 'object') {
+//                     console.debug('IPA Data received: ', typeof data);
+//                     sortIpaRecursively(data);
+//                     ipamtree.value = data;
+//                 } else {
+//                     console.error('IPA Received data is not in usable format: ', typeof data);
+//                 }
+//             } catch (error) {
+//                 console.error('IPA Fetch request failed: ', error);
+//             } finally {
+//                 loading.value = false;
+//                 console.debug('IPA Loading spinner stopped');
+//             }
+//         };
+
+//         return {
+//             ipamtree,
+//             loading,
+//             makeIpaFolder,
+//             getIpaTreeData
+//         };
+//     }
+// });
+
+// app.component('ipam-tree-item', IpamTreeItem);
+
+// app.mount('#ipam-tree');
+
+// // Utility functions
+// function inet_aton(ip) {
+//     const a = ip.split('.');
+//     const buffer = new ArrayBuffer(4);
+//     const dv = new DataView(buffer);
+//     for (let i = 0; i < 4; i++) {
+//         dv.setUint8(i, a[i]);
+//     }
+//     return dv.getUint32(0);
+// }
+
+// const compareIpaFunc = (a, b) => {
+//     const aVal = a.name.toLowerCase();
+//     const bVal = b.name.toLowerCase();
+//     if (aVal === bVal) return 0;
+//     return inet_aton(aVal) > inet_aton(bVal) ? 1 : -1;
+// };
+
+// const sortIpaRecursively = (arr) => {
+//     if (arr.children) {
+//         arr.children = arr.children.map(sortIpaRecursively).sort(compareIpaFunc);
+//     }
+//     return arr;
+// };
+
+// // function for copying selected text in clipboard
+// function copyText() {
+//     selectText();
+//     $('#ip-copied').html(event.target.innerText);
+//     $('#ip-copied-toast').toast('show');
+//     document.execCommand("copy");
+// }
+
+// function selectText() {
+//     const element = event.target;
+//     const range = document.createRange();
+//     range.selectNode(element);
+//     window.getSelection().removeAllRanges();
+//     window.getSelection().addRange(range);
+// }

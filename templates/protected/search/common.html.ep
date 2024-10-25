@@ -39,27 +39,28 @@
 
       <div class="card-header bg-<%= $col %> p-0 m-0 fs-6">
 	<div class="btn-group z-10" role="group">
-	  %# BURGER MENU
+	  %# COLLAPSE CARET
 	  <button class="btn" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-<%= $i %>"
 		  aria-expanded="false" aria-controls="collapse-<%= $i %>">
 	    <i class="fa-solid fa-caret-right"></i>
 	  </button>
+	  %# BURGER MENU
 	  %= include 'protected/search/common-menu', dn => $e->dn, i => $i
 
 	  %# ICO after BURGER MENU
-	  %= form_for '/search/common' => (method => 'POST') => begin
+	  %= form_for '/search/common' => (class => "injectable-form", method => 'POST') => begin
 	  %= hidden_field 'ldap_subtree' => $root_usr_dn ne '' ? $root_usr_dn : $e->dn
 	  <button type="submit" class="btn">
 	    % if ($root_usr_dn ne '') {
 	      <i class="fa-solid fa-circle-user"></i>
 	    % } else {
-	    <i class="fa-solid fa-shapes"></i>
+	      <i class="fa-solid fa-shapes"></i>
             % }
 	  </button>
 	  % end
 
 	  %# REWRITTEN DN with ICO
-	  %= form_for '/search/common' => (method => 'POST') => begin
+	  %= form_for '/search/common' => (class => "injectable-form", method => 'POST') => begin
 	  %= hidden_field 'ldap_subtree' => $e->dn
 	  <button type="submit" class="btn fw-bold px-0">
 	    <%== scalar @dn_ico ? '<i class="' . app->{cfg}->{ui}->{ico}->{usvc}->{$dn_ico[0]} . $mps . ' me-1"></i>': '' %>
@@ -103,9 +104,24 @@
 		      <div class="col-12 font-monospace">
 			<img src="data:image/jpg;base64,<%= Mojo::Util::b64_encode $attr_val %>"
 			     class="img-thumbnail" alt="<%= $e->dn %>">
-		      </div>	      
-		    % } else {
-		    <div class="col-12 font-monospace pb-1"><%= $attr_val; %></div>
+		      </div>
+		    % } elsif ($attr eq 'userCertificate;binary' || $attr eq 'cACertificate;binary') {
+		    % my $ci = $self->h_cert_info({ cert => $attr_val, ts => "%Y%m%d%H%M%S", });
+		    <div class="col-12 font-monospace">
+		      <small class="float-left">
+			%# <pre><%= dumper $ci %></pre>
+			<dl class="row">
+			  % foreach my $k (sort keys %$ci) {
+			    % next if $k eq 'cert';
+			    % next if $k eq 'error';
+			    <dt class="col-2 text-end py-0 my-0"><%= $k %></dt>
+			    <dd class="col-10 text-monospace text-start py-0 my-0"><%= $ci->{$k} %></dd>
+			  % }
+			</dl>
+		      </small>
+		    </div>
+		  % } else {
+		    <div class="col-12 font-monospace pb-1"><%= $attr_val %></div>
 		  % }
 		  % $j++
 	  % }

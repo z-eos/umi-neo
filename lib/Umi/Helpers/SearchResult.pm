@@ -47,11 +47,8 @@ already present
   $app->helper(
 	       h_attr_unused => sub {
 		 my ($c, $e, $s) = @_;
-		 # p $e;
 		 my $au;
 		 foreach my $oc (@{$e->get_value('objectClass', asref => 1)}) {
-		   # p $oc;
-		   # p $s->{$oc};
 		   if ( exists $s->{$oc}->{must} ) {
 		     $au->{$_} = 0 foreach (@{$s->{$oc}->{must}});
 		   }
@@ -59,9 +56,10 @@ already present
 		     $au->{$_} = 0 foreach (@{$s->{$oc}->{may}});
 		   }
 		 }
-		 # p $au;
-		 delete $au->{$_} foreach ($e->attributes);
-		 # p $au;
+		 foreach my $a ($e->attributes) {
+		   $a =~ s/;binary//;
+		   delete $au->{$a};
+		 }
 		 return sort(keys %$au);
 	       });
 

@@ -167,7 +167,7 @@ sub search_common  ($self) {
 		   entries => [ $search->sorted ] );
   } else {
     $self->render( template => 'protected/search/common',
-		   entries => [ $search->sorted ] );
+		   entries => [ $search->sorted ]);
   }
 }
 

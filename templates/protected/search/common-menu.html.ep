@@ -9,11 +9,11 @@
   %      "moddn"    => { act => "modal",    title => "", btn => "", ico => "fa-crown",        col => "danger" },
   %      "reassign" => { act => "modal",    title => "", btn => "", ico => "fa-retweet",      col => "danger" },
   %      "modify"   => { act => "/tool/modify", title => "", btn => "", ico => "fa-hammer",       col => "warning" },
-    %      "group"    => { act => "/profile", title => "", btn => "", ico => "fa-users-gear",   col => "warning" },
-    %      "image"    => { act => "/profile", title => "", btn => "", ico => "fa-image",        col => "warning" },
-    %      "ldif"     => { act => "modal",    title => "", btn => "", ico => "fa-code",         col => "info" },
-    %      "vCard"    => { act => "/profile", title => "", btn => "", ico => "fa-upload",       col => "info" },
-    %      "history"  => { act => "/profile", title => "", btn => "", ico => "fa-history",      col => "info" }
+  %      "group"    => { act => "/profile", title => "", btn => "", ico => "fa-users-gear",   col => "warning" },
+  %      "image"    => { act => "/profile", title => "", btn => "", ico => "fa-image",        col => "warning" },
+  %      "ldif"     => { act => "modal",    title => "", btn => "", ico => "fa-code",         col => "info" },
+  %      "vCard"    => { act => "/profile", title => "", btn => "", ico => "fa-upload",       col => "info" },
+  %      "history"  => { act => "/profile", title => "", btn => "", ico => "fa-history",      col => "info" }
 % };
 %# here we provide data further, to modals template
 % stash->{menu} = $menu;
@@ -35,7 +35,7 @@
 			<%= $item %>
 		    </button>
 		% } else {
-		    <form role="form" method="POST" class="" action="<%= $menu->{$item}->{act} %>">
+		    <form role="form" method="POST" class="injectable-form" action="<%= $menu->{$item}->{act} %>">
 			<input type="hidden" name="dn_to_<%= $item %>" value="<%= $dn %>">
 			<button type="submit" title="" class="btn btn-sm" data-order="20">
 			    <i class="fa-solid fa-fw <%= $menu->{$item}->{ico} %> text-<%= $menu->{$item}->{col} %>"></i>

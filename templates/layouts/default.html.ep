@@ -34,6 +34,8 @@
     <script src="https://cdn.jsdelivr.net/npm/@eonasdan/tempus-dominus@6.9.4/dist/js/tempus-dominus.min.js" crossorigin="anonymous"></script>
     <!-- script src="https://cdn.jsdelivr.net/npm/moment@2.29.1/moment.min.js"></script -->
 
+    <script src="/assets/js/vue.js"></script>
+
     <script src="/assets/js/bs-theme-switcher.js"></script>
     
     <noscript>
@@ -71,11 +73,9 @@
 
     <!-- UMI SCRIPTS -->
     <script src="/assets/js/umi-common.js"></script>
-    <script src="/assets/js/umi-tool-keygen-ssh.js"></script>
     <script src="/assets/js/umi-tool-pwdgen.js"></script>
     <script src="/assets/js/umi-tool-modify.js"></script>
 
-    <script src="/assets/js/vue.js"></script>
     <script src="/assets/js/ldap-tree/ldap-tree.js"></script>
     <script src="/assets/js/ldap-tree/ipam-tree.js"></script>
 

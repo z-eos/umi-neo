@@ -17,6 +17,8 @@ use Net::CIDR::Set;
 use Net::LDAP::Util qw(ldap_explode_dn);
 use POSIX qw(strftime :sys_wait_h);
 use Try::Tiny;
+use Crypt::X509;
+# use Crypt::X509::CRL;
 
 sub register {
 
@@ -410,6 +412,8 @@ wrapper for ssh-keygen(1)
     $app->helper(
 		 h_hash_diff => sub {
 		   my ($self, $original_ref, $modified_ref) = @_;
+		   #$self->h_log($original_ref);
+		   #$self->h_log($modified_ref);
 		   my (%removed, %added, %changed, %unchanged);
 		   # Find removed and changed keys
 		   foreach my $key (keys %$original_ref) {
@@ -504,7 +508,103 @@ wrapper for ssh-keygen(1)
 			    };
 		 });
 
+=head2 h_file2var
+
+reading file to a string or array
+
+TODO: error handling
+
+=cut
+
+    $app->helper(
+		 h_file2var => sub {
+		   my ( $self, $file, $final_message, $return_as_arr ) = @_;
+		   my ( @file_in_arr,$file_in_str, $fh );
+
+		   open($fh, '<', "$file") || die "Cannot open file $file: $!";
+		   {
+		     local $/;
+		     if ( defined $return_as_arr && $return_as_arr == 1 ) {
+		       while (<$fh>) {
+			 chomp;
+			 push @file_in_arr, $_;
+		       }
+		     } else {
+		       local $/ = undef;
+		       $file_in_str = <$fh>;
+		     }
+		   }
+		   close($fh) || die "Cannot close file $file: $!";
+
+		   return defined $return_as_arr && $return_as_arr == 1 ? \@file_in_arr : $file_in_str;
+		 });
+
+=head2 cert_info
+
+data taken, generally, from
+
+    openssl x509 -in target.crt -text -noout
+    openssl crl  -inform der -in crl.der -text -noout
+
+=cut
+
+    $app->helper(
+		 h_cert_info => sub {
+		   my ( $self, $args ) = @_;
+		   my $arg = {
+			      attr => $args->{attr} || 'userCertificate;binary',
+			      cert => $args->{cert},
+			      ts => defined $args->{ts} && $args->{ts} ? $args->{ts} : "%a %b %e %H:%M:%S %Y",
+			     };
+
+		   my ( $cert, $key, $hex, $return );
+		   if ( $arg->{attr} eq 'userCertificate;binary' ||
+			$arg->{attr} eq 'cACertificate;binary' ) {
+		     $cert = Crypt::X509->new( cert => join('', $arg->{cert}) );
+		     if ( $cert->error ) {
+		       return { 'error' => sprintf('Error on parsing Certificate: %s', $cert->error) };
+		     } else {
+		       return  {
+				'Subject' => join(',',@{$cert->Subject}),
+				'CN' => $cert->subject_cn,
+				'Issuer' => join(',',@{$cert->Issuer}),
+				'S/N' => $cert->serial,
+				'Not Before' => strftime ($arg->{ts}, localtime($cert->not_before)),
+				'Not  After' => strftime ($arg->{ts}, localtime( $cert->not_after)),
+				'cert' => $arg->{cert},
+				'error' => undef,
+			       };
+		     }
+		   } elsif ( $arg->{attr} eq 'certificateRevocationList;binary' ) {
+		     # $cert = Crypt::X509::CRL->new( crl => $arg->{cert} );
+		     # if ( $cert->error ) {
+		     #   return { 'error' => sprintf('Error on parsing CertificateRevocationList: %s', $cert->error) };
+		     # } else {
+		     #   $arg->{sn} = $cert->revocation_list;
+		     #   foreach $key (sort (keys %{$arg->{sn}} )) {
+		     # 	 $hex = sprintf("%X", $key);
+		     # 	 $hex = length($hex) % 2 ? '0' . $hex : $hex;
+		     # 	 $arg->{sn}->{$key}->{sn_hex} = $hex;
+		     # 	 $arg->{sn}->{$key}->{revocationDate} =
+		     # 	   strftime ($arg->{ts}, localtime($arg->{sn}->{$key}->{revocationDate}));
+		     #   }
+		     #   return {
+		     # 	       'Issuer' => join(',',@{$cert->Issuer}),
+		     # 	       'AuthIssuer' => join(',',@{$cert->authorityCertIssuer}),
+		     # 	       'RevokedCertificates' => $arg->{sn},
+		     # 	       'Update This' => strftime ($arg->{ts}, localtime($cert->this_update)),
+		     # 	       'Update Next' => strftime ($arg->{ts}, localtime( $cert->next_update)),
+		     # 	       'error' => undef,
+		     # 	       'cert' => $arg->{cert},
+		     # 	      };
+		     # }
+		   } else {
+		     return { 'error' => sprintf('Unknown certificate type'), };
+		   }
+		 });
+
     ### END OF REGISTER
-}
+  }
+
 
 1;

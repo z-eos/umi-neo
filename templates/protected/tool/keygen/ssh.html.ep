@@ -8,7 +8,7 @@
 
 % my $par = stash('kg_ssh_params');
 
-<form action="/tool/keygen/ssh" class="form-horizontal" id="form865" method="post">
+<form action="/tool/keygen/ssh" class="injectable-form form-horizontal" id="form865" method="post">
   <div class="form-group row mt-4">
     <label class="col text-end font-weight-bold required control-label" for="key_type">Type</label>
     <div class="input-sm col-10">
@@ -100,3 +100,5 @@
   </div>
 </div>
 % }
+
+<script src="/assets/js/umi-tool-keygen-ssh.js"></script>

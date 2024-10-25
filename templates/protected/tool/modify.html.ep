@@ -5,7 +5,7 @@
 
 <h2 class="my-5">
   <i class="fa-solid fa-file-code mr-3 text-muted"></i>
-  Modify DN: <small><em class="text-muted font-monospace fs-6">
+  Modify DN: <small><em class="align-middle text-muted font-monospace fs-6">
     <%= $entry->dn %>
   </em></small>
 </h2>
@@ -18,10 +18,10 @@
 
 % my $i = 0;
 % my $id = '';
-<form method="POST" id="modify-tt-form" enctype="multipart/form-data" class="form-horizontal" action="/tool/modify">
-  <input type="hidden" name="dn_to_modify" id="dn_to_modify" value="<%= $entry->dn %>">
-  <input type="hidden" name="attr_to_modify" id="attr_to_modify" value="<%= stash('attr_to_modify') %>">
-  % if ( ! defined $attr_to_modify ) {
+%= form_for '/tool/modify' => (method => 'post', id => 'modify-form', enctype => 'multipart/form-data', class => 'injectable-form form-horizontal') => begin
+  %= hidden_field dn_to_modify => $entry->dn, id => 'dn_to_modify'
+  %= hidden_field attr_to_add => stash('attr_to_add'), id => 'attr_to_add'
+  % if ( ! defined $attr_to_add ) {
     %# start: unused attributes of existent objectClass-es in the object
     <div class="form-group row mb-2">
       <label class="col-sm-3 text-end h6 fw-bold text-success text-uppercase">Unused Attributes:</label>
@@ -47,6 +47,9 @@
 	    </span>
 	    % if ($_ eq 'mu-sieveOnReceive') {
 	      <textarea name="<%= $_ %>" class="form-control" rows=2 placeholder="sieve script to be put here"></textarea>
+	    % } elsif ($_ eq 'jpegPhoto')
+	    % {
+	      %= file_field $_, id => $id, class => 'form-control form-control-sm', accept => '.jpg'
 	    % } else {
 	      <input type=text value="" id="<%= $_ %>" name="<%= $_ %>" class="form-control"
 		     placeholder="<%= $aa->{$_}->{desc} %>">
@@ -61,28 +64,34 @@
   % my $rdn = h_get_rdn($entry->dn);
   % my $readonly = '';
 
-  % my %ro = ( createTimestamp => 1,
-  %            creatorsName => 1,
-  %            modifyTimestamp => 1,
-  %            modifiersName => 1 );
+  %# my %ro = ( createTimestamp => 1,
+  %#            creatorsName => 1,
+  %#            modifyTimestamp => 1,
+  %#            modifiersName => 1 );
 
   % foreach my $a (sort($entry->attributes)) {
-    % if ($a eq $rdn || exists $ro{$a} ) {
-      % $readonly = ' readonly';
-    % }
-    <div class="form-group row mb-2" title="title">
+    % next if $attr_to_ignore->{$a};
+    % my $b = $a =~ s/;binary/_binary/r;
+    %# if ($a eq $rdn || exists $ro{$a} ) {
+      %# $readonly = ' readonly';
+    %# }
+    <div class="form-group row mb-2" title="">
       <label class="col-sm-3 text-end text-truncate h6 fw-bold"><%= $a %>:</label>
       <div class="col-sm-9 controls">
 	<div class="" title="">
 	  % foreach my $v (sort @{[$entry->get_value($a, asref => 1)]}) {
 	    % foreach my $e (sort(@$v)) {
-	      % $id = $a . '_' . $i;
+	      % $id = $b . '_' . $i;
 	      <div class="input-group input-group-sm entry">
-		% if ( $a =~ /^.*ertificat.*;binary/ ) {
-		  %= file_field $a, id => $id, class => 'form-control form-control-sm', accept => '.der'
+		% if ( $a =~ /^.*ertif.*;binary/ ) {
+		  %= file_field $b, id => $id, class => 'form-control form-control-sm', accept => '.der'
+		% } elsif ( $a =~ /^.*;binary/ )
+		% {
+		  %= file_field $b, id => $id, class => 'form-control form-control-sm'
 		% } elsif ( $a eq 'jpegPhoto' )
 		% {
 		  %= image 'data:image/jpg;base64,' . Mojo::Util::b64_encode($e), class => 'img-thumbnail', alt => $entry->dn
+		  %= file_field $a, id => $id, class => 'form-control form-control-sm', accept => '.jpg'
 		% } else {
 		  % if ($readonly eq '') {
 	            % if ( ! exists $aa->{$a}->{"single"} && (scalar @$v == 1 || scalar @$v == $i + 1)) {
@@ -126,8 +135,10 @@
     </div>
     % $readonly = '';
     % }
-    <input type="submit" value="Submit" class="btn btn-success fw-bold text-uppercase mt-3">
-</form>
+
+    %= submit_button 'Submit', class => 'btn btn-success fw-bold text-uppercase mt-3'
+
+% end
 
 % my $moc;
 % my %at = map { $_ => 1 } $entry->attributes;

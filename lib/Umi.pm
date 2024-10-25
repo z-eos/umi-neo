@@ -5,7 +5,7 @@ package Umi;
 
 use Umi::Authentication;
 
-use Mojo::Base qw< Mojolicious -signatures >;
+use Mojo::Base qw( Mojolicious -signatures );
 use Mojo::Util qw( dumper );
 use Mojolicious::Plugin::Authentication;
 use Mojolicious::Plugin::Authorization;
@@ -115,50 +115,54 @@ sub startup ($self) {
 
 sub _startup_session ($self) {
   ## ?? # Mojolicious::Plugin::ServerSession
-  $self->helper(h_log => sub {
-		  my ($c, $data) = @_;
-		  if ($self->cfg->{debug}->{level} > 0) {
+  $self->helper(
+		h_log => sub {
+		  my ($self, $data) = @_;
+		  if ($self->app->cfg->{debug}->{level} > 0) {
 		    my ($package, $filename, $line) = caller(1);
 		    p $data, caller_message => "$package $filename:$line";
 		  }
 		});
 
   # Helper to set user session after successful authentication
-  $self->helper(set_user_session => sub {
-		  # my ($c, $username, $password) = @_;
-		  # $c->session(uid => $username);
-		  # $c->session(pwd => $password);
-		  my ($c, $data_to_session) = @_;
+  $self->helper(
+		set_user_session => sub {
+		  # my ($self, $username, $password) = @_;
+		  # $self->session(uid => $username);
+		  # $self->session(pwd => $password);
+		  my ($self, $data_to_session) = @_;
 		  my ($k, $v);
-		  $c->session($k => $v) while (($k, $v) = each %$data_to_session);
-		  $c->session(last_seen => time());
+		  $self->session($k => $v) while (($k, $v) = each %$data_to_session);
+		  $self->session(last_seen => time());
 		});
 
-  $self->helper(get_pwd => sub {
-		  my $c = shift;
-		  return $c->session('pwd');
+  $self->helper(
+		get_pwd => sub {
+		  my $self = shift;
+		  return $self->session('pwd');
 		});
 
   # Helper to check if user is authenticated
-  $self->helper(is_user_authenticated => sub {
-		  my $c = shift;
-		  return $c->session('uid') ? 1 : 0;
+  $self->helper(
+		is_user_authenticated => sub {
+		  my $self = shift;
+		  return $self->session('uid') ? 1 : 0;
 		});
 
   # Middleware to check session expiration
   $self->hook(before_dispatch => sub {
-		my $c = shift;
+		my $self = shift;
 
-		if ($c->is_user_authenticated) {
-		  my $last_seen = $c->session('last_seen');
-		  if (time() - $last_seen > $self->cfg->{session}->{expiration}) {
+		if ($self->is_user_authenticated) {
+		  my $last_seen = $self->session('last_seen');
+		  if (time() - $last_seen > $self->app->cfg->{session}->{expiration}) {
 		    # Session expired, clear it
-		    $c->session(expires => 1);
-		    $c->redirect_to('/');
+		    $self->session(expires => 1);
+		    $self->redirect_to('/');
 		    return 0;
 		  } else {
 		    # Update last_seen
-		    $c->session(last_seen => time());
+		    $self->session(last_seen => time());
 		  }
 		}
 		return 1;

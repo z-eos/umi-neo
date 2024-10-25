@@ -2,6 +2,36 @@
  * common things
  */
 
+// const FORM_SELECTOR = '.injectable-form';
+// const CONTAINER_SELECTOR = '#workingfield';
+
+// $(document).on('submit', FORM_SELECTOR, async function(event) {
+//   event.preventDefault();  // Prevent default form submission and page refresh
+
+//   const url = $(this).attr('action');  // Get form action URL
+//   const formData = $(this).serialize();  // Serialize the form data
+
+//   try {
+//     const response = await fetch(url, {
+//       method: 'POST',
+//       headers: {
+//         'Content-Type': 'application/x-www-form-urlencoded'  // Indicate form submission
+//       },
+//       body: formData  // Send serialized form data
+//     });
+
+//     if (!response.ok) {
+//       throw new Error('Server error');
+//     }
+
+//     const html = await response.text();  // Get response HTML
+//     $(CONTAINER_SELECTOR).html(html);  // Inject response HTML into #workingfield
+//   } catch (e) {
+//     alert('Something went wrong: ' + e.message);  // Error handling
+//   }
+// });
+
+
 // onclick="copyToClipboard('#ssh_private')"
 function copyToClipboard(selector) {
   var range = document.createRange();

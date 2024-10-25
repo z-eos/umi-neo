@@ -2,19 +2,19 @@
 
 <aside id="aside" class="collapse show">
   <nav id="sidebar-right"
-       class="text-light float-right"
+       class="float-right"
        data-url-tree="/ldap_tree">
     <ul class="nav nav-pills nav-fill" role="tablist">
       
       <li class="nav-item" title="LDAP tree">
 	<a class="nav-link active" data-bs-toggle="tab" href="#ldap-tree-tab" role="tab">
-	  <i class="fa-solid fa-project-diagram"></i>
+	  <i class="fa-solid fa-project-diagram text-secondary"></i>
 	</a>
       </li>
 
       <li class="nav-item" title="IPAM">
 	<a class="nav-link" data-bs-toggle="tab" href="#ipam-tab" role="tab">
-	  <i class="fa-solid fa-network-wired"></i>
+	  <i class="fa-solid fa-network-wired text-secondary"></i>
 	</a>
       </li>
       
@@ -31,7 +31,7 @@
 
       <li class="nav-item">
 	<a class="nav-link" data-bs-toggle="tab" href="#settings" role="tab">
-	  <i class="fa-solid fa-cogs"></i>
+	  <i class="fa-solid fa-cogs text-secondary"></i>
 	</a>
       </li>
     </ul>
@@ -188,15 +188,16 @@
 	</div>
 
 	<div id="ipam" class="">
-	  <div id="ip-copied-toast" class="toast border border-success" data-delay="2000"
+	  
+	  <div id="ip-copied-toast"
+	       class="toast border border-success" data-delay="2000"
 	       style="position: absolute; top: 20px; right: 20px;"
 	       role="alert" aria-live="assertive" aria-atomic="true">
 	    <div class="toast-header bg-info text-white fw-bold">
 	      <i class="fa-solid fa-clipboard mr-4"></i>
 	      IP Copied
 	    </div>
-	    <div id="ip-copied" class="toast-body text-center fw-bold">
-	    </div>
+	    <div id="ip-copied" class="toast-body text-center fw-bold"></div>
 	  </div>
 
 	  <script type="text/x-template" id="ipam-template">

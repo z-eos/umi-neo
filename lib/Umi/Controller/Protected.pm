@@ -186,10 +186,11 @@ sub profile ($self) {
 		server_alive => $server_alive,
 		search_base_case => $self->{app}->{cfg}->{ldap}->{base}->{machines},
 		projects => $projects,
-		modifiersname => $modifiersname);
+		modifiersname => $modifiersname,
+		); #layout => undef);
 }
 
-sub ldif_import ($self) { $self->render(template => 'protected/tool/ldif-import') }
+sub ldif_import ($self) { $self->render(template => 'protected/tool/ldif-import') } #, layout => undef) }
 
 sub ldif_export    ($self) {
   my $v = $self->validation;
@@ -213,7 +214,7 @@ sub ldif_export    ($self) {
   }
 
   $self->stash(ldif_export_params => $par => ldif => $ldif);
-  return $self->render(template => 'protected/tool/ldif-export');
+  return $self->render(template => 'protected/tool/ldif-export'); #, layout => undef);
 }
 
 sub sysinfo    ($self) {
@@ -230,7 +231,8 @@ sub sysinfo    ($self) {
   $s{all_attributes} = \%aa;
   $s{all_syntaxes} = \%as;
   return $self->render( template => 'protected/tool/sysinfo',
-		        schema => encode_json(\%s) );
+		        schema => encode_json(\%s),
+			); # layout => undef);
 }
 
 sub pwdgen ($self) {
@@ -316,7 +318,8 @@ sub pwdgen ($self) {
 
   return $self->render(template => 'protected/tool/pwdgen',
 		       pwdgen_params => $par,
-		       pwdgen => $pwdgen);
+		       pwdgen => $pwdgen,
+		       ); # layout => undef);
 }
 
 sub qrcode ($self) {
@@ -325,7 +328,7 @@ sub qrcode ($self) {
 
   my $par = $self->req->params->to_hash;
   $self->stash(qrcode_params => $par);
-  return $self->render(template => 'protected/tool/qrcode' => qrcode => $self->h_qrcode($par));
+  return $self->render(template => 'protected/tool/qrcode' => qrcode => $self->h_qrcode($par)); # , layout => undef);
 }
 
 sub keygen_ssh ($self) {
@@ -339,7 +342,8 @@ sub keygen_ssh ($self) {
 			       ssh => $self->h_keygen_ssh($par),
 			       name => { real => 'name will be here',
 					 email => 'email will be here' }
-			      }
+			      },
+		       # layout => undef
 		      );
 }
 
@@ -352,73 +356,99 @@ attr_to_modify exists)
 
 sub modify ($self) {
   my $par = $self->req->params->to_hash;
-  my $attr_to_modify = exists $par->{attr_to_modify} && $par->{attr_to_modify} ne '' ? $par->{attr_to_modify} : undef;
+  my $uploads = $self->req->uploads;
+  # $self->h_log($uploads);
+  if ( @$uploads ) {
+    foreach ( @$uploads ) {
+      # $self->h_log($_);
+      my $n = $_->name;
+      $n =~ s/_binary/;binary/;
+      $par->{$n} = $_->slurp;
+
+      if ( $n eq 'userCertificate;binary' ) {
+	my $crt = $self->h_cert_info({ cert => $par->{$n}, ts => "%Y%m%d%H%M%S", });
+        $par->{umiUserCertificateSn}        = '' . $crt->{'S/N'},
+	$par->{umiUserCertificateNotBefore} = '' . $crt->{'Not Before'},
+	$par->{umiUserCertificateNotAfter}  = '' . $crt->{'Not  After'},
+	$par->{umiUserCertificateSubject}   = '' . $crt->{'Subject'},
+	$par->{umiUserCertificateIssuer}    = '' . $crt->{'Issuer'};
+      }
+    }
+  }
+
+  my $attr_to_add = exists $par->{attr_to_add} && $par->{attr_to_add} ne '' ? $par->{attr_to_add} : undef;
   my $dn_to_modify = $par->{dn_to_modify};
-  #$self->h_log($par);
-  # p $par;
-  # my $v = $self->validation;
-  # return $self->render(template => 'protected/tool/modify') unless $v->has_data;
-  return $self->render(template => 'protected/tool/modify') unless %$par;
+  my $attr_to_ignore;
+  my $rdn = $self->h_get_rdn($dn_to_modify);
+  %{$attr_to_ignore} = map {$_ => 1}
+    @{[qw(dn_to_modify attr_to_add attr_unused modifyTimestamp modifiersName creatorsName createTimestamp)]};
+  $attr_to_ignore->{$rdn} = 1;
+
+  my $v = $self->validation;
+  return $self->render(template => 'protected/tool/modify') unless $v->has_data;
+  # return $self->render(template => 'protected/tool/modify') unless %$par;
+
+  # $self->h_log($par);
 
   my $ldap = Umi::Ldap->new( $self->{app}, $self->session('uid'), $self->session('pwd') );
-
   my $search_arg = { base => $par->{dn_to_modify},
 		     filter => '(objectClass=*)',
 		     scope => 'base' };
-  $search_arg->{attrs} = [$attr_to_modify] if defined $attr_to_modify;
-  #$self->h_log( $search_arg );
-
+  $search_arg->{attrs} = defined $attr_to_add ? [$attr_to_add] : [];
+  $self->h_log( $search_arg );
   my $s = $ldap->search( $search_arg );
   $self->h_log( $self->h_ldap_err($s, $search_arg) ) if $s->code;
   # $self->h_log( $s->as_struct );
 
+  my ($e_orig, $e_tmp);
+  foreach ($s->entry->attributes) {
+    next if $_ eq $rdn;
+    $e_tmp = $s->entry->get_value($_, asref => 1);
+    if ( scalar @$e_tmp == 1 ) {
+      $e_orig->{$_} = $e_tmp->[0];
+    } else {
+      $e_orig->{$_} = $e_tmp;
+    }
+  }
+
   # `UNUSED ATTRIBUTES` select element
   my ($schema, %oc, %aa, %as, @attr_unused);
-  if ( ! defined $attr_to_modify ) {
+  if ( ! defined $attr_to_add ) {
     $schema = $ldap->schema;
     %oc = map { $_->{name} => $_ } $schema->all_objectclasses;
     %aa = map { $_->{name} => $_ } $schema->all_attributes;
     %as = map { $_->{name} => $_ } $schema->all_syntaxes;
     @attr_unused = $self->h_attr_unused($s->entry, \%oc);
   }
+  # NEED to re-check what it is for :(
+  $self->stash({ attr_to_add => $par->{attr_to_add} })
+    if defined $attr_to_add;
 
-  $self->stash({ attr_to_modify => $par->{attr_to_modify} })
-    if defined $attr_to_modify;
-
-  my ($e_orig, $e_tmp);
   if ( keys %$par < 3 ) {
     # here we've just clicked, search result  menu `modify` button
-    $self->h_log('~~~~~-> MODIFY: FIRST RUN (search result menu choosen)');
-    foreach ($s->entry->attributes) {
-      $e_tmp = $s->entry->get_value($_, asref => 1);
-      if ( scalar @$e_tmp == 1 ) {
-	$e_orig->{$_} = $e_tmp->[0];
-      } else {
-	$e_orig->{$_} = $e_tmp;
-      }
-    }
+    $self->h_log('~~~~~-> MODIFY [' . $self->req->method . ']: FIRST RUN (search result menu choosen)');
+    delete $self->session->{e_orig};
     $self->session->{e_orig} = $e_orig;
-    # p $e_orig;
   } elsif (exists $par->{add_objectClass}) {
     # new objectClass addition is chosen
-    $self->h_log('~~~~~-> MODIFY: ADD OBJECTCLASS');
-    $self->h_log($par);
+    $self->h_log('~~~~~-> MODIFY [' . $self->req->method . ']: ADD OBJECTCLASS');
+    # $self->h_log($par);
     # $s = $ldap->search( $search_arg );
     # $self->h_log(sprintf("Protected.pm: modify(): code: %s; message: %s; text: %s",
     # 			      $s->code, $s->error_name, $s->error_text )) if $s->code;
   } else {
     # form modification made
-    $self->h_log('~~~~~-> MODIFY: FORM CHANGED?');
-    delete $par->{dn_to_modify};
-    delete $par->{attr_to_modify};
-    delete $par->{attr_unused};
+    $self->h_log('~~~~~-> MODIFY [' . $self->req->method . ']: FORM CHANGED?');
+    delete $par->{$_} foreach (keys %{$attr_to_ignore});
     foreach (keys %$par) {
       delete $par->{$_} if $par->{$_} eq '';
     }
 
-    #$self->h_log($par);
-    my $diff = $self->h_hash_diff( $self->session->{e_orig}, $par);
-    $self->h_log($diff);
+    # $self->h_log($par);
+    # $self->h_log($self->session->{e_orig});
+
+    my $diff = $self->h_hash_diff( $e_orig, $par);
+    #$self->h_log($diff);
     my ($add, $delete, $replace, $changes);
     if ( %{$diff->{added}} ) {
       push @$add, $_ => $diff->{added}->{$_} foreach (keys(%{$diff->{added}}));
@@ -433,10 +463,11 @@ sub modify ($self) {
       push @$changes, replace => $replace;
     }
 
-    $self->h_log($changes);
-    my $msg = $ldap->modify($s->entry->dn, $changes);
-    $self->stash(debug => {$msg->{status} => [ $msg->{message} ]});
-
+    if ($changes) {
+      $self->h_log($changes);
+      my $msg = $ldap->modify($s->entry->dn, $changes);
+      $self->stash(debug => {$msg->{status} => [ $msg->{message} ]});
+    }
   }
 
   $search_arg->{base} = $dn_to_modify;
@@ -453,16 +484,17 @@ sub modify ($self) {
   }
   $self->session->{e_orig} = $e_orig;
   $self->{app}->h_log( $self->{app}->h_ldap_err($s, $search_arg) ) if $s->code;
-  @attr_unused = $self->h_attr_unused($s->entry, \%oc) if ! defined $attr_to_modify;
+  @attr_unused = $self->h_attr_unused($s->entry, \%oc) if ! defined $attr_to_add;
 
   $self->stash(entry => $s->entry,
 	       aa => \%aa, as => \%as, oc => \%oc,
 	       attr_unused => \@attr_unused,
-	       attr_to_modify => $attr_to_modify,
-	       #dn_to_modify => $attr_to_modify
+	       attr_to_add => $attr_to_add,
+	       attr_to_ignore => $attr_to_ignore,
+	       #dn_to_modify => $attr_to_add
 	      );
 
-  return $self->render(template => 'protected/tool/modify');
+  return $self->render(template => 'protected/tool/modify'); #, layout => undef);
 }
 
 sub project_new ($self) {
@@ -548,7 +580,7 @@ sub project_new ($self) {
 
   $self->h_log($debug);
   $self->stash(debug => $debug);
-  $self->render(template => 'protected/project/new');
+  $self->render(template => 'protected/project/new'); #, layout => undef);
 }
 
 sub profile_new ($self) {
@@ -682,7 +714,7 @@ sub profile_modify ($self) {
   my $msg = $ldap->modify($dn, $changes);
   $self->stash(debug => {$msg->{status} => [ $msg->{message} ]});
 
-  $self->render(template => 'protected/profile/modify');
+  $self->render(template => 'protected/profile/modify'); #, layout => undef);
 }
 
 sub project_modify ($self) {
@@ -834,7 +866,7 @@ sub project_modify ($self) {
   }
   $self->h_log($chg);
 
-  $self->render(template => 'protected/project/modify', debug => $debug);
+  $self->render(template => 'protected/project/modify', debug => $debug); # , layout => undef);
 }
 
 sub resolve ($self) {

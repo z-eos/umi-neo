@@ -1,6 +1,6 @@
 %# -*- mode: web; eval: (follow-mode) -*-
 % my $par = stash('search_common_params');
-<form class="container-fluid d-flex"
+<form class="injectable-form container-fluid d-flex"
       role="form"
       id="searchby"
       method="POST"

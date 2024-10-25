@@ -1,7 +1,7 @@
 // IDEA: https://bootsnipp.com/snippets/featured/dynamic-form-fields-add-amp-remove-bs3
 
 $(document).ready(function() {
-  $('#modify-tt-form').on('click', '.btn-add', function(e) {
+  $('#modify-form').on('click', '.btn-add', function(e) {
     e.preventDefault();
     console.log('btn-add was clicked');
     

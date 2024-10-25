@@ -33,13 +33,13 @@
     <div class="dropdown-menu z-10 position-absolute">
 
       %# --- SEARCH BY ATTRIBUTE BUTTONS
-      <form id="ddFormUid" action="/profile" method="post">
+      <form id="ddFormUid" class="" action="/profile" method="post">
 	<input type="hidden" name="uid" id="uid">
 	<button type="submit" class="dropdown-item btn btn-sm btn-link">
 	  <i class="fa-solid fa-fw fa-user"></i> by user
 	</button>
       </form>
-      <form id="ddFormProj" action="/project" method="post">
+      <form id="ddFormProj" class="" action="/project" method="post">
 	<input type="hidden" name="proj" id="proj">
 	<button type="submit" class="dropdown-item btn btn-sm btn-link">
 	  <i class="fa-solid fa-fw fa-file"></i> by project
