@@ -20,14 +20,21 @@ RUN cpan -T -i \
     Mojolicious::Plugin::Authentication \
     Mojolicious::Plugin::Authorization \
     Mojolicious::Plugin::StaticCache \
-    Net::LDAP \
-    Try::Tiny \
-    Data::Printer \
     Crypt::HSXKPasswd \
+    Crypt::X509 \
+    Crypt::X509::CRL \
+    Data::Printer \
+    Digest::SHA \
+    File::Path \
+    File::Temp \
     File::Which \
     GD \
     GD::Barcode::QRcode \
-    IPC::Run
+    IPC::Run \
+    Net::CIDR::Set \
+    Net::DNS \
+    Net::LDAP \
+    Try::Tiny
 
 WORKDIR /
 COPY --from=source /usr/src/umi /umi
