@@ -40,7 +40,13 @@ sub delete ($self) {
 
 sub profile ($self) {
   my $par = $self->req->params->to_hash;
-  my $uid = $par->{uid} // $self->stash->{uid} // '';
+  my $reqpath = $self->req->url->to_abs->path;
+  my $uid;
+  if ( $reqpath eq '/audit/users' ) {
+    $uid = 'all';
+  } else {
+    $uid = $par->{uid} // $self->stash->{uid} // '';
+  }
   # $self->h_log($uid);
 
   my $ldap = Umi::Ldap->new( $self->{app}, $self->session('uid'), $self->session('pwd') );
@@ -63,6 +69,7 @@ sub profile ($self) {
   my $search_arg = { base => $self->{app}->{cfg}->{ldap}->{base}->{acc_root},
 		     filter => $filter,
 		     scope => 'one' };
+  $search_arg->{attrs} = [qw( gidNumber givenName mail sn uid modifiersName )] if $reqpath eq '/audit/users';
   # $self->{app}->h_log( $search_arg);
   my $search = $ldap->search( $search_arg );
   $self->{app}->h_log( $self->{app}->h_ldap_err($search, $search_arg) ) if $search->code;
@@ -77,7 +84,7 @@ sub profile ($self) {
     $modifiersname->{$k} = $search->as_struct->{$v->{modifiersname}->[0]};
 
     ### only admins and coadmins need this info
-    if ( $self->is_role('admin,coadmin', {cmp => 'or'}) ) {
+    if ( $self->is_role('admin,coadmin', {cmp => 'or'}) || $reqpath eq '/audit/users') {
       ### GROUPS: list of all groups user is a member of
       $search_arg = { base => $self->{app}->{cfg}->{ldap}->{base}->{group},
 		      filter => '(memberUid=' . $v->{uid}->[0] . ')',
@@ -175,8 +182,10 @@ sub profile ($self) {
     $p = $search->as_struct;
     @{$projects->{$k}} = sort map { $p->{$_}->{cn}->[0] =~ s/_/:/r } keys(%$p);
   }
-  # $self->h_log($profiled_user);
-  $self->render(template => 'protected/profile',
+
+  my $template = $reqpath eq '/audit/users' ? 'protected/audit/users' : 'protected/profile';
+  # $self->h_log($template);
+  $self->render(template => $template,
 		hash => $profiled_user,
 		groups => $groups,
 		group_blocked_gidnumber => $self->{app}->{cfg}->{ldap}->{defaults}->{group_blocked_gidnumber},
@@ -187,7 +196,7 @@ sub profile ($self) {
 		search_base_case => $self->{app}->{cfg}->{ldap}->{base}->{machines},
 		projects => $projects,
 		modifiersname => $modifiersname,
-		); #layout => undef);
+	       ); #layout => undef);
 }
 
 sub ldif_import ($self) { $self->render(template => 'protected/tool/ldif-import') } #, layout => undef) }
@@ -518,7 +527,7 @@ sub project_new ($self) {
   # $self->h_log($es);
 
   my $par = $self->req->params->to_hash;
-  $self->h_log($par);
+  # $self->h_log($par);
   $self->stash(project_new_params => $par, employees => $es);
 
   my $v = $self->validation;
@@ -596,9 +605,7 @@ sub profile_new ($self) {
   $v->required('user_last_name')->size(1, 50)->like($re);
   $v->required('title')->size(1, 50);
 
-  my $ldap = Umi::Ldap->new( $self->{app},
-			     $self->session('uid'),
-			     $self->session('pwd') );
+  my $ldap = Umi::Ldap->new( $self->{app}, $self->session('uid'), $self->session('pwd') );
 
   my $search_arg = { base => $self->{app}->{cfg}->{ldap}->{base}->{acc_root},
 		     filter => sprintf("(|(&(givenName=%s)(sn=%s))(uid=%s.%s))",

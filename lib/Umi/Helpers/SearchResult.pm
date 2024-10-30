@@ -36,7 +36,7 @@ sub register {
 
 =head1 h_attr_unused
 
-expected arguments: entry object and a list of all schema objectclasses
+expected arguments: entry object and a hash by objectclasses and may/must arguments for each objectclass
 
 returns a list of each objectclass attributes (both 'must' and 'may')
 across all objectclasses of the entry, excluding attributes that are

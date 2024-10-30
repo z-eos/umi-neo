@@ -306,6 +306,14 @@ sub _startup_routes ($self) {
     ->requires(is_role => ['admin,coadmin', {cmp => 'or'}])
     ->to('protected#delete');
 
+  ## AUDIT
+  ### users
+  $protected_root
+    ->get( '/audit/users')
+    ->requires(is_role => ['admin,coadmin,hr', {cmp => 'or'}])
+    ->to('protected#profile');
+#    ->to('audit#users');
+
   ## TOOLs
   ### aside
   $protected_root

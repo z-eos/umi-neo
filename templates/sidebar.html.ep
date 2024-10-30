@@ -41,56 +41,57 @@
 	     aria-expanded="true"
 	     aria-controls="submenuAnalyze"
 	     class="nav-link btn btn-link text-secondary text-start">
-	    <i class="fa-solid fa-lg fa-fw fa-flask"></i>
+	    <i class="fa-solid fa-lg fa-fw fa-magnifying-glass-chart"></i>
 	    <div class="sidebar-left-item d-inline-flex">
-	      <b class="text-uppercase">Analyze</b>
+	      <b class="text-uppercase">Audit</b>
 	    </div>
 	  </a>
 	  <ul class="nav flex-column collapse show ms-3 p-0" id="submenuAnalyze">
-            <li class="nav-item">
-	      <a class="nav-link btn btn-link text-secondary text-start" href="/tool/ldap-tree">
-		<i class="fa-solid fa-code-branch"></i>
-		Test Code
-	      </a>
-	    </li>
             <!-- <li class="nav-item">
-		 <a class="nav-link btn btn-link text-secondary text-start" href="#modal-is-accounts" data-bs-toggle="modal">
-		 <i class="fa-solid fa-id-card"></i>
-		 Accounts
-		 </a>
-		 </li>
-		 <li class="nav-item">
-		 <a class="nav-link btn btn-link text-secondary text-start" href="/abstrstataccgroups"
-		 tabindex="2"
-		 title="Acc &harr; Group">
-		 <i class="fa-solid fa-users"></i>
-		 Usr<i class="fa-solid fa-arrows-alt-h m-0 mx-1"></i>Grp
-		 </a>
-		 </li>
-		 <li class="nav-item">
-		 <a class="nav-link btn btn-link text-secondary text-start" href="/servermta"
-		 tabindex="2"
-		 title="All MTAs info in one single table">
-		 <i class="fa-solid fa-mail-bulk"></i>
-		 MTA
-		 </a>
-		 </li>
-		 <li class="nav-item">
-		 <a class="nav-link btn btn-link text-secondary text-start" href="/mikrotik"
-		 tabindex="2"
-		 title="CAPsMAN registrations">
-		 <i class="fa-solid fa-broadcast-tower"></i>
-		 CAPs reg
-		 </a>
-		 </li>
-		 <li class="nav-item">
-		 <a class="nav-link btn btn-link text-secondary text-start" href="/mikrotikpsk"
-		 tabindex="2"
-		 title="all corp SSID-s PSK-s">
-		 <i class="fa-solid fa-wifi"></i>
-		 CAPs PSK
+		 <a class="nav-link btn btn-link text-secondary text-start" href="/tool/ldap-tree">
+		 <i class="fa-solid fa-code-branch"></i>
+		 Test Code
 		 </a>
 		 </li> -->
+            <!-- <li class="nav-item">
+	      <a class="nav-link btn btn-link text-secondary text-start" href="#modal-is-accounts" data-bs-toggle="modal">
+		<i class="fa-solid fa-id-card"></i>
+		Accounts
+	      </a>
+	    </li> -->
+	    <li class="nav-item">
+	      <a class="nav-link btn btn-link text-secondary text-start" href="/audit/users"
+		 tabindex="2"
+		 title="Users">
+		<i class="fa-solid fa-users-between-lines"></i>
+		Usrers
+		<i class="fa-solid fa-stopwatch-20 text-warning-emphasis ms-3" title="long (up to 2 minutes) request"></i>
+	      </a>
+	    </li>
+	    <!-- <li class="nav-item">
+	    <a class="nav-link btn btn-link text-secondary text-start" href="/servermta"
+	       tabindex="2"
+	       title="All MTAs info in one single table">
+	      <i class="fa-solid fa-mail-bulk"></i>
+	      MTA
+	    </a>
+	</li>
+	<li class="nav-item">
+	  <a class="nav-link btn btn-link text-secondary text-start" href="/mikrotik"
+	     tabindex="2"
+	     title="CAPsMAN registrations">
+	    <i class="fa-solid fa-broadcast-tower"></i>
+	    CAPs reg
+	  </a>
+	</li>
+	<li class="nav-item">
+	  <a class="nav-link btn btn-link text-secondary text-start" href="/mikrotikpsk"
+	     tabindex="2"
+	     title="all corp SSID-s PSK-s">
+	    <i class="fa-solid fa-wifi"></i>
+	    CAPs PSK
+	  </a>
+	</li> -->
 	  </ul>
 	</li>
       % }

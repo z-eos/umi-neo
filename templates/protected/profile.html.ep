@@ -5,6 +5,7 @@
 % use Net::LDAP::Util qw(generalizedTime_to_time);
 % use POSIX qw(strftime);
 
+% my $root_uid = session('user_obj')->{dn};
 % my ($dn, $v);
 % foreach $dn (sort keys %$hash) {
   % $v = $hash->{$dn};
@@ -52,6 +53,23 @@
 	    <dt class="col-sm-1 text-end" title="uid"><i class="fa-lg fa-solid fa-id-card-clip"></i></dt>
 	    <dd class="col-sm-11 user-select-all"><%= exists $v->{uid} ? $v->{uid}->[0] : 'unavailable' %></dd>
 
+	    % if ($dn eq $root_uid) {
+	      <dt class="col-sm-1 text-end" title="password">
+		<i class="fa-solid fa-fingerprint text-danger me-1"></i>
+	      <dd class="col-sm-11 user-select-all">
+		<form id="searchMachine" method="POST" action="/tool/pwdgen">
+		  <input type="hidden" name="pwd_chg_dn"  value="<%= $dn %>">
+		  <input type="hidden" name="pwd_chg_svc" value="">
+		  <input type="hidden" name="pwd_chg_rdn" value="">
+		  <button type="submit"
+			  class="btn btn-sm btn-danger fw-bold text-uppercase"
+			  data-filter="<%= '(objectClass=*)' %>">
+		    reset password
+		  </button>
+		</form>
+	      </dd>
+	    % }
+
 	    %# !!! WARNING FIX error check for existance of all values used
 	    <dt class="col-sm-1 text-end" title="Email"><i class="fa-lg fa-solid fa-at"></i></dt>
 	    <dd class="col-sm-11 user-select-all"><%== exists $v->{mail} ? sprintf('<a href="mailto:%s">%s</a>', $v->{mail}->[0], $v->{mail}->[0]) : 'unavailable' %></dd>
@@ -93,7 +111,7 @@
 	      % if ( defined $services ) {
 		<dt class="col-sm-1 text-end" title="services"><i class="fa-lg fa-solid fa-bell-concierge"></i></dt>
 		<dd class="col-sm-11">
-		  <details open="">
+		  <details>
 		    <summary>services</summary>
 		    <table class="table table-sm table-responsive" style="font-size: 0.75rem;">
 		      % foreach (sort keys %{$services->{$dn}}) {
@@ -114,18 +132,23 @@
 			            <%= $services->{$_}->{obj}->{$l}->{uid}->[0] // $services->{$dn}->{$_}->{obj}->{$l}->{cn}->[0] %>
 				  </button>
 				</form>
-			      % } elsif ($services->{$dn}->{$_}->{auth}) {
-			      <form id="searchMachine" method="POST" action="/tool/pwdgen">
-			        <input type="hidden" name="pwd_chg_dn"  value="<%= $l %>">
-			        <input type="hidden" name="pwd_chg_svc" value="<%= $_ %>">
-			        <input type="hidden" name="pwd_chg_rdn" value="<%= $services->{$dn}->{$_}->{obj}->{$l}->{uid}->[0] // $services->{$dn}->{$_}->{obj}->{$l}->{cn}->[0] %>">
-			          <button type="submit"
-			        	  class="btn btn-sm umi-text-xs ms-2"
-			        	  data-filter="<%= 'cn=' . $_ . ',' . $search_base_case %>">
-			            <i class="fa-solid fa-fingerprint text-danger me-1"></i>
-			            <%= $services->{$dn}->{$_}->{obj}->{$l}->{uid}->[0] // $services->{$dn}->{$_}->{obj}->{$l}->{cn}->[0] %>
-			          </button>
-			        </form>
+			      % } elsif ($services->{$dn}->{$_}->{auth})
+			      % {
+				% if (is_role('admin,coadmin', {cmp => 'or'}) || $l =~ /.*$root_uid/) {
+				  <form id="searchMachine" method="POST" action="/tool/pwdgen">
+			            <input type="hidden" name="pwd_chg_dn"  value="<%= $l %>">
+			            <input type="hidden" name="pwd_chg_svc" value="<%= $_ %>">
+			            <input type="hidden" name="pwd_chg_rdn" value="<%= $services->{$dn}->{$_}->{obj}->{$l}->{uid}->[0] // $services->{$dn}->{$_}->{obj}->{$l}->{cn}->[0] %>">
+				% }
+			        <button type="submit"
+			        	class="btn btn-sm umi-text-xs ms-2"
+			        	data-filter="<%= 'cn=' . $_ . ',' . $search_base_case %>">
+			          <i class="fa-solid fa-fingerprint text-danger me-1"></i>
+			          <%= $services->{$dn}->{$_}->{obj}->{$l}->{uid}->[0] // $services->{$dn}->{$_}->{obj}->{$l}->{cn}->[0] %>
+			        </button>
+				% if (is_role('admin,coadmin', {cmp => 'or'}) || $l =~ /.*$root_uid/) {
+			          </form>
+				% }
 			      % } else {
 			        <span class="me-3">
 			          <%= $services->{$dn}->{$_}->{obj}->{$l}->{uid}->[0] // $services->{$dn}->{$_}->{obj}->{$l}->{cn}->[0] %>
