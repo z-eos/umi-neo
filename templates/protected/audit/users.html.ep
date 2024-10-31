@@ -34,57 +34,107 @@
 	  % $card_col = 'danger';
 	% }
 
-	<tr class="umi-text-xs <%= 'table-danger' if $card_col eq 'danger' %>">
-	  <td><%= $v->{sn}->[0] %></td>
-	  <td><%= $v->{givenname}->[0] %></td>
-	  <td class="mono"><%= $card_col eq 'danger' ? 1 : 0 %></td>
-	  <td>
-	    % if ( exists $projects->{$dn} ) {
-	      % foreach (@{$projects->{$dn}}) {
-	        <span class="badge text-bg-secondary fw-bold"><a href="/project/<%= substr($_, 0, index($_, ':')) %>"><%= $_ %></a></span>
+	% if (exists stash->{type} && stash->{type} eq 'user-driven-rows') {
+	  
+	  <tr class="umi-text-xs <%= 'table-danger' if $card_col eq 'danger' %>">
+	    <td><%= $v->{sn}->[0] %></td>
+	    <td><%= $v->{givenname}->[0] %></td>
+	    <td class="mono"><%= $card_col eq 'danger' ? 'yes' : 'no' %></td>
+	    <td>
+	      % if ( exists $projects->{$dn} ) {
+		% foreach (sort @{$projects->{$dn}}) {
+	          <span class="badge text-bg-secondary fw-bold"><a href="/project/<%= substr($_, 0, index($_, ':')) %>"><%= $_ %></a></span>
+		% }
 	      % }
-	    % }	    
-	  </td>
-	  <td>
-	    <form role="form" id="searchMachine" method="POST" action="/search/common">
-	      <input type="hidden" name="search_base_case" class="search_base_case" value="">
-	      % foreach (sort(@{$servers->{$dn}})) {
-	        <span title="<%== $server_alive->{$dn}->{$_} ? '' : 'absent in machines (probably old stuff)' %>">
-	          <button type="submit"
-	    		  class="btn btn-<%= $server_alive->{$dn}->{$_} ? 'secondary' : 'danger disabled' %> btn-sm mb-1"
-	    		  style="--bs-btn-font-size: .75rem;"
-	    		  data-filter="<%= 'cn=' . $_ . ',' . $search_base_case %>"
-	    		  onClick="$('.search_base_case').val($(this).data('filter')); $('#searchMachine').submit();">
-	    	    <%= $_ %>
-	          </button>
-	        </span>
-	      % }
-	    </form>	    
-	  </td>
-	  <td><%== exists $v->{mail} ? sprintf('<a href="mailto:%s">%s</a>', $v->{mail}->[0], $v->{mail}->[0]) : 'unavailable' %></td>
-	  <td><%== sprintf('<a href="/profile/%s">%s</a>', $v->{uid}->[0], $v->{uid}->[0]) %></td>
-	</tr>
+	    </td>
+	    <td>
+	      <form role="form" id="searchMachine" method="POST" action="/search/common">
+		<input type="hidden" name="search_base_case" class="search_base_case" value="">
+		% foreach (sort(@{$servers->{$dn}})) {
+	          <span title="<%== $server_alive->{$dn}->{$_} ? '' : 'absent in machines (probably old stuff)' %>">
+	            <button type="submit"
+	    		    class="btn btn-<%= $server_alive->{$dn}->{$_} ? 'secondary' : 'danger disabled' %> btn-sm mb-1"
+	    		    style="--bs-btn-font-size: .75rem;"
+	    		    data-filter="<%= 'cn=' . $_ . ',' . $search_base_case %>"
+	    		    onClick="$('.search_base_case').val($(this).data('filter')); $('#searchMachine').submit();">
+	    	      <%= $_ %>
+	            </button>
+	          </span>
+		% }
+	      </form>	    
+	    </td>
+	    <td><%== exists $v->{mail} ? sprintf('<a href="mailto:%s">%s</a>', $v->{mail}->[0], $v->{mail}->[0]) : 'unavailable' %></td>
+	    <td><%== sprintf('<a href="/profile/%s">%s</a>', $v->{uid}->[0], $v->{uid}->[0]) %></td>
+	  </tr>
+	  
+	% } elsif (exists stash->{type} && stash->{type} eq 'server-driven-rows')
+	% {
+	  
+	  % $servers->{$dn} = ['none'] if ! @{$servers->{$dn}};
+	  % foreach my $s (sort(@{$servers->{$dn}})) {
+	    <tr class="umi-text-xs <%= 'table-danger' if $card_col eq 'danger' %>">
+	      <td><%= $v->{sn}->[0] %></td>
+	      <td><%= $v->{givenname}->[0] %></td>
+	      <td class="mono"><%= $card_col eq 'danger' ? 'yes' : 'no' %></td>
+	      <td>
+		% if ( exists $projects->{$dn} ) {
+		  % foreach (sort @{$projects->{$dn}}) {
+	            <span class="badge text-bg-secondary fw-bold"><a href="/project/<%= substr($_, 0, index($_, ':')) %>"><%= $_ %></a></span>
+		  % }
+		% }
+	      </td>
+	      <td>
+		% if ($s ne 'none') {
+		  <form role="form" id="searchMachine" method="POST" action="/search/common">
+		    <input type="hidden" name="search_base_case" class="search_base_case" value="">
+	            <span title="<%== $server_alive->{$dn}->{$s} ? '' : 'absent in machines (probably old stuff)' %>">
+	              <button type="submit"
+	    		      class="btn btn-<%= $server_alive->{$dn}->{$s} ? 'secondary' : 'danger disabled' %> btn-sm mb-1"
+	    		      style="--bs-btn-font-size: .75rem;"
+	    		      data-filter="<%= 'cn=' . $s . ',' . $search_base_case %>"
+	    		      onClick="$('.search_base_case').val($(this).data('filter')); $('#searchMachine').submit();">
+	    		<%= $s %>
+	              </button>
+	            </span>
+		  </form>
+		% }
+	      </td>
+	      <td><%== exists $v->{mail} ? sprintf('<a href="mailto:%s">%s</a>', $v->{mail}->[0], $v->{mail}->[0]) : 'unavailable' %></td>
+	      <td><%== sprintf('<a href="/profile/%s">%s</a>', $v->{uid}->[0], $v->{uid}->[0]) %></td>
+	    </tr>
+	  % }
+	  
+	% }
+      % }
+    </tbody>
+  </table>
+</div>
 
-	%# 	      %# GROUPS
-	%# 	      % if (is_role 'admin,coadmin', {cmp => 'or'}) {
-	%# 		% if ( defined $groups ) {
-	%# 		  <dt class="col-sm-1 text-end" title="groups"><i class="fa-lg fa-solid fa-users-viewfinder"></i></dt>
-	%# 		  <dd class="col-sm-11">
-	%# 		    <details>
-	%# 		      <summary>groups</summary>
-	%# 		      % if ( exists $groups->{$dn} ) {
-	%# 			% foreach (sort(@{$groups->{$dn}})) {
-	%# 			  <span class="badge text-bg-secondary fw-normal"><%= $_ %></span>
-	%# 			% }
-	%# 		      % }
-	%# 		    </details>
-	%# 		  </dd>
-	%# 		% }
-	%# 		
+<script src="/assets/js/datatables/datatables.min.js"></script>
+<script src="/assets/js/umi-datatables.js"></script>
 
-	
-	%# 	      %# SERVICES
-	%# 	      % if ( defined $services ) {
+
+
+%# 	      %# GROUPS
+%# 	      % if (is_role 'admin,coadmin', {cmp => 'or'}) {
+%# 		% if ( defined $groups ) {
+%# 		  <dt class="col-sm-1 text-end" title="groups"><i class="fa-lg fa-solid fa-users-viewfinder"></i></dt>
+%# 		  <dd class="col-sm-11">
+%# 		    <details>
+%# 		      <summary>groups</summary>
+%# 		      % if ( exists $groups->{$dn} ) {
+%# 			% foreach (sort(@{$groups->{$dn}})) {
+%# 			  <span class="badge text-bg-secondary fw-normal"><%= $_ %></span>
+%# 			% }
+%# 		      % }
+%# 		    </details>
+%# 		  </dd>
+%# 		% }
+%# 		
+
+
+%# 	      %# SERVICES
+%# 	      % if ( defined $services ) {
 %# 		<dt class="col-sm-1 text-end" title="services"><i class="fa-lg fa-solid fa-bell-concierge"></i></dt>
 %# 		<dd class="col-sm-11">
 %# 		  <details>
@@ -163,11 +213,3 @@
 %#       </div>
 %#     </div>
 %#   </div>
-
-% }
-    </tbody>
-  </table>
-</div>
-
-<script src="/assets/js/datatables/datatables.min.js"></script>
-<script src="/assets/js/umi-datatables.js"></script>

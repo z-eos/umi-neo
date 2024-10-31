@@ -42,12 +42,11 @@ sub profile ($self) {
   my $par = $self->req->params->to_hash;
   my $reqpath = $self->req->url->to_abs->path;
   my $uid;
-  if ( $reqpath eq '/audit/users' ) {
+  if ( $reqpath =~ /^\/audit\/.*$/ ) {
     $uid = 'all';
   } else {
     $uid = $par->{uid} // $self->stash->{uid} // '';
   }
-  # $self->h_log($uid);
 
   my $ldap = Umi::Ldap->new( $self->{app}, $self->session('uid'), $self->session('pwd') );
 
@@ -69,7 +68,7 @@ sub profile ($self) {
   my $search_arg = { base => $self->{app}->{cfg}->{ldap}->{base}->{acc_root},
 		     filter => $filter,
 		     scope => 'one' };
-  $search_arg->{attrs} = [qw( gidNumber givenName mail sn uid modifiersName )] if $reqpath eq '/audit/users';
+  $search_arg->{attrs} = [qw( gidNumber givenName mail sn uid modifiersName )] if $reqpath =~ /^\/audit\/.*$/;
   # $self->{app}->h_log( $search_arg);
   my $search = $ldap->search( $search_arg );
   $self->{app}->h_log( $self->{app}->h_ldap_err($search, $search_arg) ) if $search->code;
@@ -183,7 +182,7 @@ sub profile ($self) {
     @{$projects->{$k}} = sort map { $p->{$_}->{cn}->[0] =~ s/_/:/r } keys(%$p);
   }
 
-  my $template = $reqpath eq '/audit/users' ? 'protected/audit/users' : 'protected/profile';
+  my $template = $reqpath =~ /^\/audit\/.*/ ? 'protected/audit/users' : 'protected/profile';
   # $self->h_log($template);
   $self->render(template => $template,
 		hash => $profiled_user,

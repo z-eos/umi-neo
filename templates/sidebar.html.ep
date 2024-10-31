@@ -32,7 +32,7 @@
 
   <nav id="sidebar-left" class="collapse show">
 
-    <ul id="sidebar-left-menu" class="nav flex-column">
+    <ul id="sidebar-left-menu" class="nav flex-column" style="--bs-nav-link-padding-y: .2rem;">
 
       % if ( is_role 'admin,coadmin', {cmp => 'or'} ) {
 	<li class="nav-item">
@@ -46,7 +46,7 @@
 	      <b class="text-uppercase">Audit</b>
 	    </div>
 	  </a>
-	  <ul class="nav flex-column collapse show ms-3 p-0" id="submenuAnalyze">
+	  <ul class="nav flex-column collapse show ms-3" id="submenuAnalyze" style="--bs-nav-link-padding-y: .2rem;">
             <!-- <li class="nav-item">
 		 <a class="nav-link btn btn-link text-secondary text-start" href="/tool/ldap-tree">
 		 <i class="fa-solid fa-code-branch"></i>
@@ -60,38 +60,47 @@
 	      </a>
 	    </li> -->
 	    <li class="nav-item">
-	      <a class="nav-link btn btn-link text-secondary text-start" href="/audit/users"
+	      <a class="nav-link btn btn-link text-secondary text-start" href="/audit/users/user-driven-rows"
 		 tabindex="2"
-		 title="Users">
-		<i class="fa-solid fa-users-between-lines"></i>
+		 title="Users Driven Rows List of Accounts">
+		<i class="fa-solid fa-person-circle-question"></i>
 		Usrers
-		<i class="fa-solid fa-stopwatch-20 text-warning-emphasis ms-3" title="long (up to 2 minutes) request"></i>
+		<i class="fa-solid fa-user fa-xs ms-2" title="long (up to 2 minutes) request"></i>
+	      </a>
+	    </li>
+	    <li class="nav-item">
+	      <a class="nav-link btn btn-link text-secondary text-start" href="/audit/users/server-driven-rows"
+		 tabindex="2"
+		 title="Servers Driven Rows List of Accounts">
+		<i class="fa-solid fa-person-circle-question invisible"></i>
+		Usrers
+		<i class="fa-solid fa-server fa-xs ms-2" title="long (up to 2 minutes) request"></i>
 	      </a>
 	    </li>
 	    <!-- <li class="nav-item">
-	    <a class="nav-link btn btn-link text-secondary text-start" href="/servermta"
-	       tabindex="2"
-	       title="All MTAs info in one single table">
-	      <i class="fa-solid fa-mail-bulk"></i>
-	      MTA
-	    </a>
-	</li>
-	<li class="nav-item">
-	  <a class="nav-link btn btn-link text-secondary text-start" href="/mikrotik"
-	     tabindex="2"
-	     title="CAPsMAN registrations">
-	    <i class="fa-solid fa-broadcast-tower"></i>
-	    CAPs reg
-	  </a>
-	</li>
-	<li class="nav-item">
-	  <a class="nav-link btn btn-link text-secondary text-start" href="/mikrotikpsk"
-	     tabindex="2"
-	     title="all corp SSID-s PSK-s">
-	    <i class="fa-solid fa-wifi"></i>
-	    CAPs PSK
-	  </a>
-	</li> -->
+		 <a class="nav-link btn btn-link text-secondary text-start" href="/servermta"
+		 tabindex="2"
+		 title="All MTAs info in one single table">
+		 <i class="fa-solid fa-mail-bulk"></i>
+		 MTA
+		 </a>
+		 </li>
+		 <li class="nav-item">
+		 <a class="nav-link btn btn-link text-secondary text-start" href="/mikrotik"
+		 tabindex="2"
+		 title="CAPsMAN registrations">
+		 <i class="fa-solid fa-broadcast-tower"></i>
+		 CAPs reg
+		 </a>
+		 </li>
+		 <li class="nav-item">
+		 <a class="nav-link btn btn-link text-secondary text-start" href="/mikrotikpsk"
+		 tabindex="2"
+		 title="all corp SSID-s PSK-s">
+		 <i class="fa-solid fa-wifi"></i>
+		 CAPs PSK
+		 </a>
+		 </li> -->
 	  </ul>
 	</li>
       % }
@@ -107,7 +116,7 @@
 	      <b class="text-uppercase">Management</b>
 	    </div>
 	  </a>
-	  <ul class="nav flex-column collapse show ms-3 p-0" id="submenuManage">
+	  <ul class="nav flex-column collapse show ms-3 p-0" id="submenuManage" style="--bs-nav-link-padding-y: .2rem;">
 	    <li class="nav-item">
 	      <a class="nav-link text-secondary" href="/project">
 		<i class="fa-solid fa-fw fa-folder-tree"></i>
@@ -129,7 +138,7 @@
 	      <b class="text-uppercase">New Obj</b>
 	    </div>
 	  </a>
-	  <ul class="nav flex-column collapse show ms-3 p-0" id="submenuObjects">
+	  <ul class="nav flex-column collapse show ms-3 p-0" id="submenuObjects" style="--bs-nav-link-padding-y: .2rem;">
 	    <li class="nav-item">
 	      <a class="nav-link btn btn-link text-secondary text-start" href="/profile/new" tabindex="2">
 		<i class="fa-solid fa-fw fa-user-plus"></i>
@@ -218,7 +227,7 @@
 	    <b class="text-uppercase">Tools</b>
 	  </div>
 	</a>
-	<ul class="nav flex-column collapse show ms-3 p-0" id="submenuTools">
+	<ul class="nav flex-column collapse show ms-3 p-0" id="submenuTools" style="--bs-nav-link-padding-y: .2rem;">
 	  <li class="nav-item">
 	    <a class="nav-link btn btn-link text-secondary text-start disabled" href="/onboarding">
 	      <i class="fa-solid fa-fw fa-baby"></i>
@@ -288,7 +297,7 @@
 	      <b class="text-uppercase">Info</b>
 	    </div>
 	  </a>
-	  <ul class="nav flex-column collapse ms-3 p-0" id="submenuInfo">
+	  <ul class="nav flex-column collapse ms-3 p-0" id="submenuInfo" style="--bs-nav-link-padding-y: .2rem;">
 	    <li class="nav-item">
 	      <a class="nav-link btn btn-link text-secondary text-start disabled" href="/motto"><i class="fa-solid fa-hand-spock"></i> user's motto</a>
 	    </li>

@@ -309,6 +309,10 @@ sub _startup_routes ($self) {
   ## AUDIT
   ### users
   $protected_root
+    ->get( '/audit/users/:type') # => [ type => qr/[^a-z\-]+$/ ] )
+    ->requires(is_role => ['admin,coadmin,hr', {cmp => 'or'}])
+    ->to('protected#profile', type => 'user-driven-rows');
+  $protected_root
     ->get( '/audit/users')
     ->requires(is_role => ['admin,coadmin,hr', {cmp => 'or'}])
     ->to('protected#profile');
