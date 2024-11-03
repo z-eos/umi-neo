@@ -355,6 +355,25 @@ sub keygen_ssh ($self) {
 		      );
 }
 
+sub keygen_gpg ($self) {
+  my $par = $self->req->params->to_hash;
+  $self->h_log($par);
+  my $v = $self->validation;
+  return $self->render(template => 'protected/tool/keygen/gpg') unless $v->has_data;
+
+  $par->{name} = {
+		  real => sprintf("%s %s", $self->session->{user_obj}->{givenname}, $self->session->{user_obj}->{sn}),
+		  email => $self->session->{user_obj}->{mail}
+		 };
+  my $k = $self->h_keygen_gpg($par);
+  # $self->h_log($k);
+
+  return $self->render(template => 'protected/tool/keygen/gpg',
+		       key => $k,
+		       # layout => undef
+		      );
+}
+
 =head1 modify
 
 method to modify whole oject or some definite attribute (if parameter

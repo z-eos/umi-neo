@@ -1,0 +1,82 @@
+%# -*- mode: web; eval: (follow-mode); -*-
+
+<h3 class="fw-bold py-5">
+  <i class="fa-solid fa-lock fa-lg m-3 text-muted"></i>
+  GPG Key Generator Form
+</h3>
+<hr>
+
+%= form_for '/tool/keygen/gpg' => (class => "form-horizontal", method => 'GET') => begin
+  <div class="input-group mb-3">
+    <span class="input-group-text">Key Type</span>
+    %= select_field key_type => ['eddsa', 'RSA'], id => 'key_type', class => 'form-select'
+  </div>
+  %# = submit_button 'generate', class => 'btn btn-success font-weight-bold text-uppercase'
+  <button type="submit" class="btn btn-success font-weight-bold text-uppercase">
+    <i class="fa-solid fa-lock me-1"></i> generate gpg key
+  </button>
+% end
+
+<hr>
+
+% my $key = stash('key');
+% if ($key) { 
+<div class="row m-5 p-5">
+    <div class="col-12">
+      <pre class="text-secondary"><%= $key->{list_key}->{hr} %></pre>
+    </div>
+    <div class="col">
+      <div class="btn-group mb-3" role="group">
+	<button class="btn btn-info btn-sm"
+		onclick="copyDivToClipboard('#private')"
+		title="Copy private key to clipboard"
+		type="button">
+          <span>
+	    <i class="fas fa-copy fa-lg fa-fw"></i>
+	  </span>
+	</button>
+	<button class="btn btn-info btn-sm"
+		onclick="downloadString(document.querySelector('#private').innerText, 'text/plain', 'gpg-key-<%= $key->{send_key}->{pgpKeyCreateTime} %>-pvt.asc')"
+       		title="Download private key"
+		type="button">
+	  <span>
+	    <i class="fas fa-file-download fa-lg fa-fw"></i>
+	  </span>
+	</button>
+      </div>
+      <pre id="private"><%= $key->{private} %></pre>	
+    </div>
+    <div class="col">
+      <div class="btn-group mb-3" role="group">
+	<button class="btn btn-info btn-sm"
+		onclick="copyDivToClipboard('#public')"
+       		title="Copy public key to clipboard"
+		type="button">
+          <span>
+	    <i class="fas fa-copy fa-lg fa-fw"></i>
+	  </span>
+	</button>
+	<button class="btn btn-info btn-sm"
+		       onclick="downloadString(document.querySelector('#public').innerText, 'text/plain', 'gpg-key-<%= $key->{send_key}->{pgpKeyCreateTime} %>-pub.asc')"
+       		       title="Download public key"
+		       type="button">
+	  <span>
+	    <i class="fas fa-file-download fa-lg fa-fw"></i>
+	  </span>
+	</button>
+      </div>
+      <pre id="public"><%= $key->{public} %></pre>
+    </div>
+</div>
+
+<script>
+  function copyDivToClipboard(selector) {
+    var range = document.createRange();
+    range.selectNode(document.querySelector(selector));
+    window.getSelection().removeAllRanges(); // clear current selection
+    window.getSelection().addRange(range);   // to select text
+    document.execCommand("copy");
+    window.getSelection().removeAllRanges(); // to deselect
+  }
+</script>
+% }

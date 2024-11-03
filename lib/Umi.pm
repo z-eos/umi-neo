@@ -366,6 +366,9 @@ sub _startup_routes ($self) {
   $protected_root->get( '/tool/keygen/ssh')->to('protected#keygen_ssh');
   $protected_root->post('/tool/keygen/ssh')->to('protected#keygen_ssh');
 
+  $protected_root->get( '/tool/keygen/gpg')->to('protected#keygen_gpg');
+  $protected_root->post('/tool/keygen/gpg')->to('protected#keygen_gpg');
+
   $protected_root
     ->get( '/tool/sysinfo')
     ->requires(is_role => ['admin,coadmin,hr', {cmp => 'or'}])

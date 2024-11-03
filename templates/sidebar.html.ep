@@ -46,7 +46,7 @@
 	      <b class="text-uppercase">Audit</b>
 	    </div>
 	  </a>
-	  <ul class="nav flex-column collapse show ms-3" id="submenuAnalyze" style="--bs-nav-link-padding-y: .2rem;">
+	  <ul class="nav flex-column collapse show" id="submenuAnalyze" style="--bs-nav-link-padding-y: .2rem;">
             <!-- <li class="nav-item">
 		 <a class="nav-link btn btn-link text-secondary text-start" href="/tool/ldap-tree">
 		 <i class="fa-solid fa-code-branch"></i>
@@ -63,8 +63,8 @@
 	      <a class="nav-link btn btn-link text-secondary text-start" href="/audit/users/user-driven-rows"
 		 tabindex="2"
 		 title="Users Driven Rows List of Accounts">
-		<i class="fa-solid fa-person-circle-question"></i>
-		Usrers
+		<i class="fa-solid fa-person-circle-question me-2"></i>
+		by
 		<i class="fa-solid fa-user fa-xs ms-2" title="long (up to 2 minutes) request"></i>
 	      </a>
 	    </li>
@@ -72,8 +72,8 @@
 	      <a class="nav-link btn btn-link text-secondary text-start" href="/audit/users/server-driven-rows"
 		 tabindex="2"
 		 title="Servers Driven Rows List of Accounts">
-		<i class="fa-solid fa-person-circle-question invisible"></i>
-		Usrers
+		<i class="fa-solid fa-person-circle-question invisible me-2"></i>
+		by
 		<i class="fa-solid fa-server fa-xs ms-2" title="long (up to 2 minutes) request"></i>
 	      </a>
 	    </li>
@@ -247,7 +247,7 @@
 	    </a>
 	  </li>
 	  <li class="nav-item">
-	    <a class="nav-link btn btn-link text-secondary text-start" href="/tool/gpgkeygen">
+	    <a class="nav-link btn btn-link text-secondary text-start" href="/tool/keygen/gpg">
 	      <i class="fa-solid fa-fw fa-lock"></i>
 	      GPG keygen
 	    </a>

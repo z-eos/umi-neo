@@ -10,6 +10,7 @@
 *~
 .*~
 /umi.yml
+.tt
 
 # Devel::Cover
 cover_db/

@@ -1,61 +1,72 @@
 %# -*- mode: web; eval: (follow-mode); -*-
 
+<!-- style>
+ #bitSize { display: none; }
+ select#keyType:has(option[value="RSA"]:checked) ~ #bitSize {
+   display: inline;
+ }
+</style -->
+
 <h3 class="fw-bold py-5">
-    <i class="fa fa-unlock-alt fa-lg m-3 text-muted"></i>
-    SSH Key Generator Form
+  <i class="fa fa-unlock-alt fa-lg m-3 text-muted"></i>
+  SSH Key Generator Form
 </h3>
 <hr>
 
 % my $par = stash('kg_ssh_params');
 
-<form action="/tool/keygen/ssh" class="injectable-form form-horizontal" id="form865" method="post">
+%= form_for '/tool/keygen/ssh' => (class => "injectable-form form-horizontal", method => 'GET') => begin
   <div class="form-group row mt-4">
-    <label class="col text-end font-weight-bold required control-label" for="key_type">Type</label>
-    <div class="input-sm col-10">
-      <select name="key_type" id="key_type" class="custom-select form-control" title="SSH key types">
-	% my @kt = ('RSA', 'ECDSA256', 'ECDSA384', 'ECDSA521', 'Ed25519' );
-	% foreach (@kt) {
-	    <option value="<%= $_ %>"
-		<%= $par->{key_type} && $_ eq $par->{key_type} ? 'selected="selected"' : '' %>
-		><%= $_ %></option>
-	% }
-      </select>
+    <label class="col text-end fw-bold required control-label" for="keyType">Type</label>
+    <div class="input-sm col-9">
+      % my $options =  [
+      %      ['Ed25519 (elliptic curve algorithm)' => 'Ed25519'],
+      %      ['RSA' => 'RSA'],
+      %      ['ECDSA256 (elliptic curve, 256 bit key)' => 'ECDSA256'],
+      %      ['ECDSA384 (elliptic curve, 384 bit key)' => 'ECDSA384'],
+      %      ['ECDSA521 (elliptic curve, 521 bit key)' => 'ECDSA521']
+      %    ];
+      %= select_field key_type => $options, id => 'keyType', class => 'custom-select form-control', onchange => 'toggleInputField()'
     </div>
   </div>
   
-  <div class="form-group row mt-3">
-    <label class="col-2 text-right font-weight-bold control-label" title="" for="bits">
-      Bits: <span id="bits_size" class=""></span>
+  <div id="bitSize" class="form-group row mt-3 invisible">
+    <label class="col-2 text-right fw-bold control-label" title="" for="bits">
+      Bits: <span id="bits_size" class="text-primary"></span>
     </label>
-    <div class="col-1 text-start font-weight-bold"><span>1024</span></div>
+    <div class="col-1 text-start fw-bold"><span>1024</span></div>
     <div class="col-8">
       <input id="bits" name="bits" type="range" class="form-range" min="1024" max="4096" step="1024" value="<%= $par->{bits} %>">
     </div>
-    <div class="col-1 font-weight-bold text-end"><span>4096</span></div>
+    <div class="col-1 fw-bold text-end"><span>4096</span></div>
   </div>
 
   <div class="row">
-    <div class="form-group col-2">
+    <div class="form-group col-3">
       <div>
-	<input type="submit" name="aux_submit" id="aux_submit" value="Submit" class="btn btn-success btn-block font-weight-bold text-uppercase"></div>
+	<button type="submit" class="btn btn-success fw-bold text-uppercase">
+	  <i class="fa-solid fa-unlock-alt me-1"></i> generate ssh key
+	</button>
+      </div>
     </div></div>
-</form>
+%# </form>
+% end
 
 <hr>
 
 % my $key = stash('key');
 % if (defined $key && %$key) {
-<h3 class=" m-5 p-5">
-  Your Stuff
+  <h3 class="my-3">
+    Your Stuff
   <small class="text-muted"><i>(<%= session->{user_obj}->{gecos} // session->{user_obj}->{givenname} . ' ' . session->{user_obj}->{sn} %> &lt;<%= session->{user_obj}->{mail} %>&gt;)</i></small>
 </h3>
 
 
-<div class="row m-5 p-5">
+<div class="row">
   <div class="col">
-    <div class="btn-toolbar" role="toolbar" aria-label="Toolbar with button groups">
-      <div class="btn-group" role="group">
-	<button class="btn btn-info p-3 my-3"
+    <div class="btn-toolbar" role="toolbar">
+      <div class="btn-group mb-3" role="group">
+	<button class="btn btn-info btn-sm"
 		onclick="copyToClipboard('#ssh_private')"
 		       title="Copy SSH private key to clipboard"
 		type="button">
@@ -63,7 +74,7 @@
 	    <i class="fa-solid fa-copy"></i>
 	  </span>
 	</button>
-	<button class="btn btn-info p-3 my-3"
+	<button class="btn btn-info btn-sm"
 		onclick="downloadString(document.querySelector('#ssh_private').innerText, 'text/plain', 'ssh-key-<%= $key->{ssh}->{date} %>.pvt')"
        		title="Download SSH private key"
 		type="button">
@@ -76,9 +87,9 @@
     <pre id="user-select-all ssh_private"><%= $key->{ssh}->{private} %></pre>
   </div>
   <div class="col">
-    <div class="btn-toolbar" role="toolbar" aria-label="Toolbar with button groups">
-      <div class="btn-group" role="group">
-	<button class="btn btn-info p-3 my-3"
+    <div class="btn-toolbar" role="toolbar">
+      <div class="btn-group mb-3" role="group">
+	<button class="btn btn-info btn-sm"
 		onclick="copyToClipboard('#ssh_public')"
      		title="Copy SSH public key to clipboard"
 		type="button">
@@ -86,7 +97,7 @@
 	    <i class="fa-solid fa-copy"></i>
 	  </span>
 	</button>
-	<button class="btn btn-info p-3 my-3"
+	<button class="btn btn-info btn-sm"
 		onclick="downloadString(document.querySelector('#ssh_public').innerText, 'text/plain', 'ssh-key-<%= $key->{ssh}->{date} %>.pub')"
        		title="Download SSH public key"
 		type="button">
@@ -96,7 +107,7 @@
 	</button>
       </div>
     </div>
-    <div class="user-select-all m-4"><small id="ssh_public" class="font-monospace text-break"><%= $key->{ssh}->{public} %></small></div>
+    <div class="user-select-all"><small id="ssh_public" class="font-monospace text-break"><%= $key->{ssh}->{public} %></small></div>
   </div>
 </div>
 % }
