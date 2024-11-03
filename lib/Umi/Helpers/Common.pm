@@ -208,8 +208,10 @@ wrapper for ssh-keygen(1)
 		     my ( $self, $args ) = @_;
 
 		     my $res;
-		     return $res->{debug}->{error} = ['Configuration lacks SSH related section. Inform admins.']
-		       if !exists $app->{cfg}->{tool}->{ssh};
+		     if (!exists $app->{cfg}->{tool}->{ssh}) {
+		       $res->{debug}->{error} = ['Configuration lacks SSH related section. Inform admins.'];
+		       return $res;
+		     }
 
 		     my $arg = {
 				type => $args->{key_type} // 'Ed25519',
@@ -217,7 +219,7 @@ wrapper for ssh-keygen(1)
 				name => $args->{name}
 			       };
 
-		     my (@ssh, $res, $fh, $key_file, $kf);
+		     my (@ssh, $fh, $key_file, $kf);
 		     my $to_which = 'ssh-keygen';
 		     my $ssh_bin = which $to_which;
 		     if ( defined $ssh_bin ) {
@@ -326,8 +328,10 @@ this method is supposed to work with the only one single key in keyring
 		   my ( $self, $args ) = @_;
 
 		   my $res;
-		   return $res->{debug}->{error} = ['Configuration lacks GPG related section. Inform admins.']
-		     if !exists $app->{cfg}->{tool}->{gpg};
+		   if (!exists $app->{cfg}->{tool}->{gpg}) {
+		     $res->{debug}->{error} = ['Configuration lacks GPG related section. Inform admins.'];
+		     return $res;
+		   }
 
 		   my $arg = { bits     => $args->{bits}     // 4096,
 			       key_type => $args->{key_type} // 'eddsa',

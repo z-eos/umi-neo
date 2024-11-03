@@ -55,7 +55,7 @@
 <hr>
 
 % my $key = stash('key');
-% if (defined $key && %$key) {
+% if (defined $key && %$key && !exists $key->{ssh}->{debug}->{error}) {
   <h3 class="my-3">
     Your Stuff
   <small class="text-muted"><i>(<%= session->{user_obj}->{gecos} // session->{user_obj}->{givenname} . ' ' . session->{user_obj}->{sn} %> &lt;<%= session->{user_obj}->{mail} %>&gt;)</i></small>

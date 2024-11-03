@@ -345,9 +345,14 @@ sub keygen_ssh ($self) {
 
   my $par = $self->req->params->to_hash;
   $self->stash(kg_ssh_params => $par);
+
+  my $k = $self->h_keygen_ssh($par);
+  $self->stash(debug => $k->{debug});
+
+  $self->h_log($k);
   return $self->render(template => 'protected/tool/keygen/ssh',
 		       key => {
-			       ssh => $self->h_keygen_ssh($par),
+			       ssh => $k,
 			       name => { real => 'name will be here',
 					 email => 'email will be here' }
 			      },
@@ -368,7 +373,7 @@ sub keygen_gpg ($self) {
   my $k = $self->h_keygen_gpg($par);
   $self->stash(debug => $k->{debug});
 
-  # $self->h_log($k);
+  $self->h_log($k);
 
   return $self->render(template => 'protected/tool/keygen/gpg',
 		       key => $k,
