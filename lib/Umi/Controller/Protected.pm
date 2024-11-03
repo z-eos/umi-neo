@@ -366,6 +366,8 @@ sub keygen_gpg ($self) {
 		  email => $self->session->{user_obj}->{mail}
 		 };
   my $k = $self->h_keygen_gpg($par);
+  $self->stash(debug => $k->{debug});
+
   # $self->h_log($k);
 
   return $self->render(template => 'protected/tool/keygen/gpg',
