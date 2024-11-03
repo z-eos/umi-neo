@@ -206,6 +206,11 @@ wrapper for ssh-keygen(1)
     $app->helper(
 		 h_keygen_ssh => sub  {
 		     my ( $self, $args ) = @_;
+
+		     my $res;
+		     return $res->{debug}->{error} = ['Configuration lacks SSH related section. Inform admins.']
+		       if !exists $app->{cfg}->{tool}->{ssh};
+
 		     my $arg = {
 				type => $args->{key_type} // 'Ed25519',
 				bits => $args->{bits} // 2048,
@@ -319,6 +324,11 @@ this method is supposed to work with the only one single key in keyring
     $app->helper(
 		 h_keygen_gpg => sub {
 		   my ( $self, $args ) = @_;
+
+		   my $res;
+		   return $res->{debug}->{error} = ['Configuration lacks GPG related section. Inform admins.']
+		     if !exists $app->{cfg}->{tool}->{gpg};
+
 		   my $arg = { bits     => $args->{bits}     // 4096,
 			       key_type => $args->{key_type} // 'eddsa',
 			       import   => $args->{import}   // '',
@@ -331,7 +341,7 @@ this method is supposed to work with the only one single key in keyring
 
 		   $ENV{GNUPGHOME} = tempdir(TEMPLATE => '/var/tmp/.umi-gnupg.XXXXXX', CLEANUP => 1 );
 
- 		   my ($key, @gpg, @run, $obj, $gpg_bin, $res, $fh, $tf, $stdout, $stderr);
+ 		   my ($key, @gpg, @run, $obj, $gpg_bin, $fh, $tf, $stdout, $stderr);
 		   my $to_which = 'gpg';
 		   $gpg_bin = which $to_which;
 		   if ( defined $gpg_bin ) {
