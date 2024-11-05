@@ -181,13 +181,14 @@ sub search_projects  ($self) {
   my $proj = $par->{proj} // $self->stash->{proj};
   $proj = '*' if $proj eq 'all';
 
-  $self->h_log($proj);
+  # $self->h_log($proj);
   my $search_arg = { base => $self->{app}->{cfg}->{ldap}->{base}->{project},
 		     filter => sprintf("(cn=%s)", $proj),
 		     scope => 'one',
 		     attrs => [qw(cn createTimestamp creatorsName modifiersName modifyTimestamp)] };
   my $search = $ldap->search( $search_arg );
-  $self->{app}->h_log( $self->{app}->h_ldap_err($search, $search_arg) ) if $search->code;
+  # $self->h_log( $search );
+  $self->h_log( $self->{app}->h_ldap_err($search, $search_arg) ) if $search->code;
 
   my @project_names;
   push @project_names, $_->get_value('cn') foreach ($search->entries());

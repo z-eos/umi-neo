@@ -356,27 +356,25 @@ this method is supposed to work with the only one single key in keyring
 		   }
 
 		   if ( $arg->{import} ne '' ) {
-
-		     if ( defined $arg->{import}->{file} ) {
-		       $tf = $arg->{import}->{file};
-		     } elsif ( defined $arg->{import}->{text} ) {
-		       ($fh, $tf) = tempfile( 'import.XXXXXX', DIR => $ENV{GNUPGHOME} );
-		       print $fh $arg->{import}->{text};
-		       close $fh;
+		     ($fh, $tf) = tempfile( 'import.XXXXXX', DIR => $ENV{GNUPGHOME} );
+		     if ( exists $arg->{import}->{key_file} && $arg->{import}->{key_file} ne '' ) {
+		       print $fh $arg->{import}->{key_file};
+		     } elsif ( exists $arg->{import}->{key_text} && $arg->{import}->{key_text} ne '' ) {
+		       print $fh $arg->{import}->{key_text};
 		     }
-
-		     # $obj = new POSIX::Run::Capture(argv    => [ @gpg, '--import', $tf ]);
-		     # push @{$res->{debug}->{error}},  $obj->errno
-		     #   if ! $obj->run;
+		     close $fh;
+		     $stdout = $stderr = undef;
+		     @run = (@gpg, '--import', $tf);
+		     # $self->h_log(\@run);
+		     run \@run, '>', \$stdout, '2>', \$stderr ||
+		       push @{$res->{debug}->{error}},  $? >> 8, $stderr;
 
 		   } else {
-
 		     ### https://www.gnupg.org/documentation/manuals/gnupg-devel/Unattended-GPG-key-generation.html
 		     ### https://lists.gnupg.org/pipermail/gnupg-users/2017-December/059622.html
-
-		     # Key-Type: default
-		     # Key-Length: $arg->{bits}
-		     # Subkey-Type: default
+		     ### Key-Type: default
+		     ### Key-Length: $arg->{bits}
+		     ### Subkey-Type: default
 
 		     ($fh, $tf) = tempfile( 'batch.XXXXXX', DIR => $ENV{GNUPGHOME} );
 		     if ($arg->{key_type} eq 'eddsa') {
@@ -444,6 +442,7 @@ END_INPUT
 		     run \@run, '>', \$stdout, '2>', \$stderr ||
 		       push @{$res->{debug}->{error}},  $? >> 8, $stderr;
 		     $stdout =~ /^fpr:{9}([A-F0-9]{40})/m;
+		     $res->{fingerprint} = $1;
 		     $arg->{fingerprint} = $1;
 		     #$arg->{fingerprint} =~ tr/ \n//ds;
 		     # log_debug { np($arg->{fingerprint}) };

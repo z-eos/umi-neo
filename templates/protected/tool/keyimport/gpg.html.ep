@@ -1,0 +1,97 @@
+%# -*- mode: web; eval: (follow-mode); -*-
+
+<h3 class="fw-bold py-5">
+  <i class="fa-solid fa-lock fa-lg m-3 text-muted"></i>
+  GPG Key Import
+</h3>
+<hr>
+
+%= form_for '/tool/keyimport/gpg' => (class => "form-horizontal", method => 'POST', enctype => 'multipart/form-data') => begin
+  <div class="row mb-3" id="file">
+    <label class="col-1 col-form-label text-end fw-bold" for="keyFile">File</label>
+    <div class="input-sm col-11">
+      <div>
+      %= file_field 'key_file', id => 'keyFile', class => 'form-control form-control-sm'
+      </div>
+    </div>
+  </div>
+
+  <div class="row mb-3" id="text">
+    <label class="col-1 col-form-label text-end fw-bold" for="keyText">Data</label>
+    <div class="input-sm col-11">
+      %= text_area 'key_text', id => 'keyText', cols => 10, rows => 20, class => 'text-monospace form-control'
+      <!-- <textarea name="key_text" id="keyText"
+	   class="text-monospace form-control" placeholder="GPG key text"
+	   rows="20" cols="10"></textarea> -->
+    </div>
+  </div>
+
+  <button type="reset" id="resetButton" class="btn btn-danger fw-bold text-uppercase">reset</button>
+  <button type="submit" class="btn btn-success fw-bold text-uppercase">
+    <i class="fa-solid fa-lock me-1"></i> import
+  </button>
+% end
+
+<script>
+ const divText = document.getElementById('text');
+ const divFile = document.getElementById('file');
+ const elText = document.getElementById('keyText');
+ const elFile = document.getElementById('keyFile');
+ const rstBtn = document.getElementById('resetButton');
+ 
+ function toggleVisibility() {
+   // Hide file input if the textarea has content
+   if (elText.value.trim() !== "") {
+     divFile.classList.add('d-none');
+   } else {
+     divFile.classList.remove('d-none');
+   }
+
+   // Hide textarea if a file is selected in the file input
+   if (elFile.files.length > 0) {
+     divText.classList.add('d-none');
+   } else {
+     divText.classList.remove('d-none');
+   }
+ }
+
+ // Attach event listeners to handle input changes
+ elText.addEventListener('input', toggleVisibility);
+ elFile.addEventListener('change', toggleVisibility);
+ rstBtn.addEventListener('click', function() {
+   elText.value = "";
+   elFile.value = "";
+   divText.classList.remove('d-none');
+   divFile.classList.remove('d-none');
+ });
+</script>
+
+% my $key = stash('key');
+% if ( defined $key && %$key ) {
+  <div class="row mt-5 pt-5">
+    <div class="col-12">
+      <pre><%= $key->{gpg}->{list_key}->{hr} =%></pre>
+    </div>
+    <div class="col">
+      <div class="btn-group" role="group">
+	<button class="btn btn-info btn-sm"
+		       onclick="copyDivToClipboard('#public')"
+       		       title="Copy public key to clipboard"
+		       type="button">
+          <span>
+	    <i class="fas fa-copy fa-lg fa-fw"></i>
+	  </span>
+	</button>
+	<button class="btn btn-info btn-sm"
+		onclick="downloadString(document.querySelector('#public').innerText, 'text/plain', 'gpg-key-[% key.gpg.send_key.pgpKeyCreateTime %]-pub.asc')"
+       		title="Download public key"
+		type="button">
+	  <span>
+	    <i class="fas fa-file-download fa-lg fa-fw"></i>
+	  </span>
+	</button>
+      </div>
+      <pre id="public" class="mt-3"><%= $key->{gpg}->{public} =%></pre>
+    </div>
+  </div>
+% }

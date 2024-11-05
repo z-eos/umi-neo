@@ -183,12 +183,6 @@
 		</a>
 	      </li>
 	      <li class="nav-item">
-		<a class="nav-link btn btn-link text-secondary text-start disabled" href="/tool/importgpg">
-		  <i class="fa-solid fa-fw fa-file-import"></i>
-		  GPG key Import
-		</a>
-	      </li>
-	      <li class="nav-item">
 		<a class="nav-link btn btn-link text-secondary text-start disabled" href="/sargon" tabindex="3">
 		  <i class="fa-solid fa-fw fa-dragon"> </i>
 		  Sargon
@@ -250,6 +244,12 @@
 	    <a class="nav-link btn btn-link text-secondary text-start" href="/tool/keygen/gpg">
 	      <i class="fa-solid fa-fw fa-lock"></i>
 	      GPG keygen
+	    </a>
+	  </li>
+	  <li class="nav-item">
+	    <a class="nav-link btn btn-link text-secondary text-start" href="/tool/keyimport/gpg">
+	      <i class="fa-solid fa-fw fa-file-import invisible"></i>
+	      GPG key import
 	    </a>
 	  </li>
 	  <li class="nav-item">

@@ -1,40 +1,64 @@
-% my $title = "To Import";
+%# -*- mode: web; eval: (follow-mode); -*-
 
-<h2>
-<i class="fas fa-file-import fa-lg mr-3 text-muted"></i>
-LDIF to import <small><em class="text-muted font-monospace">( either LDIF file or LDIF data )</em></small>
+<h2 class="py-5">
+  <i class="fas fa-file-import fa-lg mr-3 text-muted"></i>
+  LDIF to import <small><em class="text-muted font-monospace">( either LDIF file or LDIF data )</em></small>
 </h2>
 <hr>
 
-% # [% INCLUDE ldap_err.tt %]
-
-<form action="/tool/ldif-import" class="form-horizontal formajaxer"
-      enctype="multipart/form-data" id="form804" method="post">
-
-  <div class="row mb-3">
-    <label class="col-2 col-form-label text-end" for="file">LDIF File</label>
-    <div class="input-sm col-10">
-      <input type="file" name="file" id="file" class="form-control">
-    </div>
-  </div>
-  <div class="row mb-3">
-    <label class="col-2 col-form-label text-end" for="ldif">LDIF Data</label>
-    <div class="input-sm col-10">
-      <textarea name="ldif" id="ldif"
-		class="text-monospace form-control" placeholder="LDIF data"
-		rows="20" cols="10">
-      </textarea>
-    </div>
-  </div>
-
-  <div class="row mb-3">
-    <div class="form-group col-2 text-end">
+%= form_for '/tool/ldif-import' => (class => "form-horizontal", method => 'POST', enctype => 'multipart/form-data') => begin
+  <div class="row mb-3" id="file">
+    <label class="col-1 col-form-label text-end fw-bold" for="keyFile">File</label>
+    <div class="input-sm col-11">
       <div>
-	<input type="submit" name="aux_submit" id="aux_submit" value="Submit"
-	       class="btn btn-success btn-block font-weight-bold text-uppercase">
+      %= file_field 'file', id => 'keyFile', class => 'form-control form-control-sm'
       </div>
     </div>
   </div>
 
-</form>
-<script src="/static/js/umi-tool-import.js"></script>
+  <div class="row mb-3" id="text">
+    <label class="col-1 col-form-label text-end fw-bold" for="keyText">LDIF</label>
+    <div class="input-sm col-11">
+      %= text_area 'ldif', id => 'keyText', cols => 10, rows => 20, class => 'text-monospace form-control'
+    </div>
+  </div>
+
+  <button type="reset" id="resetButton" class="btn btn-danger fw-bold text-uppercase">reset</button>
+  <button type="submit" class="btn btn-success fw-bold text-uppercase">
+    <i class="fa-solid fa-file-import me-1"></i> import
+  </button>
+% end
+
+<script>
+ const divText = document.getElementById('text');
+ const divFile = document.getElementById('file');
+ const elText = document.getElementById('keyText');
+ const elFile = document.getElementById('keyFile');
+ const rstBtn = document.getElementById('resetButton');
+ 
+ function toggleVisibility() {
+   // Hide file input if the textarea has content
+   if (elText.value.trim() !== "") {
+     divFile.classList.add('d-none');
+   } else {
+     divFile.classList.remove('d-none');
+   }
+
+   // Hide textarea if a file is selected in the file input
+   if (elFile.files.length > 0) {
+     divText.classList.add('d-none');
+   } else {
+     divText.classList.remove('d-none');
+   }
+ }
+
+ // Attach event listeners to handle input changes
+ elText.addEventListener('input', toggleVisibility);
+ elFile.addEventListener('change', toggleVisibility);
+ rstBtn.addEventListener('click', function() {
+   elText.value = "";
+   elFile.value = "";
+   divText.classList.remove('d-none');
+   divFile.classList.remove('d-none');
+ });
+</script>

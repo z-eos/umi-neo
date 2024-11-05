@@ -177,28 +177,55 @@ sub profile ($self) {
 		    filter => '(memberUid=' . $v->{uid}->[0] . ')',
 		    attrs => ['cn'] };
     $search = $ldap->search( $search_arg );
-    $self->{app}->h_log( $self->{app}->h_ldap_err($search, $search_arg) ) if $search->code;
+    $self->h_log( $self->{app}->h_ldap_err($search, $search_arg) ) if $search->code;
     $p = $search->as_struct;
     @{$projects->{$k}} = sort map { $p->{$_}->{cn}->[0] =~ s/_/:/r } keys(%$p);
   }
 
+  $self->stash(
+	       hash => $profiled_user,
+	       groups => $groups,
+	       group_blocked_gidnumber => $self->{app}->{cfg}->{ldap}->{defaults}->{group_blocked_gidnumber},
+	       pgp => $pgp,
+	       servers => $servers,
+	       services => $service,
+	       server_alive => $server_alive,
+	       search_base_case => $self->{app}->{cfg}->{ldap}->{base}->{machines},
+	       projects => $projects,
+	       modifiersname => $modifiersname,
+	      );
+
   my $template = $reqpath =~ /^\/audit\/.*/ ? 'protected/audit/users' : 'protected/profile';
   # $self->h_log($template);
-  $self->render(template => $template,
-		hash => $profiled_user,
-		groups => $groups,
-		group_blocked_gidnumber => $self->{app}->{cfg}->{ldap}->{defaults}->{group_blocked_gidnumber},
-		pgp => $pgp,
-		servers => $servers,
-		services => $service,
-		server_alive => $server_alive,
-		search_base_case => $self->{app}->{cfg}->{ldap}->{base}->{machines},
-		projects => $projects,
-		modifiersname => $modifiersname,
-	       ); #layout => undef);
+  $self->render(template => $template); #layout => undef);
 }
 
-sub ldif_import ($self) { $self->render(template => 'protected/tool/ldif-import') } #, layout => undef) }
+sub ldif_import ($self) {
+  my $par = $self->req->params->to_hash;
+  # $self->h_log($par);
+  my $uploads = $self->req->uploads;
+  # $self->h_log($uploads);
+  $par->{file} = $uploads->[0]->slurp if @$uploads;
+
+  my $v = $self->validation;
+  return $self->render(template => 'protected/tool/ldif-import') unless $v->has_data;
+
+  my ( $ldif, $err );
+  $ldif->{ldif} = $par->{ldif} if defined $par->{ldif} && $par->{ldif} ne '';
+  $ldif->{file} = $par->{file} if defined $par->{file};
+  # $self->h_log($ldif);
+
+  my $ldap = Umi::Ldap->new( $self->{app}, $self->session('uid'), $self->session('pwd') );
+
+  my $res = $ldap->ldif_read(defined $par->{file} && $par->{file} ne '' ? $par->{file} : $par->{ldif} );
+
+  $self->stash(debug => $res->{debug});
+
+  # $self->h_log($key);
+  return $self->render(template => 'protected/tool/ldif-import',
+		       # layout => undef
+		      );
+}
 
 sub ldif_export    ($self) {
   my $v = $self->validation;
@@ -245,7 +272,7 @@ sub sysinfo    ($self) {
 
 sub pwdgen ($self) {
   my $par = $self->req->params->to_hash;
-  $self->h_log($par);
+  # $self->h_log($par);
 
   ### call from another place (first run)
   if (exists $par->{pwd_vrf} && $par->{pwd_vrf} ne '' && ! exists $self->session->{pw}->{vrf}) {
@@ -349,7 +376,7 @@ sub keygen_ssh ($self) {
   my $k = $self->h_keygen_ssh($par);
   $self->stash(debug => $k->{debug});
 
-  $self->h_log($k);
+  # $self->h_log($k);
   return $self->render(template => 'protected/tool/keygen/ssh',
 		       key => {
 			       ssh => $k,
@@ -362,7 +389,7 @@ sub keygen_ssh ($self) {
 
 sub keygen_gpg ($self) {
   my $par = $self->req->params->to_hash;
-  $self->h_log($par);
+  # $self->h_log($par);
   my $v = $self->validation;
   return $self->render(template => 'protected/tool/keygen/gpg') unless $v->has_data;
 
@@ -373,10 +400,54 @@ sub keygen_gpg ($self) {
   my $k = $self->h_keygen_gpg($par);
   $self->stash(debug => $k->{debug});
 
-  $self->h_log($k);
+  # $self->h_log($k);
 
   return $self->render(template => 'protected/tool/keygen/gpg',
 		       key => $k,
+		       # layout => undef
+		      );
+}
+
+
+=head2 keyimport_gpg
+
+Import GPG from file or TextArea field
+
+=cut
+
+sub keyimport_gpg ($self) {
+  my $par = $self->req->params->to_hash;
+  # $self->h_log($par);
+  my $uploads = $self->req->uploads;
+  # $self->h_log($uploads);
+  $par->{key_file} = $uploads->[0]->slurp if @$uploads;
+
+  my $v = $self->validation;
+  return $self->render(template => 'protected/tool/keyimport/gpg') unless $v->has_data;
+
+  my ( $key, $err );
+  $key->{import}->{key_text} = $par->{key_text} if defined $par->{key_text} && $par->{key_text} ne '';
+  $key->{import}->{key_file} = $par->{key_file} if defined $par->{key_file};
+  # $self->h_log($key);
+
+  $key->{gpg} = $self->h_keygen_gpg({ import => $key->{import}, });
+  $self->stash(debug => $key->{gpg}->{debug}) if exists $key->{gpg}->{debug};
+
+  if ( !exists $key->{gpg}->{debug}->{error} ) {
+    my $ldap = Umi::Ldap->new( $self->{app}, $self->session('uid'), $self->session('pwd') );
+    my ($add_dn, $add_arg);
+    $add_dn = sprintf("pgpCertID=%s,%s",
+		      $key->{gpg}->{send_key}->{pgpCertID},
+		      $self->{app}->{cfg}->{ldap}->{base}->{pgp});
+    @{$add_arg} = map { $_ => $key->{gpg}->{send_key}->{$_} } keys %{$key->{gpg}->{send_key}};
+    my $a = $ldap->add( $add_dn, $key->{gpg}->{send_key} );
+    $self->h_log( $a->{message} ) if $a->{status} eq 'error';
+    $self->stash(debug => {$a->{status} => [ $a->{message} ]});
+  }
+
+  # $self->h_log($key);
+  return $self->render(template => 'protected/tool/keyimport/gpg',
+		       key => $key,
 		       # layout => undef
 		      );
 }

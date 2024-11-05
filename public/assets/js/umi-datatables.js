@@ -70,7 +70,10 @@ var table = $('#dataTableToDraw').DataTable({
 	regex: true,
 	smart: true, },
     responsive: false,
-    order: [[ 0, 'asc' ]],
+    order: [
+	[ 3, 'asc' ],
+    	[ 1, 'asc' ]
+    ],
     // "paging": false,
     // "scrolly": 400,
     select: true,
@@ -84,6 +87,18 @@ var table = $('#dataTableToDraw').DataTable({
 	if ( data[2] == 1 ) {
 	    $(row).addClass('danger');
 	}
+    },
+    columnDefs: [
+	{
+            "targets": 0, // Target the first column
+            "orderable": false, // Disable sorting on this column
+            "searchable": false, // Disable searching on this column
+            "data": null,
+            "defaultContent": ""
+	}
+    ],
+    rowCallback: function(row, data, index) {
+	$('td:eq(0)', row).html(index + 1); // Add row number to the first column
     },
     // "serverSide": true,
     pagingType: "full_numbers"

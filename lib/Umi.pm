@@ -368,6 +368,8 @@ sub _startup_routes ($self) {
 
   $protected_root->get( '/tool/keygen/gpg')->to('protected#keygen_gpg');
   $protected_root->post('/tool/keygen/gpg')->to('protected#keygen_gpg');
+  $protected_root->get( '/tool/keyimport/gpg')->to('protected#keyimport_gpg');
+  $protected_root->post('/tool/keyimport/gpg')->to('protected#keyimport_gpg');
 
   $protected_root
     ->get( '/tool/sysinfo')

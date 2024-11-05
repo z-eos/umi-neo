@@ -11,7 +11,7 @@
 
 <div class="table-responsive">
   <table id="dataTableToDraw" class="table table-sm table-hover">
-    % my @fields = qw( LName FName block Project Servers Email uid );
+    % my @fields = qw( № LName FName block Project Servers Email uid );
     <thead class="bg-dark text-white">
       <tr class="text-uppercase">
 	% foreach (@fields) {
@@ -37,6 +37,7 @@
 	% if (exists stash->{type} && stash->{type} eq 'user-driven-rows') {
 	  
 	  <tr class="umi-text-xs <%= 'table-danger' if $card_col eq 'danger' %>">
+	    <td></td>
 	    <td><%= $v->{sn}->[0] %></td>
 	    <td><%= $v->{givenname}->[0] %></td>
 	    <td class="mono"><%= $card_col eq 'danger' ? 'yes' : 'no' %></td>
@@ -51,7 +52,7 @@
 	      <form role="form" id="searchMachine" method="POST" action="/search/common">
 		<input type="hidden" name="search_base_case" class="search_base_case" value="">
 		% foreach (sort(@{$servers->{$dn}})) {
-	          <span title="<%== $server_alive->{$dn}->{$_} ? '' : 'absent in machines (probably old stuff)' %>">
+	          <span title="<%== $server_alive->{$dn}->{$_} ? '' : 'absent in machines (most likely outdated stuff)' %>">
 	            <button type="submit"
 	    		    class="btn btn-<%= $server_alive->{$dn}->{$_} ? 'secondary' : 'danger disabled' %> btn-sm mb-1"
 	    		    style="--bs-btn-font-size: .75rem;"

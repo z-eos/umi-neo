@@ -7,6 +7,7 @@ use Mojo::Log;
 use Mojo::Util qw( dumper );
 
 use Net::LDAP;
+use Net::LDAP::LDIF;
 use Net::LDAP::Schema;
 use Net::LDAP::Constant qw(
 			    LDAP_SUCCESS
@@ -157,6 +158,7 @@ sub err {
 
 sub search {
   my ($self, $a) = @_;
+
   my $cf = $self->{app}->{cfg}->{ldap};
   my $o =
     {
@@ -169,7 +171,6 @@ sub search {
     };
 
   # $self->{log}->debug(dumper($o));
-
   return $self->ldap->search( %{$o} );
 }
 
@@ -182,7 +183,7 @@ sub add {
     $message->{caller} = 'call to Umi::Ldap::add from ' . (caller(1))[3] . ': ';
     $status = 'error';
   } else {
-    $message->{html} = sprintf('DN: <a href="/profile/%s">%s</a> has been successfully added.', $attrs->{uid}, $dn);
+    $message->{html} = sprintf('DN: %s has been successfully added.', $dn);
     $status = 'ok';
   }
   return {status => $status, message => $message->{html}};
@@ -274,6 +275,54 @@ sub delete {
   }
 
   return $return;
+}
+
+=head2 ldif_read
+
+LDIF processing from input ldif code
+
+=cut
+
+sub ldif_read {
+  my ($self, $ldif) = @_;
+
+  my ($file, $entry, $res);
+  try {
+    open( $file, "<", \$ldif);
+  }
+  catch {
+    $self->h_log("Cannot open data from variable: \$file for reading: $_");
+    return {debug => { error => [ "Cannot open data from variable: \$ldif for reading: $_", ] }};
+  };
+
+  my $l = Net::LDAP::LDIF->new( $file, "r", onerror => 'warn' );
+  while ( not $l->eof ) {
+    $entry = $l->read_entry;
+    if ( $l->error ) {
+      push @{$res->{debug}->{error}},
+	sprintf('Error msg: %s\nError lines:\n%s\n',
+		$l->error,
+		$l->error_lines );
+    } else {
+      my $mesg = $entry->update($self->ldap);
+      if ( $mesg->code ) {
+	$self->h_log( $self->err($mesg) );
+	return {debug => {error => [ $self->err($mesg)->{html} ]}};
+      } else {
+	push @{$res->{debug}->{ok}}, '<mark>' . $entry->dn . '</mark> successfully added';
+      }
+    }
+  }
+  $l->done;
+
+  try {
+    close $file;
+  }
+  catch {
+    return {debug => { error => "Cannot close file: \$file error: $_" }};
+  };
+
+  return $res;
 }
 
 1;
