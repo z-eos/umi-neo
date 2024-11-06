@@ -78,7 +78,7 @@ sub search_common  ($self) {
 		      $filter_meta, $filter_meta, join('.', @narr), $filter_meta);
     $base   = $self->{app}->{cfg}->{ldap}->{base}->{dc};
     $p->{search_base_case} = $base;
-  } elsif ( defined $p->{search_base_case} && $p->{search_base_case} eq 'search_pgp' ) {
+  } elsif ( defined $p->{search_base_case} && $p->{search_base_case} eq 'search_by_pgp' ) {
     $filter = sprintf("|(pgpCertID=%s)(pgpKeyID=%s)(pgpUserID=%s)",
 		      $filter_meta, $filter_meta, $filter_meta);
     $base   = $self->{app}->{cfg}->{ldap}->{base}->{pgp};

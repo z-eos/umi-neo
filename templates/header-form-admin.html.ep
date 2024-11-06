@@ -50,9 +50,9 @@
 	  <i class="sr-only">Toggle Dropdown</i>
 	</div>
 
-	<% my $icon_class = "fa-solid fa-fw text-success"; %>
-	<% my $menu_item = "dropdown-item btn btn-sm btn-link "; %>
-	<% my $color = "text-success"; %>
+	% my $icon_class = "fa-solid fa-fw text-success";
+	% my $menu_item = "dropdown-item btn btn-sm btn-link ";
+	% my $color = "text-success";
 
 	<div class="dropdown-menu z-10 position-absolute">
 
@@ -64,7 +64,7 @@
 	  %           mac => 'barcode',
 	  %           sn => 'qrcode',
 	  %           telephone => 'phone',
-	  %           gpg => 'key', };
+	  %           pgp => 'lock', };
 	  % for my $k (sort(keys(%$b))) {
 	    <button type="submit" class="<%= $menu_item %><%= $color %>"
 		    onClick="$('#search_base_case').val(this.value);$('#search_filter').focus()"

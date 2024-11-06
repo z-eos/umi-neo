@@ -853,8 +853,33 @@ data taken, generally, from
 		   }
 		 });
 
-    ### END OF REGISTER
-  }
+    $app->helper(
+		 h_element_cp_download_btns => sub {
+		   my ($c, $target_id, $file_name, $button_class) = @_;
 
+		   # Set default values if parameters are not provided
+		   $target_id    ||= 'targetId';
+		   $file_name    ||= 'element-' . $target_id . '-value.txt';
+		   $button_class ||= 'btn btn-secondary btn-sm';
+
+		   my $html = qq{
+<div class="btn-group mb-2">
+    <button type="button" class="$button_class" title="Copy to clipboard"
+            onclick="copyToClipboard('#$target_id')">
+        <i class="fas fa-copy"></i>
+    </button>
+    <button type="button" class="$button_class"  title="Download as text/plain"
+            onclick="downloadString(document.querySelector('#$target_id').innerText, 'text/plain', '$file_name')">
+        <i class="fas fa-download"></i>
+    </button>
+</div>
+        };
+
+		   return $html;
+		 });
+
+
+    ### END OF REGISTER --------------------------------------------------------------------------------------------
+  }
 
 1;

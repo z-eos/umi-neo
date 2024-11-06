@@ -231,24 +231,29 @@ sub ldif_export    ($self) {
   my $v = $self->validation;
   return $self->render(template => 'protected/tool/ldif-export') unless $v->has_data;
 
-  my $ldap = Umi::Ldap->new( $self->{app},
-			     $self->session('uid'),
-			     $self->session('pwd') );
+  my $ldap = Umi::Ldap->new( $self->{app}, $self->session('uid'), $self->session('pwd') );
 
   my $par = $self->req->params->to_hash;
+  # $self->h_log($par);
   $par->{dn} =~ s/ //g;
-  my $search_arg = { base => substr($par->{dn}, index($par->{dn}, ",")+1),
-		     filter => substr($par->{dn}, 0, index($par->{dn}, ",")),
+  # my $search_arg = { base => substr($par->{dn}, index($par->{dn}, ",")+1),
+  # 		     filter => substr($par->{dn}, 0, index($par->{dn}, ",")),
+  # 		     scope => $par->{scope} };
+  my $search_arg = { base => $par->{dn},
 		     scope => $par->{scope} };
+  $search_arg->{attrs} = [] if !exists $par->{sysinfo};
+  # $self->h_log($search_arg);
   my $search = $ldap->search( $search_arg );
-  $self->{app}->h_log( $self->{app}->h_ldap_err($search, $search_arg) ) if $search->code;
+  $self->h_log( $self->h_ldap_err($search, $search_arg) ) if $search->code;
 
   my $ldif;
   foreach ($search->entries) {
     $ldif .= $_->ldif;
   }
 
-  $self->stash(ldif_export_params => $par => ldif => $ldif);
+  # $self->h_log($ldif);
+
+  $self->stash(ldif_export_params => $par, ldif => $ldif);
   return $self->render(template => 'protected/tool/ldif-export'); #, layout => undef);
 }
 

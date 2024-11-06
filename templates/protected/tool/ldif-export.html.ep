@@ -1,26 +1,14 @@
 %# -*- mode: web; eval: (follow-mode) -*-
 
-<h2>
-    <i class="fa-solid fa-file-code mr-3 text-muted"></i>
-    LDIF <small><em class="text-muted font-monospace fs-6">
-	dn: <%= stash->{ldif_export_params}->{dn} %>; &nbsp;&nbsp; scope: <%= stash->{ldif_export_params}->{scope} %>
-    </em></small>
+<h2 class="my-4">
+  <i class="fa-solid fa-file-code me-3 text-muted"></i>
+  LDIF <small><em class="text-muted font-monospace fs-6">
+    dn: <%= $ldif_export_params->{dn} %>; &nbsp; scope: <%= $ldif_export_params->{scope} %>
+  </em></small>
 </h2>
 <hr class="p-1 ">
 
-<div class="btn-group btn-group-sm" role="group">
-    <button class="btn btn-info" type="button"
-	    onclick="copyToClipboard('#ldif')"
-	    title="Copy LDIF to clipboard">
-      <i class="fa-solid fa-copy"></i>
-  </button>
-  <button class="btn btn-info" type="button"
-	  onclick="downloadString(document.querySelector('#ldif').innerText, 'text/plain', '<%= stash->{ldif_export_params}->{dn} %>.ldif')"
-       	  title="Download LDIF as file">
-      <i class="fa-solid fa-file-download"></i>
-  </button>
-</div>
-
-<pre id="ldif">
-    <%= stash->{ldif} =%>
+%== h_element_cp_download_btns( 'ldif', $ldif_export_params->{dn} . '.ldif' );
+<pre id="ldif" class="user-select-all text-break umi-text-xs font-monospace">
+    <%= $ldif =%>
 </pre>

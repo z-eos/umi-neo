@@ -171,12 +171,6 @@
 		</a>
 	      </li>
 	      <li class="nav-item">
-		<a class="nav-link btn btn-link text-secondary text-start disabled" href="/abstrnisnetgroup" tabindex="3">
-		  <i class="fa-solid fa-fw fa-user-friends"> </i>
-		  NetGr abstr
-		</a>
-	      </li>
-	      <li class="nav-item">
 		<a class="nav-link btn btn-link text-secondary text-start disabled" href="/nisnetgroup" tabindex="3">
 		  <i class="fa-solid fa-fw fa-user-friends"> </i>
 		  NetGr
@@ -255,7 +249,7 @@
 	  <li class="nav-item">
 	    <a class="nav-link btn btn-link text-secondary text-start" href="/tool/qrcode">
 	      <i class="fa-solid fa-fw fa-qrcode"></i>
-	      QR
+	      QR code
 	    </a>
 	  </li>
 	  <!-- <li class="nav-item">

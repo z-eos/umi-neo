@@ -4,13 +4,13 @@
 % my $attr_val_class = "";
 
 <div class="row w-100 py-5">
-  <div class="col-xs-6 col-sm-6 col-md-3 col-lg-3">
+  <div class="col-xs-6 col-sm-6 col-md-4 col-lg-4">
     <h3 class="fw-bold">
       <i class="fa-solid fa-search fa-lg text-muted me-2"></i>
       Search Results
     </h3>
   </div>
-  <div class="col-xs-6 col-sm-6 col-md-9 col-lg-9">
+  <div class="col-xs-6 col-sm-6 col-md-8 col-lg-8">
     <dl class="row font-monospace text-muted umi-text-xs">
       <dt class="col-1">base:</dt>  <dd class="col-11 text-break"><%= $search_arg->{base}   %></dd>
       <dt class="col-1">filter:</dt><dd class="col-11 text-break"><%= $search_arg->{filter} %></dd>
@@ -90,7 +90,9 @@
 	    <div class="col-3 text-end fw-bold fs-6">dn</div>
 	    <div class="col-9"><%= $e->dn %></div>
 	  </div>
-	  
+
+	  % my @attr_break = qw(pgpKey certificateRevocationList;binary);
+	  % my @attr_wrap = qw(grayPublicKey sshPublicKey);
 	  % for my $attr (sort( $e->attributes )) {
 	    % next if $attr eq 'createTimestamp' || $attr eq 'creatorsName' || $attr eq 'modifyTimestamp' || $attr eq 'modifiersName';
 
@@ -98,15 +100,25 @@
 	      <div class="col-3 text-end fw-bold fs-6"><%= $attr %></div>
 	      <div class="col-9">
 
-		<div class="row">
+		<!-- <div class="row"> -->
 		  % for my $attr_val (@{$e->get_value($attr, asref => 1)}) {
 		    % if ($attr eq "jpegPhoto") {
 		      <div class="col-12 font-monospace">
 			<img src="data:image/jpg;base64,<%= Mojo::Util::b64_encode $attr_val %>"
 			     class="img-thumbnail" alt="<%= $e->dn %>">
 		      </div>
+		    % } elsif ( grep {$attr eq $_} (@attr_break, @attr_wrap))
+		    % {
+		      % my $text_pre;
+		      % if ( grep {$attr eq $_} @attr_break ) {
+			% $text_pre = ' text-break';
+		      % } else {
+			% $text_pre = ' text-wrap';
+		      % }
+		      %== h_element_cp_download_btns( $attr, $attr . '.txt' );
+		      <pre class="user-select-all<%= $text_pre %> umi-text-tiny" id="<%= $attr %>""><%= $attr_val %></pre>
 		    % } elsif ($attr eq 'userCertificate;binary' || $attr eq 'cACertificate;binary') {
-		    % my $ci = $self->h_cert_info({ cert => $attr_val, ts => "%Y%m%d%H%M%S", });
+		  % my $ci = $self->h_cert_info({ cert => $attr_val, ts => "%Y%m%d%H%M%S", });
 		    <div class="col-12 font-monospace">
 		      <small class="float-left">
 			%# <pre><%= dumper $ci %></pre>
@@ -125,7 +137,7 @@
 		  % }
 		  % $j++
 	  % }
-		</div>
+	  <!-- </div> -->
 
 	      </div>
 	    </div>
