@@ -11,11 +11,6 @@
 </h2>
 <hr class="p-1 ">
 
-<pre id="ldif">
-  <%# = dumper $oc %>
-  <%# = dumper $aa %>
-</pre>
-
 % my $i = 0;
 % my $id = '';
 %= form_for '/tool/modify' => (method => 'post', id => 'modify-form', enctype => 'multipart/form-data', class => 'injectable-form form-horizontal') => begin
@@ -62,19 +57,9 @@
   % }
 
   % my $rdn = h_get_rdn($entry->dn);
-  % my $readonly = '';
-
-  %# my %ro = ( createTimestamp => 1,
-  %#            creatorsName => 1,
-  %#            modifyTimestamp => 1,
-  %#            modifiersName => 1 );
-
   % foreach my $a (sort($entry->attributes)) {
     % next if $attr_to_ignore->{$a};
     % my $b = $a =~ s/;binary/_binary/r;
-    %# if ($a eq $rdn || exists $ro{$a} ) {
-      %# $readonly = ' readonly';
-    %# }
     <div class="form-group row mb-2" title="">
       <label class="col-sm-3 text-end text-truncate h6 fw-bold"><%= $a %>:</label>
       <div class="col-sm-9 controls">
@@ -93,38 +78,40 @@
 		  %= image 'data:image/jpg;base64,' . Mojo::Util::b64_encode($e), class => 'img-thumbnail', alt => $entry->dn
 		  %= file_field $a, id => $id, class => 'form-control form-control-sm', accept => '.jpg'
 		% } else {
-		  % if ($readonly eq '') {
-	            % if ( ! exists $aa->{$a}->{"single"} && (scalar @$v == 1 || scalar @$v == $i + 1)) {
+
+	            % if ( ! exists $aa->{$a}->{"single"} && $i == 0 ) { #(scalar @$v == 1 || scalar @$v == $i + 1)) {
 	              <span class="input-group-btn">
 			<button
-			  % if ( $a eq 'objectClass' ) {
+			  % if ( $a eq 'objectClass') {
                             class="btn btn-secondary btn-sm border"
                             data-bs-toggle="modal" data-bs-target="#modal-objectClass"
 			  % } else {
                             class="btn btn-secondary btn-sm btn-add element-add"
 			  % }
 			  id="<%= $id %>" type="button" title="click to add another <%= $a %> field value">
-			  <i class="fa-solid fa-fw <%= $a eq 'objectClass' ? 'fa-circle-plus' : 'fa-clone' %>"></i>
+			  <i class="fa-solid fa-fw <%= $a eq 'objectClass' ? 'fa-circle-plus' : 'fa-clone' %> text-success-emphasis"></i>
 			</button>
 	              </span>
 	            % } else {
 	              <span class="input-group-btn">
-			<button class="btn btn-secondary btn-sm btn-erase" type="button"
-	              		title="erase field value" id="<%= $id %>">
-			  <i class="fa-regular fa-fw fa-trash-can"></i>
-			</button>
+			<button class="btn btn-sm invisible" type="button"><i class="fa-regular fa-fw fa-trash-can"></i></button>
 	              </span>
                     % }
-		  % }
 
                   % if ( $a eq 'grayPublicKey' || $a eq 'sshPublicKey') {
 		    %= text_area $a => $e, rows => 5, class => "form-control", id => $id
                   % } else {
-		    %# WARNING: tag works incorrectly
+		    %# WARNING: helper tag works incorrectly
 		    %# = input_tag $a => $e, id => 'val_' . $id, class => 'form-control', title => '', type => 'text'
-		    <input type="text" name="<%= $a %>" id="val_<%= $id %>" class="form-control<%= ' text-secondary' if $readonly %>" title="<%= 'change unavailable, readonly value' if $readonly %>" value="<%= $e %>"<%= $readonly =%>>
+		    <input type="text" name="<%= $a %>" id="val_<%= $id %>" class="form-control" title="" value="<%= $e %>">
                   % }
 		% }
+		<span class="input-group-btn">
+		  <!-- Delete Button -->
+		  <button class="btn btn-secondary btn-sm btn-delete element-delete" type="button" title="Click to delete this field">
+		    <i class="fa-solid fa-fw fa-trash text-danger-emphasis"></i>
+		  </button>
+		</span>
 	      </div>
 	      % $i++;
             % }
@@ -133,7 +120,6 @@
 	</div>
       </div>
     </div>
-    % $readonly = '';
     % }
 
     %= submit_button 'Submit', class => 'btn btn-success fw-bold text-uppercase mt-3'
@@ -213,3 +199,5 @@
     </div>
   </div>
 </div>
+
+<script src="/assets/js/umi-tool-modify.js"></script>

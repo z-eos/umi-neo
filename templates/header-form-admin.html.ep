@@ -9,14 +9,14 @@
   <div class="input-group flex-grow-1">
     <div class="input-group-prepend">
       <button type="button"
-	      class="btn btn-secondary"
+	      class="btn btn-secondary btn-sm"
 	      title="clear search field"
 	      onclick="$('#search_filter').val('').focus()">
 	<i class="fas fa-eraser"></i>
       </button>
     </div>
     <input type="text"
-	   class="form-control font-monospace"
+	   class="form-control form-control-sm font-monospace"
 	   id="search_filter"
 	   value="<%= $par->{search_filter} %>"
 	   name="search_filter"
@@ -35,14 +35,14 @@
     <div class="btn-group">
       %# --- DEFAULT, SEARCH_BY_NAME BUTTON
       <button type="submit" title="Search &laquo;by name&raquo;"
-	      class="btn btn-secondary"
+	      class="btn btn-secondary btn-sm"
 	      onClick="$('#search_base_case').val(this.value);$('#search_filter').focus()"
               value="search_by_name" tabindex="13" >
         <i class="fas fa-search"></i>
       </button>
 
 	<div type="submit" 
-	     class="btn btn-secondary dropdown-toggle dropdown-toggle-split"
+	     class="btn btn-secondary btn-sm dropdown-toggle dropdown-toggle-split"
 	     data-bs-toggle="dropdown" 
 	     aria-haspopup="true"
 	     title="ldap search base by"
@@ -66,7 +66,7 @@
 	  %           telephone => 'phone',
 	  %           pgp => 'lock', };
 	  % for my $k (sort(keys(%$b))) {
-	    <button type="submit" class="<%= $menu_item %><%= $color %>"
+	    <button type="submit" class="<%= $menu_item %><%= $color %> btn-sm"
 		    onClick="$('#search_base_case').val(this.value);$('#search_filter').focus()"
 		    value="search_by_<%= $k %>"
 		    title="">
@@ -75,7 +75,7 @@
 	  % }
 
 	  %# --- GLOBAL SEARCH BUTTON
-	  <button type="submit" class="<%= $menu_item %>"
+	  <button type="submit" class="<%= $menu_item %> btn-sm"
 		  onClick="$('#search_base_case').val(this.value);$('#search_filter').focus()"
 		  value="search_global"
 		  title="base: "><% # c.session.ldap.base.db %>">
@@ -89,7 +89,7 @@
 	  % delete $b->{dc};
 	  % for my $k (sort(keys( %$b ))) {
 	    % next if $k eq 'dc' || $k =~ /acc_/;
-	    <button type="submit" class="<%= $menu_item %><%= $color %>"
+	    <button type="submit" class="<%= $menu_item %><%= $color %> btn-sm"
 		    onClick="$('#search_base_case').val(this.value);$('#search_filter').focus()"
 		    name="search_base" value="<%= $b->{$k} %>"
 		    title="base: <%= $b->{$k} %>">
@@ -98,7 +98,7 @@
 	  % }
 
 	</div>
-	<a href="/searchadvanced" class="btn btn-secondary"
+	<a href="/search/advanced" class="btn btn-secondary btn-sm"
 	   title="advanced search">
 	  <i class="fa fa-binoculars"></i>
 	</a>

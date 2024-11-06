@@ -534,6 +534,7 @@ sub modify ($self) {
   $self->stash({ attr_to_add => $par->{attr_to_add} })
     if defined $attr_to_add;
 
+  my ($add, $delete, $replace, $changes);
   if ( keys %$par < 3 ) {
     # here we've just clicked, search result  menu `modify` button
     $self->h_log('~~~~~-> MODIFY [' . $self->req->method . ']: FIRST RUN (search result menu choosen)');
@@ -542,10 +543,17 @@ sub modify ($self) {
   } elsif (exists $par->{add_objectClass}) {
     # new objectClass addition is chosen
     $self->h_log('~~~~~-> MODIFY [' . $self->req->method . ']: ADD OBJECTCLASS');
-    # $self->h_log($par);
-    # $s = $ldap->search( $search_arg );
-    # $self->h_log(sprintf("Protected.pm: modify(): code: %s; message: %s; text: %s",
-    # 			      $s->code, $s->error_name, $s->error_text )) if $s->code;
+    $self->h_log($par);
+    foreach (keys(%$par)) {
+      next if $_ !~ /^add_/;
+      push @$add, substr($_,4) => $par->{$_};
+    }
+    push @$changes, add => $add;
+    if ($changes) {
+      $self->h_log($changes);
+      my $msg = $ldap->modify($s->entry->dn, $changes);
+      $self->stash(debug => {$msg->{status} => [ $msg->{message} ]});
+    }
   } else {
     # form modification made
     $self->h_log('~~~~~-> MODIFY [' . $self->req->method . ']: FORM CHANGED?');
@@ -559,7 +567,6 @@ sub modify ($self) {
 
     my $diff = $self->h_hash_diff( $e_orig, $par);
     #$self->h_log($diff);
-    my ($add, $delete, $replace, $changes);
     if ( %{$diff->{added}} ) {
       push @$add, $_ => $diff->{added}->{$_} foreach (keys(%{$diff->{added}}));
       push @$changes, add => $add;

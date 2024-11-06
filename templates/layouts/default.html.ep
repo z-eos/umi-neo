@@ -77,7 +77,6 @@
     <!-- UMI SCRIPTS -->
     <script src="/assets/js/umi-common.js"></script>
     <script src="/assets/js/umi-tool-pwdgen.js"></script>
-    <script src="/assets/js/umi-tool-modify.js"></script>
 
     <script src="/assets/js/ldap-tree/ldap-tree.js"></script>
     <script src="/assets/js/ldap-tree/ipam-tree.js"></script>
