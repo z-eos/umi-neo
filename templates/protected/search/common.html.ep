@@ -21,6 +21,8 @@
 %# vh-100 is important, without it dropwown are not shown for collapsed rows
 <div class="container-fluid vh-100">
   % my ($col, $cn, $ct, $mn, $mt, $mps);
+  % my $acclog = app->{cfg}->{ldap}->{accesslog};
+  % my $re = qr/^.*$acclog$/;
   %# !!! TOFIX on bold request to `/search/common` $entries is empty and we need err handle that
   % for my $e (@{$entries}) {
     
@@ -46,7 +48,7 @@
 	    <i class="fa-solid fa-caret-right"></i>
 	  </button>
 	  %# BURGER MENU
-	  % if ( $e->dn !~ app->{cfg}->{ldap}->{accesslog} ) {
+	  % if ( $e->dn !~ /$re/ ) {
 	    %= include 'protected/search/common-menu', dn => $e->dn, i => $i
 	  % }
 	  
