@@ -1,51 +1,51 @@
 %# -*- mode: web; eval: (follow-mode) -*-
 
 % my $menu = {
-  %      "profile"  => { act => "/profile", title => "", btn => "", ico => "fa-address-card", col => "info" },
-  %      "block"    => { act => "modal",    title => "", btn => "", ico => "fa-user-slash",   col => "danger" },
-  %      "new_svc"  => { act => "/profile", title => "", btn => "", ico => "fa-user-gear",    col => "success" },
-  %      "password" => { act => "/profile", title => "", btn => "", ico => "fa-fingerprint",  col => "danger" },
-  %      "delete"   => { act => "modal",    title => "", btn => "", ico => "fa-skull",        col => "danger" },
-  %      "moddn"    => { act => "modal",    title => "", btn => "", ico => "fa-crown",        col => "danger" },
-  %      "reassign" => { act => "modal",    title => "", btn => "", ico => "fa-retweet",      col => "danger" },
-  %      "modify"   => { act => "/tool/modify", title => "", btn => "", ico => "fa-hammer",       col => "warning" },
-  %      "group"    => { act => "/profile", title => "", btn => "", ico => "fa-users-gear",   col => "warning" },
-  %      "image"    => { act => "/profile", title => "", btn => "", ico => "fa-image",        col => "warning" },
-  %      "ldif"     => { act => "modal",    title => "", btn => "", ico => "fa-code",         col => "info" },
-  %      "vCard"    => { act => "/profile", title => "", btn => "", ico => "fa-upload",       col => "info" },
-  %      "history"  => { act => "/profile", title => "", btn => "", ico => "fa-history",      col => "info" }
+  % "profile"  => { act => "/profile", title => "", btn => "", ico => "fa-address-card", col => "info" },
+  % "block"    => { act => "modal",    title => "", btn => "", ico => "fa-user-slash",   col => "danger" },
+  % "new_svc"  => { act => "/profile", title => "", btn => "", ico => "fa-user-gear",    col => "success" },
+  % "password" => { act => "/profile", title => "", btn => "", ico => "fa-fingerprint",  col => "danger" },
+  % "delete"   => { act => "modal",    title => "", btn => "", ico => "fa-skull",        col => "danger" },
+  % "moddn"    => { act => "modal",    title => "", btn => "", ico => "fa-crown",        col => "danger" },
+  % "reassign" => { act => "modal",    title => "", btn => "", ico => "fa-retweet",      col => "danger" },
+  % "modify"   => { act => "/tool/modify", title => "", btn => "", ico => "fa-hammer",   col => "warning" },
+  % "group"    => { act => "/profile", title => "", btn => "", ico => "fa-users-gear",   col => "warning" },
+  % "image"    => { act => "/profile", title => "", btn => "", ico => "fa-image",        col => "warning" },
+  % "ldif"     => { act => "modal",    title => "", btn => "", ico => "fa-code",         col => "info" },
+  % "vCard"    => { act => "/profile", title => "", btn => "", ico => "fa-upload",       col => "info" },
+  % "history"  => { act => "/search/common", title => "", btn => "", ico => "fa-history",col => "info" }
 % };
 %# here we provide data further, to modals template
 % stash->{menu} = $menu;
 
 <div class="dropdown float-left">
-    <button class="btn btn-link umi-search" type="button"
-	    id="dropdownMenuActions" data-bs-toggle="dropdown"
-	    aria-haspopup="true" aria-expanded="false" title="Action Menu">
-	<span class="fa-solid fa-bars text-muted"></span>
-    </button>
-    <div class="dropdown-menu z-50 position-absolute" aria-labelledby="dropdownMenuActions">
+  <button class="btn btn-link umi-search" type="button"
+	  id="dropdownMenuActions" data-bs-toggle="dropdown"
+	  aria-haspopup="true" aria-expanded="false" title="Action Menu">
+    <span class="fa-solid fa-bars text-muted"></span>
+  </button>
+  <div class="dropdown-menu z-50 position-absolute" aria-labelledby="dropdownMenuActions">
 
-	% for my $item (sort(keys(%$menu))) {
-	    <div class="dropdown-item">
-		% if ($menu->{$item}->{act} eq "modal") {
-		    <button type="button" title="" class="btn btn-sm"
-			    value="<%= $dn %>" name="<%= $item %>" data-bs-toggle="modal" data-bs-target="#modal_<%= $item %><%= $i %>">
-			<i class="fa-solid fa-fw <%= $menu->{$item}->{ico} %> text-<%= $menu->{$item}->{col} %>"></i>
-			<%= $item %>
-		    </button>
-		% } else {
-		    <form role="form" method="POST" class="injectable-form" action="<%= $menu->{$item}->{act} %>">
-			<input type="hidden" name="dn_to_<%= $item %>" value="<%= $dn %>">
-			<button type="submit" title="" class="btn btn-sm" data-order="20">
-			    <i class="fa-solid fa-fw <%= $menu->{$item}->{ico} %> text-<%= $menu->{$item}->{col} %>"></i>
-			    <%= $item %>
-			</button>
-		    </form>
-		% }
-	    </div>
-	    
+    % for my $item (sort(keys(%$menu))) {
+      <div class="dropdown-item">
+	% if ($menu->{$item}->{act} eq "modal") {
+	  <button type="button" title="" class="btn btn-sm"
+		  value="<%= $dn %>" name="<%= $item %>" data-bs-toggle="modal" data-bs-target="#modal_<%= $item %><%= $i %>">
+	    <i class="fa-solid fa-fw <%= $menu->{$item}->{ico} %> text-<%= $menu->{$item}->{col} %>"></i>
+	    <%= $item %>
+	  </button>
+	% } else {
+	  <form role="form" method="POST" class="injectable-form" action="<%= $menu->{$item}->{act} %>">
+	    <input type="hidden" name="dn_to_<%= $item %>" value="<%= $dn %>">
+	    <button type="submit" title="" class="btn btn-sm" data-order="20">
+	      <i class="fa-solid fa-fw <%= $menu->{$item}->{ico} %> text-<%= $menu->{$item}->{col} %>"></i>
+	      <%= $item %>
+	    </button>
+	  </form>
 	% }
+      </div>
+      
+    % }
 
-    </div>
+  </div>
 </div>

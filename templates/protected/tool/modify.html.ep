@@ -34,12 +34,6 @@
 	<label class="col-sm-3 text-end h6 fw-bold text-success"><%= $_ %>:</label>
 	<div class="col-sm-9">
 	  <div class="input-group input-group-sm">
-	    <span class="input-group-btn">
-	      <button class="btn btn-secondary btn-sm btn-erase border" type="button" title="erase field value"
-		      id="<%= $_ %>">
-		<i class="fa-regular fa-fw fa-trash-can"></i>
-	      </button>
-	    </span>
 	    % if ($_ eq 'mu-sieveOnReceive') {
 	      <textarea name="<%= $_ %>" class="form-control" rows=2 placeholder="sieve script to be put here"></textarea>
 	    % } elsif ($_ eq 'jpegPhoto')

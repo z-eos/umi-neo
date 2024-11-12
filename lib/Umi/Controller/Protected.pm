@@ -498,7 +498,7 @@ sub modify ($self) {
   return $self->render(template => 'protected/tool/modify') unless $v->has_data;
   # return $self->render(template => 'protected/tool/modify') unless %$par;
 
-  # $self->h_log($par);
+  $self->h_log($par);
 
   my $ldap = Umi::Ldap->new( $self->{app}, $self->session('uid'), $self->session('pwd') );
   my $search_arg = { base => $par->{dn_to_modify},
@@ -535,7 +535,7 @@ sub modify ($self) {
     if defined $attr_to_add;
 
   my ($add, $delete, $replace, $changes);
-  if ( keys %$par < 3 ) {
+  if ( keys %$par < 3 && !exists $par->{add_objectClass} ) {
     # here we've just clicked, search result  menu `modify` button
     $self->h_log('~~~~~-> MODIFY [' . $self->req->method . ']: FIRST RUN (search result menu choosen)');
     delete $self->session->{e_orig};
@@ -735,9 +735,9 @@ sub profile_new ($self) {
 	       cn => $par->{user_first_name} . ' ' . $par->{user_last_name},
 	       title => $par->{title},
 	       ### just a kludge since there is no attribute for country available
-	       registeredAddress => $par->{country},
+	       schacCountryOfResidence => $par->{country},
 	       ### just a kludge since there is no attribute for birth date available
-	       carLicense => $par->{birth},
+	       schacDateOfBirth => $par->{birth},
 	       l => $par->{city},
 	       uid => lc $par->{user_first_name} . '.' . lc $par->{user_last_name},
 	       homeDirectory => '/usr/local/home/' . lc $par->{user_first_name} . '.' . lc $par->{user_last_name},

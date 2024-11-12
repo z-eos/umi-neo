@@ -21,6 +21,7 @@
 %# vh-100 is important, without it dropwown are not shown for collapsed rows
 <div class="container-fluid vh-100">
   % my ($col, $cn, $ct, $mn, $mt, $mps);
+  %# !!! TOFIX on bold request to `/search/common` $entries is empty and we need err handle that
   % for my $e (@{$entries}) {
     
     % $col = h_dn_color($e->dn);
@@ -45,41 +46,67 @@
 	    <i class="fa-solid fa-caret-right"></i>
 	  </button>
 	  %# BURGER MENU
-	  %= include 'protected/search/common-menu', dn => $e->dn, i => $i
-
+	  % if ( $e->dn !~ app->{cfg}->{ldap}->{accesslog} ) {
+	    %= include 'protected/search/common-menu', dn => $e->dn, i => $i
+	  % }
+	  
 	  %# ICO after BURGER MENU
 	  %= form_for '/search/common' => (class => "injectable-form", method => 'POST') => begin
 	  %= hidden_field 'ldap_subtree' => $root_usr_dn ne '' ? $root_usr_dn : $e->dn
-	  <button type="submit" class="btn">
-	    % if ($root_usr_dn ne '') {
-	      <i class="fa-solid fa-circle-user"></i>
-	    % } else {
-	      <i class="fa-solid fa-shapes"></i>
-            % }
+	  <button type="submit" class="btn"
+		  % if ($root_usr_dn ne '') {
+		  title="Click to get whole root object subtree">
+	    <i class="fa-solid fa-user-tag"></i>
+		  % } elsif ($e->dn =~ /^.*,cn=accesslog$/)
+		  % {
+		    >
+		    <i class="fa-solid fa-history"></i>
+		  % } else {
+		    >
+		    <i class="fa-solid fa-shapes"></i>
+		  % }
 	  </button>
 	  % end
 
 	  %# REWRITTEN DN with ICO
 	  %= form_for '/search/common' => (class => "injectable-form", method => 'POST') => begin
 	  %= hidden_field 'ldap_subtree' => $e->dn
-	  <button type="submit" class="btn fw-bold px-0">
-	    <%== scalar @dn_ico ? '<i class="' . app->{cfg}->{ui}->{ico}->{usvc}->{$dn_ico[0]} . $mps . ' me-1"></i>': '' %>
-	    <%= h_rewrite_dn($e->dn) %>
-	  </button>
+	    <button type="submit" class="btn px-0" title="Click to get branch object subtree">
+	      % if ( scalar @dn_ico ) {
+		<%== '<i class="' . app->{cfg}->{ui}->{ico}->{usvc}->{$dn_ico[0]} . $mps . ' me-2"></i>' %>
+	      % } elsif ( $e->exists('reqType') )
+	      % {
+		% my $reqType = $e->get_value('reqType');
+		% if ( $reqType eq 'add' )
+		% {
+		  <i class="fa-solid fa-circle-plus fa-xs me-2 text-success-emphasis"></i>
+		% } elsif ( $reqType eq 'modify' )
+		% {
+		  <i class="fa-solid fa-gear fa-xs me-2 text-warning-emphasis"></i>
+		% } elsif ( $reqType eq 'delete' )
+		% {
+		  <i class="fa-solid fa-circle-xmark fa-xs me-2 text-danger-emphasis"></i>
+		% }
+	      % } else {
+	      % }
+	      <%= h_rewrite_dn($e->dn) %>
+	    </button>
 	  % end
 	</div>
-	% $ct = substr($e->get_value('createTimestamp'), 0, -1);
-	% $cn = substr($e->get_value('creatorsName'), 4, index($e->get_value('creatorsName'), ",")-4);
-	% $mt = substr($e->get_value('modifyTimestamp'), 0, -1);
-	% $mn = substr($e->get_value('modifiersName'), 4, index($e->get_value('modifiersName'), ",")-4);
-	<ul class="list-unstyled fa-ul umi-text-tiny font-monospace float-end m-0 pe-2 pt-1">
-	  <li title="created GMT: <%= $ct %> by <%= $cn %>">
-	    <span class="fa-li"><i class="fa-solid fa-hourglass-start"></i></span><%= $ct %> <b><%= $cn %></b>
-	  </li>
-	  <li title="modified, GMT: <%= $mt %> by <%= $mn %>">
-	    <span class="fa-li"><i class="fa-solid fa-hourglass-half"></i></span><%= $mt %> <b><%= $mn %></b>
-	  </li>
-	</ul>
+	% if ( ! $e->exists('reqType') ) {
+	  % $ct = substr($e->get_value('createTimestamp'), 0, -1);
+	  % $cn = substr($e->get_value('creatorsName'), 4, index($e->get_value('creatorsName'), ",")-4) if !$e->exists('reqType');
+	  % $mt = substr($e->get_value('modifyTimestamp'), 0, -1);
+	  % $mn = substr($e->get_value('modifiersName'), 4, index($e->get_value('modifiersName'), ",")-4) if !$e->exists('reqType');
+	  <ul class="list-unstyled fa-ul umi-text-tiny font-monospace float-end m-0 pe-2 pt-1">
+	    <li title="created GMT: <%= $ct %> by <%= $cn %>">
+	      <span class="fa-li"><i class="fa-solid fa-hourglass-start"></i></span><%= $ct %> <b><%= $cn %></b>
+	    </li>
+	    <li title="modified, GMT: <%= $mt %> by <%= $mn %>">
+	      <span class="fa-li"><i class="fa-solid fa-hourglass-half"></i></span><%= $mt %> <b><%= $mn %></b>
+	    </li>
+	  </ul>
+	% }
 	
       </div>
 
@@ -92,7 +119,7 @@
 	  </div>
 
 	  % my @attr_break = qw(pgpKey certificateRevocationList;binary);
-	  % my @attr_wrap = qw(grayPublicKey sshPublicKey);
+	  % my @attr_wrap = qw(grayPublicKey sshPublicKey reqMod);
 	  % for my $attr (sort( $e->attributes )) {
 	    % next if $attr eq 'createTimestamp' || $attr eq 'creatorsName' || $attr eq 'modifyTimestamp' || $attr eq 'modifiersName';
 
@@ -100,13 +127,15 @@
 	      <div class="col-3 text-end fw-bold fs-6"><%= $attr %></div>
 	      <div class="col-9">
 
-		<!-- <div class="row"> -->
 		  % for my $attr_val (@{$e->get_value($attr, asref => 1)}) {
 		    % if ($attr eq "jpegPhoto") {
 		      <div class="col-12 font-monospace">
 			<img src="data:image/jpg;base64,<%= Mojo::Util::b64_encode $attr_val %>"
 			     class="img-thumbnail" alt="<%= $e->dn %>">
 		      </div>
+		    % } elsif ( $attr eq 'reqMod' )
+		    % {
+		      <div class="user-select-all font-monospace umi-text-tiny mb-1"><%= $attr_val %></div>
 		    % } elsif ( grep {$attr eq $_} (@attr_break, @attr_wrap))
 		    % {
 		      % my $text_pre;
@@ -117,27 +146,27 @@
 		      % }
 		      %== h_element_cp_download_btns( $attr, $attr . '.txt' );
 		      <pre class="user-select-all<%= $text_pre %> umi-text-tiny" id="<%= $attr %>""><%= $attr_val %></pre>
-		    % } elsif ($attr eq 'userCertificate;binary' || $attr eq 'cACertificate;binary') {
-		  % my $ci = $self->h_cert_info({ cert => $attr_val, ts => "%Y%m%d%H%M%S", });
-		    <div class="col-12 font-monospace">
-		      <small class="float-left">
-			%# <pre><%= dumper $ci %></pre>
-			<dl class="row">
-			  % foreach my $k (sort keys %$ci) {
-			    % next if $k eq 'cert';
-			    % next if $k eq 'error';
-			    <dt class="col-2 text-end py-0 my-0"><%= $k %></dt>
-			    <dd class="col-10 text-monospace text-start py-0 my-0"><%= $ci->{$k} %></dd>
-			  % }
-			</dl>
-		      </small>
-		    </div>
-		  % } else {
-		    <div class="col-12 font-monospace pb-1"><%= $attr_val %></div>
+		    % } elsif ($attr eq 'userCertificate;binary' || $attr eq 'cACertificate;binary')
+		    % {
+		      % my $ci = $self->h_cert_info({ cert => $attr_val, ts => "%Y%m%d%H%M%S", });
+		      <div class="col-12 font-monospace">
+			<small class="float-left">
+			  %# <pre><%= dumper $ci %></pre>
+			  <dl class="row">
+			    % foreach my $k (sort keys %$ci) {
+			      % next if $k eq 'cert';
+			      % next if $k eq 'error';
+			      <dt class="col-2 text-end py-0 my-0"><%= $k %></dt>
+			      <dd class="col-10 text-monospace text-start py-0 my-0"><%= $ci->{$k} %></dd>
+			    % }
+			  </dl>
+			</small>
+		      </div>
+		    % } else {
+		      <div class="col-12 font-monospace pb-1"><%= $attr_val %></div>
+		    % }
+		    % $j++
 		  % }
-		  % $j++
-	  % }
-	  <!-- </div> -->
 
 	      </div>
 	    </div>

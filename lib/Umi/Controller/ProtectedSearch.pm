@@ -37,8 +37,8 @@ sub search_common  ($self) {
   }
 
   # $self->h_log($self->req->params->pairs);
-  $self->h_log($self->req->params->to_hash);
   $p = $self->req->params->to_hash;
+  $self->h_log($p);
   $p->{params_orig} = $self->req->params->to_hash;
   $sort_order = 'reverse';
   $filter_armor = '';
@@ -117,11 +117,11 @@ sub search_common  ($self) {
 	    $p->{'ldap_subtree'} ne '' ) {
     $filter = 'objectClass=*';
     $base   = $p->{'ldap_subtree'};
-  } elsif ( defined $p->{'ldap_history'} &&
-	    $p->{'ldap_history'} ne '' ) {
-    $filter     = 'reqDN=' . $p->{'ldap_history'};
+  } elsif ( defined $p->{'dn_to_history'} &&
+	    $p->{'dn_to_history'} ne '' ) {
+    $filter     = 'reqDN=' . $p->{'dn_to_history'};
     $sort_order = 'straight';
-    $base       = UMI->config->{ldap_crud_db_log};
+    $base       = $self->{app}->{cfg}->{ldap}->{accesslog};
   } elsif ( defined $p->{search_base_case} && $p->{search_base_case} ne '' &&
 	    $p->{'search_filter'} ne '' ) {
     $filter = $p->{'search_filter'};
@@ -257,14 +257,12 @@ sub search_projects  ($self) {
     }
   }
 
-  #$self->h_log($entries);
+  $self->h_log($entries);
 
-  $self->render(
-		template => 'protected/search/projects',
-		entries => $entries,
+  $self->stash( entries => $entries,
 		base_proj => $self->{app}->{cfg}->{ldap}->{base}->{project},
-		base_acc => $self->{app}->{cfg}->{ldap}->{base}->{acc_root}
-	       );
+		base_acc => $self->{app}->{cfg}->{ldap}->{base}->{acc_root} );
+  $self->render( template => 'protected/search/projects' );
 
 }
 

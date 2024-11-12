@@ -14,8 +14,10 @@ sub register {
 		 my ($c, $dn, $delim) = @_;
 		 $delim = ' > ' if ! defined $delim;
 		 my @x = split(/,/, $dn);
-		 pop @x;
-		 pop @x;
+		 if ( $dn !~ /^.*,cn=accesslog$/ ) {
+		   pop @x;
+		   pop @x;
+		 }
 		 my @y = map { substr($_, index($_, '=') + 1) } @x;
 		 return join($delim, @y);
 	       });
@@ -29,6 +31,8 @@ sub register {
 		   return "success-subtle";
 		 } elsif ( $dn =~ /^uid=[^,]+,ou=People,dc=/i ) {
 		   return "info-subtle";
+		 } elsif ( $dn =~ /^.*,cn=accesslog$/ ) {
+		   return "info bg-opacity-25";
 		 } else {
 		   return "secondary-subtle";
 		 }
