@@ -1,19 +1,19 @@
 %# -*- mode: web; eval: (follow-mode) -*-
 
 % my $menu = {
-  % "profile"  => { act => "/profile", title => "", btn => "", ico => "fa-address-card", col => "info" },
-  % "block"    => { act => "modal",    title => "", btn => "", ico => "fa-user-slash",   col => "danger" },
-  % "new_svc"  => { act => "/profile", title => "", btn => "", ico => "fa-user-gear",    col => "success" },
-  % "password" => { act => "/profile", title => "", btn => "", ico => "fa-fingerprint",  col => "danger" },
-  % "delete"   => { act => "modal",    title => "", btn => "", ico => "fa-skull",        col => "danger" },
-  % "moddn"    => { act => "modal",    title => "", btn => "", ico => "fa-crown",        col => "danger" },
-  % "reassign" => { act => "modal",    title => "", btn => "", ico => "fa-retweet",      col => "danger" },
-  % "modify"   => { act => "/tool/modify", title => "", btn => "", ico => "fa-hammer",   col => "warning" },
-  % "group"    => { act => "/profile", title => "", btn => "", ico => "fa-users-gear",   col => "warning" },
-  % "image"    => { act => "/profile", title => "", btn => "", ico => "fa-image",        col => "warning" },
-  % "ldif"     => { act => "modal",    title => "", btn => "", ico => "fa-code",         col => "info" },
-  % "vCard"    => { act => "/profile", title => "", btn => "", ico => "fa-upload",       col => "info" },
-  % "history"  => { act => "/search/common", title => "", btn => "", ico => "fa-history",col => "info" }
+  % "block"    => { act => "modal",    class => "disabled", ico => "fa-user-slash",   col => "danger" },
+  % "delete"   => { act => "modal",    class =>         "", ico => "fa-skull",        col => "danger" },
+  % "group"    => { act => "/profile", class => "disabled", ico => "fa-users-gear",   col => "warning" },
+  % "history"  => { act => "/search/common", class =>   "", ico => "fa-history",      col => "info" },
+  % "image"    => { act => "/profile", class =>         "", ico => "fa-image",        col => "warning" },
+  % "ldif"     => { act => "modal",    class =>         "", ico => "fa-code",         col => "info" },
+  % "moddn"    => { act => "modal",    class => "disabled", ico => "fa-crown",        col => "danger" },
+  % "modify"   => { act => "/tool/modify", class =>     "", ico => "fa-hammer",       col => "warning" },
+  % "new_svc"  => { act => "/profile", class => "disabled", ico => "fa-user-gear",    col => "success" },
+  % "password" => { act => "/profile", class =>         "", ico => "fa-fingerprint",  col => "danger" },
+  % "profile"  => { act => "/profile", class =>         "", ico => "fa-address-card", col => "info" },
+  % "reassign" => { act => "modal",    class => "disabled", ico => "fa-retweet",      col => "danger" },
+  % "vCard"    => { act => "/profile", class => "disabled", ico => "fa-upload",       col => "info" },
 % };
 %# here we provide data further, to modals template
 % stash->{menu} = $menu;
@@ -29,7 +29,7 @@
     % for my $item (sort(keys(%$menu))) {
       <div class="dropdown-item">
 	% if ($menu->{$item}->{act} eq "modal") {
-	  <button type="button" title="" class="btn btn-sm"
+	  <button type="button" title="" class="btn btn-sm border-0 <%= $menu->{$item}->{class} %>"
 		  value="<%= $dn %>" name="<%= $item %>" data-bs-toggle="modal" data-bs-target="#modal_<%= $item %><%= $i %>">
 	    <i class="fa-solid fa-fw <%= $menu->{$item}->{ico} %> text-<%= $menu->{$item}->{col} %>"></i>
 	    <%= $item %>
@@ -37,7 +37,7 @@
 	% } else {
 	  <form role="form" method="POST" class="injectable-form" action="<%= $menu->{$item}->{act} %>">
 	    <input type="hidden" name="dn_to_<%= $item %>" value="<%= $dn %>">
-	    <button type="submit" title="" class="btn btn-sm" data-order="20">
+	    <button type="submit" title="" class="btn btn-sm border-0 <%= $menu->{$item}->{class} %>" data-order="20">
 	      <i class="fa-solid fa-fw <%= $menu->{$item}->{ico} %> text-<%= $menu->{$item}->{col} %>"></i>
 	      <%= $item %>
 	    </button>
