@@ -27,8 +27,10 @@ sub search_common  ($self) {
      );
 
   my $v = $self->validation;
-  return $self->render(template => 'protected/search/common' =>
-		       search_arg => {} => searchres => {}) unless $v->has_data;
+  return $self->render( template => 'protected/search/common',
+			search_arg => {},
+			searchres => {},
+			entries => [] ) unless $v->has_data;
 
   if ($self->session('debug')) {
     $self->stash( debug => $self->session('debug') );

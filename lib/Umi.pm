@@ -254,6 +254,10 @@ sub _startup_routes ($self) {
     ->get( '/profile/:uid' => [ uid => qr/[^\/]+/ ])
     ->requires(is_role => ['admin,coadmin,hr', {cmp => 'or'}])
     ->to('protected#profile', uid => '');
+  $protected_root
+    ->post('/profile/:uid' => [ uid => qr/[^\/]+/ ])
+    ->requires(is_role => ['admin,coadmin,hr', {cmp => 'or'}])
+    ->to('protected#profile', uid => '');
 
   $protected_root
     ->get( '/profile')
@@ -356,6 +360,20 @@ sub _startup_routes ($self) {
     ->post('/tool/modify')
     ->requires(is_role => ['admin,coadmin,hr', {cmp => 'or'}])
     ->to('protected#modify');
+
+  $protected_root
+    ->post('/tool/moddn')
+    ->requires(is_role => ['admin,coadmin', {cmp => 'or'}])
+    ->to('protected#moddn');
+
+  $protected_root
+    ->get( '/tool/newsvc')
+    ->requires(is_role => ['admin,coadmin', {cmp => 'or'}])
+    ->to('protected#newsvc');
+  $protected_root
+    ->post('/tool/newsvc')
+    ->requires(is_role => ['admin,coadmin', {cmp => 'or'}])
+    ->to('protected#newsvc');
 
   $protected_root->get( '/tool/pwdgen')->to('protected#pwdgen');
   $protected_root->post('/tool/pwdgen')->to('protected#pwdgen');

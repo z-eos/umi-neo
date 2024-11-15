@@ -157,23 +157,26 @@
 
 			% if ($_ =~ /^ssh/) {
 			  % foreach (@{$services->{$dn}->{$_}->{obj}->{$l}->{sshPublicKey}}) {
-				  <p class="mt-1 mb-0 font-monospace text-muted user-select-all umi-text-tiny">
-				    %= $_
-				  </p>
-				% }
-			      % } elsif ( $_ =~ /^ovpn/ ) {
-			      <span class="float-end umi-text-xs font-monospace">
-				<span title="Not Before">
-				  <%= $services->{$dn}->{$_}->{obj}->{$l}->{umiUserCertificateNotBefore}->[0] %>
-				</span> - <span title="Not After">
-				  <%= $services->{$dn}->{$_}->{obj}->{$l}->{umiUserCertificateNotAfter}->[0] %>
-				</span>
-			      </span>
-		      % }
+			    <p class="mt-1 mb-0 font-monospace text-muted user-select-all umi-text-tiny">
+			      %= $_
+			    </p>
+			  % }
+			% } elsif ( $_ =~ /^ovpn/ ) {
+			<span class="ms-5 font-monospace" title="ifconfig-push value">
+			  <%= $services->{$dn}->{$_}->{obj}->{$l}->{umiOvpnCfgIfconfigPush}->[0] %>			  
+			</span>			  
+			<span class="float-end umi-text-xs font-monospace">
+			  <span title="Not Before">
+			    <%= $services->{$dn}->{$_}->{obj}->{$l}->{umiUserCertificateNotBefore}->[0] %>
+			  </span> - <span title="Not After">
+			    <%= $services->{$dn}->{$_}->{obj}->{$l}->{umiUserCertificateNotAfter}->[0] %>
+			  </span>
+			</span>
+			% }
 			    </td>
 			  </tr>
+		      % }
 	      % }
-% }
 		    </table>
 		  </details>
 		</dd>

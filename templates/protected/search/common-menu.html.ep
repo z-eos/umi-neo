@@ -1,19 +1,18 @@
 %# -*- mode: web; eval: (follow-mode) -*-
 
 % my $menu = {
-  % "block"    => { act => "modal",    class => "disabled", ico => "fa-user-slash",   col => "danger" },
-  % "delete"   => { act => "modal",    class =>         "", ico => "fa-skull",        col => "danger" },
-  % "group"    => { act => "/profile", class => "disabled", ico => "fa-users-gear",   col => "warning" },
-  % "history"  => { act => "/search/common", class =>   "", ico => "fa-history",      col => "info" },
-  % "image"    => { act => "/profile", class =>         "", ico => "fa-image",        col => "warning" },
-  % "ldif"     => { act => "modal",    class =>         "", ico => "fa-code",         col => "info" },
-  % "moddn"    => { act => "modal",    class => "disabled", ico => "fa-crown",        col => "danger" },
-  % "modify"   => { act => "/tool/modify", class =>     "", ico => "fa-hammer",       col => "warning" },
-  % "new_svc"  => { act => "/profile", class => "disabled", ico => "fa-user-gear",    col => "success" },
-  % "password" => { act => "/profile", class =>         "", ico => "fa-fingerprint",  col => "danger" },
-  % "profile"  => { act => "/profile", class =>         "", ico => "fa-address-card", col => "info" },
-  % "reassign" => { act => "modal",    class => "disabled", ico => "fa-retweet",      col => "danger" },
-  % "vCard"    => { act => "/profile", class => "disabled", ico => "fa-upload",       col => "info" },
+  % "block"    => { act => "modal",          affinity => [],         class => "disabled", ico => "fa-user-slash",   col => "danger" },
+  % "delete"   => { act => "modal",          affinity => [],         class =>         "", ico => "fa-skull",        col => "danger" },
+  % "group"    => { act => "/profile",       affinity => [qw(root)], class =>         "", ico => "fa-users-gear",   col => "warning" },
+  % "history"  => { act => "/search/common", affinity => [],         class =>         "", ico => "fa-history",      col => "info" },
+  % "image"    => { act => "/profile",       affinity => [qw(root)], class =>         "", ico => "fa-image",        col => "warning" },
+  % "ldif"     => { act => "modal",          affinity => [],         class =>         "", ico => "fa-code",         col => "info" },
+  % "moddn"    => { act => "modal",          affinity => [qw(leaf)], class =>         "", ico => "fa-recycle",      col => "danger" },
+  % "modify"   => { act => "/tool/modify",   affinity => [],         class =>         "", ico => "fa-hammer",       col => "warning" },
+  % "new_svc"  => { act => "/tool/newsvc",   affinity => [qw(root)], class =>         "", ico => "fa-file-circle-plus", col => "success" },
+  % "password" => { act => "/tool/pwdgen",   affinity => [qw(root leaf)], class =>    "", ico => "fa-fingerprint",  col => "danger" },
+  % "profile"  => { act => "/profile/$rrdn", affinity => [qw(root)], class =>         "", ico => "fa-address-card", col => "info" },
+  % "vCard"    => { act => "/profile",       affinity => [qw(root)], class => "disabled", ico => "fa-upload",       col => "info" },
 % };
 %# here we provide data further, to modals template
 % stash->{menu} = $menu;
@@ -27,6 +26,19 @@
   <div class="dropdown-menu z-50 position-absolute" aria-labelledby="dropdownMenuActions">
 
     % for my $item (sort(keys(%$menu))) {
+      
+      % if (
+      %# -*- for not root objects, skip each item with the single afinity `root`
+      %     ( $dn !~ /^uid=[^,]+,ou=People,dc=/i &&
+      %       join('', @{$menu->{$item}->{affinity}}) eq 'root' ) ||
+      %# -*- for branch objects, skip items with non-empty affinity that doesn’t contain `branch`
+      %     ( $dn =~ /^author/ &&
+      %       @{$menu->{$item}->{affinity}} &&
+      %       ! grep {$_ eq 'branch'} @{$menu->{$item}->{affinity}} )
+      %    ) {
+	% next;
+      % }
+      
       <div class="dropdown-item">
 	% if ($menu->{$item}->{act} eq "modal") {
 	  <button type="button" title="" class="btn btn-sm border-0 <%= $menu->{$item}->{class} %>"
@@ -36,10 +48,16 @@
 	  </button>
 	% } else {
 	  <form role="form" method="POST" class="injectable-form" action="<%= $menu->{$item}->{act} %>">
-	    <input type="hidden" name="dn_to_<%= $item %>" value="<%= $dn %>">
+	    % if ( $item eq 'password' ) {
+	      <input type="hidden" name="pwd_chg_dn" value="<%= $dn %>">
+	      <input type="hidden" name="pwd_chg_svc" value="">
+	      <input type="hidden" name="pwd_chg_rdn" value="">
+	    % } else {
+	      <input type="hidden" name="dn_to_<%= $item %>" value="<%= $dn %>">
+	    % }
 	    <button type="submit" title="" class="btn btn-sm border-0 <%= $menu->{$item}->{class} %>" data-order="20">
 	      <i class="fa-solid fa-fw <%= $menu->{$item}->{ico} %> text-<%= $menu->{$item}->{col} %>"></i>
-	      <%= $item %>
+	      <%= $item =~ s/_/ /gr %>
 	    </button>
 	  </form>
 	% }

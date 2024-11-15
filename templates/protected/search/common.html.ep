@@ -49,7 +49,9 @@
 	  </button>
 	  %# BURGER MENU
 	  % if ( $e->dn !~ /$re/ ) {
-	    %= include 'protected/search/common-menu', dn => $e->dn, i => $i
+	    % my $rrdn = '';
+	    % $rrdn = $1 if $e->dn =~ /^uid=([^,]+),ou=People,dc=/i;
+	    %= include 'protected/search/common-menu', dn => $e->dn, i => $i, rrdn => $rrdn
 	  % }
 	  
 	  %# ICO after BURGER MENU
@@ -117,7 +119,7 @@
 
 	  <div class="row">
 	    <div class="col-3 text-end fw-bold fs-6">dn</div>
-	    <div class="col-9"><%= $e->dn %></div>
+	    <div class="col-9 user-select-all"><%= $e->dn %></div>
 	  </div>
 
 	  % my @attr_break = qw(pgpKey certificateRevocationList;binary);
@@ -127,7 +129,7 @@
 
 	    <div class="row">
 	      <div class="col-3 text-end fw-bold fs-6"><%= $attr %></div>
-	      <div class="col-9">
+	      <div class="col-9 user-select-all">
 
 		  % for my $attr_val (@{$e->get_value($attr, asref => 1)}) {
 		    % if ($attr eq "jpegPhoto") {

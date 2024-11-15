@@ -34,7 +34,7 @@
 
     <ul id="sidebar-left-menu" class="nav flex-column" style="--bs-nav-link-padding-y: .2rem;">
 
-      % if ( is_role 'admin,coadmin', {cmp => 'or'} ) {
+      % if ( is_role 'admin,coadmin,hr', {cmp => 'or'} ) {
 	<li class="nav-item">
 	  <a href="#submenuAnalyze"
 	     data-bs-toggle="collapse"

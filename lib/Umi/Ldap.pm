@@ -277,6 +277,36 @@ sub delete {
   return $return;
 }
 
+=head2 moddn
+
+Net::LDAP->moddn wrapper
+
+=cut
+
+sub moddn {
+  my ($self, $args) = @_;
+  # $self->{app}->h_log($args);
+  my $msg;
+  if (defined $args->{newsuperior} ) {
+    $msg = $self->ldap->moddn ( $args->{src_dn},
+				newrdn       => $args->{newrdn},
+				deleteoldrdn => $args->{deleteoldrdn} // '1' );
+  } else {
+    $msg = $self->ldap->moddn ( $args->{src_dn},
+				newrdn       => $args->{newrdn},
+				deleteoldrdn => $args->{deleteoldrdn} // '1',
+				newsuperior  => $args->{newsuperior} );
+  }
+  # $self->{app}->h_log($msg);
+  my $return;
+  if ($msg->is_error()) {
+    $return = { error => [$self->err( $msg, 0, $args->{src_dn} )->{html}] };
+  } else {
+    $return = { ok => [ 'DN ' . $args->{src_dn} . ' successfully modified<br>new RDN <mark class="bg-success">' . $args->{newrdn} . '</mark>'] };
+  }
+  return $return;
+}
+
 =head2 ldif_read
 
 LDIF processing from input ldif code
@@ -291,7 +321,7 @@ sub ldif_read {
     open( $file, "<", \$ldif);
   }
   catch {
-    $self->h_log("Cannot open data from variable: \$file for reading: $_");
+    $self->{app}->h_log("Cannot open data from variable: \$file for reading: $_");
     return {debug => { error => [ "Cannot open data from variable: \$ldif for reading: $_", ] }};
   };
 
@@ -306,7 +336,7 @@ sub ldif_read {
     } else {
       my $mesg = $entry->update($self->ldap);
       if ( $mesg->code ) {
-	$self->h_log( $self->err($mesg) );
+	$self->{app}->h_log( $self->err($mesg) );
 	return {debug => {error => [ $self->err($mesg)->{html} ]}};
       } else {
 	push @{$res->{debug}->{ok}}, '<mark>' . $entry->dn . '</mark> successfully added';
