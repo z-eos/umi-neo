@@ -310,6 +310,12 @@ sub _startup_routes ($self) {
     ->requires(is_role => ['admin,coadmin', {cmp => 'or'}])
     ->to('protected#delete');
 
+  ## FIRE
+  $protected_root
+    ->post('/fire')
+    ->requires(is_role => ['admin,coadmin', {cmp => 'or'}])
+    ->to('protected#fire');
+
   ## AUDIT
   ### users
   $protected_root

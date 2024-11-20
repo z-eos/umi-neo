@@ -24,19 +24,31 @@ sub register {
 
   $app->helper(
 	       h_dn_color => sub {
-		 my ($c, $dn) = @_;
-		 if ( $dn =~ /^author/ ) {
+		 my ($c, $e) = @_;
+
+		 if ( $e->dn =~ /^author/ ) {
 		   return "warning-subtle";
-		 } elsif ( $dn =~ /^(cn|uid)=[^,]+,auth/ ) {
+		 } elsif ( $e->dn =~ /^(cn|uid)=[^,]+,auth/ ) {
 		   return "success-subtle";
-		 } elsif ( $dn =~ /^uid=[^,]+,ou=People,dc=/i ) {
+		 } elsif ( $e->dn =~ /^uid=[^,]+,ou=People,dc=/i ) {
 		   return "info-subtle";
-		 } elsif ( $dn =~ /^.*,cn=accesslog$/ ) {
+		 } elsif ( $e->dn =~ /^.*,cn=accesslog$/ ) {
 		   return "info bg-opacity-25";
 		 } else {
 		   return "secondary-subtle";
 		 }
 	       });
+
+  $app->helper(
+	       h_get_root_dn => sub {
+		 my ($c, $dn) = @_;
+		 my $root_dn;
+		 if ( $dn =~ /^.*(uid=[^,]+,$app->{cfg}->{ldap}->{base}->{acc_root})$/i ) {
+		   $root_dn = $1;
+		 }
+		 return $root_dn;
+	       });
+
 
 =head1 h_attr_unused
 

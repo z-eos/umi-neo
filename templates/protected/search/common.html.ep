@@ -26,17 +26,19 @@
   %# !!! TOFIX on bold request to `/search/common` $entries is empty and we need err handle that
   % for my $e (@{$entries}) {
     
-    % $col = h_dn_color($e->dn);
-    % if ( $col eq 'warning' ) {  $mps = ' ms-3'; }
-    % elsif ($col eq 'success') { $mps = ' ms-4 ps-1'; }
+    % $col = $e->exists('gidNumber') && $e->get_value('gidNumber') eq app->{cfg}->{ldap}->{defaults}->{group_blocked_gidnumber} ? 'danger-subtle' : h_dn_color($e);
+    % if ( $col eq 'warning-subtle' ) {  $mps = ' ms-3'; }
+    % elsif ($col eq 'success-subtle') { $mps = ' ms-4 ps-1'; }
     % else { $mps = ''; }
 
     % my @dn_ico = ($e->dn =~ /authorizedService=([^,]+)\@/g);
 
-    %# extracting users root object dn
-    % my $root_usr_dn = '';
-    % my @rusr_dn = split(/uid=/, $e->dn);
-    % $root_usr_dn = 'uid=' . $rusr_dn[-1] if @rusr_dn > 1;
+    %## extracting users root object dn
+    %# delete if h_get_root_dn works well # my $root_usr_dn = '';
+    %# delete if h_get_root_dn works well # my @rusr_dn = split(/uid=/, $e->dn);
+    %# delete if h_get_root_dn works well # $root_usr_dn = 'uid=' . $rusr_dn[-1] if @rusr_dn > 1;
+    % my $root_usr_dn = h_get_root_dn $e->dn;
+    % $root_usr_dn = '' if ! defined $root_usr_dn;
     
     <div class="card border-<%= $col %>" id="card-<%= $i %>">
 
@@ -122,7 +124,7 @@
 	    <div class="col-9 user-select-all"><%= $e->dn %></div>
 	  </div>
 
-	  % my @attr_break = qw(pgpKey certificateRevocationList;binary);
+	  % my @attr_break = qw(pgpKey certificateRevocationList;binary umiUserBackup);
 	  % my @attr_wrap = qw(grayPublicKey sshPublicKey reqMod);
 	  % for my $attr (sort( $e->attributes )) {
 	    % next if $attr eq 'createTimestamp' || $attr eq 'creatorsName' || $attr eq 'modifyTimestamp' || $attr eq 'modifiersName';
@@ -149,7 +151,14 @@
 			% $text_pre = ' text-wrap';
 		      % }
 		      %== h_element_cp_download_btns( $attr, $attr . '.txt' );
-		      <pre class="user-select-all<%= $text_pre %> umi-text-tiny" id="<%= $attr %>""><%= $attr_val %></pre>
+		      % my $attr_val_processed = $attr_val;
+		      % if ( $attr eq 'umiUserBackup' ) {
+			% use IO::Uncompress::Gunzip qw(gunzip $GunzipError) ;
+			% use Mojo::Util;
+			% my $decoded = Mojo::Util::b64_decode( $attr_val );
+			% gunzip \$decoded => \$attr_val_processed;
+		      % }
+		      <pre class="user-select-all<%= $text_pre %> umi-text-tiny" id="<%= $attr %>""><%= $attr_val_processed %></pre>
 		    % } elsif ($attr eq 'userCertificate;binary' || $attr eq 'cACertificate;binary')
 		    % {
 		      % my $ci = $self->h_cert_info({ cert => $attr_val, ts => "%Y%m%d%H%M%S", });

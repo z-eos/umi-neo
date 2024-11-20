@@ -659,6 +659,17 @@ END_INPUT
     #
     # 5. It returns a hash reference containing four hashes: removed,
     # added, changed, and unchanged keys and their values.
+    #
+    # [
+    #     [0] "add",
+    #     [1] [
+    #             [0] "roomNumber",
+    #             [1] 2
+    #         ]
+    # ]
+
+
+    
     $app->helper(
 		 h_hash_diff => sub {
 		   my ($self, $original_ref, $modified_ref) = @_;

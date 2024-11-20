@@ -208,7 +208,7 @@ sub schema ($self) {
   return $self->ldap->schema();
 }
 
-=head2 last_seq_val
+=head2 last_num
 
 find the bigest number among all values of an attributes like for uidNumber or gidNumber
 
@@ -244,15 +244,16 @@ sub last_num {
 }
 
 sub delete {
-  my ($self, $dn, $recursively) = @_;
+  my ($self, $dn, $recursively, $scope) = @_;
   $recursively = 0 if ! defined $recursively;
+  $scope = 'sub' if ! defined $scope;
   my ($entries, $msg, $return, $search);
 
   # !! to add it latter # my $g_mod = $self->del_from_groups($dn);
   # !! to add it latter # push @{$return->{error}}, $g_mod->{error} if defined $g_mod->{error};
 
   if ($recursively) {
-    $search = $self->search({ base => $dn, filter => '(objectclass=*)' });
+    $search = $self->search({ base => $dn, filter => '(objectclass=*)', scope => $scope });
     ## taken from perl-ldap/contrib/recursive-ldap-delete.pl
     # delete the entries found in a sorted way:
     # those with more "," (= more elements) in their DN, which are deeper in the DIT, first

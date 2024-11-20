@@ -6,6 +6,45 @@
 %# data for menu is provided in menu template
 % my $menu = stash->{menu};
 
+% my $it = "fire";
+<div class="modal border-1" id="modal_<%= $it %><%= $i %>" tabindex="-1"
+     aria-labelledby="modal_<%= $it %><%= $i %>_label" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content border border-<%= $menu->{$it}->{col} %> border-1">
+      <div class="modal-header bg-<%= $menu->{$it}->{col} %> row m-0">
+	<h4 class="modal-title mb-3" id="modal_<%= $it %><%= $i %>_label">
+	  <i class="fa <%= $menu->{$it}->{ico} %> me-3"></i> Root object hierarchy archive and delete.
+	</h4>
+	<b class=""><%= $dn %></b>
+      </div>
+      <div class="modal-body">
+	%= form_for '/' . $it => (class => "", method => 'POST') => begin
+	% my $po = $search_common_params->{params_orig};
+	%= hidden_field search_base_case => $po->{search_base_case}
+	%= hidden_field search_filter => $po->{search_filter}
+	%= hidden_field ldap_subtree => $po->{ldap_subtree}
+	
+	<div class="">
+	  <label class="form-label" for="modal_<%= $it %>_descr<%= $i %>">
+	    Description
+	  </label>
+	  %= text_area 'description', id => 'modal_' . $it . '_descr' . $i, class => "form-control", rows => 5, cols => 40
+	</div>
+	<div class="modal-error mx-5"></div>
+	<div class="btn-group float-end mt-3">
+	  <button type="button" class="btn btn-sm btn-secondary me-1"
+		  data-bs-dismiss="modal">Close</button>
+	  <button type="submit" class="btn btn-sm btn-block btn-<%= $menu->{$it}->{col} %>"
+		  name="<%= $it %>_dn" value="<%= $dn_orig %>" data-bs-action="<%= $it %>">
+	    Archive and delete entire subtree
+	  </button>
+	</div>
+	% end
+      </div>
+    </div>
+  </div>
+</div>
+
 % my $it = "delete";
 <div class="modal border-1" id="modal_<%= $it %><%= $i %>" tabindex="-1"
      aria-labelledby="modal_<%= $it %><%= $i %>_label" aria-hidden="true">
@@ -13,7 +52,7 @@
     <div class="modal-content border border-<%= $menu->{$it}->{col} %> border-1">
       <div class="modal-header bg-<%= $menu->{$it}->{col} %> row m-0">
 	<h4 class="modal-title mb-3" id="modal_<%= $it %><%= $i %>_label">
-	  <i class="fa <%= $menu->{$it}->{ico} %> mr-3"></i> Object / hierarchy deletion
+	  <i class="fa <%= $menu->{$it}->{ico} %> me-3"></i> Object / hierarchy deletion
 	</h4>
 	<b class=""><%= $dn %></b>
       </div>

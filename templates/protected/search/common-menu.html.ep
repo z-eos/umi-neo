@@ -1,8 +1,10 @@
 %# -*- mode: web; eval: (follow-mode) -*-
 
+%# column affinity defines which type of objects the item belongs (can appear for), an empty means available for all
 % my $menu = {
   % "block"    => { act => "modal",          affinity => [],         class => "disabled", ico => "fa-user-slash",   col => "danger" },
   % "delete"   => { act => "modal",          affinity => [],         class =>         "", ico => "fa-skull",        col => "danger" },
+  % "fire"     => { act => "modal",          affinity => [qw(root)], class =>         "", ico => "fa-fire",         col => "danger" },
   % "group"    => { act => "/profile",       affinity => [qw(root)], class =>         "", ico => "fa-users-gear",   col => "warning" },
   % "history"  => { act => "/search/common", affinity => [],         class =>         "", ico => "fa-history",      col => "info" },
   % "image"    => { act => "/profile",       affinity => [qw(root)], class =>         "", ico => "fa-image",        col => "warning" },
@@ -34,7 +36,8 @@
       %# -*- for branch objects, skip items with non-empty affinity that doesn’t contain `branch`
       %     ( $dn =~ /^author/ &&
       %       @{$menu->{$item}->{affinity}} &&
-      %       ! grep {$_ eq 'branch'} @{$menu->{$item}->{affinity}} )
+      %       join('', @{$menu->{$item}->{affinity}}) !~ /branch/ )
+      %#       ! grep {$_ eq 'branch'} @{$menu->{$item}->{affinity}} )
       %    ) {
 	% next;
       % }
