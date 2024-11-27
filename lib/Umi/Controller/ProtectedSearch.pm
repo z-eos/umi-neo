@@ -8,6 +8,8 @@ use Mojo::Util qw(b64_encode dumper);
 use Umi::Ldap;
 use Umi::Helpers::SearchResult;
 
+use Encode qw(decode_utf8);
+
 sub search_common  ($self) {
   my (
       $base,
@@ -156,13 +158,22 @@ sub search_common  ($self) {
   # my @dn_s = map { $_->dn } $search->sorted;
   # $self->{app}->h_log(\@dn_s);
 
-  # my $s;
-  # foreach ($search->entries) {
-  # 	$s .= $_->ldif;
-  # }
+  # hash to keep aux data like disabled state of the root object for branch/leaf
+  my $e_info;
+  foreach ($search->entries) {
+    $e_info->{$_->dn}->{root_dn} = $self->h_get_root_dn($_->dn) if ! exists $e_info->{$_->dn}->{root_dn};
+    $e_info->{$_->dn}->{disabled} = 0;
+    if ( $e_info->{$_->dn}->{root_dn} eq $_->dn ) {
+      $e_info->{$_->dn}->{disabled} = 1 if $_->get_value('gidNumber') eq $self->{app}->{cfg}->{ldap}->{defaults}->{group_blocked_gidnumber};
+    } else {
+      my $e_tmp = $ldap->search( { base => $e_info->{$_->dn}->{root_dn}, scope => 'base' } );
+      $e_info->{$_->dn}->{disabled} = 1 if $e_tmp->entry->get_value('gidNumber') eq $self->{app}->{cfg}->{ldap}->{defaults}->{group_blocked_gidnumber};
+    }
+  }
+  # $self->h_log($search->as_struct);
 
   my @entries = $search->sorted;
-  $self->stash(search_common_params => $p, search_arg => $search_arg);
+  $self->stash(search_common_params => $p, search_arg => $search_arg, e_info => $e_info);
   if ( exists $p->{no_layout} ) {
     $self->render( template => 'protected/search/common',
 		   layout => undef,

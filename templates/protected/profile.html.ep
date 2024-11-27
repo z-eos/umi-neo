@@ -4,6 +4,7 @@
 
 % use Net::LDAP::Util qw(generalizedTime_to_time);
 % use POSIX qw(strftime);
+% use Encode qw(decode_utf8);
 
 % my $root_uid = session('user_obj')->{dn};
 % my ($dn, $v);
@@ -31,7 +32,8 @@
       </div>
       <div class="">
 	<div class="card-body">
-          <h4 class="card-title fw-bold bg-secondary px-5 pt-1 <%= 'text-' . $card_col if $card_col ne '' %>"><%= $v->{gecos}->[0] ne '' ? $v->{gecos}->[0] : $v->{givenname}->[0] . ' ' . $v->{sn}->[0] %>
+	  % my $fullname = $v->{givenname}->[0] . ' ' . $v->{sn}->[0];
+          <h4 class="card-title fw-bold bg-secondary px-5 pt-1 <%= 'text-' . $card_col if $card_col ne '' %>"><%=  utf8::is_utf8($fullname) ? $fullname : decode_utf8($fullname) %>
 	    <a href="/profile/modify/<%= $v->{uid}->[0] %>" class="btn btn-sm btn-secondary">
 	      <i class="fa-solid fa-gears"></i>
 	    </a>

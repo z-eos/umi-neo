@@ -92,12 +92,13 @@
 	              </span>
                     % }
 
-                  % if ( $a eq 'grayPublicKey' || $a eq 'sshPublicKey') {
-		    %= text_area $a => $e, rows => 5, class => "form-control", id => $id
-                  % } else {
-		    %# WARNING: helper tag works incorrectly
-		    %# = input_tag $a => $e, id => 'val_' . $id, class => 'form-control', title => '', type => 'text'
-		    <input type="text" name="<%= $a %>" id="val_<%= $id %>" class="form-control" title="" value="<%= $e %>">
+                    % if ( $a eq 'grayPublicKey' || $a eq 'sshPublicKey') {
+		      %= text_area $a => $e, rows => 5, class => "form-control", id => $id
+                    % } else {
+		      %# WARNING: helper tag works incorrectly
+		      %# = input_tag $a => $e, id => 'val_' . $id, class => 'form-control', title => '', type => 'text'
+		      <input type="text" name="<%= $a %>" id="val_<%= $id %>" class="form-control" title=""
+			     value="<%= Mojo::Util::decode('UTF-8', $e) %>">
                   % }
 		% }
 		<span class="input-group-btn">

@@ -1,4 +1,5 @@
 %# -*- mode: web; eval: (follow-mode) -*-
+% use Encode qw(decode_utf8);
 % my $i = 0;
 % my $j = 0;
 % my $attr_val_class = "";
@@ -20,17 +21,23 @@
 
 %# vh-100 is important, without it dropwown are not shown for collapsed rows
 <div class="container-fluid vh-100">
-  % my ($col, $cn, $ct, $mn, $mt, $mps);
+  % my ($col, $cn, $ct, $mn, $mt);
+  % my $mps = '';
   % my $acclog = app->{cfg}->{ldap}->{accesslog};
   % my $re = qr/^.*$acclog$/;
   %# !!! TOFIX on bold request to `/search/common` $entries is empty and we need err handle that
   % for my $e (@{$entries}) {
-    
-    % $col = $e->exists('gidNumber') && $e->get_value('gidNumber') eq app->{cfg}->{ldap}->{defaults}->{group_blocked_gidnumber} ? 'danger-subtle' : h_dn_color($e);
-    % if ( $col eq 'warning-subtle' ) {  $mps = ' ms-3'; }
-    % elsif ($col eq 'success-subtle') { $mps = ' ms-4 ps-1'; }
-    % else { $mps = ''; }
 
+    % if ( $e_info->{$e->dn}->{disabled} ) {
+      % $col = 'danger';
+    % } else {
+      % $col = h_dn_color($e);
+      % if ( $col eq 'warning' ) {  $mps = ' ms-3'; }
+      % elsif ($col eq 'success') { $mps = ' ms-4 ps-1'; }
+      % else { $mps = ''; }
+    % }
+    % $col .= '-subtle';
+    
     % my @dn_ico = ($e->dn =~ /authorizedService=([^,]+)\@/g);
 
     %## extracting users root object dn
@@ -40,9 +47,9 @@
     % my $root_usr_dn = h_get_root_dn $e->dn;
     % $root_usr_dn = '' if ! defined $root_usr_dn;
     
-    <div class="card border-<%= $col %>" id="card-<%= $i %>">
+    <div class="card border border-<%= $col %> my-1" id="card-<%= $i %>">
 
-      <div class="card-header bg-<%= $col %> p-0 m-0 fs-6">
+	<div class="card-header bg-<%= $col %> p-0 m-0 fs-6">
 	<div class="btn-group z-10" role="group">
 	  %# COLLAPSE CARET
 	  <button class="btn" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-<%= $i %>"
@@ -133,12 +140,21 @@
 	      <div class="col-3 text-end fw-bold fs-6"><%= $attr %></div>
 	      <div class="col-9 user-select-all">
 
-		  % for my $attr_val (@{$e->get_value($attr, asref => 1)}) {
+		% for my $attr_val (@{$e->get_value($attr, asref => 1)}) {
 		    % if ($attr eq "jpegPhoto") {
 		      <div class="col-12 font-monospace">
 			<img src="data:image/jpg;base64,<%= Mojo::Util::b64_encode $attr_val %>"
 			     class="img-thumbnail" alt="<%= $e->dn %>">
 		      </div>
+		    % } elsif ( $attr eq 'gidNumber' )
+		    % {
+		      <a href="/search/common?search_filter=gidNumber=<%= $attr_val %>&search_base_case=ou=group,dc=nxc,dc=no"
+			 class="btn btn-link btn-sm px-0<%= ' text-danger fw-bold' if $attr_val eq app->{cfg}->{ldap}->{defaults}->{group_blocked_gidnumber} %>">
+			<%= $attr_val %><%= $attr_val eq app->{cfg}->{ldap}->{defaults}->{group_blocked_gidnumber} ? ' / ' . app->{cfg}->{ldap}->{defaults}->{group_blocked_cn} : '' %>
+		      </a>
+		    % } elsif ( $attr eq 'userPassword' )
+		    % {
+		      <%= 6 x '<i class="fa-solid fa-asterisk text-muted"></i>' %>
 		    % } elsif ( $attr eq 'reqMod' )
 		    % {
 		      <div class="user-select-all font-monospace umi-text-tiny mb-1"><%= $attr_val %></div>
@@ -176,7 +192,7 @@
 			</small>
 		      </div>
 		    % } else {
-		      <div class="col-12 font-monospace pb-1"><%= $attr_val %></div>
+		      <div class="col-12 font-monospace pb-1"><%= utf8::is_utf8($attr_val) ? $attr_val : decode_utf8($attr_val) %></div>
 		    % }
 		    % $j++
 		  % }
@@ -184,7 +200,7 @@
 	      </div>
 	    </div>
 
-		    % }
+	  % }
 
 	</div>
       </div>
@@ -192,6 +208,7 @@
     </div>
     %= include 'protected/search/common-modals', dn => $e->dn, i => $i
 
-    % $i++
-    % }
+    % $i++;
+    % $mps = '';
+  % }
 </div>

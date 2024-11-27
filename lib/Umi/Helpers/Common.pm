@@ -193,6 +193,17 @@ stolen from http://ddiguru.com/blog/25-ip-address-conversions-in-perl
 		     return $arg->{ret};
 		 });
 
+    # IMAGE SIDES
+    $app->helper(
+		 h_img_info => sub {
+		   my ($self, $image) = @_;
+		   my $i = GD::Image->new($image);
+		   return {
+			   width  => $i->width,
+			   height => $i->height
+			  };
+		 });
+
 =head2 keygen_ssh
 
 ssh key generator

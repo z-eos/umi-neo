@@ -5,6 +5,7 @@ package Umi::Helpers::SearchResult;
 use Mojo::Base 'Mojolicious::Plugin';
 
 use Net::DNS;
+use Net::LDAP::Util qw(generalizedTime_to_time);
 
 sub register {
   my ($self, $app) = @_;
@@ -26,16 +27,22 @@ sub register {
 	       h_dn_color => sub {
 		 my ($c, $e) = @_;
 
-		 if ( $e->dn =~ /^author/ ) {
-		   return "warning-subtle";
+		 if ( $e->exists('gidNumber') &&
+		      $e->get_value('gidNumber') eq $app->{cfg}->{ldap}->{defaults}->{group_blocked_gidnumber} ) {
+		   return 'danger';
+		 } elsif ( $e->dn =~ /^cn=.*,authorizedService=ovpn@.*/ && $e->exists('umiUserCertificateNotAfter') &&
+			   time > generalizedTime_to_time($e->get_value('umiUserCertificateNotAfter') . 'Z') ) {
+		   return 'danger';
+		 } elsif ( $e->dn =~ /^author/ ) {
+		   return 'warning';
 		 } elsif ( $e->dn =~ /^(cn|uid)=[^,]+,auth/ ) {
-		   return "success-subtle";
+		   return 'success';
 		 } elsif ( $e->dn =~ /^uid=[^,]+,ou=People,dc=/i ) {
-		   return "info-subtle";
+		   return 'info';
 		 } elsif ( $e->dn =~ /^.*,cn=accesslog$/ ) {
-		   return "info bg-opacity-25";
+		   return 'info bg-opacity-25';
 		 } else {
-		   return "secondary-subtle";
+		   return 'secondary';
 		 }
 	       });
 
@@ -43,9 +50,8 @@ sub register {
 	       h_get_root_dn => sub {
 		 my ($c, $dn) = @_;
 		 my $root_dn;
-		 if ( $dn =~ /^.*(uid=[^,]+,$app->{cfg}->{ldap}->{base}->{acc_root})$/i ) {
-		   $root_dn = $1;
-		 }
+		 my $re = qr/^.*(uid=[^,]+,$app->{cfg}->{ldap}->{base}->{acc_root})$/i;
+		 $root_dn = $1 if $dn =~ /$re/;
 		 return $root_dn;
 	       });
 

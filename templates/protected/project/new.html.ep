@@ -6,6 +6,14 @@
 </h3>
 <hr>
 
+% my $f = {
+%          team_pm     => { title => 'Project Manager', },
+%          team_tl     => { title => 'Team Lead', },
+%          team_back   => { title => 'Backend Developer', },
+%          team_front  => { title => 'Frontend Developer', },
+%          team_qa     => { title => 'QA', },
+%          team_devops => { title => 'DevOps', },
+% };
 % my $em = stash->{employees};
 % my $p = stash->{project_new_params};
 % my $option_checked = '';
@@ -34,7 +42,7 @@
   % my @team = qw(team_pm team_tl team_back team_front team_qa team_devops);
   % foreach (@team) {
     % $option_checked .= sprintf("#%s option:checked {\n     background-color: #808080;\n}\n\n", $_);
-    <div class="row mb-3">
+    <div class="row mb-3" title="<%= $f->{$_}->{title} %>">
       %= label_for 'input_' . $_ => (class => 'col-sm-2 col-form-label text-end fw-bold text-uppercase') => begin
 	<%= substr($_,5) %>:
       % end
@@ -48,14 +56,16 @@
 
 % end
 
+<pre class="mt-5 umi-text-tiny text-muted"><%= dumper stash->{'mojo.validation'}->{error} if %{stash->{'mojo.validation'}->{error}} %></pre>
+
 <style>
-  <%= $option_checked %>
+ <%= $option_checked %>
 </style>
 
 % if ( stash->{'mojo.validation'}->{error} ) {
   <script>
    % while (my ($k, $v) = each %{stash->{'mojo.validation'}->{error}}) {
-     $('#<%= $k %>').addClass('is-invalid').after('<div id="<%= $k %>ValidationFeedback" class="invalid-feedback"></div>');
+     $('#<%= $k %>').addClass('is-invalid').after('<div id="<%= $k %>ValidationFeedback" class="invalid-feedback font-monospace"></div>');
      % if (scalar(@$v) == 1) {
      $('#<%= $k %>ValidationFeedback').text('<%= $v->[0] %>');
      % } else {
@@ -64,8 +74,6 @@
    % }
   </script>
 % }
-
-<pre><%= dumper stash->{'mojo.validation'}->{error} if %{stash->{'mojo.validation'}->{error}} %></pre>
 
 <script>
  $('select').select2({

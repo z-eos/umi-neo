@@ -8,14 +8,16 @@
 %= form_for '/profile/new' => {class => "form-horizontal"} => (method => 'POST') => begin
 
   <div class="input-group mb-3">    
-    %= label_for user_first_name => 'First Name:', class => 'input-group-text'
+    %= label_for user_first_name => 'First / Last Names', class => 'input-group-text'
     %= text_field 'user_first_name', class => 'form-control', id => 'user_first_name', placeholder => 'First name of the employee', title => 'First name of the employee'
-  </div>
-  <div class="input-group mb-3">
-    %= label_for user_last_name => 'Last Name:', class => 'input-group-text'
     %= text_field 'user_last_name', class => 'form-control', id => 'user_last_name', placeholder => 'Last name of the employee', title => 'Last name of the employee'
   </div>
 
+  <div class="input-group mb-3">
+    %= label_for title => 'Photo', class => 'input-group-text'
+    %= file_field 'photo', id => 'photo', class => 'form-control form-control', accept => '.jpg'
+  </div>
+  
   <div class="input-group mb-3">
     %= label_for title => 'Title:', class => 'input-group-text'
     %= text_field 'title', class => 'form-control', id => 'title', placeholder => 'Employee title', title => 'Employee title'
@@ -23,14 +25,14 @@
   
   <div class="input-group mb-3">
     <span class="input-group-text">Birth:</span>
-    %= text_field 'birth', class => 'form-control', id => 'birth', title => 'Employee birth date', placeholder => 'Employee birth date'
+    %= text_field 'schacDateOfBirth', class => 'form-control', id => 'schacDateOfBirth', title => 'Employee birth date', placeholder => 'Employee birth date'
       <span class="input-group-text"><i class="fa-regular fa-calendar"></i></span>
   </div>
 
   <div class="input-group mb-3">
     <span class="input-group-text">Employee Location:</span>
     %= text_field 'city', class => 'form-control', id => 'city', placeholder => 'City', title => 'Employee city'
-    %= text_field 'country', class => 'form-control', id => 'country', placeholder => 'Country', title => 'Employee country'
+    %= text_field 'schacCountryOfResidence', class => 'form-control', id => 'schacCountryOfResidence', placeholder => 'Country', title => 'Employee country'
   </div>
 
   %= submit_button 'Submit', class => 'btn btn-success font-weight-bold text-uppercase text-end'

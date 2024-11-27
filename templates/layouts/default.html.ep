@@ -2,7 +2,7 @@
 <!DOCTYPE html>
 <html lang="en" data-bs-theme="dark">
   <head>
-    <meta charset="utf-8">
+    <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="description" content='UMI is intended to be rather flexible, though still "high level" (for use by not qualified personell), LDAP stored data, "simple" and "user-friendly" UI. https://github.com/z-eos/umi'>
     <meta name="author" content="">

@@ -5,19 +5,42 @@
   Modify User <small><em class="text-muted font-monospace"></em></small>
 </h3>
 
-%= form_for '/profile/modify' => {class => "form-horizontal"} => (method => 'POST') => begin
+%= form_for '/profile/modify' => {class => "form-horizontal"} => (method => 'POST', enctype => 'multipart/form-data') => begin
 
 %= hidden_field uid_to_modify => 'uid_to_modify', id => 'uid_to_modify', value => exists stash->{from_form}->{uid_to_modify} ? stash->{from_form}->{uid_to_modify} : ''
 
+  <div class="g-0 mb-3">
+    <div class="d-flex flex-row-reverse">
+      <picture>
+	% my $img;
+	% if (exists $from_form->{jpegPhoto}) {
+	  % $img = $from_form->{jpegPhoto};
+	% } elsif (exists $from_ldap->{jpegPhoto})
+	% {
+	  % $img = $from_ldap->{jpegPhoto};
+	% }
+	% if ( defined $img ) {
+	  %= image 'data:image/jpg;base64,' . Mojo::Util::b64_encode($img), class => 'img-thumbnail', alt => stash->{from_form}->{uid_to_modify}
+	% }
+      </picture>
+    </div>
+  </div>
+  
   <div class="input-group mb-3">    
-    %= label_for givenName => 'First Name:', class => 'input-group-text'
+    %= label_for givenName => 'First Name', class => 'input-group-text'
     %= text_field 'givenName', class => 'form-control', id => 'givenName', placeholder => 'First name of the employee', title => 'First name of the employee', value => exists stash->{from_ldap}->{givenName} ? stash->{from_ldap}->{givenName} : ''
   </div>
+  
   <div class="input-group mb-3">
-    %= label_for sn => 'Last Name:', class => 'input-group-text'
+    %= label_for givenName => 'Last Name', class => 'input-group-text'
     %= text_field 'sn', class => 'form-control', id => 'sn', placeholder => 'Last name of the employee', title => 'Last name of the employee', value => exists stash->{from_ldap}->{sn} ? stash->{from_ldap}->{sn} : ''
   </div>
 
+  <div class="input-group mb-3">
+    %= label_for title => 'Photo', class => 'input-group-text'
+    %= file_field 'jpegPhoto', id => 'jpegPhoto', class => 'form-control form-control', accept => '.jpg'
+  </div>
+  
   <div class="input-group mb-3">
     %= label_for title => 'Title:', class => 'input-group-text'
     %= text_field 'title', class => 'form-control', id => 'title', placeholder => 'Employee title', title => 'Employee title', value => exists stash->{from_ldap}->{title} ? stash->{from_ldap}->{title} : ''
@@ -25,14 +48,14 @@
   
   <div class="input-group mb-3">
     <span class="input-group-text">Birth:</span>
-    %= text_field 'carLicense', class => 'form-control', id => 'carLicense', title => 'Employee birth date', placeholder => 'Employee birth date', value => exists stash->{from_ldap}->{carLicense} ? stash->{from_ldap}->{carLicense} : ''
+    %= text_field 'schacDateOfBirth', class => 'form-control', id => 'schacDateOfBirth', title => 'Employee birth date', placeholder => 'Employee birth date', value => exists stash->{from_ldap}->{schacDateOfBirth} ? stash->{from_ldap}->{schacDateOfBirth} : ''
     <span class="input-group-text"><i class="fa-regular fa-calendar"></i></span>
   </div>
 
   <div class="input-group mb-3">
     <span class="input-group-text">Employee Location:</span>
     %= text_field 'l', class => 'form-control', id => 'l', placeholder => 'City', title => 'Employee city', value => exists stash->{from_ldap}->{l} ? stash->{from_ldap}->{l} : ''
-    %= text_field 'registeredAddress', class => 'form-control', id => 'registeredAddress', placeholder => 'Country', title => 'Employee country', value => exists stash->{from_ldap}->{registeredAddress} ? stash->{from_ldap}->{registeredAddress} : ''
+    %= text_field 'schacCountryOfResidence', class => 'form-control', id => 'schacCountryOfResidence', placeholder => 'Country', title => 'Employee country', value => exists stash->{from_ldap}->{schacCountryOfResidence} ? stash->{from_ldap}->{schacCountryOfResidence} : ''
   </div>
 
   %= submit_button 'Submit', class => 'btn btn-success font-weight-bold text-uppercase text-end'

@@ -1,4 +1,6 @@
 %# -*- mode: web; eval: (follow-mode) -*-
+% use Encode qw(decode_utf8);
+
 <link href="/assets/js/datatables/datatables.min.css" rel="stylesheet" type="text/css">
 
 %= t 'h1', class => 'mt-3 mb-4', 'Users list'
@@ -38,8 +40,8 @@
 	  
 	  <tr class="umi-text-xs <%= 'table-danger' if $card_col eq 'danger' %>">
 	    <td></td>
-	    <td><%= $v->{sn}->[0] %></td>
-	    <td><%= $v->{givenname}->[0] %></td>
+	    <td><%= utf8::is_utf8($v->{sn}->[0]) ? $v->{sn}->[0] : decode_utf8($v->{sn}->[0]) %></td>
+	    <td><%= utf8::is_utf8($v->{givenname}->[0]) ? $v->{givenname}->[0] : decode_utf8($v->{givenname}->[0]) %></td>
 	    <td class="mono"><%= $card_col eq 'danger' ? 'yes' : 'no' %></td>
 	    <td>
 	      % if ( exists $projects->{$dn} ) {
@@ -74,8 +76,8 @@
 	  % $servers->{$dn} = ['none'] if ! @{$servers->{$dn}};
 	  % foreach my $s (sort(@{$servers->{$dn}})) {
 	    <tr class="umi-text-xs <%= 'table-danger' if $card_col eq 'danger' %>">
-	      <td><%= $v->{sn}->[0] %></td>
-	      <td><%= $v->{givenname}->[0] %></td>
+	      <td><%= utf8::is_utf8($v->{sn}->[0]) ? $v->{sn}->[0] : decode_utf8($v->{sn}->[0]) %></td>
+	      <td><%= utf8::is_utf8($v->{givenname}->[0]) ? $v->{givenname}->[0] : decode_utf8($v->{givenname}->[0]) %></td>
 	      <td class="mono"><%= $card_col eq 'danger' ? 'yes' : 'no' %></td>
 	      <td>
 		% if ( exists $projects->{$dn} ) {

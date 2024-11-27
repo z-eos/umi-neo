@@ -13,8 +13,10 @@ use Mojolicious::Plugin::Authorization;
 # ?? # use Mojolicious::Plugin::Syslog;
 use Data::Printer {
   caller_info => 1,
-    # max_depth   => 3,
+    hash_max => 0,
+    array_max => 0,
     theme => 'Monokai',
+    # max_depth   => 3,
     # use_prototypes => 0,
   };
 
