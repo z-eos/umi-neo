@@ -5,7 +5,7 @@
   New User <small><em class="text-muted font-monospace"></em></small>
 </h3>
 
-%= form_for '/profile/new' => {class => "form-horizontal"} => (method => 'POST') => begin
+%= form_for '/profile/new' => {class => "form-horizontal"} => (method => 'POST', enctype => 'multipart/form-data') => begin
 
   <div class="input-group mb-3">    
     %= label_for user_first_name => 'First / Last Names', class => 'input-group-text'
@@ -15,7 +15,7 @@
 
   <div class="input-group mb-3">
     %= label_for title => 'Photo', class => 'input-group-text'
-    %= file_field 'photo', id => 'photo', class => 'form-control form-control', accept => '.jpg'
+    %= file_field 'jpegPhoto', id => 'jpegPhoto', class => 'form-control form-control', accept => '.jpg'
   </div>
   
   <div class="input-group mb-3">
@@ -52,7 +52,8 @@
   </script>
 % }
 
-  
+<pre class="mt-5"><%= dumper stash->{'mojo.validation'}->{error} if %{stash->{'mojo.validation'}->{error}} %></pre>
+
 <script>
  document.addEventListener('DOMContentLoaded', function () {
    const picker = new tempusDominus.TempusDominus(document.getElementById('birth'), {

@@ -800,66 +800,98 @@ sub profile_new ($self) {
   my $par = $self->req->params->to_hash;
   $self->h_log($par);
   $self->stash(profile_new_params => $par);
+  my $upload;
+  my $uploads = $self->req->uploads;
+  # $self->h_log($uploads);
+  if ( @$uploads ) {
+    %$upload = map { $_->name => $_ } @$uploads;
+  }
 
   my $v = $self->validation;
   return $self->render(template => 'protected/profile/new') unless $v->has_data;
 
-  my $re = qr/^\p{Lu}\p{L}*([-']\p{L}+)*$/;
+  my $re = qr/^\p{Lu}\p{L}*([-']\p{L}+)*[0-9]*$/;
   $v->required('user_first_name')->size(1, 50)->like($re);
   $v->required('user_last_name')->size(1, 50)->like($re);
   $v->required('title')->size(1, 50);
+  $v->required('schacDateOfBirth');
+  $v->required('city');
+  $v->required('schacCountryOfResidence');
 
+  my $nf = $self->h_translit(lc $par->{user_first_name});
+  my $nl = $self->h_translit(lc $par->{user_last_name});
+  my $nn = sprintf("%s %s", $self->h_translit($par->{user_first_name}), $self->h_translit($par->{user_last_name}));
   my $ldap = Umi::Ldap->new( $self->{app}, $self->session('uid'), $self->session('pwd') );
-
   my $search_arg = { base => $self->{app}->{cfg}->{ldap}->{base}->{acc_root},
 		     filter => sprintf("(|(&(givenName=%s)(sn=%s))(uid=%s.%s))",
 				       $par->{user_first_name},
 				       $par->{user_last_name},
-				       lc $par->{user_first_name},
-				       lc $par->{user_last_name}),
+				       $nf,
+				       $nl),
 		     scope => "one" };
   my $search = $ldap->search( $search_arg );
   $self->{app}->h_log( $self->{app}->h_ldap_err($search, $search_arg) ) if $search->code;
   $v->error(user_first_name => ['User with such first and last names exists']) if $search->count > 0;
   $v->error(user_last_name  => ['User with such first and last names exists']) if $search->count > 0;
 
-  my $attrs = {
-	       objectClass => $self->{app}->{cfg}->{ldap}->{objectClass}->{acc_root},
-	       givenName => $par->{user_first_name},
-	       sn => $par->{user_last_name},
-	       gecos => $par->{user_first_name} . ' ' . $par->{user_last_name},
-	       cn => $par->{user_first_name} . ' ' . $par->{user_last_name},
-	       title => $par->{title},
-	       ### just a kludge since there is no attribute for country available
-	       schacCountryOfResidence => $par->{country},
-	       ### just a kludge since there is no attribute for birth date available
-	       schacDateOfBirth => $par->{birth},
-	       l => $par->{city},
-	       uid => lc $par->{user_first_name} . '.' . lc $par->{user_last_name},
-	       homeDirectory => '/usr/local/home/' . lc $par->{user_first_name} . '.' . lc $par->{user_last_name},
-	       gidNumber => $self->{app}->{cfg}->{ldap}->{defaults}->{attr}->{gidNumber}->{onboarding}
-	      };
+  my $jpegPhoto_error;
+  if ($upload->{jpegPhoto}->size) {
+    my $sides = $self->h_img_info($upload->{jpegPhoto}->slurp);
+    if ( $sides->{width} > $self->{app}->{cfg}->{ldap}->{defaults}->{attr}->{jpegPhoto}->{max_side} ) {
+      $jpegPhoto_error .= sprintf('File %s width is %s what is bigger than %s px; ',
+				  $upload->{jpegPhoto}->filename,
+				  $sides->{width},
+				  $self->{app}->{cfg}->{ldap}->{defaults}->{attr}->{jpegPhoto}->{max_side});
+    } elsif ( $sides->{height} > $self->{app}->{cfg}->{ldap}->{defaults}->{attr}->{jpegPhoto}->{max_side} ) {
+      $jpegPhoto_error .= sprintf('File %s height is %s what is bigger than %s px; ',
+				  $upload->{jpegPhoto}->filename,
+				  $sides->{height},
+				  $self->{app}->{cfg}->{ldap}->{defaults}->{attr}->{jpegPhoto}->{max_side});
+    }
+  }
+  $jpegPhoto_error .= sprintf('File %s is bigget than %s bytes.',
+			      $upload->{jpegPhoto}->filename,
+			      $self->{app}->{cfg}->{ldap}->{defaults}->{attr}->{jpegPhoto}->{max_size})
+    if $upload->{jpegPhoto}->size > $self->{app}->{cfg}->{ldap}->{defaults}->{attr}->{jpegPhoto}->{max_size};
 
-  my $u = $ldap->last_num($self->{app}->{cfg}->{ldap}->{base}->{acc_root}, 'uid', 'uidNumber');
-  if ( $u->[1] ) {
-    $self->h_log($u->[1]);
-    $attrs->{uidNumber} = undef;
-  } else {
-    $attrs->{uidNumber} = $u->[0] + 1;
+  $v->error( jpegPhoto => [ $jpegPhoto_error ] ) if defined $jpegPhoto_error;
+
+  if ( ! $v->has_error ) {
+    my $attrs = {
+		 cn => $nn,
+		 gecos => $nn,
+		 gidNumber => $self->{app}->{cfg}->{ldap}->{defaults}->{attr}->{gidNumber}->{onboarding},
+		 givenName => $par->{user_first_name},
+		 homeDirectory => sprintf("/usr/local/home/%s.%s", $nf, $nl),
+		 l => $par->{city},
+		 objectClass => $self->{app}->{cfg}->{ldap}->{objectClass}->{acc_root},
+		 schacCountryOfResidence => $par->{schacCountryOfResidence},
+		 schacDateOfBirth => $par->{schacDateOfBirth},
+		 sn => $par->{user_last_name},
+		 title => $par->{title},
+		 uid => sprintf("%s.%s", $nf, $nl),
+		};
+
+    $attrs->{jpegPhoto} = $upload->{jpegPhoto}->slurp if $upload->{jpegPhoto}->size > 0;
+
+    my $u = $ldap->last_num($self->{app}->{cfg}->{ldap}->{base}->{acc_root}, 'uid', 'uidNumber');
+    if ( $u->[1] ) {
+      $self->h_log($u->[1]);
+      $attrs->{uidNumber} = undef;
+    } else {
+      $attrs->{uidNumber} = $u->[0] + 1;
+    }
+
+    $self->h_log($attrs);
+
+    my $msg = $ldap->add(sprintf("uid=%s.%s,%s",
+				 $nf,
+				 $nl,
+				 $self->{app}->{cfg}->{ldap}->{base}->{acc_root}),
+			 $attrs);
+    $self->stash(debug => {$msg->{status} => [ $msg->{message} ]});
   }
 
-  $self->h_log($attrs);
-
-  my $msg = $ldap->add(sprintf("uid=%s.%s,%s",
-			       lc $par->{user_first_name},
-			       lc $par->{user_last_name},
-			       $self->{app}->{cfg}->{ldap}->{base}->{acc_root}),
-		       $attrs);
-
-  my $debug;
-  push @{$debug->{$msg->{status}}}, $msg->{message};
-
-  $self->stash(debug => $debug);
   $self->render(template => 'protected/profile/new');
 }
 

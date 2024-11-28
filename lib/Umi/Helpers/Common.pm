@@ -17,6 +17,7 @@ use MIME::Base64 qw(decode_base64 encode_base64);
 use Net::CIDR::Set;
 use Net::LDAP::Util qw(ldap_explode_dn);
 use POSIX qw(strftime :sys_wait_h);
+use Text::Unidecode;
 use Try::Tiny;
 use Crypt::X509;
 # use Crypt::X509::CRL;
@@ -78,6 +79,20 @@ returns 0 if it is and 1 if not
 		     return $arg // '' ne '' && $arg !~ /^[[:ascii:]]+$/ ? 1 : 0;
 		 });
 
+=head2 h_translit
+
+simple transliteration to ASCII with normalization to [:alnum:]
+
+=cut
+
+    $app->helper(
+		 h_translit => sub {
+		   my ($self, $in) = @_;
+		   my $ou = unidecode($in);
+		   $ou =~ s/[^[:alnum:]\.-_]//g;s/[^[:alnum:]\s]//g;
+		   return $ou;
+		 });
+
 =head2 h_is_ip
 
 checks whether the argument is ASCII
@@ -134,8 +149,6 @@ stolen from http://ddiguru.com/blog/25-ip-address-conversions-in-perl
 		   my ($self, $dn) = @_;
 		   return (split(/=/, $dn))[0];
 		 });
-
-
 
     # MAC address normalyzer
     $app->helper(
