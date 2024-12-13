@@ -270,7 +270,7 @@ sub search_projects  ($self) {
     }
   }
 
-  $self->h_log($entries);
+  # $self->h_log($entries);
 
   $self->stash( entries => $entries,
 		base_proj => $self->{app}->{cfg}->{ldap}->{base}->{project},

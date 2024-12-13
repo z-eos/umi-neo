@@ -118,9 +118,13 @@
 			  <div class="card mb-3 p-2">
 			    <div class="row g-0">
 			      <div class="col-md-4">
-				<img src="data:image/jpg;base64,<%= Mojo::Util::b64_encode $v->{team}->{sprintf("uid=%s,%s", $p, $base_acc)}->{jpegphoto}->[0] %>""
-				     class="img-thumbnail object-fit-cover"
-				     width="100" alt="<%= $name %>">
+				% if ( exists $v->{team}->{sprintf("uid=%s,%s", $p, $base_acc)}->{jpegphoto} ) {
+				  <img src="data:image/jpg;base64,<%= Mojo::Util::b64_encode $v->{team}->{sprintf("uid=%s,%s", $p, $base_acc)}->{jpegphoto}->[0] %>"
+				       class="img-thumbnail object-fit-cover"
+				       width="100" alt="<%= $name %>">
+				% } else {
+				  <i class="fa-solid fa-person-circle-question fa-7x"></i>
+				% }
 			      </div>
 			      <div class="col-md-8">
 				<div class="card-body">

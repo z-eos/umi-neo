@@ -42,6 +42,12 @@ sub delete ($self) {
 		 );
 }
 
+=head2 fire
+
+steps to do on employee firing
+
+=cut
+
 sub fire ($self) {
   my $par = $self->req->params->to_hash;
   $self->h_log($par);
@@ -810,13 +816,19 @@ sub profile_new ($self) {
   my $v = $self->validation;
   return $self->render(template => 'protected/profile/new') unless $v->has_data;
 
-  my $re = qr/^\p{Lu}\p{L}*([-']\p{L}+)*[0-9]*$/;
-  $v->required('user_first_name')->size(1, 50)->like($re);
-  $v->required('user_last_name')->size(1, 50)->like($re);
-  $v->required('title')->size(1, 50);
-  $v->required('schacDateOfBirth');
+  my $re_name = qr/^\p{Lu}\p{L}*([-']\p{L}+)*[0-9]*$/;
+  my $re_date = qr/^(\d{4})(0[1-9]|1[0-2])(0[1-9]|[12]\d|3[01])000000$/;
+  $v->required('user_first_name')->like($re_name);
+  $v->required('user_last_name')->like($re_name);
+  $v->required('title');
+  $v->required('umiUserDateOfEmployment')->like($re_date);
+  $v->required('umiUserDateOfBirth')->like($re_date);
   $v->required('city');
-  $v->required('schacCountryOfResidence');
+  $v->required('umiUserGender');
+  $v->required('umiUserCountryOfResidence');
+
+  $v->error(user_first_name => ['Required, can contain alfanumeric characters and dash']) if $v->error('user_first_name');
+  $v->error(user_last_name => ['Required, can contain alfanumeric characters and dash']) if $v->error('user_last_name');
 
   my $nf = $self->h_translit(lc $par->{user_first_name});
   my $nl = $self->h_translit(lc $par->{user_last_name});
@@ -865,8 +877,10 @@ sub profile_new ($self) {
 		 homeDirectory => sprintf("/usr/local/home/%s.%s", $nf, $nl),
 		 l => $par->{city},
 		 objectClass => $self->{app}->{cfg}->{ldap}->{objectClass}->{acc_root},
-		 schacCountryOfResidence => $par->{schacCountryOfResidence},
-		 schacDateOfBirth => $par->{schacDateOfBirth},
+		 umiUserCountryOfResidence => $par->{umiUserCountryOfResidence},
+		 umiUserDateOfEmployment => $par->{umiUserDateOfEmployment} . 'Z',
+		 umiUserDateOfBirth => $par->{umiUserDateOfBirth},
+		 umiUserGender => $par->{umiUserGender},
 		 sn => $par->{user_last_name},
 		 title => $par->{title},
 		 uid => sprintf("%s.%s", $nf, $nl),
@@ -882,7 +896,7 @@ sub profile_new ($self) {
       $attrs->{uidNumber} = $u->[0] + 1;
     }
 
-    $self->h_log($attrs);
+    # $self->h_log($attrs);
 
     my $msg = $ldap->add(sprintf("uid=%s.%s,%s",
 				 $nf,
@@ -911,7 +925,7 @@ sub profile_modify ($self) {
   my $search_arg = { base => $self->{app}->{cfg}->{ldap}->{base}->{acc_root},
 		     filter => '(uid=' . $uid .')',
 		     scope => 'one',
-		     attrs => [qw(givenName sn mail l schacCountryOfResidence title schacDateOfBirth jpegPhoto)], };
+		     attrs => [qw(givenName sn mail l umiUserCountryOfResidence title umiUserDateOfBirth jpegPhoto)], };
   my $search = $ldap->search( $search_arg );
   $self->{app}->h_log( $self->{app}->h_ldap_err($search, $search_arg) ) if $search->code;
   my ($from_ldap, $dn, $e);
@@ -932,10 +946,16 @@ sub profile_modify ($self) {
   my $v = $self->validation;
   return $self->render(template => 'protected/profile/modify') unless $v->has_data;
 
-  my $re = qr/^\p{Lu}\p{L}*([-']\p{L}+)*$/;
-  $v->required('givenName')->size(1, 50)->like($re);
-  $v->required('sn')->size(1, 50)->like($re);
-  $v->required('title')->size(1, 50);
+  my $re_name = qr/^\p{Lu}\p{L}*([-']\p{L}+)*[0-9]*$/;
+  my $re_date = qr/^(\d{4})(0[1-9]|1[0-2])(0[1-9]|[12]\d|3[01])000000$/;
+  $v->required('givenName')->like($re_name);
+  $v->required('sn')->like($re_name);
+  $v->required('title');
+  $v->required('umiUserDateOfEmployment')->like($re_date);
+  $v->required('umiUserDateOfBirth')->like($re_date);
+  $v->required('umiUserGender');
+  $v->required('l');
+  $v->required('umiUserCountryOfResidence');
   $v->error( givenName => ['UTF-8 and - characters only'] ) if $v->error('givenName');
   $v->error( sn        => ['UTF-8 and - characters only'] ) if $v->error('sn');
   $v->error( title     => ['UTF-8 and - characters only'] ) if $v->error('title');
@@ -982,6 +1002,7 @@ sub profile_modify ($self) {
     my %f = %$from_form;
     delete $f{jpegPhoto} if exists $f{jpegPhoto};
     delete $f{uid_to_modify};
+    $f{umiUserDateOfEmployment} .= 'Z' if exists $f{umiUserDateOfEmployment} && $f{umiUserDateOfEmployment} !~ /^.*Z$/;
 
     my $diff = $self->h_hash_diff( \%l, \%f);
     $self->h_log($diff);
@@ -1214,6 +1235,54 @@ sub moddn ($self) {
 		 );
 }
 
-sub newsvc ($self) { $self->render(template => 'protected/tool/newsvc'); }
+sub newsvc ($self) {
+  my $p = $self->req->params->to_hash;
+  $self->h_log($p);
+
+  my $ldap = Umi::Ldap->new( $self->{app}, $self->session('uid'), $self->session('pwd') );
+
+  my $search_arg = { base => $self->{app}->{cfg}->{ldap}->{base}->{project},
+		     scope => 'one',
+		     filter => '(cn=*)',
+		     attrs => ['associatedDomain'] };
+  # $self->h_log($search_arg);
+  my $search = $ldap->search( $search_arg );
+  $self->h_log( $self->h_ldap_err($search, $search_arg) ) if $search->code;
+
+  my ($domains, $domains_ref);
+  foreach ($search->entries) {
+    $domains_ref = $_->get_value('associatedDomain', asref => 1);
+    push @$domains, @$domains_ref if $domains_ref->[0] ne 'unknown';
+  }
+  @$domains = sort @$domains;
+
+  $search_arg = { base => $self->{app}->{cfg}->{ldap}->{base}->{rad_groups},
+		  filter => '(cn=*)' };
+  # $self->h_log($search_arg);
+  $search = $ldap->search( $search_arg );
+  $self->h_log( $self->h_ldap_err($search, $search_arg) ) if $search->code;
+
+  my $rad_groups;
+  %$rad_groups = map { $_->dn => $_->exists('description') ? $_->get_value('description') : $_->get_value('cn') } $search->entries;
+  # $self->h_log($rad_groups);
+
+  $search_arg = { base => $self->{app}->{cfg}->{ldap}->{base}->{rad_profiles},
+		  filter => '(cn=*)' };
+  # $self->h_log($search_arg);
+  $search = $ldap->search( $search_arg );
+  # $self->h_log( $self->h_ldap_err($search, $search_arg) ) if $search->code;
+
+  my $rad_profiles;
+  %$rad_profiles = map { $_->dn => $_->exists('description') ? $_->get_value('description') : $_->get_value('cn') } $search->entries;
+  # $self->h_log($rad_profiles);
+
+
+  $self->stash( dn => $p->{dn_to_new_svc},
+		domains => $domains,
+		rad_groups => $rad_groups,
+		rad_profiles => $rad_profiles );
+
+  $self->render(template => 'protected/tool/newsvc');
+}
 
 1;

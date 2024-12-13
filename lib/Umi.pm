@@ -4,6 +4,7 @@
 package Umi;
 
 use Umi::Authentication;
+use Umi::Constants qw(COUNTRIES);
 
 use Mojo::Base qw( Mojolicious -signatures );
 use Mojo::Util qw( dumper );
@@ -149,6 +150,11 @@ sub _startup_session ($self) {
 		is_user_authenticated => sub {
 		  my $self = shift;
 		  return $self->session('uid') ? 1 : 0;
+		});
+
+  $self->helper(constant => sub {
+		  my ($c, $name) = @_;
+		  return Umi::Constants->can($name) ? Umi::Constants->$name() : undef;
 		});
 
   # Middleware to check session expiration

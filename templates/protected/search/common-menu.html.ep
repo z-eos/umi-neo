@@ -2,20 +2,34 @@
 
 %# column affinity defines which type of objects the item belongs (can appear for), an empty means available for all
 % my $menu = {
-  % "block"    => { act => "modal",          affinity => [],         class => "disabled", ico => "fa-user-slash",   col => "danger" },
-  % "delete"   => { act => "modal",          affinity => [],         class =>         "", ico => "fa-skull",        col => "danger" },
-  % "fire"     => { act => "modal",          affinity => [qw(root)], class =>         "", ico => "fa-fire",         col => "danger" },
-  % "group"    => { act => "/profile",       affinity => [qw(root)], class =>         "", ico => "fa-users-gear",   col => "warning" },
-  % "history"  => { act => "/search/common", affinity => [],         class =>         "", ico => "fa-history",      col => "info" },
-  % "image"    => { act => "/profile",       affinity => [qw(root)], class =>         "", ico => "fa-image",        col => "warning" },
-  % "ldif"     => { act => "modal",          affinity => [],         class =>         "", ico => "fa-code",         col => "info" },
-  % "moddn"    => { act => "modal",          affinity => [qw(leaf)], class =>         "", ico => "fa-recycle",      col => "danger" },
-  % "modify"   => { act => "/tool/modify",   affinity => [],         class =>         "", ico => "fa-hammer",       col => "warning" },
-  % "new_svc"  => { act => "/tool/newsvc",   affinity => [qw(root)], class =>         "", ico => "fa-file-circle-plus", col => "success" },
-  % "password" => { act => "/tool/pwdgen",   affinity => [qw(root leaf)], class =>    "", ico => "fa-fingerprint",  col => "danger" },
-  % "profile"  => { act => "/profile/$rrdn", affinity => [qw(root)], class =>         "", ico => "fa-address-card", col => "info" },
-  % "vCard"    => { act => "/profile",       affinity => [qw(root)], class => "disabled", ico => "fa-upload",       col => "info" },
+  % "block"    => { act => "modal",          affinity => [],              class => "disabled", ico => "fa-user-slash",   col => "danger" },
+  % "delete"   => { act => "modal",          affinity => [],              class =>         "", ico => "fa-skull",        col => "danger" },
+  % "demo"     => { act => "",               affinity => [],              class =>         "", ico => "fa-person-chalkboard", col => "success" },
+  % "fire"     => { act => "modal",          affinity => [qw(root)],      class =>         "", ico => "fa-fire",         col => "danger" },
+  % "group"    => { act => "/profile",       affinity => [qw(root)],      class =>         "", ico => "fa-users-gear",   col => "warning" },
+  % "history"  => { act => "/search/common", affinity => [],              class =>         "", ico => "fa-history",      col => "info" },
+  % "image"    => { act => "/profile",       affinity => [qw(root)],      class =>         "", ico => "fa-image",        col => "warning" },
+  % "ldif"     => { act => "modal",          affinity => [],              class =>         "", ico => "fa-code",         col => "info" },
+  % "moddn"    => { act => "modal",          affinity => [qw(branch leaf)],      class =>         "", ico => "fa-recycle",      col => "danger" },
+  % "modify"   => { act => "/tool/modify",   affinity => [],              class =>         "", ico => "fa-hammer",       col => "warning" },
+  % "new_svc"  => { act => "/tool/newsvc",   affinity => [qw(root)],      class =>         "", ico => "fa-file-circle-plus", col => "success" },
+  % "password" => { act => "/tool/pwdgen",   affinity => [qw(root leaf)], class =>         "", ico => "fa-fingerprint",  col => "danger" },
+  % "profile"  => { act => "/profile/$rrdn", affinity => [qw(root)],      class =>         "", ico => "fa-address-card", col => "info" },
+  % "vCard"    => { act => "/profile",       affinity => [qw(root)],      class => "disabled", ico => "fa-upload",       col => "info" },
 % };
+
+% my $ppl_base = app->{cfg}->{ldap}->{base}->{acc_root};
+% my $re_root_ppl = qr/^uid=[^,]+,$ppl_base$/;
+% my $is_root_ppl = $e->dn =~ /$re_root_ppl/i ? 1 : 0;
+% my $re_ppl = qr/^.+,$ppl_base$/;
+% my $is_ppl = $e->dn =~ /$re_ppl/i ? 1 : 0;
+
+% my $prj_base = app->{cfg}->{ldap}->{base}->{project};
+% my $re_root_prj = qr/^cn=[^,]+,$prj_base$/;
+% my $is_root_prj = $e->dn =~ /$re_root_prj/i ? 1 : 0;
+% my $re_prj = qr/^.+,$prj_base$/;
+% my $is_prj = $e->dn =~ /$re_prj/i ? 1 : 0;
+
 %# here we provide data further, to modals template
 % stash->{menu} = $menu;
 
@@ -26,37 +40,53 @@
     <span class="fa-solid fa-bars text-muted"></span>
   </button>
   <div class="dropdown-menu z-50 position-absolute" aria-labelledby="dropdownMenuActions">
-
+    
     % for my $item (sort(keys(%$menu))) {
-      
       % if (
-      %# -*- for not root objects, skip each item with the single afinity `root`
-      %     ( $dn !~ /^uid=[^,]+,ou=People,dc=/i &&
-      %       join('', @{$menu->{$item}->{affinity}}) eq 'root' ) ||
+      %#
+      %# -*- for base people or project, not root objects, skip item 'demo'
+      %     ( $is_root_ppl == 0 && $is_root_prj == 0 && $item eq 'demo' ) ||
+      %#
+      %# -*- for not base people objects, skip item 'password'
+      %     ( ( $is_ppl == 0 || $e->dn =~ /^authorizedService=.+/ ) && $item eq 'password' ) ||
+      %#
+      %# -*- for base acc_root, not root objects, skip each item with the single afinity `root`
+      %     ( join('', @{$menu->{$item}->{affinity}}) eq 'root' && $is_root_ppl == 0) ||
+      %#
       %# -*- for branch objects, skip items with non-empty affinity that doesn’t contain `branch`
-      %     ( $dn =~ /^author/ &&
+      %     ( $e->dn =~ /^authorizedService=.+/ &&
       %       @{$menu->{$item}->{affinity}} &&
       %       join('', @{$menu->{$item}->{affinity}}) !~ /branch/ )
-      %#       ! grep {$_ eq 'branch'} @{$menu->{$item}->{affinity}} )
-      %    ) {
+      %#
+      % ) {
 	% next;
       % }
-      
+
       <div class="dropdown-item">
 	% if ($menu->{$item}->{act} eq "modal") {
 	  <button type="button" title="" class="btn btn-sm border-0 <%= $menu->{$item}->{class} %>"
-		  value="<%= $dn %>" name="<%= $item %>" data-bs-toggle="modal" data-bs-target="#modal_<%= $item %><%= $i %>">
+		  value="<%= $e->dn %>" name="<%= $item %>" data-bs-toggle="modal" data-bs-target="#modal_<%= $item %><%= $i %>">
 	    <i class="fa-solid fa-fw <%= $menu->{$item}->{ico} %> text-<%= $menu->{$item}->{col} %>"></i>
 	    <%= $item %>
 	  </button>
 	% } else {
-	  <form role="form" method="POST" class="injectable-form" action="<%= $menu->{$item}->{act} %>">
+	  % my $action;
+	  % if ( $item eq 'demo' && $is_root_ppl == 1 ) {
+	    % $action = '/profile/' . $e->get_value('uid');
+	  % }
+	  % elsif ( $item eq 'demo' && $is_root_prj == 1) {
+	    % $action = '/project/' . $e->get_value('cn');
+	  % } else {
+	    % $action = $menu->{$item}->{act};
+	  % }
+	      <form role="form" method="POST" class="injectable-form" action="<%= $action %>">
 	    % if ( $item eq 'password' ) {
-	      <input type="hidden" name="pwd_chg_dn" value="<%= $dn %>">
-	      <input type="hidden" name="pwd_chg_svc" value="">
-	      <input type="hidden" name="pwd_chg_rdn" value="">
+	      <input type="hidden" name="pwd_chg_dn" value="<%= $e->dn %>">
+	      % 
+	      <input type="hidden" name="pwd_chg_svc" value="<%= $e->get_value('authorizedService') %>">
+	      <input type="hidden" name="pwd_chg_rdn" value="<%= $e->get_value('uid') %>">
 	    % } else {
-	      <input type="hidden" name="dn_to_<%= $item %>" value="<%= $dn %>">
+	      <input type="hidden" name="dn_to_<%= $item %>" value="<%= $e->dn %>">
 	    % }
 	    <button type="submit" title="" class="btn btn-sm border-0 <%= $menu->{$item}->{class} %>" data-order="20">
 	      <i class="fa-solid fa-fw <%= $menu->{$item}->{ico} %> text-<%= $menu->{$item}->{col} %>"></i>
@@ -70,3 +100,9 @@
 
   </div>
 </div>
+
+<!--
+     <i class="fa-solid fa-person-chalkboard"></i>
+     <i class="fa-solid fa-champagne-glasses"></i>
+     <i class="fa-solid fa-martini-glass-citrus"></i>
+-->

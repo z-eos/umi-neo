@@ -9,30 +9,54 @@
 
   <div class="input-group mb-3">    
     %= label_for user_first_name => 'First / Last Names', class => 'input-group-text'
-    %= text_field 'user_first_name', class => 'form-control', id => 'user_first_name', placeholder => 'First name of the employee', title => 'First name of the employee'
-    %= text_field 'user_last_name', class => 'form-control', id => 'user_last_name', placeholder => 'Last name of the employee', title => 'Last name of the employee'
+    %= text_field 'user_first_name', class => 'form-control', id => 'user_first_name', maxlength => "50", placeholder => 'First name, 1 to 50, UTF-8 characters', title => 'First name, 1 to 50, UTF-8 characters'
+    %= text_field 'user_last_name', class => 'form-control', id => 'user_last_name', maxlength => "50", placeholder => 'Last name, 1 to 50, UTF-8 characters', title => 'Last name, 1 to 50, UTF-8 characters'
   </div>
 
-  <div class="input-group mb-3">
+  % my $img_title = 'User avatar image. Must be resolution max 300x300px and max 50kB size';
+  <div class="input-group mb-3" title="">
     %= label_for title => 'Photo', class => 'input-group-text'
     %= file_field 'jpegPhoto', id => 'jpegPhoto', class => 'form-control form-control', accept => '.jpg'
   </div>
   
   <div class="input-group mb-3">
     %= label_for title => 'Title:', class => 'input-group-text'
-    %= text_field 'title', class => 'form-control', id => 'title', placeholder => 'Employee title', title => 'Employee title'
+    %= text_field 'title', class => 'form-control', id => 'title', maxlength => "50", placeholder => 'Employee title', title => 'Employee title'
   </div>
   
   <div class="input-group mb-3">
-    <span class="input-group-text">Birth:</span>
-    %= text_field 'schacDateOfBirth', class => 'form-control', id => 'schacDateOfBirth', title => 'Employee birth date', placeholder => 'Employee birth date'
-      <span class="input-group-text"><i class="fa-regular fa-calendar"></i></span>
+    <span class="input-group-text">Employment Date:</span>
+    %= text_field 'umiUserDateOfEmployment', class => 'form-control', id => 'employment', title => 'Employment date', placeholder => 'yyyyMMddHHMMss'
+    <span class="input-group-text"><i class="fa-regular fa-calendar"></i></span>
   </div>
 
   <div class="input-group mb-3">
     <span class="input-group-text">Employee Location:</span>
-    %= text_field 'city', class => 'form-control', id => 'city', placeholder => 'City', title => 'Employee city'
-    %= text_field 'schacCountryOfResidence', class => 'form-control', id => 'schacCountryOfResidence', placeholder => 'Country', title => 'Employee country'
+    %= text_field 'city', class => 'form-control', id => 'city', maxlength => "30", placeholder => 'City', title => 'Employee city'
+
+    <select name="umiUserCountryOfResidence" class="form-select" id="umiUserCountryOfResidence" title="Countries (ISO 3166)">
+      <option value="" disabled selected>--- CHOOSE COUNTRY ---</option>
+      % foreach (sort(keys(%{constant('COUNTRIES')}))) {
+	<option value="<%= $_ %>"><%= constant('COUNTRIES')->{$_}->{name} %></option>
+      % }
+    </select>
+
+    %#= text_field 'umiUserCountryOfResidence', class => 'form-control', id => 'umiUserCountryOfResidence', maxlength => "20", placeholder => 'Country', title => 'Employee country'
+  </div>
+
+  <div class="input-group mb-3">
+    <span class="input-group-text">Birth:</span>
+    %= text_field 'umiUserDateOfBirth', class => 'form-control', id => 'birth', title => 'Employee birth date', placeholder => 'yyyyMMddHHMMss'
+    <span class="input-group-text"><i class="fa-regular fa-calendar"></i></span>
+  </div>
+
+  <div class="input-group mb-3">
+    <label class="input-group-text" for="gender">Gender</label>
+    <select name="umiUserGender" class="form-select" id="gender" title="Representation of human sex (see ISO 5218)">
+      % foreach (sort(keys(%{constant('GENDER')}))) {
+	<option value="<%= $_ %>"><%= constant('GENDER')->{$_} %></option>
+      % }
+    </select>
   </div>
 
   %= submit_button 'Submit', class => 'btn btn-success font-weight-bold text-uppercase text-end'
@@ -52,13 +76,14 @@
   </script>
 % }
 
-<pre class="mt-5"><%= dumper stash->{'mojo.validation'}->{error} if %{stash->{'mojo.validation'}->{error}} %></pre>
+<pre class="mt-5 umi-text-tiny text-muted"><%= dumper stash->{'mojo.validation'}->{error} if %{stash->{'mojo.validation'}->{error}} %></pre>
 
 <script>
  document.addEventListener('DOMContentLoaded', function () {
    const picker = new tempusDominus.TempusDominus(document.getElementById('birth'), {
      display: {
        viewMode: 'calendar',
+       toolbarPlacement: 'top',
        components: {
          calendar: true,
          date: true,
@@ -71,11 +96,41 @@
          seconds: false
        },
        buttons: {
+	 clear: true,
+	 close: true,
 	 today: true
        }
      },
      localization: {
-       format: 'yyyy-MM-dd'
+       format: 'yyyyMMdd000000'
+     }
+   });
+ });
+
+ document.addEventListener('DOMContentLoaded', function () {
+   const picker = new tempusDominus.TempusDominus(document.getElementById('employment'), {
+     display: {
+       viewMode: 'calendar',
+       toolbarPlacement: 'top',
+       components: {
+         calendar: true,
+         date: true,
+         month: true,
+         year: true,
+         decades: true,
+         clock: false,
+         hours: false,
+         minutes: false,
+         seconds: false
+       },
+       buttons: {
+	 clear: true,
+	 close: true,
+	 today: true
+       }
+     },
+     localization: {
+       format: 'yyyyMMdd000000'
      }
    });
  });

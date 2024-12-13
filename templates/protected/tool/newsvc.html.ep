@@ -1,0 +1,161 @@
+%# -*- mode: web; eval: (follow-mode) -*-
+
+<h2 class="my-4">
+  <i class="fa-solid fa-file-circle-plus me-3 text-muted"></i>
+  New Service <small><em class="text-muted font-monospace fs-6">
+    for dn: <%= $dn %>
+  </em></small>
+</h2>
+<hr class="p-1 ">
+
+%= form_for '/tool/newsvc' => {class => "form-horizontal"} => (method => 'POST', enctype => 'multipart/form-data', id => 'dynamicForm') => begin
+  
+  % my $options = [['--- choose service ---' => '']];
+  % foreach (sort(keys(%{app->{cfg}->{ldap}->{authorizedService}}))) {
+    % push @{$options}, [$_ => $_] if !app->{cfg}->{ldap}->{authorizedService}->{$_}->{disabled};
+  % }
+  <div class="input-group my-3">
+    %= label_for authorizedService => 'Service', class => 'input-group-text text-uppercase'
+    %= select_field authorizedService => $options, id => 'authorizedService', class => 'custom-select form-control', onchange => 'toggleInputField()'
+  </div>
+
+  % my $fields = {
+    %   description      => { type => 'textarea', ph => '' },
+    %   associatedDomain => { type => 'select'  , ph => '' },
+    %   homeDir          => { type => 'text'    , ph => 'Absolute path to home directory' },
+    %   login            => { type => 'text'    , ph => 'firstname.lastname' },
+    %   loginShell       => { type => 'text'    , ph => 'Absolute path to login shell' },
+    %   ovpnConfig       => { type => 'text'    , ph => '' },
+    %   ovpnDevMake      => { type => 'text'    , ph => '' },
+    %   ovpnDevModel     => { type => 'text'    , ph => '' },
+    %   ovpnDevOs        => { type => 'text'    , ph => '' },
+    %   ovpnDevOsVer     => { type => 'text'    , ph => '' },
+    %   ovpnIfconfigPush => { type => 'text'    , ph => '' },
+    %   ovpnIroute       => { type => 'text'    , ph => '' },
+    %   ovpnPush         => { type => 'text'    , ph => '' },
+    %   ovpncDevType     => { type => 'text'    , ph => '' },
+    %   password         => { type => 'text'    , ph => '' },
+    %   radiusgroupname  => { type => 'select'  , ph => '' },
+    %   radiusprofiledn  => { type => 'select'  , ph => '' },
+    %   sshKeyFile       => { type => 'file'    , ph => 'Publick key file' },
+    %   sshKeyText       => { type => 'textarea', ph => 'ssh-rsa AAAAB3Nza ... sdfKg my key @ my host' },
+    %   status           => { type => 'text'    , ph => '' },
+    %   userCertificate  => { type => 'file'    , ph => '' },
+  % };
+  
+  % foreach my $fld (sort(keys(%$fields))) {
+    % if ( $fld eq 'password' ) {
+      <div class="input-group mb-3 d-none" data-field="<%= $fld %>">
+	%= label_for password1 => $fld, class => 'input-group-text'
+	%= text_field 'password1', class => 'form-control', id => 'password1', placeholder => 'type a password'
+	%= text_field 'password2', class => 'form-control', id => 'password2', placeholder => 'confirm the password'
+      </div>
+    % }
+    % elsif ( $fld eq 'associatedDomain' )
+    % {
+      % my $options = [ ['--- choose domain ---' => ''], map { [ $_ => $_ ] } @$domains ];
+      <div class="input-group my-3 d-none" data-field="<%= $fld %>">
+	%= label_for $fld => $fld, class => 'input-group-text'
+	%= select_field $fld => $options, id => $fld, class => 'custom-select form-control'
+      </div>
+    % }
+    % elsif ( $fld eq 'radiusgroupname' )
+    % {
+      % my $options = [ ['--- choose domain ---' => ''], map { [ $rad_groups->{$_} => $_ ] } keys(%$rad_groups) ];
+      <div class="input-group my-3 d-none" data-field="<%= $fld %>">
+	%= label_for $fld => $fld, class => 'input-group-text'
+	%= select_field $fld => $options, id => $fld, class => 'custom-select form-control'
+      </div>
+    % }
+    % elsif ( $fld eq 'radiusprofiledn' )
+    % {
+      % my $options = [ ['--- choose domain ---' => ''], map { [ $rad_profiles->{$_} => $_ ] } keys(%$rad_profiles) ];
+      <div class="input-group my-3 d-none" data-field="<%= $fld %>">
+	%= label_for $fld => $fld, class => 'input-group-text'
+	%= select_field $fld => $options, id => $fld, class => 'custom-select form-control'
+      </div>
+    % }
+    % elsif ( $fields->{$fld}->{type} eq 'textarea' )
+    % {
+      <div class="input-group mb-3 d-none" data-field="<%= $fld %>">
+	%= label_for $fld => $fld, class => 'input-group-text'
+	%= text_area $fld, id => $fld, rows => 3, class => 'text-monospace form-control', placeholder => $fields->{$fld}->{ph}
+      </div>
+    % } elsif ( $fields->{$fld}->{type} eq 'file' )
+    % {
+      <div class="input-group mb-3 d-none" data-field="<%= $fld %>">
+	%= label_for $fld => $fld, class => 'input-group-text'
+	%= file_field $fld, id => $fld, class => 'form-control form-control'
+      </div>
+    % } else {
+      <div class="input-group mb-3 d-none" data-field="<%= $fld %>">
+	%= label_for $fld => $fld, class => 'input-group-text'
+	%= text_field $fld, class => 'form-control', id => $fld, placeholder => $fields->{$fld}->{ph}
+      </div>
+    % }
+  % }
+
+  %= submit_button 'Submit', class => 'btn btn-success fw-bold text-uppercase my-3'
+% end
+
+%# == h_element_cp_download_btns( 'ldif', $ldif_export_params->{dn} . '.ldif' );
+<pre id="ldif" class="user-select-all text-break umi-text-xs font-monospace">
+  <%# = dumper $domains =%>
+</pre>
+
+<script>
+ 
+ document.addEventListener('DOMContentLoaded', () => {
+   const authorizedService = document.getElementById('authorizedService');
+   const fieldMap = {
+     'comm-acc':      [ 'associatedDomain', 'login', 'password', 'description' ],
+     'dot1x-eap-md5': [ 'associatedDomain', 'login', 'password', 'description', 'radiusgroupname', 'radiusprofiledn', 'userCertificate' ],
+     'dot1x-eap-tls': [ 'associatedDomain', 'login', 'password', 'description', 'radiusgroupname', 'radiusprofiledn', 'userCertificate' ],
+     gitlab:          [ 'associatedDomain', 'login', 'password', 'description' ],
+     mail:            [ 'associatedDomain', 'login', 'password', 'description' ],
+     ovpn:            [ 'associatedDomain',
+			'ovpnIfconfigPush',
+			'ovpnIroute',
+			'ovpnPush',
+			'ovpncDevType',
+			'ovpnDevOs',
+			'ovpnConfig',
+			'ovpnDevMake',
+			'ovpnDevModel',
+			'ovpnDevOsVer',
+			'status',
+			'userCertificate',
+			'description' ],
+     'ssh-acc':       [ 'associatedDomain', 'login', 'password', 'homeDir', 'loginShell', 'sshKeyFile', 'sshKeyText', 'description' ],
+     web:             [ 'associatedDomain', 'login', 'password',  'description' ],
+     xmpp:            [ 'associatedDomain', 'login', 'password',  'description' ]
+   };
+
+   authorizedService.addEventListener('change', function () {
+     const selectedService = this.value;
+     const fieldsToShow = fieldMap[selectedService] || [];
+
+     // Hide all fields initially
+     document.querySelectorAll('#dynamicForm [data-field]').forEach(field => {
+       field.classList.add('d-none');
+       field.querySelector('input, select, textarea').disabled = true;
+     });
+
+     // Show relevant fields for the selected service
+     const formGroupContainer = document.getElementById('dynamicForm');
+     fieldsToShow.forEach(fieldName => {
+       const field = document.querySelector(`#dynamicForm [data-field="${fieldName}"]`);
+       if (field) {
+         field.classList.remove('d-none');
+         field.querySelector('input, select, textarea').disabled = false;
+         // Ensure the field is moved to the correct position
+	 formGroupContainer.appendChild(field);
+       }
+     });
+     
+   });
+   
+ });
+
+</script>
+

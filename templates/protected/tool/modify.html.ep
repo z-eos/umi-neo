@@ -54,14 +54,14 @@
   % foreach my $a (sort($entry->attributes)) {
     % next if $attr_to_ignore->{$a};
     % my $b = $a =~ s/;binary/_binary/r;
-    <div class="form-group row mb-2" title="">
+    <div id="container-<%= $a %>" class="form-group row mb-2" title="">
       <label class="col-sm-3 text-end text-truncate h6 fw-bold"><%= $a %>:</label>
       <div class="col-sm-9 controls">
 	<div class="" title="">
 	  % foreach my $v (sort @{[$entry->get_value($a, asref => 1)]}) {
 	    % foreach my $e (sort(@$v)) {
 	      % $id = $b . '_' . $i;
-	      <div class="input-group input-group-sm entry">
+	      <div id="iteration-<%= $a . '-' . $i %>" class="input-group input-group-sm<%= $a ne 'objectClass' ? ' entry-removable' : ' entry-at-least-one' %>">
 		% if ( $a =~ /^.*ertif.*;binary/ ) {
 		  %= file_field $b, id => $id, class => 'form-control form-control-sm', accept => '.der'
 		% } elsif ( $a =~ /^.*;binary/ )
@@ -103,7 +103,7 @@
 		% }
 		<span class="input-group-btn">
 		  <!-- Delete Button -->
-		  <button class="btn btn-secondary btn-sm btn-delete element-delete" type="button" title="Click to delete this field">
+		  <button class="btn btn-secondary btn-sm btn-delete element-delete" type="button" title="Click to delete <%= $a %> field">
 		    <i class="fa-solid fa-fw fa-trash text-danger-emphasis"></i>
 		  </button>
 		</span>

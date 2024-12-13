@@ -60,7 +60,7 @@
 	  % if ( $e->dn !~ /$re/ ) {
 	    % my $rrdn = '';
 	    % $rrdn = $1 if $e->dn =~ /^uid=([^,]+),ou=People,dc=/i;
-	    %= include 'protected/search/common-menu', dn => $e->dn, i => $i, rrdn => $rrdn
+	    %= include 'protected/search/common-menu', e => $e, i => $i, rrdn => $rrdn
 	  % }
 	  
 	  %# ICO after BURGER MENU
@@ -92,13 +92,13 @@
 		% my $reqType = $e->get_value('reqType');
 		% if ( $reqType eq 'add' )
 		% {
-		  <i class="fa-solid fa-circle-plus fa-xs me-2 text-success-emphasis"></i>
+		  <i class="fa-solid fa-circle-plus fa-xs me-2 text-success"></i>
 		% } elsif ( $reqType eq 'modify' )
 		% {
-		  <i class="fa-solid fa-gear fa-xs me-2 text-warning-emphasis"></i>
+		  <i class="fa-solid fa-gear fa-xs me-2 text-warning"></i>
 		% } elsif ( $reqType eq 'delete' )
 		% {
-		  <i class="fa-solid fa-circle-xmark fa-xs me-2 text-danger-emphasis"></i>
+		  <i class="fa-solid fa-circle-xmark fa-xs me-2 text-danger"></i>
 		% }
 	      % } else {
 	      % }

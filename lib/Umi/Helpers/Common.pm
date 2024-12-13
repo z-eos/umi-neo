@@ -913,6 +913,36 @@ data taken, generally, from
 		   return $html;
 		 });
 
+# =head2 h_domains_to_hash
+
+# convert an array of domain names into a hash where the keys are the
+# second-level domain names (SLDs) and the values are arrays of
+# top-level domain names (TLDs) for each SLD
+
+# =cut
+
+#     $app->helper(
+# 		 h_domains_to_hash => sub {
+# 		   my ($self, $domains) = @_;
+# 		   #$self->h_log($domains);
+# 		   # Hash to group domains by their SLD
+# 		   my %grouped_domains;
+# 		   foreach my $domain (@$domains) {
+# 		     if ($domain =~ /^(?:.*\.)?([^.]+)\.([^.]+)$/) {
+# 		       my ($tld, $sld) = ($1, $2);
+# 		       push @{ $grouped_domains{$sld} }, $tld;
+# 		     }
+# 		   }
+# 		   $self->h_log(%grouped_domains);
+
+# 		   # Sort TLDs within each SLD group
+# 		   foreach my $sld (keys %grouped_domains) {
+# 		     my @sorted_tlds = sort @{ $grouped_domains{$sld} };
+# 		     $grouped_domains{$sld} = \@sorted_tlds;
+# 		   }
+
+# 		   return \%grouped_domains;
+# 		 });
 
     ### END OF REGISTER --------------------------------------------------------------------------------------------
   }

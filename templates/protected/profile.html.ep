@@ -24,9 +24,10 @@
 		 class="img-thumbnail img-fluid <%= 'border-' . $card_col if $card_col ne '' %> float-end" style="max-width: 300px;"
 		 alt="<%= $dn %>">
 	  % } else {
-	    <img src="/assets/images/unknown-1-svgrepo-com.svg"
+	    <i class="fa-solid fa-person-circle-question fa-10x"></i>
+	    <!-- <img src="/assets/images/unknown-user-symbol-svgrepo-com.svg"
 		 class="img-thumbnail img-fluid <%= 'border-' . $card_col if $card_col ne '' %> float-end" style="max-width: 300px;"
-		 alt="<%= $dn %>">
+		 alt="<%= $dn %>"> -->
 	  % }
 	</picture>
       </div>

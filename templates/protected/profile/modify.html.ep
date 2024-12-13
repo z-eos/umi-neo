@@ -47,20 +47,55 @@
   </div>
   
   <div class="input-group mb-3">
-    <span class="input-group-text">Birth:</span>
-    %= text_field 'schacDateOfBirth', class => 'form-control', id => 'schacDateOfBirth', title => 'Employee birth date', placeholder => 'Employee birth date', value => exists stash->{from_ldap}->{schacDateOfBirth} ? stash->{from_ldap}->{schacDateOfBirth} : ''
+    <span class="input-group-text">Employment Date:</span>
+    %= text_field 'umiUserDateOfEmployment', class => 'form-control', id => 'employment', title => 'Employment date', placeholder => 'yyyyMMddHHMMss', value => exists stash->{from_ldap}->{umiUserDateOfEmployment} ? stash->{from_ldap}->{umiUserDateOfEmployment} : ''
+    <span class="input-group-text"><i class="fa-regular fa-calendar"></i></span>
+  </div>
+
+  <div class="input-group mb-3">
+    <span class="input-group-text">Termination Date:</span>
+    %= text_field 'umiUserDateOfTermination', class => 'form-control', id => 'termination', title => 'Termination date', placeholder => 'yyyyMMddHHMMss', value => exists stash->{from_ldap}->{umiUserDateOfTermination} ? stash->{from_ldap}->{umiUserDateOfTermination} : ''
     <span class="input-group-text"><i class="fa-regular fa-calendar"></i></span>
   </div>
 
   <div class="input-group mb-3">
     <span class="input-group-text">Employee Location:</span>
     %= text_field 'l', class => 'form-control', id => 'l', placeholder => 'City', title => 'Employee city', value => exists stash->{from_ldap}->{l} ? stash->{from_ldap}->{l} : ''
-    %= text_field 'schacCountryOfResidence', class => 'form-control', id => 'schacCountryOfResidence', placeholder => 'Country', title => 'Employee country', value => exists stash->{from_ldap}->{schacCountryOfResidence} ? stash->{from_ldap}->{schacCountryOfResidence} : ''
+
+    <select name="umiUserCountryOfResidence" class="form-select" id="umiUserCountryOfResidence">
+      % my $sel = '';
+      % if ( ! exists stash->{from_ldap}->{umiUserCountryOfResidence} ) {
+	<option value="" disabled selected>--- CHOOSE COUNTRY ---</option>
+      % }
+      % foreach (sort(keys(%{constant('COUNTRIES')}))) {
+	% $sel = ' selected' if stash->{from_ldap}->{umiUserCountryOfResidence} == $_;
+	<option value="<%= $_ %>"><%= constant('COUNTRIES')->{$_}->{name} %></option>
+      % }
+    </select>
+
+  </div>
+
+  <div class="input-group mb-3">
+    <span class="input-group-text">Birth:</span>
+    %= text_field 'umiUserDateOfBirth', class => 'form-control', id => 'birth', title => 'Employee birth date', placeholder => 'yyyyMMddHHMMss', value => exists stash->{from_ldap}->{umiUserDateOfBirth} ? stash->{from_ldap}->{umiUserDateOfBirth} : ''
+    <span class="input-group-text"><i class="fa-regular fa-calendar"></i></span>
+  </div>
+
+  <div class="input-group mb-3">
+    <label class="input-group-text" for="gender">Gender</label>
+    <select name="umiUserGender" class="form-select" id="gender">
+      % foreach (sort(keys(%{constant('GENDER')}))) {
+	% $sel = ' selected' if stash->{from_ldap}->{umiUserGender} == $_;
+	<option value="<%= $_ %>"<%= $sel %>><%= constant('GENDER')->{$_} %></option>
+      % }
+    </select>
   </div>
 
   %= submit_button 'Submit', class => 'btn btn-success font-weight-bold text-uppercase text-end'
 
 % end
+
+<pre class="mt-5 umi-text-tiny text-muted"><%= dumper stash->{'mojo.validation'}->{error} if %{stash->{'mojo.validation'}->{error}} %></pre>
 
 % if ( stash->{'mojo.validation'}->{error} ) {
   <script>
@@ -75,30 +110,37 @@
   </script>
 % }
 
-  
 <script>
  document.addEventListener('DOMContentLoaded', function () {
-   const picker = new tempusDominus.TempusDominus(document.getElementById('carLicense'), {
+   const ids = ['birth', 'employment', 'termination'];
+   const pickerConfig = {
      display: {
        viewMode: 'calendar',
+       toolbarPlacement: 'top',
        components: {
          calendar: true,
-         date: true,
-         month: true,
-         year: true,
-         decades: true,
          clock: false,
+         date: true,
+         decades: true,
          hours: false,
          minutes: false,
-         seconds: false
+         month: true,
+         seconds: false,
+         year: true
        },
        buttons: {
-	 today: true
+         clear: true,
+         close: true,
+         today: true
        }
      },
      localization: {
-       format: 'yyyy-MM-dd'
+       format: 'yyyyMMdd000000'
      }
+   };
+
+   ids.forEach(id => {
+     new tempusDominus.TempusDominus(document.getElementById(id), pickerConfig);
    });
  });
 </script>

@@ -12,7 +12,7 @@
     % debug => 'circle-info' };
   % foreach my $k (sort(keys(%{stash->{debug}}))) {
     <div id="message" class="alert alert-<%= $status->{$k} %> mt-4 ">
-      <div class="hstack gap-3">
+      <div class="">
 	<i class="fa-solid fa-<%= $ico->{$k} %>"></i>
 	<ul class="fload-start">
 	  % foreach (@{stash->{debug}->{$k}}) {
