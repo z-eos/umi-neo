@@ -250,7 +250,7 @@
 	      </div>
 	      <ul class="font-monospace ldap-tree text-info" v-if="faddr && faddr.children && faddr.children.length && isOpenFaddr">
 		<li class="faddr-leaf ldap-tree-item ml-4" v-for="(child, index) in faddr.children"
-		    @click.exact="copyText();"
+		    @click.exact="copyText(child.dn);"
 		    data-bs-toggle="popover" data-bs-placement="top"
 		    title="click to copy to clipboard"
 		    :key="index">{{child.dn}}</li>

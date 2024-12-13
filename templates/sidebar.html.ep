@@ -41,7 +41,7 @@
 	     aria-expanded="true"
 	     aria-controls="submenuAnalyze"
 	     class="nav-link btn btn-link text-secondary text-start">
-	    <i class="fa-solid fa-lg fa-fw fa-magnifying-glass-chart"></i>
+	    <i class="fa-solid fa-fw fa-magnifying-glass-chart"></i>
 	    <div class="sidebar-left-item d-inline-flex">
 	      <b class="text-uppercase">Audit</b>
 	    </div>
@@ -111,7 +111,7 @@
 	     data-bs-toggle="collapse"
 	     aria-expanded="true"
 	     class="nav-link btn btn-link text-secondary text-start">
-	    <i class="fa-solid fa-lg fa-fw fa-compass-drafting"></i>
+	    <i class="fa-solid fa-fw fa-compass-drafting"></i>
 	    <div class="sidebar-left-item d-inline-flex">
 	      <b class="text-uppercase">Management</b>
 	    </div>
@@ -133,7 +133,7 @@
 	     data-bs-toggle="collapse"
 	     aria-expanded="true"
 	     class="nav-link btn btn-link text-secondary text-start">
-	    <i class="fa-solid fa-lg fa-fw fa-shapes"></i>
+	    <i class="fa-solid fa-fw fa-shapes"></i>
 	    <div class="sidebar-left-item d-inline-flex">
 	      <b class="text-uppercase">New Obj</b>
 	    </div>
@@ -210,7 +210,7 @@
 	   data-bs-toggle="collapse"
 	   aria-expanded="true"
 	   class="nav-link btn btn-link text-secondary text-start">
-	  <i class="fa-solid fa-lg fa-fw fa-toolbox"></i>
+	  <i class="fa-solid fa-fw fa-toolbox"></i>
 	  <div class="sidebar-left-item d-inline-flex">
 	    <b class="text-uppercase">Tools</b>
 	  </div>
@@ -286,7 +286,7 @@
 	     data-bs-toggle="collapse"
 	     aria-expanded="false"
 	     class="nav-link btn btn-link text-secondary text-start">
-	    <i class="fa-solid fa-lg fa-fw fa-info"></i>
+	    <i class="fa-solid fa-fw fa-info"></i>
 	    <div class="sidebar-left-item d-inline-flex">
 	      <b class="text-uppercase">Info</b>
 	    </div>

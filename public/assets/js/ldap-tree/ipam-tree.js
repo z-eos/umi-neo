@@ -172,7 +172,10 @@ var ipamTree = new Vue({
 		_this.loading = false;
 		console.debug('IPA Loading spinner stopped');
 	    }
-	}
+	},
+      copyText: function (text) {
+	navigator.clipboard.writeText(text);
+      }
     }
 });
 
@@ -201,6 +204,7 @@ const sortIpaRecursively = arr => {
     return arr;
 };
 
+/*
 // function for copying selected text in clipboard
 function copyText() {
     selectText();
@@ -229,7 +233,7 @@ function selectText() {
         window.getSelection().addRange(range);
     }
 }
-
+*/
 
 /* v3 */
 // import { createApp, reactive, ref } from 'vue';

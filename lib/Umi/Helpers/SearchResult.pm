@@ -33,6 +33,9 @@ sub register {
 		 } elsif ( $e->dn =~ /^cn=.*,authorizedService=ovpn@.*/ && $e->exists('umiUserCertificateNotAfter') &&
 			   time > generalizedTime_to_time($e->get_value('umiUserCertificateNotAfter') . 'Z') ) {
 		   return 'danger';
+		 } elsif ( $e->dn =~ /^pgpCertID=.*,$app->{cfg}->{ldap}->{base}->{pgp}/ &&
+			   time > generalizedTime_to_time($e->get_value('pgpKeyExpireTime') . 'Z') ) {
+		   return 'danger';
 		 } elsif ( $e->dn =~ /^author/ ) {
 		   return 'warning';
 		 } elsif ( $e->dn =~ /^(cn|uid)=[^,]+,auth/ ) {
