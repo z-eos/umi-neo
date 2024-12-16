@@ -190,11 +190,11 @@
 	<div id="ipam" class="">
 	  
 	  <div id="ip-copied-toast"
-	       class="toast border border-success" data-delay="2000"
-	       style="position: absolute; top: 20px; right: 20px;"
+	       class="toast border border-info" data-bs-delay="6000"
+	       style="position: absolute; top: 50px; right: 20px;"
 	       role="alert" aria-live="assertive" aria-atomic="true">
-	    <div class="toast-header bg-info text-white fw-bold">
-	      <i class="fa-solid fa-clipboard mr-4"></i>
+	    <div class="toast-header bg-info fw-bold">
+	      <i class="fa-solid fa-clipboard me-4"></i>
 	      IP Copied
 	    </div>
 	    <div id="ip-copied" class="toast-body text-center fw-bold"></div>
@@ -250,7 +250,7 @@
 	      </div>
 	      <ul class="font-monospace ldap-tree text-info" v-if="faddr && faddr.children && faddr.children.length && isOpenFaddr">
 		<li class="faddr-leaf ldap-tree-item ml-4" v-for="(child, index) in faddr.children"
-		    @click.exact="copyText(child.dn);"
+		    @click.exact="copyText($event)"
 		    data-bs-toggle="popover" data-bs-placement="top"
 		    title="click to copy to clipboard"
 		    :key="index">{{child.dn}}</li>

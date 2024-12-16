@@ -39,6 +39,53 @@ Vue.component('ipam-tree-item', {
 		this.isOpen = true
 	    }
 	},
+
+	copyText: function (event) {
+	    const textNode = event.target;
+
+	    const range = document.createRange();
+	    range.selectNodeContents(textNode);
+
+	    const selection = window.getSelection();
+	    selection.removeAllRanges();
+	    selection.addRange(range);
+
+	    $('#ip-copied').html(event.target.innerText)
+	    $('#ip-copied-toast').toast('show')
+
+	    document.execCommand('copy');
+
+	    selection.removeAllRanges();
+	},
+	
+/*	copyText: function () {
+	    selectText();
+
+	    $('#ip-copied').html(event.target.innerText)
+	    $('#ip-copied-toast').toast('show')
+	    // $(event.target).popover({ container: $(event.target).parent(),
+	    // 			      content: event.target.innerText + ' copied to clipboard' })
+	    
+	    //alert(event.target.innerText + ' copied to clipboard')
+	    document.execCommand("copy");
+	},
+
+	selectText: function () {
+	    var element = event.target
+	    var range;
+	    if (document.selection) {
+		// IE
+		range = document.body.createTextRange();
+		range.moveToElementText(element);
+		range.select();
+	    } else if (window.getSelection) {
+		range = document.createRange();
+		range.selectNode(element);
+		window.getSelection().removeAllRanges();
+		window.getSelection().addRange(range);
+	    }
+	}, */
+
 	showIpaItem: async function (scope) {
 	    // console.log(this.ipaitem.dn);
 	    var url;
@@ -172,10 +219,7 @@ var ipamTree = new Vue({
 		_this.loading = false;
 		console.debug('IPA Loading spinner stopped');
 	    }
-	},
-      copyText: function (text) {
-	navigator.clipboard.writeText(text);
-      }
+	}
     }
 });
 
