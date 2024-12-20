@@ -29,6 +29,7 @@
       </tr>
     </tfoot>
     <tbody>
+      % my $a_class = 'class="text-info link-underline link-underline-opacity-0 link-underline-opacity-75-hover"';
       % foreach $dn (sort keys %$hash) {
 	% $v = $hash->{$dn};
 	% my $card_col = '';
@@ -46,7 +47,7 @@
 	    <td>
 	      % if ( exists $projects->{$dn} ) {
 		% foreach (sort @{$projects->{$dn}}) {
-	          <span class="badge text-bg-secondary fw-bold"><a href="/project/<%= substr($_, 0, index($_, ':')) %>"><%= $_ %></a></span>
+	          <span class="badge text-bg-secondary fw-bold"><a <%== $a_class %> href="/project/<%= substr($_, 0, index($_, ':')) %>"><%= $_ %></a></span>
 		% }
 	      % }
 	    </td>
@@ -66,8 +67,8 @@
 		% }
 	      </form>	    
 	    </td>
-	    <td><%== exists $v->{mail} ? sprintf('<a href="mailto:%s">%s</a>', $v->{mail}->[0], $v->{mail}->[0]) : 'unavailable' %></td>
-	    <td><%== sprintf('<a href="/profile/%s">%s</a>', $v->{uid}->[0], $v->{uid}->[0]) %></td>
+	    <td><%== exists $v->{mail} ? sprintf('<a %s href="mailto:%s">%s</a>', $a_class, $v->{mail}->[0], $v->{mail}->[0]) : 'unavailable' %></td>
+	    <td><%== sprintf('<a %s href="/profile/%s">%s</a>', $a_class, $v->{uid}->[0], $v->{uid}->[0]) %></td>
 	  </tr>
 	  
 	% } elsif (exists stash->{type} && stash->{type} eq 'server-driven-rows')
@@ -83,7 +84,7 @@
 	      <td>
 		% if ( exists $projects->{$dn} ) {
 		  % foreach (sort @{$projects->{$dn}}) {
-	            <span class="badge text-bg-secondary fw-bold"><a href="/project/<%= substr($_, 0, index($_, ':')) %>"><%= $_ %></a></span>
+	            <span class="badge text-bg-secondary fw-bold"><a <%== $a_class %> href="/project/<%= substr($_, 0, index($_, ':')) %>"><%= $_ %></a></span>
 		  % }
 		% }
 	      </td>
@@ -103,8 +104,8 @@
 		  </form>
 		% }
 	      </td>
-	      <td><%== exists $v->{mail} ? sprintf('<a href="mailto:%s">%s</a>', $v->{mail}->[0], $v->{mail}->[0]) : 'unavailable' %></td>
-	      <td><%== sprintf('<a href="/profile/%s">%s</a>', $v->{uid}->[0], $v->{uid}->[0]) %></td>
+	      <td><%== exists $v->{mail} ? sprintf('<a %s href="mailto:%s">%s</a>', $a_class, $v->{mail}->[0], $v->{mail}->[0]) : 'unavailable' %></td>
+	      <td><%== sprintf('<a %s href="/profile/%s">%s</a>', $a_class, $v->{uid}->[0], $v->{uid}->[0]) %></td>
 	    </tr>
 	  % }
 	  
