@@ -12,6 +12,7 @@
   
   % my $options = [['--- choose service ---' => '']];
   % foreach (sort(keys(%{app->{cfg}->{ldap}->{authorizedService}}))) {
+    % next if ! exists app->{cfg}->{ldap}->{authorizedService}->{$_}->{data_fields};
     % push @{$options}, [$_ => $_] if !app->{cfg}->{ldap}->{authorizedService}->{$_}->{disabled};
   % }
   <div class="input-group my-3">
@@ -34,9 +35,9 @@
     %   ovpnIroute       => { type => 'text'    , ph => '' },
     %   ovpnPush         => { type => 'text'    , ph => '' },
     %   ovpncDevType     => { type => 'text'    , ph => '' },
-    %   password         => { type => 'text'    , ph => '' },
-    %   radiusgroupname  => { type => 'select'  , ph => '' },
-    %   radiusprofiledn  => { type => 'select'  , ph => '' },
+    %   userPassword     => { type => 'text'    , ph => '' },
+    %   radiusGroupName  => { type => 'select'  , ph => '' },
+    %   radiusProfileDn  => { type => 'select'  , ph => '' },
     %   sshKeyFile       => { type => 'file'    , ph => 'Publick key file' },
     %   sshKeyText       => { type => 'textarea', ph => 'ssh-rsa AAAAB3Nza ... sdfKg my key @ my host' },
     %   status           => { type => 'text'    , ph => '' },
@@ -44,9 +45,9 @@
   % };
   
   % foreach my $fld (sort(keys(%$fields))) {
-    % if ( $fld eq 'password' ) {
+    % if ( $fld eq 'userPassword' ) {
       <div class="input-group mb-3 d-none" data-field="<%= $fld %>">
-	%= label_for password1 => $fld, class => 'input-group-text'
+	%= label_for password1 => 'Password', class => 'input-group-text'
 	%= text_field 'password1', class => 'form-control', id => 'password1', placeholder => 'type a password'
 	%= text_field 'password2', class => 'form-control', id => 'password2', placeholder => 'confirm the password'
       </div>
@@ -59,7 +60,7 @@
 	%= select_field $fld => $options, id => $fld, class => 'custom-select form-control'
       </div>
     % }
-    % elsif ( $fld eq 'radiusgroupname' )
+    % elsif ( $fld eq 'radiusGroupName' )
     % {
       % my $options = [ ['--- choose domain ---' => ''], map { [ $rad_groups->{$_} => $_ ] } keys(%$rad_groups) ];
       <div class="input-group my-3 d-none" data-field="<%= $fld %>">
@@ -67,7 +68,7 @@
 	%= select_field $fld => $options, id => $fld, class => 'custom-select form-control'
       </div>
     % }
-    % elsif ( $fld eq 'radiusprofiledn' )
+    % elsif ( $fld eq 'radiusProfileDn' )
     % {
       % my $options = [ ['--- choose domain ---' => ''], map { [ $rad_profiles->{$_} => $_ ] } keys(%$rad_profiles) ];
       <div class="input-group my-3 d-none" data-field="<%= $fld %>">
@@ -103,32 +104,32 @@
   <%# = dumper $domains =%>
 </pre>
 
+<pre class="mt-5 umi-text-tiny text-muted"><%= dumper stash->{'mojo.validation'}->{error} if %{stash->{'mojo.validation'}->{error}} %></pre>
+
+% if ( stash->{'mojo.validation'}->{error} ) {
+  <script>
+   % while (my ($k, $v) = each %{stash->{'mojo.validation'}->{error}}) {
+     $('#<%= $k %>').addClass('is-invalid').after('<div id="<%= $k %>ValidationFeedback" class="invalid-feedback"></div>');
+     % if (scalar(@$v) == 1) {
+     $('#<%= $k %>ValidationFeedback').text('<%= $v->[0] %>');
+     % } else {
+     $('#<%= $k %>ValidationFeedback').text('is not <%= $v->[0] %>: <%= $v->[2] %>');
+     % }
+   % }
+  </script>
+% }
+
 <script>
  
  document.addEventListener('DOMContentLoaded', () => {
    const authorizedService = document.getElementById('authorizedService');
    const fieldMap = {
-     'comm-acc':      [ 'associatedDomain', 'login', 'password', 'description' ],
-     'dot1x-eap-md5': [ 'associatedDomain', 'login', 'password', 'description', 'radiusgroupname', 'radiusprofiledn', 'userCertificate' ],
-     'dot1x-eap-tls': [ 'associatedDomain', 'login', 'password', 'description', 'radiusgroupname', 'radiusprofiledn', 'userCertificate' ],
-     gitlab:          [ 'associatedDomain', 'login', 'password', 'description' ],
-     mail:            [ 'associatedDomain', 'login', 'password', 'description' ],
-     ovpn:            [ 'associatedDomain',
-			'ovpnIfconfigPush',
-			'ovpnIroute',
-			'ovpnPush',
-			'ovpncDevType',
-			'ovpnDevOs',
-			'ovpnConfig',
-			'ovpnDevMake',
-			'ovpnDevModel',
-			'ovpnDevOsVer',
-			'status',
-			'userCertificate',
-			'description' ],
-     'ssh-acc':       [ 'associatedDomain', 'login', 'password', 'homeDir', 'loginShell', 'sshKeyFile', 'sshKeyText', 'description' ],
-     web:             [ 'associatedDomain', 'login', 'password',  'description' ],
-     xmpp:            [ 'associatedDomain', 'login', 'password',  'description' ]
+     % my $svc = app->{cfg}->{ldap}->{authorizedService};
+     % foreach my $s ( sort(keys( %$svc ))) {
+       % if ( exists $svc->{$s}->{data_fields} ) {
+     '<%= $s %>': [ '<%== join("','", @{$svc->{$s}->{data_fields}}) %>' ],
+       % }
+     % }
    };
 
    authorizedService.addEventListener('change', function () {
@@ -155,6 +156,8 @@
      
    });
    
+   authorizedService.dispatchEvent(new Event('change', { bubbles: true }));
+
  });
 
 </script>

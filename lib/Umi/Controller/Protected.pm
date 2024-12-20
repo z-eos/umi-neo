@@ -1236,8 +1236,10 @@ sub moddn ($self) {
 }
 
 sub newsvc ($self) {
-  my $p = $self->req->params->to_hash;
-  $self->h_log($p);
+  my $p;
+  my $par = $self->req->params->to_hash;
+  %$p = map { $_ => $par->{$_} } grep { defined $par->{$_} && $par->{$_} ne '' } keys %$par;
+  # $self->h_log($p);
 
   my $ldap = Umi::Ldap->new( $self->{app}, $self->session('uid'), $self->session('pwd') );
 
@@ -1276,11 +1278,22 @@ sub newsvc ($self) {
   %$rad_profiles = map { $_->dn => $_->exists('description') ? $_->get_value('description') : $_->get_value('cn') } $search->entries;
   # $self->h_log($rad_profiles);
 
-
   $self->stash( dn => $p->{dn_to_new_svc},
 		domains => $domains,
 		rad_groups => $rad_groups,
 		rad_profiles => $rad_profiles );
+
+  $self->h_log($self->{app}->{cfg}->{ldap}->{authorizedService}->{$p->{authorizedService}}->{data_fields});
+  my $v = $self->validation;
+  return $self->render(template => 'protected/tool/newsvc') unless exists $p->{authorizedService};
+  foreach (@{$self->{app}->{cfg}->{ldap}->{authorizedService}->{$p->{authorizedService}}->{data_fields}}) {
+    $self->h_log($_);
+    $v->required($_);
+    # $v->error( $_ => ['reuired'] ) if $v->error($_);
+    $v->error( $_ => ['reuired'] ) if ! exists $p->{$_};
+  }
+
+  $self->h_log($p);
 
   $self->render(template => 'protected/tool/newsvc');
 }

@@ -152,13 +152,15 @@ sub _startup_session ($self) {
 		  return $self->session('uid') ? 1 : 0;
 		});
 
-  $self->helper(constant => sub {
+  $self->helper(
+		constant => sub {
 		  my ($c, $name) = @_;
 		  return Umi::Constants->can($name) ? Umi::Constants->$name() : undef;
 		});
 
   # Middleware to check session expiration
-  $self->hook(before_dispatch => sub {
+  $self->hook(
+	      before_dispatch => sub {
 		my $self = shift;
 
 		if ($self->is_user_authenticated) {
