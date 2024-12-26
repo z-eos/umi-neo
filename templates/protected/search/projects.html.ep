@@ -79,9 +79,15 @@
 	      <i class="fa-solid fa-people-roof fa-xl" title="team"></i>
 	    </div>
 	    <div class="col-11 pt-4">
+	      % my @roles = sort {
+		% $a =~ /.*_pm,ou=.*/ ? -1 :
+		% $b =~ /.*_pm,ou=.*/ ?  1 :
+		% $a cmp $b
+	      % } %{$v->{group}};
+	      %# <pre><%= dumper @roles %></pre>
 	      <dl class="row">
-		% for my $role (sort(keys(%{$v->{group}}))) {
-		  % next if $role =~ m/\Q^cn=$role,/;
+		% for my $role (@roles) {
+		  % next if ref($role) eq 'HASH';
 		  <dt class="col-sm-1 text-end pe-2">
 		    % my $team_role = substr($role,3+length($en)+1,index($role,',')-length($role));
 		    % if ($team_role eq 'devops' ) {

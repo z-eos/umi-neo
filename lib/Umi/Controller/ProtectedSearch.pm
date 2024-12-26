@@ -223,7 +223,8 @@ sub search_projects  ($self) {
     $search = $ldap->search( $search_arg );
     $self->{app}->h_log( $self->{app}->h_ldap_err($search, $search_arg) ) if $search->code;
     $entries->{$p}->{group} = $search->as_struct;
-
+    # $self->h_log($entries->{$p}->{group});
+    
     ### TEAM
     $entries->{$p}->{team} = {};
     my @groups = $search->entries;
