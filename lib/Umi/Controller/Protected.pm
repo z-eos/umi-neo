@@ -925,7 +925,7 @@ sub profile_modify ($self) {
   my $search_arg = { base => $self->{app}->{cfg}->{ldap}->{base}->{acc_root},
 		     filter => '(uid=' . $uid .')',
 		     scope => 'one',
-		     attrs => [qw(givenName sn mail l umiUserCountryOfResidence title umiUserDateOfBirth jpegPhoto)], };
+		     attrs => [qw(givenName sn mail l umiUserCountryOfResidence title umiUserDateOfBirth umiUserDateOfEmployment umiUserDateOfTermination umiUserGender jpegPhoto)], };
   my $search = $ldap->search( $search_arg );
   $self->{app}->h_log( $self->{app}->h_ldap_err($search, $search_arg) ) if $search->code;
   my ($from_ldap, $dn, $e);
@@ -1002,7 +1002,9 @@ sub profile_modify ($self) {
     my %f = %$from_form;
     delete $f{jpegPhoto} if exists $f{jpegPhoto};
     delete $f{uid_to_modify};
+    $f{umiUserDateOfBirth} .= 'Z' if exists $f{umiUserDateOfBirth} && $f{umiUserDateOfBirth} !~ /^.*Z$/;
     $f{umiUserDateOfEmployment} .= 'Z' if exists $f{umiUserDateOfEmployment} && $f{umiUserDateOfEmployment} !~ /^.*Z$/;
+    $f{umiUserDateOfTermination} .= 'Z' if exists $f{umiUserDateOfTermination} && $f{umiUserDateOfTermination} !~ /^.*Z$/;
 
     my $diff = $self->h_hash_diff( \%l, \%f);
     $self->h_log($diff);
@@ -1233,69 +1235,6 @@ sub moddn ($self) {
 			   search_filter => $par->{search_filter},
 			   ldap_subtree => $par->{ldap_subtree} )
 		 );
-}
-
-sub newsvc ($self) {
-  my $p;
-  my $par = $self->req->params->to_hash;
-  %$p = map { $_ => $par->{$_} } grep { defined $par->{$_} && $par->{$_} ne '' } keys %$par;
-  # $self->h_log($p);
-
-  my $ldap = Umi::Ldap->new( $self->{app}, $self->session('uid'), $self->session('pwd') );
-
-  my $search_arg = { base => $self->{app}->{cfg}->{ldap}->{base}->{project},
-		     scope => 'one',
-		     filter => '(cn=*)',
-		     attrs => ['associatedDomain'] };
-  # $self->h_log($search_arg);
-  my $search = $ldap->search( $search_arg );
-  $self->h_log( $self->h_ldap_err($search, $search_arg) ) if $search->code;
-
-  my ($domains, $domains_ref);
-  foreach ($search->entries) {
-    $domains_ref = $_->get_value('associatedDomain', asref => 1);
-    push @$domains, @$domains_ref if $domains_ref->[0] ne 'unknown';
-  }
-  @$domains = sort @$domains;
-
-  $search_arg = { base => $self->{app}->{cfg}->{ldap}->{base}->{rad_groups},
-		  filter => '(cn=*)' };
-  # $self->h_log($search_arg);
-  $search = $ldap->search( $search_arg );
-  $self->h_log( $self->h_ldap_err($search, $search_arg) ) if $search->code;
-
-  my $rad_groups;
-  %$rad_groups = map { $_->dn => $_->exists('description') ? $_->get_value('description') : $_->get_value('cn') } $search->entries;
-  # $self->h_log($rad_groups);
-
-  $search_arg = { base => $self->{app}->{cfg}->{ldap}->{base}->{rad_profiles},
-		  filter => '(cn=*)' };
-  # $self->h_log($search_arg);
-  $search = $ldap->search( $search_arg );
-  # $self->h_log( $self->h_ldap_err($search, $search_arg) ) if $search->code;
-
-  my $rad_profiles;
-  %$rad_profiles = map { $_->dn => $_->exists('description') ? $_->get_value('description') : $_->get_value('cn') } $search->entries;
-  # $self->h_log($rad_profiles);
-
-  $self->stash( dn => $p->{dn_to_new_svc},
-		domains => $domains,
-		rad_groups => $rad_groups,
-		rad_profiles => $rad_profiles );
-
-  $self->h_log($self->{app}->{cfg}->{ldap}->{authorizedService}->{$p->{authorizedService}}->{data_fields});
-  my $v = $self->validation;
-  return $self->render(template => 'protected/tool/newsvc') unless exists $p->{authorizedService};
-  foreach (@{$self->{app}->{cfg}->{ldap}->{authorizedService}->{$p->{authorizedService}}->{data_fields}}) {
-    $self->h_log($_);
-    $v->required($_);
-    # $v->error( $_ => ['reuired'] ) if $v->error($_);
-    $v->error( $_ => ['reuired'] ) if ! exists $p->{$_};
-  }
-
-  $self->h_log($p);
-
-  $self->render(template => 'protected/tool/newsvc');
 }
 
 1;

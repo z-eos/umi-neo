@@ -45,7 +45,7 @@
   </div>
 </div>
 
-% my $it = "delete";
+% $it = "delete";
 <div class="modal border-1" id="modal_<%= $it %><%= $i %>" tabindex="-1"
      aria-labelledby="modal_<%= $it %><%= $i %>_label" aria-hidden="true">
   <div class="modal-dialog modal-lg">

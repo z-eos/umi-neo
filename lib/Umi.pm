@@ -385,11 +385,11 @@ sub _startup_routes ($self) {
   $protected_root
     ->get( '/tool/newsvc')
     ->requires(is_role => ['admin,coadmin', {cmp => 'or'}])
-    ->to('protected#newsvc');
+    ->to('newsvc#newsvc');
   $protected_root
     ->post('/tool/newsvc')
     ->requires(is_role => ['admin,coadmin', {cmp => 'or'}])
-    ->to('protected#newsvc');
+    ->to('newsvc#newsvc');
 
   $protected_root->get( '/tool/pwdgen')->to('protected#pwdgen');
   $protected_root->post('/tool/pwdgen')->to('protected#pwdgen');

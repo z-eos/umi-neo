@@ -68,8 +68,7 @@
 	<option value="" disabled selected>--- CHOOSE COUNTRY ---</option>
       % }
       % foreach (sort(keys(%{constant('COUNTRIES')}))) {
-	% $sel = ' selected' if stash->{from_ldap}->{umiUserCountryOfResidence} == $_;
-	<option value="<%= $_ %>"><%= constant('COUNTRIES')->{$_}->{name} %></option>
+	<option value="<%= constant('COUNTRIES')->{$_}->{two} %>"<%= ' selected' if exists stash->{from_ldap}->{umiUserCountryOfResidence} && stash->{from_ldap}->{umiUserCountryOfResidence} eq constant('COUNTRIES')->{$_}->{two} %>><%= $_ %></option>
       % }
     </select>
 
@@ -84,9 +83,9 @@
   <div class="input-group mb-3">
     <label class="input-group-text" for="gender">Gender</label>
     <select name="umiUserGender" class="form-select" id="gender">
+      % $sel = '';
       % foreach (sort(keys(%{constant('GENDER')}))) {
-	% $sel = ' selected' if stash->{from_ldap}->{umiUserGender} == $_;
-	<option value="<%= $_ %>"<%= $sel %>><%= constant('GENDER')->{$_} %></option>
+	<option value="<%= $_ %>"<%= ' selected' if exists stash->{from_ldap}->{umiUserGender} && stash->{from_ldap}->{umiUserGender} == $_ %>><%= constant('GENDER')->{$_} %></option>
       % }
     </select>
   </div>

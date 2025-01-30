@@ -1,97 +1,107 @@
 %# -*- mode: web; eval: (follow-mode) -*-
 
 <h2 class="my-4">
-  <i class="fa-solid fa-file-circle-plus me-3 text-muted"></i>
+  <i id="title-icon" class="fa-solid fa-file-circle-plus me-3 text-muted"></i>
   New Service <small><em class="text-muted font-monospace fs-6">
-    for dn: <%= $dn %>
+    for dn: <%= $dn_to_new_svc %>
   </em></small>
 </h2>
-<hr class="p-1 ">
+<hr class="p-1">
 
 %= form_for '/tool/newsvc' => {class => "form-horizontal"} => (method => 'POST', enctype => 'multipart/form-data', id => 'dynamicForm') => begin
+  %= hidden_field dn_to_new_svc => $dn_to_new_svc
   
   % my $options = [['--- choose service ---' => '']];
   % foreach (sort(keys(%{app->{cfg}->{ldap}->{authorizedService}}))) {
     % next if ! exists app->{cfg}->{ldap}->{authorizedService}->{$_}->{data_fields};
-    % push @{$options}, [$_ => $_] if !app->{cfg}->{ldap}->{authorizedService}->{$_}->{disabled};
+    % push @{$options}, [app->{cfg}->{ldap}->{authorizedService}->{$_}->{descr} => $_] if !app->{cfg}->{ldap}->{authorizedService}->{$_}->{disabled};
   % }
   <div class="input-group my-3">
     %= label_for authorizedService => 'Service', class => 'input-group-text text-uppercase'
     %= select_field authorizedService => $options, id => 'authorizedService', class => 'custom-select form-control', onchange => 'toggleInputField()'
   </div>
 
-  % my $fields = {
-    %   description      => { type => 'textarea', ph => '' },
-    %   associatedDomain => { type => 'select'  , ph => '' },
-    %   homeDir          => { type => 'text'    , ph => 'Absolute path to home directory' },
-    %   login            => { type => 'text'    , ph => 'firstname.lastname' },
-    %   loginShell       => { type => 'text'    , ph => 'Absolute path to login shell' },
-    %   ovpnConfig       => { type => 'text'    , ph => '' },
-    %   ovpnDevMake      => { type => 'text'    , ph => '' },
-    %   ovpnDevModel     => { type => 'text'    , ph => '' },
-    %   ovpnDevOs        => { type => 'text'    , ph => '' },
-    %   ovpnDevOsVer     => { type => 'text'    , ph => '' },
-    %   ovpnIfconfigPush => { type => 'text'    , ph => '' },
-    %   ovpnIroute       => { type => 'text'    , ph => '' },
-    %   ovpnPush         => { type => 'text'    , ph => '' },
-    %   ovpncDevType     => { type => 'text'    , ph => '' },
-    %   userPassword     => { type => 'text'    , ph => '' },
-    %   radiusGroupName  => { type => 'select'  , ph => '' },
-    %   radiusProfileDn  => { type => 'select'  , ph => '' },
-    %   sshKeyFile       => { type => 'file'    , ph => 'Publick key file' },
-    %   sshKeyText       => { type => 'textarea', ph => 'ssh-rsa AAAAB3Nza ... sdfKg my key @ my host' },
-    %   status           => { type => 'text'    , ph => '' },
-    %   userCertificate  => { type => 'file'    , ph => '' },
-  % };
-  
-  % foreach my $fld (sort(keys(%$fields))) {
+  % my $fields = app->{cfg}->{form_fields};
+  % my $f;
+  % foreach my $s (keys(%{app->{cfg}->{ldap}->{authorizedService}})) {
+    % $f->{$_}++ foreach (@{app->{cfg}->{ldap}->{authorizedService}->{$s}->{data_fields}});
+  % }
+  % foreach my $fld (sort(keys(%$f))) {
+    % my $fld_label = $fld =~ s/^umiOvpn(?:Cfg|Add)//r;
     % if ( $fld eq 'userPassword' ) {
       <div class="input-group mb-3 d-none" data-field="<%= $fld %>">
-	%= label_for password1 => 'Password', class => 'input-group-text'
-	%= text_field 'password1', class => 'form-control', id => 'password1', placeholder => 'type a password'
-	%= text_field 'password2', class => 'form-control', id => 'password2', placeholder => 'confirm the password'
+	%= label_for password1 => 'password', class => 'input-group-text', title => $schema->{$fld}->{desc}
+	%= password_field 'password1', class => 'form-control', id => 'password1', placeholder => 'type a password'
+	%= password_field 'password2', class => 'form-control', id => 'password2', placeholder => 'confirm the password'
       </div>
     % }
     % elsif ( $fld eq 'associatedDomain' )
     % {
       % my $options = [ ['--- choose domain ---' => ''], map { [ $_ => $_ ] } @$domains ];
       <div class="input-group my-3 d-none" data-field="<%= $fld %>">
-	%= label_for $fld => $fld, class => 'input-group-text'
+	%= label_for $fld => $fld, class => 'input-group-text', title => $schema->{$fld}->{desc}
 	%= select_field $fld => $options, id => $fld, class => 'custom-select form-control'
       </div>
     % }
     % elsif ( $fld eq 'radiusGroupName' )
     % {
-      % my $options = [ ['--- choose domain ---' => ''], map { [ $rad_groups->{$_} => $_ ] } keys(%$rad_groups) ];
+      % my $options = [ ['--- choose RADIUS group ---' => ''], map { [ $rad_groups->{$_} => $_ ] } keys(%$rad_groups) ];
       <div class="input-group my-3 d-none" data-field="<%= $fld %>">
-	%= label_for $fld => $fld, class => 'input-group-text'
+	%= label_for $fld => $fld, class => 'input-group-text', title => $schema->{$fld}->{desc}
 	%= select_field $fld => $options, id => $fld, class => 'custom-select form-control'
       </div>
     % }
     % elsif ( $fld eq 'radiusProfileDn' )
     % {
-      % my $options = [ ['--- choose domain ---' => ''], map { [ $rad_profiles->{$_} => $_ ] } keys(%$rad_profiles) ];
+      % my $options = [ ['--- choose RADIUS profile ---' => ''], map { [ $rad_profiles->{$_} => $_ ] } keys(%$rad_profiles) ];
       <div class="input-group my-3 d-none" data-field="<%= $fld %>">
-	%= label_for $fld => $fld, class => 'input-group-text'
+	%= label_for $fld => $fld, class => 'input-group-text', title => $schema->{$fld}->{desc}
 	%= select_field $fld => $options, id => $fld, class => 'custom-select form-control'
       </div>
     % }
-    % elsif ( $fields->{$fld}->{type} eq 'textarea' )
+    % elsif ( $fld eq 'umiOvpnAddStatus' )
     % {
       <div class="input-group mb-3 d-none" data-field="<%= $fld %>">
-	%= label_for $fld => $fld, class => 'input-group-text'
-	%= text_area $fld, id => $fld, rows => 3, class => 'text-monospace form-control', placeholder => $fields->{$fld}->{ph}
+	<span class="input-group-text" title="<%= $schema->{$fld}->{desc} %>"><%= $fld_label %>:</span>
+	<select name="ovpnAddStatus" class="form-control custom-select" id="ovpnAddStatus" title="<%= app->{cfg}->{form_fields}->{$fld}->{title} %>">
+	  % foreach (sort(keys(%{constant('UMIOVPNADDSTATUS')}))) {
+	    <option value="<%= constant('UMIOVPNADDSTATUS')->{$_} %>"<%= ' selected' if $_ eq 'enabled' %>><%= $_ %></option>
+	  % }
+	</select>
       </div>
-    % } elsif ( $fields->{$fld}->{type} eq 'file' )
+    % }
+    % elsif ( $fld eq 'umiOvpnAddDevType' || $fld eq 'umiOvpnAddDevOS' )
+    % {
+      % my $options = [ ['--- choose ' . $fld . ' type ---' => ''], map { [ $_ => $_ ] } @{constant(uc $fld)} ];
+      <div class="input-group my-3 d-none" data-field="<%= $fld %>">
+	%= label_for $fld => $fld_label, class => 'input-group-text', title => $schema->{$fld}->{desc}
+	%= select_field $fld => $options, id => $fld, class => 'custom-select form-control'
+      </div>
+    % }
+    % elsif ( exists app->{cfg}->{form_fields}->{$fld}->{type} && app->{cfg}->{form_fields}->{$fld}->{type} eq 'textarea' )
     % {
       <div class="input-group mb-3 d-none" data-field="<%= $fld %>">
-	%= label_for $fld => $fld, class => 'input-group-text'
+	%= label_for $fld => $fld_label, class => 'input-group-text', title => $schema->{$fld}->{desc}
+	%= text_area $fld, id => $fld, rows => 3, class => 'text-monospace form-control', placeholder => app->{cfg}->{form_fields}->{$fld}->{ph}
+      </div>
+    % } elsif ( exists app->{cfg}->{form_fields}->{$fld}->{type} && app->{cfg}->{form_fields}->{$fld}->{type} eq 'file' )
+    % {
+      <div class="input-group mb-3 d-none" data-field="<%= $fld %>">
+	%= label_for $fld => $fld_label, class => 'input-group-text', title => $schema->{$fld}->{desc}
 	%= file_field $fld, id => $fld, class => 'form-control form-control'
       </div>
     % } else {
+      % my $ph = exists app->{cfg}->{form_fields}->{$fld}->{ph} && app->{cfg}->{form_fields}->{$fld}->{ph} ne '' ?
+      %            app->{cfg}->{form_fields}->{$fld}->{ph} :
+      %            exists app->{cfg}->{ldap}->{defaults}->{attr}->{$fld}->{val} ?
+      %              app->{cfg}->{ldap}->{defaults}->{attr}->{$fld}->{val} :
+      %              '';
+
+      % $ph .= lc sprintf('%s.%s', $root->get_value('givenName'), $root->get_value('sn')) if $fld eq 'homeDirectory' || $fld eq 'login';
+      
       <div class="input-group mb-3 d-none" data-field="<%= $fld %>">
-	%= label_for $fld => $fld, class => 'input-group-text'
-	%= text_field $fld, class => 'form-control', id => $fld, placeholder => $fields->{$fld}->{ph}
+	%= label_for $fld => $fld_label, class => 'input-group-text', title => $schema->{$fld}->{desc}
+	%= text_field $fld, class => 'form-control', id => $fld, placeholder => $ph
       </div>
     % }
   % }
@@ -131,6 +141,15 @@
        % }
      % }
    };
+   const iconMap = {
+     % my $svc = app->{cfg}->{ldap}->{authorizedService};
+     % foreach my $s ( sort(keys( %$svc ))) {
+       % if ( exists $svc->{$s}->{icon} ) {
+	 % my $c = $svc->{$s}->{icon};
+     '<%= $s %>': ['<%== '' . $c =~ s/ /', '/r %>'],
+       % }
+     % }
+   };
 
    authorizedService.addEventListener('change', function () {
      const selectedService = this.value;
@@ -153,6 +172,26 @@
 	 formGroupContainer.appendChild(field);
        }
      });
+
+     // Change the icon at the top of the page according to the selected service
+     const iconNode = document.querySelector('#title-icon');
+     if (!iconNode) {
+       return;
+     }
+     Array.from(iconNode.classList).forEach((cls) => {
+       if (cls.startsWith('fa-')) {
+	 iconNode.classList.remove(cls)
+       }
+     })
+
+     if (selectedService && iconMap[selectedService]) {
+       iconMap[selectedService].forEach(cls => {
+	 iconNode.classList.add(cls);
+       })
+     } else {
+       iconNode.classList.add('fa-solid');
+       iconNode.classList.add('fa-file-circle-plus');
+     }
      
    });
    

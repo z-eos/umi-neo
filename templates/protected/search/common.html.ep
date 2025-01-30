@@ -155,7 +155,7 @@
 		      </a>
 		    % } elsif ( $attr eq 'userPassword' )
 		    % {
-		      <%= 6 x '<i class="fa-solid fa-asterisk text-muted"></i>' %>
+		      <%== '<i class="fa-solid fa-asterisk text-muted"></i>' x 6 %>
 		    % } elsif ( $attr eq 'reqMod' )
 		    % {
 		      <div class="user-select-all font-monospace umi-text-tiny mb-1"><%= $attr_val %></div>
