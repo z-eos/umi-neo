@@ -37,7 +37,7 @@
     <select name="umiUserCountryOfResidence" class="form-select" id="umiUserCountryOfResidence" title="Countries (ISO 3166)">
       <option value="" disabled selected>--- CHOOSE COUNTRY ---</option>
       % foreach (sort(keys(%{constant('COUNTRIES')}))) {
-	<option value="<%= $_ %>"><%= constant('COUNTRIES')->{$_}->{name} %></option>
+	<option value="<%= constant('COUNTRIES')->{$_}->{two} %>"><%= $_ %></option>
       % }
     </select>
 

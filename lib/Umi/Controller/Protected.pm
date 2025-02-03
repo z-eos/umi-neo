@@ -780,7 +780,7 @@ sub project_new ($self) {
 		cn => sprintf("%s_%s", lc $par->{proj_name}, $g),
 		memberUid => $par->{'team_' . $g}
 	       };
-      my $gn = $ldap->last_num($self->{app}->{cfg}->{ldap}->{base}->{project_groups}, 'cn', 'gidNumber');
+      my $gn = $ldap->last_num($self->{app}->{cfg}->{ldap}->{base}->{project_groups}, '(cn=*)', 'gidNumber');
       if ( $gn->[1] ) {
 	$self->h_log($gn->[1]);
 	$attrs->{gidNumber} = undef;
@@ -879,7 +879,7 @@ sub profile_new ($self) {
 		 objectClass => $self->{app}->{cfg}->{ldap}->{objectClass}->{acc_root},
 		 umiUserCountryOfResidence => $par->{umiUserCountryOfResidence},
 		 umiUserDateOfEmployment => $par->{umiUserDateOfEmployment} . 'Z',
-		 umiUserDateOfBirth => $par->{umiUserDateOfBirth},
+		 umiUserDateOfBirth => $par->{umiUserDateOfBirth} . 'Z',
 		 umiUserGender => $par->{umiUserGender},
 		 sn => $par->{user_last_name},
 		 title => $par->{title},
@@ -888,7 +888,7 @@ sub profile_new ($self) {
 
     $attrs->{jpegPhoto} = $upload->{jpegPhoto}->slurp if $upload->{jpegPhoto}->size > 0;
 
-    my $u = $ldap->last_num($self->{app}->{cfg}->{ldap}->{base}->{acc_root}, 'uid', 'uidNumber');
+    my $u = $ldap->last_num;
     if ( $u->[1] ) {
       $self->h_log($u->[1]);
       $attrs->{uidNumber} = undef;

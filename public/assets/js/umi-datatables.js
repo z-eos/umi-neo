@@ -80,7 +80,7 @@ var table = $('#dataTableToDraw').DataTable({
     // "displayLength": 25,
     lengthMenu: [[50, 100, -1], [50, 100, "All"]],
     infoCallback: function( settings, start, end, max, total, pre ) {
-	var infostr= start +' to '+ end +' of total'+ total +' rows';
+	var infostr= start +' to '+ end +' of total '+ total +' rows';
 	return infostr;
     },
     createdRow: function ( row, data, index ) {

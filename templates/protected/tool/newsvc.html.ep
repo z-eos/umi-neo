@@ -142,7 +142,7 @@
      % }
    };
    const iconMap = {
-     % my $svc = app->{cfg}->{ldap}->{authorizedService};
+     % $svc = app->{cfg}->{ldap}->{authorizedService};
      % foreach my $s ( sort(keys( %$svc ))) {
        % if ( exists $svc->{$s}->{icon} ) {
 	 % my $c = $svc->{$s}->{icon};

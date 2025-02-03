@@ -583,6 +583,12 @@ END_INPUT
 		     my ( $self, $par ) = @_;
 		     # return {} if ! %$par;
 		     my $cf = $app->{cfg}->{tool}->{pwdgen} // undef;
+
+		     if ( ! defined $par || ref($par) ne 'HASH' ) {
+		       $par->{xk_separator_character} = 'CHAR';
+		       $par->{xk_separator_character_char} = $cf->{xk}->{separator_character};
+		       # $self->h_log($cf->{separator_character});
+		     }
 		     my $p =
 			 {
 			  pwd => $par->{pwd_vrf} // undef,

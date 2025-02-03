@@ -208,15 +208,52 @@ sub schema ($self) {
   return $self->ldap->schema();
 }
 
+=head2 get_all_superior_classes
+
+Recursive routine to retrieve all superior object classes
+
+=cut
+
+sub get_all_superior_classes {
+  my ($self, $schema, $oc_name, $seen) = @_;
+
+  $seen ||= {};
+  my @supers = ();
+
+  return () if $seen->{$oc_name}++;
+
+  my $oc = $schema->objectclass($oc_name);
+  my @direct_supers = ();
+
+  if ( ref($oc) eq 'HASH' ) {
+    # If 'sup' is stored as an array ref, use it, otherwise force it into an array.
+    if ( exists $oc->{sup} ) {
+      @direct_supers = ref($oc->{sup}) eq 'ARRAY' ? @{$oc->{sup}} : ($oc->{sup});
+    }
+  }
+  # Otherwise, if it's a blessed object that provides a 'sup' method, use it.
+  elsif ( $oc and $oc->can("sup") ) {
+    @direct_supers = $oc->sup;
+  }
+
+  for my $super (@direct_supers) {
+    push @supers, $super;
+    push @supers, $self->get_all_superior_classes($schema, $super, $seen);
+  }
+  return @supers;
+
+}
+
 =head2 last_num
 
 find the bigest number among all values of an attributes like for uidNumber or gidNumber
 
 on input it expects hash
 
-    base      => base to search in (mandatory)
-    attr      => attribute, the bigest value of which to search for
-    filter_by => attribute to use in filter - `(ATTRIBUTE=*)`
+    base      : base to search in (mandatory)
+    filter_by : attribute to use in filter - `(ATTRIBUTE=*)`
+    attr      : attribute, the bigest value of which to search for
+    scope     : scope, default `one`
 
 returns a ref to an array where the first element is the bigest number
 (or undef) and the second value in an error (or undef)
@@ -224,20 +261,21 @@ returns a ref to an array where the first element is the bigest number
 =cut
 
 sub last_num {
-  my ($self, $base, $filter_by, $attr) = @_;
+  my ($self, $base, $filter, $attr, $scope) = @_;
   my ($mesg, $search_arg, $err, $res);
-  $search_arg = { base   => $base,
-		  filter => sprintf("(%s=*)", $filter_by),
-		  scope  => 'one',
-		  attrs  => [ $attr ], };
+  $search_arg = { base   => $base   // $self->{app}->{cfg}->{ldap}->{base}->{acc_root},
+		  filter => $filter // '(uid=*)',
+		  scope  => $scope  // 'one',
+		  attrs  => [ $attr // 'uidNumber' ], };
   $mesg = $self->search( $search_arg );
-  #$self->{app}->h_log( $mesg );
+  # $self->{app}->h_log( $search_arg );
   if ( $mesg->code ) {
     $self->{app}->h_log( $self->{app}->h_ldap_err($mesg, $search_arg) );
   } else {
     if ( $mesg->count ) {
-      my @arr = $mesg->sorted ( $attr );
-      $res = $arr[$#arr]->get_value( $attr );
+      my @arr = $mesg->sorted ( $attr // 'uidNumber' );
+      # $self->{app}->h_log( \@arr );
+      $res = $arr[$#arr]->get_value( $attr // 'uidNumber' );
     }
   }
   return [ $res, $err ];
