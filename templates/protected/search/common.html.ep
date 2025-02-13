@@ -87,7 +87,8 @@
 	  %= hidden_field 'ldap_subtree' => $e->dn
 	    <button type="submit" class="btn px-0" title="Click to get branch object subtree">
 	      % if ( scalar @dn_ico ) {
-		<%== '<i class="' . app->{cfg}->{ui}->{ico}->{usvc}->{$dn_ico[0]} . $mps . ' me-2"></i>' %>
+		<%# == '<i class="' . app->{cfg}->{ui}->{ico}->{usvc}->{$dn_ico[0]} . $mps . ' me-2"></i>' %>
+		<%== '<i class="' . app->{cfg}->{ldap}->{authorizedService}->{$dn_ico[0]}->{icon} . $mps . ' me-2"></i>' %>
 	      % } elsif ( $e->exists('reqType') )
 	      % {
 		% my $reqType = $e->get_value('reqType');

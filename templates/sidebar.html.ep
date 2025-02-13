@@ -217,7 +217,7 @@
 	</a>
 	<ul class="nav flex-column collapse show ms-3 p-0" id="submenuTools" style="--bs-nav-link-padding-y: .2rem;">
 	  <li class="nav-item">
-	    <a class="nav-link btn btn-link text-secondary text-start disabled" href="/onboarding">
+	    <a class="nav-link btn btn-link text-secondary text-start" href="/onboarding">
 	      <i class="fa-solid fa-fw fa-baby"></i>
 	      Onboarding
 	    </a>

@@ -8,12 +8,14 @@
 </h2>
 <hr class="p-1">
 
-%= form_for '/tool/newsvc' => {class => "form-horizontal"} => (method => 'POST', enctype => 'multipart/form-data', id => 'dynamicForm') => begin
+%= form_for '/profile/newsvc' => {class => "form-horizontal"} => (method => 'POST', enctype => 'multipart/form-data', id => 'dynamicForm') => begin
   %= hidden_field dn_to_new_svc => $dn_to_new_svc
   
   % my $options = [['--- choose service ---' => '']];
   % foreach (sort(keys(%{app->{cfg}->{ldap}->{authorizedService}}))) {
-    % next if ! exists app->{cfg}->{ldap}->{authorizedService}->{$_}->{data_fields};
+    % next if ! exists app->{cfg}->{ldap}->{authorizedService}->{$_}->{data_fields} ||
+    %         ( exists app->{cfg}->{ldap}->{authorizedService}->{$_}->{disabled} &&
+    %           app->{cfg}->{ldap}->{authorizedService}->{$_}->{disabled} == 1 );
     % push @{$options}, [app->{cfg}->{ldap}->{authorizedService}->{$_}->{descr} => $_] if !app->{cfg}->{ldap}->{authorizedService}->{$_}->{disabled};
   % }
   <div class="input-group my-3">
@@ -21,9 +23,10 @@
     %= select_field authorizedService => $options, id => 'authorizedService', class => 'custom-select form-control', onchange => 'toggleInputField()'
   </div>
 
-  % my $fields = app->{cfg}->{form_fields};
+  % my $fields = app->{cfg}->{ui}->{form_fields};
   % my $f;
   % foreach my $s (keys(%{app->{cfg}->{ldap}->{authorizedService}})) {
+    % next if app->{cfg}->{ldap}->{authorizedService}->{$s}->{disabled} == 1;
     % $f->{$_}++ foreach (@{app->{cfg}->{ldap}->{authorizedService}->{$s}->{data_fields}});
   % }
   % foreach my $fld (sort(keys(%$f))) {
@@ -63,7 +66,7 @@
     % {
       <div class="input-group mb-3 d-none" data-field="<%= $fld %>">
 	<span class="input-group-text" title="<%= $schema->{$fld}->{desc} %>"><%= $fld_label %>:</span>
-	<select name="ovpnAddStatus" class="form-control custom-select" id="ovpnAddStatus" title="<%= app->{cfg}->{form_fields}->{$fld}->{title} %>">
+	<select name="ovpnAddStatus" class="form-control custom-select" id="ovpnAddStatus" title="<%= app->{cfg}->{ui}->{form_fields}->{$fld}->{title} %>">
 	  % foreach (sort(keys(%{constant('UMIOVPNADDSTATUS')}))) {
 	    <option value="<%= constant('UMIOVPNADDSTATUS')->{$_} %>"<%= ' selected' if $_ eq 'enabled' %>><%= $_ %></option>
 	  % }
@@ -78,21 +81,21 @@
 	%= select_field $fld => $options, id => $fld, class => 'custom-select form-control'
       </div>
     % }
-    % elsif ( exists app->{cfg}->{form_fields}->{$fld}->{type} && app->{cfg}->{form_fields}->{$fld}->{type} eq 'textarea' )
+    % elsif ( exists app->{cfg}->{ui}->{form_fields}->{$fld}->{type} && app->{cfg}->{ui}->{form_fields}->{$fld}->{type} eq 'textarea' )
     % {
       <div class="input-group mb-3 d-none" data-field="<%= $fld %>">
 	%= label_for $fld => $fld_label, class => 'input-group-text', title => $schema->{$fld}->{desc}
-	%= text_area $fld, id => $fld, rows => 3, class => 'text-monospace form-control', placeholder => app->{cfg}->{form_fields}->{$fld}->{ph}
+	%= text_area $fld, id => $fld, rows => 3, class => 'text-monospace form-control', placeholder => app->{cfg}->{ui}->{form_fields}->{$fld}->{ph}
       </div>
-    % } elsif ( exists app->{cfg}->{form_fields}->{$fld}->{type} && app->{cfg}->{form_fields}->{$fld}->{type} eq 'file' )
+    % } elsif ( exists app->{cfg}->{ui}->{form_fields}->{$fld}->{type} && app->{cfg}->{ui}->{form_fields}->{$fld}->{type} eq 'file' )
     % {
       <div class="input-group mb-3 d-none" data-field="<%= $fld %>">
 	%= label_for $fld => $fld_label, class => 'input-group-text', title => $schema->{$fld}->{desc}
 	%= file_field $fld, id => $fld, class => 'form-control form-control'
       </div>
     % } else {
-      % my $ph = exists app->{cfg}->{form_fields}->{$fld}->{ph} && app->{cfg}->{form_fields}->{$fld}->{ph} ne '' ?
-      %            app->{cfg}->{form_fields}->{$fld}->{ph} :
+      % my $ph = exists app->{cfg}->{ui}->{form_fields}->{$fld}->{ph} && app->{cfg}->{ui}->{form_fields}->{$fld}->{ph} ne '' ?
+      %            app->{cfg}->{ui}->{form_fields}->{$fld}->{ph} :
       %            exists app->{cfg}->{ldap}->{defaults}->{attr}->{$fld}->{val} ?
       %              app->{cfg}->{ldap}->{defaults}->{attr}->{$fld}->{val} :
       %              '';

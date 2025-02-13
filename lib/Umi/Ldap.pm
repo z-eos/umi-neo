@@ -189,6 +189,14 @@ sub add {
   return {status => $status, message => $message->{html}};
 }
 
+=head2 modify
+
+EXAMPLE:
+
+      $msg = $ldap->modify( $dn, [ add => [ memberUid => $uid ] ] );
+
+=cut
+
 sub modify {
   my ($self, $dn, $changes ) = @_;
   my ($status, $message);

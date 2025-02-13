@@ -43,7 +43,7 @@ sub register {
 		 } elsif ( $e->dn =~ /^uid=[^,]+,ou=People,dc=/i ) {
 		   return 'info';
 		 } elsif ( $e->dn =~ /^.*,cn=accesslog$/ ) {
-		   return 'info bg-opacity-25';
+		   return 'info-subtle bg-opacity-25';
 		 } else {
 		   return 'secondary';
 		 }

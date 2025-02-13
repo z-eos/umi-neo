@@ -1,4 +1,4 @@
-# -*- mode: cperl; eval(follow-mode); -*-
+# -*- mode: cperl; eval: (follow-mode 1); -*-
 #
 
 package Umi::Helpers::Common;
@@ -143,11 +143,28 @@ stolen from http://ddiguru.com/blog/25-ip-address-conversions-in-perl
 		   return (unpack 'B*' => pack 'N' => $self->h_ipam_ip2dec($arg)) =~ tr/1/1/;
 		 });
 
-    # most left attribute in dn
+=head2 h_get_rdn
+
+get RDN (outmost left attribute) of the given DN
+
+=cut
+
     $app->helper(
 		 h_get_rdn => sub {
 		   my ($self, $dn) = @_;
 		   return (split(/=/, $dn))[0];
+		 });
+
+=head2 h_get_rdn_val
+
+get RDN (outmost left attribute) value of the given DN
+
+=cut
+
+    $app->helper(
+		 h_get_rdn_val => sub {
+		   my ($self, $dn) = @_;
+		   return (split(/=/, (split(/,/, $dn))[0]))[1];
 		 });
 
     # MAC address normalyzer
@@ -330,7 +347,7 @@ wrapper for ssh-keygen(1)
 		     $res->{public}  =~ s/[\n\r]//;
 		     $res->{date}    = $date;
 
-		     # log_debug { np($res) };
+		     # $self->h_log($res);
 		     # log_debug { np($arg) };
 		     return $res;
 		 });
@@ -949,6 +966,287 @@ data taken, generally, from
 
 # 		   return \%grouped_domains;
 # 		 });
+
+
+=head2 h_branch_add_if_not_exists
+
+the subroutine accepts several arguments (the object itself as $self,
+a hashref of parameters $p, the LDAP connection object $ldap, a root
+entry $root and a debug hashref $debug).
+
+It builds the branch DN, checks if it already exists, and if not,
+constructs the branch attributes and adds the entry via LDAP.
+
+Finally, it pushes any messages into the debug hash and returns the
+result of the LDAP add operation (or nothing if the entry already
+exists).
+
+EXAMPLE
+
+    my $result = $self->add_branch_if_not_exists($p, $ldap, $root, $debug, $dry_run);
+
+=cut
+
+    $app->helper(
+		 h_branch_add_if_not_exists => sub {
+		   my ($self, $p, $ldap, $root, $debug, $dry_run) = @_;
+
+		   $dry_run = 0 if ! defined $dry_run;
+
+		   # Build the branch DN from the provided parameters.
+		   my $br_dn = sprintf('authorizedService=%s@%s,%s',
+				       $p->{authorizedService},
+				       $p->{associatedDomain},
+				       $root->dn
+				      );
+
+		   # Search for an existing entry with that DN.
+		   my $if_exist = $ldap->search({
+						 base  => $br_dn,
+						 scope => 'base',
+						 attrs => [ 'authorizedService' ],
+						});
+
+		   # If an entry exists, do nothing.
+		   if ($if_exist->count) {
+		     return { br_dn => $br_dn };
+		   } else {
+		     # Build a UID. If $p->{login} exists, use it; otherwise use lowercased "givenName.sn" from $root.
+		     my $uid = sprintf('%s@%s_%s',
+				       $p->{authorizedService},
+				       $p->{associatedDomain},
+				       exists $p->{login}
+				       ? $p->{login}
+				       : lc(sprintf("%s.%s", $root->get_value('givenName'), $root->get_value('sn')))
+				      );
+
+		     # Construct the branch attributes.
+		     my $br_attrs = {
+				     uid               => $uid,
+				     objectClass       => [ @{$self->{app}->{cfg}->{ldap}->{objectClass}->{acc_svc_branch}} ],
+				     associatedDomain  => $p->{associatedDomain},
+				     authorizedService => sprintf('%s@%s',
+								  $p->{authorizedService},
+								  $p->{associatedDomain}),
+				    };
+
+		     # Add branch entry to LDAP.
+		     my $msg;
+		     if ( $dry_run == 0 ) {
+		       $msg = $ldap->add($br_dn, $br_attrs);
+		     } else {
+		       $msg = { status => 'ok',
+				message => sprintf('DRYRUN: h_branch_add_if_not_exists() ldap->add dn: %s', $br_dn) }
+		     }
+		     if ($msg) {
+		       push @{$debug->{$msg->{status}}}, $msg->{message};
+		     }
+		     return { br_dn => $br_dn, msg => $msg };
+		   }
+		 });
+
+=head2 h_service_add_if_not_exists
+
+the subroutine accepts
+
+    $self  the current object (so you can use its helpers and configuration)
+    $p     a hash reference of parameters
+    $ldap  an LDAP connection object
+    $root  an LDAP entry object (used to retrieve attribute values like givenName and sn)
+    $br    a hash reference containing the branch DN (i.e. $br->{br_dn})
+    $debug a hash reference for collecting debug messages
+    $dry_run if set to 1 then LDAP add not done
+
+The subroutine constructs the service DN, determines the required
+attributes (using schema information and placeholder substitution),
+and finally calls $ldap->add(...). It also pushes status messages into
+the debug structure. (You may adjust the return value as needed; here
+it returns an empty hashref in the success case.)
+
+EXAMPLE
+
+    my $result = $self->add_branch_if_not_exists($p, $ldap, $root, $br, $debug);
+
+=cut
+
+    $app->helper(
+		 h_service_add_if_not_exists => sub {
+		   my ($self, $p, $ldap, $root, $br, $debug, $dry_run) = @_;
+
+		   $dry_run = 0 if ! defined $dry_run;
+
+		   # Construct the service DN using parameters from $p and configuration.
+		   my $svc_dn = sprintf(
+					'%s=%s,%s',
+					(exists $self->{app}->{cfg}->{ldap}->{authorizedService}->{$p->{authorizedService}}->{rdn}
+					 ? $self->{app}->{cfg}->{ldap}->{authorizedService}->{$p->{authorizedService}}->{rdn}
+					 : $self->{app}->{cfg}->{ldap}->{defaults}->{rdn}),
+					(exists $p->{login}
+					 ? $p->{login}
+					 : lc(sprintf("%s.%s", $root->get_value('givenName'), $root->get_value('sn')))),
+					$br->{br_dn}
+				       );
+		   # Search for an existing entry with that DN.
+		   my $if_exist = $ldap->search({
+						 base  => $svc_dn,
+						 scope => 'base',
+						 attrs => [qw(uid authorizedService)],
+						});
+
+		   # If an entry exists, do nothing.
+		   return { svc_dn => $svc_dn } if $if_exist->count;
+
+		   # Build a hash of all object classes from the LDAP schema.
+		   my %objectclasses = map { $_->{name} => $_ } $ldap->schema->all_objectclasses;
+		   my $schema = $ldap->schema;
+		   my ($all_sup, $svc_attrs_must, $svc_attrs_may);
+		   $all_sup = {}; $svc_attrs_must = {}; $svc_attrs_may = {};
+
+		   # For each objectClass configured for the authorized service,
+		   # mark it and all its superior classes.
+		   foreach my $oc_name (@{$self->{app}->{cfg}->{ldap}->{authorizedService}->{$p->{authorizedService}}->{attr}->{objectClass}}) {
+		     $all_sup->{$oc_name} = 1;
+		     my @sup = $ldap->get_all_superior_classes($schema, $oc_name);
+		     $all_sup->{$_} = 1 for @sup;
+		   }
+
+		   # Log the current (empty) must/may attributes (for debugging)
+		   # $self->h_log($svc_attrs_must);
+		   # $self->h_log($svc_attrs_may);
+
+		   # Build counters for required (must) and optional (may) attributes.
+		   foreach my $oc (keys %$all_sup) {
+		     if (exists $objectclasses{$oc}->{must}) {
+		       foreach my $attr (@{$objectclasses{$oc}->{must}}) {
+			 if ($attr eq 'userid') {
+			   $svc_attrs_must->{uid}++;
+			 } else {
+			   $svc_attrs_must->{$attr}++;
+			 }
+		       }
+		     }
+		     if (exists $objectclasses{$oc}->{may}) {
+		       foreach my $attr (@{$objectclasses{$oc}->{may}}) {
+			 next unless exists $self->{app}->{cfg}->{ldap}->{authorizedService}->{$p->{authorizedService}}->{attr}->{$attr};
+			 if ($attr eq 'userid') {
+			   $svc_attrs_may->{uid}++;
+			 } else {
+			   $svc_attrs_may->{$attr}++;
+			 }
+		       }
+		     }
+		   }
+		   # $self->h_log($svc_attrs_must);
+		   # $self->h_log($svc_attrs_may);
+
+		   # Determine the last uidNumber. Use a filter if defined in config.
+		   my $uidNumber_last;
+		   if (exists $self->{app}->{cfg}->{ldap}->{authorizedService}->{$p->{authorizedService}}->{last_num_filter}) {
+		     $uidNumber_last =
+		       $ldap->last_num(
+				       undef,
+				       $self->{app}->{cfg}->{ldap}->{authorizedService}->{$p->{authorizedService}}->{last_num_filter},
+				       undef,
+				       'sub'
+				      );
+		   } else {
+		     $uidNumber_last = $ldap->last_num;
+		   }
+
+		   # Generate a password (and other related values) for the service entry.
+		   my $pwd = $self->h_pwdgen;
+		   my $svc_attrs = {};
+		   my %svc_details;
+
+		   # Set the objectClass attribute from configuration.
+		   $svc_attrs->{objectClass} = $self->{app}->{cfg}->{ldap}->{authorizedService}->{$p->{authorizedService}}->{attr}->{objectClass};
+
+		   # Process each data field defined in the configuration.
+		   foreach my $df (@{$self->{app}->{cfg}->{ldap}->{authorizedService}->{$p->{authorizedService}}->{data_fields}}) {
+		     if ($df eq 'login') {
+		       $svc_attrs->{uid} = defined $p->{$df} ?
+			 $p->{$df} :
+			 lc(sprintf("%s.%s", $root->get_value('givenName'), $root->get_value('sn')));
+		       $svc_details{uid} = $svc_attrs->{uid};
+		     } elsif ($df eq 'userPassword') {
+		       $svc_attrs->{userPassword} = exists $p->{password2} ?
+			 $p->{password2} :
+			 $pwd->{ssha};
+		       $svc_details{userPassword} = $pwd->{clear};
+		     } elsif ($df eq 'sshKeyText' || $df eq 'sshKeyFile') {
+		       push @{$svc_attrs->{sshPublicKey}}, $p->{$df} if $p->{$df} ne '';
+		     } elsif (!exists $p->{$df}) {
+		       if (exists $self->{app}->{cfg}->{ldap}->{authorizedService}->{$p->{authorizedService}}->{attr}->{$df . '_prefix'}) {
+			 $svc_attrs->{$df} = sprintf(
+						     "%s/%s.%s",
+						     $self->{app}->{cfg}->{ldap}->{authorizedService}->{$p->{authorizedService}}->{attr}->{$df . '_prefix'},
+						     lc $root->get_value('givenName'),
+						     lc $root->get_value('sn')
+						    );
+		       } elsif (exists $self->{app}->{cfg}->{ldap}->{authorizedService}->{$p->{authorizedService}}->{attr}->{$df}) {
+			 $svc_attrs->{$df} = $self->{app}->{cfg}->{ldap}->{authorizedService}->{$p->{authorizedService}}->{attr}->{$df};
+		       }
+		     } else {
+		       $svc_attrs->{$df} = $p->{$df};
+		     }
+		   }
+
+		   #---------------------------------------------------------------------
+		   # Substitute placeholders like: `%uid%`, `%associatedDomain%`, etc.
+		   #---------------------------------------------------------------------
+		   my %replace;
+		   $replace{'%uid%'} = $svc_attrs->{uid};
+		   $replace{'%associatedDomain%'} = $svc_attrs->{associatedDomain} if exists $svc_attrs->{associatedDomain};
+		   $replace{'%givenName%'} = $root->get_value('givenName');
+		   $replace{'%sn%'} = $root->get_value('sn') // 'NA';
+		   $replace{'%cn%'} = $root->get_value('cn') // 'NA';
+		   $replace{'%sshPublicKey%'} = $p->{sshPublicKey} // [];
+
+		   foreach my $attr (keys %$svc_attrs_must) {
+		     next if exists $svc_attrs->{$attr};
+		     if ($attr eq 'uidNumber') {
+		       $svc_attrs->{$attr} = $uidNumber_last->[0] + 1;
+		     } elsif (exists $self->{app}->{cfg}->{ldap}->{authorizedService}->{$p->{authorizedService}}->{attr}->{$attr}) {
+		       $svc_attrs->{$attr} = $self->{app}->{cfg}->{ldap}->{authorizedService}->{$p->{authorizedService}}->{attr}->{$attr};
+		       $svc_attrs->{$attr} =~ s/%(\w+)%/exists $replace{"%$1%"} ? $replace{"%$1%"} : $&/ge;
+		     } else {
+		       $svc_attrs->{$attr} = undef;
+		       $self->h_log('ERROR: absent must attribute: ' . $attr);
+		     }
+		   }
+		   foreach my $attr (keys %$svc_attrs_may) {
+		     next if exists $svc_attrs->{$attr} || !exists $self->{app}->{cfg}->{ldap}->{authorizedService}->{$p->{authorizedService}}->{attr}->{$attr};
+		     $svc_attrs->{$attr} = $self->{app}->{cfg}->{ldap}->{authorizedService}->{$p->{authorizedService}}->{attr}->{$attr};
+		     $svc_attrs->{$attr} =~ s/%(\w+)%/exists $replace{"%$1%"} ? $replace{"%$1%"} : $&/ge;
+		   }
+
+		   # $self->h_log($svc_dn);
+		   # $self->h_log($svc_attrs);
+
+		   # Add the service entry to LDAP.
+		   my $msg;
+		   if ( $dry_run == 0 ) {
+		     $msg = $ldap->add($svc_dn, $svc_attrs);
+		   } else {
+		     $msg = { status => 'ok',
+			      message => sprintf('DRYRUN: h_service_add_if_not_exists() ldap->add dn: %s', $svc_dn) }
+		   }
+		   if ($msg) {
+		     push @{$debug->{$msg->{status}}}, $msg->{message};
+		     if ($msg->{status} eq 'ok') {
+		       push @{$debug->{$msg->{status}}},
+			 sprintf('password: <span class="badge text-bg-secondary user-select-all">%s</span>', $pwd->{clear});
+		     }
+		   }
+		   # $self->h_log($debug);
+
+		   my %r = ( svc_dn => $svc_dn, msg => $msg, svc_details => \%svc_details );
+		   # $self->h_log(\%r);
+		   return \%r;
+
+		 });
+
+
 
     ### END OF REGISTER --------------------------------------------------------------------------------------------
   }

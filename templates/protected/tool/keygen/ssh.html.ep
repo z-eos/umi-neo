@@ -84,7 +84,7 @@
 	</button>
       </div>
     </div>
-    <pre id="user-select-all ssh_private"><%= $key->{ssh}->{private} %></pre>
+    <pre class="user-select-all id="ssh_private"><%= $key->{ssh}->{private} %></pre>
   </div>
   <div class="col">
     <div class="btn-toolbar" role="toolbar">

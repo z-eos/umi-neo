@@ -1,0 +1,50 @@
+%# -*- mode: web; eval: (follow-mode) -*-
+
+<h3 class="fw-bold p-3">
+  <i class="fa-solid fa-users fa-lg me-3 text-muted"></i>
+  Groups of user <small><em class="text-muted font-monospace"><%= $dn_to_group %></em></small>
+</h3>
+<hr class="pb-3">
+
+%= form_for '/profile/groups' => {class => "form-horizontal"} => (method => 'POST') => begin
+  %= hidden_field dn_to_group => 'dn_to_group', id => 'dn_to_group', value => $dn_to_group
+  <div class="row mb-3" title="groups">
+    <div class="col">
+      %= select_field group => $select_options, id => 'group', class => 'form-select', multiple => 'multiple'
+    </div>
+  </div>
+
+  %= submit_button 'Submit', class => 'btn btn-success font-weight-bold text-uppercase text-end'
+
+% end
+
+<pre class="mt-5 umi-text-tiny text-muted"><%= dumper stash->{'mojo.validation'}->{error} if %{stash->{'mojo.validation'}->{error}} %></pre>
+
+% if ( stash->{'mojo.validation'}->{error} ) {
+  <script>
+   % while (my ($k, $v) = each %{stash->{'mojo.validation'}->{error}}) {
+     $('#<%= $k %>').addClass('is-invalid').after('<div id="<%= $k %>ValidationFeedback" class="invalid-feedback font-monospace"></div>');
+     % if (scalar(@$v) == 1) {
+     $('#<%= $k %>ValidationFeedback').text('<%= $v->[0] %>');
+     % } else {
+     $('#<%= $k %>ValidationFeedback').text('is not <%= $v->[0] %>: <%= $v->[2] %>');
+     % }
+   % }
+  </script>
+% }
+
+<script>
+ document.addEventListener('DOMContentLoaded', function() {
+   var multipleCancelButton = new Choices(
+     '#group',
+     {
+       allowHTML: true,
+       placeholder: true,
+       placeholderValue: 'Pick a group',
+       removeItemButton: true,
+       removeItemIconText: '×',
+       renderChoiceLimit: -1,
+     }
+   );
+ });
+</script>

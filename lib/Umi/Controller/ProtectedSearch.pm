@@ -1,4 +1,4 @@
-# -*- mode: cperl; eval: (follow-mode) -*-
+# -*- mode: cperl; eval: (follow-mode 1); -*-
 
 package Umi::Controller::Search;
 

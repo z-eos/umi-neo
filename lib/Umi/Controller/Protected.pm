@@ -1,4 +1,4 @@
-# -*- mode: cperl; eval: (follow-mode) -*-
+# -*- mode: cperl; eval: (follow-mode 1); -*-
 
 package Umi::Controller::Protected;
 
@@ -11,7 +11,14 @@ use Mojolicious::Validator;
 use IO::Compress::Gzip qw(gzip $GzipError);
 use POSIX qw(strftime);
 use Encode qw(decode_utf8);
-
+use Net::LDAP::Constant qw(
+			    LDAP_SUCCESS
+			    LDAP_PROTOCOL_ERROR
+			    LDAP_NO_SUCH_OBJECT
+			    LDAP_INVALID_DN_SYNTAX
+			    LDAP_INSUFFICIENT_ACCESS
+			    LDAP_CONTROL_SORTRESULT
+			 );
 use Umi::Ldap;
 
 sub homepage ($self) {
@@ -1235,6 +1242,172 @@ sub moddn ($self) {
 			   search_filter => $par->{search_filter},
 			   ldap_subtree => $par->{ldap_subtree} )
 		 );
+}
+
+sub groups ($self) {
+  my $p = $self->req->params->to_hash;
+  $self->h_log($p);
+  $self->h_log($self->h_get_rdn_val($p->{dn_to_group}));
+  $self->stash( dn_to_group => $p->{dn_to_group} );
+
+  my $ldap = Umi::Ldap->new( $self->{app}, $self->session('uid'), $self->session('pwd') );
+  my $search_arg = { base => $self->{app}->{cfg}->{ldap}->{base}->{group},
+		     filter => '(memberUid=' . $self->h_get_rdn_val($p->{dn_to_group}) .')',};
+  my $search = $ldap->search( $search_arg );
+  $self->h_log( $self->{app}->h_ldap_err($search, $search_arg) ) if $search->code;
+
+  my %u = map { $_->get_value('cn') => 1 } $search->entries;
+
+  $search_arg = { base => $self->{app}->{cfg}->{ldap}->{base}->{group}, scope => 'one' };
+  $search = $ldap->search( $search_arg );
+  $self->h_log( $self->{app}->h_ldap_err($search, $search_arg) ) if $search->code;
+
+  my @e = map {
+    exists $u{$_->get_value('cn')} ?
+      [ $_->get_value('cn') => $_->get_value('cn'), selected => 'selected'] :
+      $_->get_value('cn')
+    } $search->sorted('cn');
+
+  $self->stash( select_options => \@e );
+  my @o = keys(%u);
+  my $diff = $self->h_array_diff(\@o,$p->{group});
+  $self->h_log($diff);
+
+  my ($debug, $msg);
+  if ( exists $p->{group} ) {
+    foreach (@{$diff->{added}}) {
+      $msg = $ldap->modify( sprintf('cn=%s,%s',$_, $self->{app}->{cfg}->{ldap}->{base}->{group}),
+			    [ add => [ memberUid => $self->h_get_rdn_val($p->{dn_to_group}) ]] );
+      $self->h_log( $msg->{message} ) if $msg->{status} eq 'error';
+      push @{$debug->{$msg->{status}}}, $msg->{message};
+    }
+    foreach (@{$diff->{removed}}) {
+      $msg = $ldap->modify( sprintf('cn=%s,%s',$_, $self->{app}->{cfg}->{ldap}->{base}->{group}),
+			    [ delete => [ memberUid => $self->h_get_rdn_val($p->{dn_to_group}) ]] );
+      $self->h_log( $msg->{message} ) if $msg->{status} eq 'error';
+      push @{$debug->{$msg->{status}}}, $msg->{message};
+    }
+  }
+
+  # my $msg = $ldap->moddn($par);
+
+  $self->stash( debug => $debug );
+
+  $self->render(template => 'protected/profile/groups');
+}
+
+sub onboarding ($self) {
+  my $p = $self->req->params->to_hash;
+  $self->h_log($p);
+  $self->stash( dn_to_onboard => $p->{dn_to_onboard} );
+
+  my $ldap = Umi::Ldap->new( $self->{app}, $self->session('uid'), $self->session('pwd') );
+  my $search_arg = { base => $p->{dn_to_onboard}, scope => 'base', };
+  my $search = $ldap->search( $search_arg );
+  $self->h_log( $self->h_ldap_err($search, $search_arg) ) if $search->code && $search->code != LDAP_NO_SUCH_OBJECT;
+  my $root = $search->entry;
+
+  my $v = $self->validation;
+
+  my (%debug, $service);
+  my $svcs = $self->{app}->{cfg}->{ui}->{onboarding}->{services};
+  # $self->h_log($svcs);
+  foreach my $svc (keys %$svcs) {
+    foreach my $d (@{$svcs->{$svc}->{fqdn}}) {
+      $search_arg = { base => sprintf('authorizedService=%s@%s,%s', $svcs->{$svc}->{svc}, $d, $self->session->{user_obj}->{dn}),
+		      scope => 'one' };
+      # $self->h_log($search_arg);
+      $search = $ldap->search( $search_arg );
+      $self->h_log( $self->{app}->h_ldap_err($search, $search_arg) ) if $search->code && $search->code != LDAP_NO_SUCH_OBJECT;
+      if ($search->code && $search->code == LDAP_NO_SUCH_OBJECT) {
+	$service->{$svc}->{exists} = 0;
+	push @{$debug{ok}}, sprintf("You don't have account for service <mark>%s</mark>, will be created", $svc)
+	  if ! $v->has_data;
+      } else {
+	foreach my $e ($search->entries) {
+	  $service->{$svc}->{exists} = 1;
+	  push @{$service->{$svc}->{acc}}, $e;
+	  push @{$debug{warn}}, sprintf("Service <mark>%s</mark> account, login: <mark>%s</mark>, exists (created on %s)",
+					$svc, $e->get_value('uid'), $e->get_value('createTimestamp'))
+	    if ! $v->has_data;
+	}
+      }
+    }
+  }
+  # $self->h_log($service);
+
+  $self->stash( debug => \%debug );
+
+  return $self->render(template => 'protected/profile/onboarding') unless $v->has_data;
+
+  $self->stash( is_submited => 1 );
+
+  my ($svc_details, $br, $s);
+  my $dry_run = 0;
+
+  my $k_ssh = $self->h_keygen_ssh;
+  # $self->stash(debug => $k_ssh->{debug});
+
+  my $k_gpg = $self->h_keygen_gpg({ name =>
+				    { real  => sprintf("%s %s",
+						       $self->session->{user_obj}->{givenname},
+						       $self->session->{user_obj}->{sn}) // "name is absent",
+				      email => $self->session->{user_obj}->{mail} // "mail is absent" }});
+  # $self->stash(debug => $k_gpg->{debug});
+
+  my ($mesg, $op_dn, $op_attrs);
+  if ( $dry_run == 0 && exists $k_gpg->{send_key} ) {
+    $op_dn = sprintf("pgpCertID=%s,%s",
+		     $k_gpg->{send_key}->{pgpCertID},
+		     $self->{app}->{cfg}->{ldap}->{base}->{pgp});
+    %{$op_attrs} = map { $_ => $k_gpg->{send_key}->{$_} } keys %{$k_gpg->{send_key}};
+    #$self->h_log($add_dn);
+    #$self->h_log($add_attrs);
+    $mesg = $ldap->add( $op_dn, $op_attrs );
+    push @{$debug{$mesg->{status}}}, $mesg->{message};
+  }
+
+  foreach my $svc (keys %$service) {
+    # next if $service->{$svc}->{exists} == 1;
+
+    $p->{authorizedService} = $svcs->{$svc}->{svc};
+    $p->{sshKeyText} = $k_ssh->{public} if $svc eq 'ssh-acc';
+
+    foreach my $d (@{$svcs->{$svc}->{fqdn}}) {
+      $p->{associatedDomain} = $d;
+      if ( $service->{$svc}->{exists} == 0 ) {
+	$br = $self->h_branch_add_if_not_exists($p, $ldap, $root, \%debug, $dry_run);
+	$s = $self->h_service_add_if_not_exists($p, $ldap, $root, $br, \%debug, $dry_run);
+	push @{$svc_details->{$svc}->{added}}, { fqdn => $d, svc_details => $s->{svc_details} };
+      } elsif ( $svc eq 'ssh-acc' ) {
+	$op_dn = sprintf('uid=%s,authorizedService=%s@%s,%s',
+			 lc(sprintf("%s.%s", $self->session->{user_obj}->{givenname}, $self->session->{user_obj}->{sn})),
+			 $svc,
+			 $d,
+			 $self->session->{user_obj}->{dn});
+	$op_attrs = [ add => [ sshPublicKey => $k_ssh->{public} ] ];
+	#$self->h_log($add_dn);
+	#$self->h_log($add_attrs);
+	$mesg = $ldap->modify( $op_dn, $op_attrs );
+	push @{$debug{$mesg->{status}}}, $mesg->{message};
+      }
+    }
+
+    $svc_details->{$svc}->{exists} = $service->{$svc}->{exists} == 1 ? 1 : 0;
+  }
+
+  # $self->h_log($k_ssh);
+  # $self->h_log(\%debug);
+  delete $debug{ok};
+  delete $service->{$_}->{acc} foreach (keys %$service);
+
+  $self->stash( debug => \%debug,
+		service => $service,
+		svc_added => $svc_details,
+		k_gpg => $k_gpg,
+		k_ssh => $k_ssh );
+
+  $self->render(template => 'protected/profile/onboarding');
 }
 
 1;

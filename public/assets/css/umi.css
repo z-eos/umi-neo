@@ -461,33 +461,33 @@ form.new-user:not(.show-simplified) .show-on-simplified {
 
    ------------------------------- */
 
-.bg-blue        { background-color: var(--blue)      !important; }
-.bg-indigo      { background-color: var(--indigo)    !important; }
-.bg-purple      { background-color: var(--purple)    !important; }
-.bg-pink        { background-color: var(--pink)      !important; }
-.bg-red	        { background-color: var(--red)       !important; }
-.bg-orange      { background-color: var(--orange)    !important; }
-.bg-yellow      { background-color: var(--yellow)    !important; }
-.bg-green       { background-color: var(--green)     !important; }
-.bg-teal        { background-color: var(--teal)      !important; }
-.bg-cyan        { background-color: var(--cyan)      !important; }
-.bg-white       { background-color: var(--white)     !important; }
-.bg-gray        { background-color: var(--gray)      !important; }
-.bg-gray-dark   { background-color: var(--gray-dark) !important; }
+.umi-bg-blue        { background-color: var(--bs-blue)      !important; }
+.umi-bg-indigo      { background-color: var(--bs-indigo)    !important; }
+.umi-bg-purple      { background-color: var(--bs-purple)    !important; }
+.umi-bg-pink        { background-color: var(--bs-pink)      !important; }
+.umi-bg-red	    { background-color: var(--bs-red)       !important; }
+.umi-bg-orange      { background-color: var(--bs-orange)    !important; }
+.umi-bg-yellow      { background-color: var(--bs-yellow)    !important; }
+.umi-bg-green       { background-color: var(--bs-green)     !important; }
+.umi-bg-teal        { background-color: var(--bs-teal)      !important; }
+.umi-bg-cyan        { background-color: var(--bs-cyan)      !important; }
+.umi-bg-white       { background-color: var(--bs-white)     !important; }
+.umi-bg-gray        { background-color: var(--bs-gray)      !important; }
+.umi-bg-gray-dark   { background-color: var(--bs-gray-dark) !important; }
 
-.text-blue	{            color: var(--blue)      !important; }
-.text-indigo	{            color: var(--indigo)    !important; }
-.text-purple	{            color: var(--purple)    !important; }
-.text-pink	{            color: var(--pink)      !important; }
-.text-red	{            color: var(--red)       !important; }
-.text-orange	{            color: var(--orange)    !important; }
-.text-yellow	{            color: var(--yellow)    !important; }
-.text-green	{            color: var(--green)     !important; }
-.text-teal	{            color: var(--teal)      !important; }
-.text-cyan	{            color: var(--cyan)      !important; }
-.text-white	{            color: var(--white)     !important; }
-.text-gray	{            color: var(--gray)      !important; }
-.text-gray-dark {            color: var(--gray-dark) !important; }
+.umi-text-blue	    {            color: var(--bs-blue)      !important; }
+.umi-text-indigo    {            color: var(--bs-indigo)    !important; }
+.umi-text-purple    {            color: var(--bs-purple)    !important; }
+.umi-text-pink	    {            color: var(--bs-pink)      !important; }
+.umi-text-red	    {            color: var(--bs-red)       !important; }
+.umi-text-orange    {            color: var(--bs-orange)    !important; }
+.umi-text-yellow    {            color: var(--bs-yellow)    !important; }
+.umi-text-green	    {            color: var(--bs-green)     !important; }
+.umi-text-teal	    {            color: var(--bs-teal)      !important; }
+.umi-text-cyan	    {            color: var(--bs-cyan)      !important; }
+.umi-text-white	    {            color: var(--bs-white)     !important; }
+.umi-text-gray	    {            color: var(--bs-gray)      !important; }
+.umi-text-gray-dark {            color: var(--bs-gray-dark) !important; }
 
 /* -------------------------------
 
@@ -638,3 +638,34 @@ form.new-user:not(.show-simplified) .show-on-simplified {
     padding: 15px;
     margin: 0 auto;
 }
+
+/* -------------------------------
+
+   HTML element <details> icon
+
+   ------------------------------- */
+
+/* For Chrome, Safari, Opera */
+summary::-webkit-details-marker {
+  display: none;
+}
+
+/* For Firefox */
+summary {
+  list-style: none;
+}
+
+/* Add a custom icon before the summary text */
+summary::before {
+  content: "\f0da"; /* Example: Font Awesome down arrow (angle-down) */
+  font-family: "Font Awesome 5 Free"; /* Adjust to match your Font Awesome version */
+  font-weight: 900; /* Use the correct font weight if needed */
+  display: inline-block;
+  margin-right: 0.5rem;
+}
+
+/* When the details element is open, change the icon */
+details[open] summary::before {
+  content: "\f0d7"; /* Example: Font Awesome up arrow (angle-up) */
+}
+

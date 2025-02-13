@@ -60,17 +60,36 @@
 % }
 
 <script>
- $('select').select2({
-   placeholder: {
-     id: -1,
-     text: "➔",
-     selectionCssClass: ":all:",
-     dropdownCssClass: ":all:"
-   },
-   allowClear: true,
-   theme: "classic"
+ /* $('select').select2({
+  *   placeholder: {
+  *     id: -1,
+  *     text: "➔",
+  *     selectionCssClass: ":all:",
+  *     dropdownCssClass: ":all:"
+  *   },
+  *   allowClear: true,
+  *   theme: "classic"
+  * }); */
+</script>
+
+<script>
+ document.addEventListener('DOMContentLoaded', function() {
+   const choicesConfig = {
+     allowHTML: true,
+     placeholder: true,
+     placeholderValue: 'Pick a group',
+     removeItemButton: true,
+     removeItemIconText: '×',
+     renderChoiceLimit: -1,
+   };
+
+   // Initialize Choices.js on every <select> element on the page.
+   document.querySelectorAll('select').forEach(function(selectElement) {
+     new Choices(selectElement, choicesConfig);
+   });
  });
 </script>
+
 
 % if ( stash->{'mojo.validation'}->{error} ) {
   <script>
