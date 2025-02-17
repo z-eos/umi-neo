@@ -3,7 +3,15 @@
 
 <link href="/assets/js/datatables/datatables.min.css" rel="stylesheet" type="text/css">
 
-%= t 'h1', class => 'mt-3 mb-4', 'Users list'
+% my $title;
+% if (exists stash->{type} && stash->{type} eq 'user-driven-rows') {
+  % $title = 'Details of each user';
+% } elsif (exists stash->{type} && stash->{type} eq 'server-driven-rows') {  
+% $title = 'Details of each user (user-to-server)';
+% } elsif (exists stash->{type} && stash->{type} eq 'users-by-server') {  
+% $title = 'All users of each server';
+% }
+%= t 'h1', class => 'mt-3 mb-4', $title
 
 % use Net::LDAP::Util qw(generalizedTime_to_time);
 % use POSIX qw(strftime);
