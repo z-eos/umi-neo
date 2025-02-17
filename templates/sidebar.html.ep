@@ -77,6 +77,14 @@
 		<i class="fa-solid fa-server fa-xs ms-2" title="long (up to 2 minutes) request"></i>
 	      </a>
 	    </li>
+	    <li class="nav-item">
+	      <a class="nav-link btn btn-link text-secondary text-start" href="/audit/users/users-by-server"
+		 tabindex="2"
+		 title="Users By Servers">
+		<i class="fa-solid fa-server me-2"></i>
+		by servers
+	      </a>
+	    </li>
 	    <!-- <li class="nav-item">
 		 <a class="nav-link btn btn-link text-secondary text-start" href="/servermta"
 		 tabindex="2"
@@ -165,13 +173,13 @@
 		</a>
 	      </li>
 	      <li class="nav-item">
-		<a class="nav-link btn btn-link text-secondary text-start disabled" href="/group" tabindex="3">
+		<a class="nav-link btn btn-link text-secondary text-start" href="/group/new" tabindex="3">
 		  <i class="fa-solid fa-fw fa-users"> </i>
 		  Group
 		</a>
 	      </li>
 	      <li class="nav-item">
-		<a class="nav-link btn btn-link text-secondary text-start disabled" href="/nisnetgroup" tabindex="3">
+		<a class="nav-link btn btn-link text-secondary text-start" href="/netgroup/new" tabindex="3">
 		  <i class="fa-solid fa-fw fa-user-friends"> </i>
 		  NetGr
 		</a>

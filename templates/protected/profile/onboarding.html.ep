@@ -25,6 +25,11 @@
 	<br />
 	<p class="fw-bold">please, backup all bellow credentials, this page is ephemeral, temporary and non-persistent, and will be lost on refresh</p>
       </div>      
+      <div class="alert alert-success" role="alert">
+	<h4 class="alert-heading"><i class="fa-solid fa-fingerprint"></i> Your profile password is been changed!</h4>
+	<br />
+	<p class="">do backup your profile new password: <mark><%= stash->{root_pwd} %></mark></p>
+      </div>      
     </caption>
     % my $key;
     % my $class_th = 'px-3 text-uppercase umi-bg-teal';

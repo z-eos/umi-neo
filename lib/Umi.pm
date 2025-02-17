@@ -295,6 +295,25 @@ sub _startup_routes ($self) {
     ->post('/profile')
     ->to('protected#profile');
 
+  ## NET/GROUPs
+  $protected_root
+    ->get( '/group/new')
+    ->requires(is_role => ['admin,coadmin', {cmp => 'or'}])
+    ->to('group#new_grp');
+  $protected_root
+    ->post('/group/new')
+    ->requires(is_role => ['admin,coadmin', {cmp => 'or'}])
+    ->to('group#new_grp');
+
+  $protected_root
+    ->get( '/netgroup/new')
+    ->requires(is_role => ['admin,coadmin', {cmp => 'or'}])
+    ->to('group#new_netgrp');
+  $protected_root
+    ->post('/netgroup/new')
+    ->requires(is_role => ['admin,coadmin', {cmp => 'or'}])
+    ->to('group#new_netgrp');
+
   ## PROJECT
   $protected_root
     ->get( '/project/new')

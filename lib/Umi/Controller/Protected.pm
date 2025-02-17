@@ -170,7 +170,7 @@ sub profile ($self) {
   my $profiled_user = $search->as_struct;
   # $self->h_log($profiled_user);
 
-  my ( $cf_svc, $groups, $k, $kk, $modifiersname, $p, $pgp, $pgp_e, $projects, $server_names, $server_alive, $servers, $service, $svc, $svc_details, $svc_msg, $v, $vv, );
+  my ( $cf_svc, $groups, $k, $kk, $modifiersname, $p, $pgp, $pgp_e, $projects, $server_names, $server_alive, $servers_alive_list, $servers, $service, $svc, $svc_details, $svc_msg, $v, $vv, );
   while (($k, $v) = each %$profiled_user) {
     ### name of the last who modified this user root object
     $search_arg = { base => $v->{modifiersname}->[0], scope => 'base', attrs => ['gecos', 'uid'] };
@@ -211,6 +211,7 @@ sub profile ($self) {
 	$search = $ldap->search( $search_arg );
 	$self->h_log( $self->{app}->h_ldap_err($search, $search_arg) ) if $search->code && $search->code != 32;
 	$server_alive->{$k}->{$_} = $search->count;
+	$servers_alive_list->{$_} = $search->count;
       }
       # $self->h_log($servers);
     }
@@ -285,6 +286,7 @@ sub profile ($self) {
 	       servers => $servers,
 	       services => $service,
 	       server_alive => $server_alive,
+	       servers_alive_list => $servers_alive_list,
 	       search_base_case => $self->{app}->{cfg}->{ldap}->{base}->{machines},
 	       projects => $projects,
 	       modifiersname => $modifiersname,
@@ -1396,13 +1398,18 @@ sub onboarding ($self) {
     $svc_details->{$svc}->{exists} = $service->{$svc}->{exists} == 1 ? 1 : 0;
   }
 
+  my $root_pwd = $self->h_pwdgen;
+  $mesg = $ldap->modify( $self->session->{user_obj}->{dn},
+			 [ replace => [ userPassword => $root_pwd->{ssha} ] ] );
+  push @{$debug{$mesg->{status}}}, $mesg->{message};
+
   # $self->h_log($k_ssh);
   # $self->h_log(\%debug);
   delete $debug{ok};
   delete $service->{$_}->{acc} foreach (keys %$service);
 
   $self->stash( debug => \%debug,
-		service => $service,
+		root_pwd => $root_pwd->{clear},
 		svc_added => $svc_details,
 		k_gpg => $k_gpg,
 		k_ssh => $k_ssh );
