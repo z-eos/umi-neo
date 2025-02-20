@@ -24,16 +24,69 @@
   </div>
 
   <div class="row mb-3" title="">
-    %= label_for 'memberUid' => 'Member:', class => 'col-sm-2 col-form-label text-end fw-bold text-uppercase'
+    %= label_for memberUid => 'Member:', class => 'col-sm-2 col-form-label text-end fw-bold text-uppercase'
     <div class="col-sm-10">
-      %= select_field memberUid => $em, id => 'memberUid', class => 'form-select', multiple => 'multiple'
+      %= select_field memberUid => stash->{emploees}, id => 'memberUid', class => 'form-select', multiple => 'multiple'
     </div>
   </div>
 
+  <div class="row mb-3" title="">
+    %= label_for hosts => 'Hosts:', class => 'col-sm-2 col-form-label text-end fw-bold text-uppercase'
+    <div class="col-sm-10">
+      %= select_field hosts => stash->{hosts}, id => 'hosts', class => 'form-select', multiple => 'multiple'
+    </div>
+  </div>
+
+  <div class="row mb-3" title="">
+    %= label_for host => 'New Host:', class => 'col-sm-2 col-form-label text-end fw-bold text-uppercase'
+    <div class="col-sm-10">
+      % my $host = stash->{host};
+      % if ( defined $host && ref($host) eq 'ARRAY' )
+      % {
+	% foreach (@$host) {
+	  <div id="" class="input-group input-group-sm entry-removable entry-at-least-one">
+	    <span class="input-group-btn">
+	      <!-- Clone Button -->
+	      <button class="btn btn-secondary btn-sm btn-add element-add"
+		      id="" type="button" title="click to add another host">
+		<i class="fa-solid fa-fw fa-clone text-success-emphasis"></i>
+	      </button>
+	    </span>
+	    <input type="text" name="host" id="" class="form-control" value="<%= $_ %>">
+	    <span class="input-group-btn">
+	      <!-- Delete Button -->
+	      <button class="btn btn-secondary btn-sm btn-delete element-delete" type="button" title="Click to delete host">
+		<i class="fa-solid fa-fw fa-trash text-danger-emphasis"></i>
+	      </button>
+	    </span>
+	  </div>	  
+	% }
+      % } else {
+	<div id="" class="input-group input-group-sm entry-removable entry-at-least-one">
+	  <span class="input-group-btn">
+	    <!-- Clone Button -->
+	    <button class="btn btn-secondary btn-sm btn-add element-add"
+		    id="" type="button" title="click to add another host">
+	      <i class="fa-solid fa-fw fa-clone text-success-emphasis"></i>
+	    </button>
+	  </span>
+	  %= text_field host => $host, class => 'form-control', title => ''
+	  <span class="input-group-btn">
+	    <!-- Delete Button -->
+	    <button class="btn btn-secondary btn-sm btn-delete element-delete" type="button" title="Click to delete host">
+	      <i class="fa-solid fa-fw fa-trash text-danger-emphasis"></i>
+	    </button>
+	  </span>
+	</div>
+      % }
+    </div>
+  </div>
+  
   %= submit_button 'Submit', class => 'btn btn-success font-weight-bold text-uppercase text-end'
 
 % end
-
+% my $tuples = stash->{tuples};
+<pre class="p-5 font-monospace umi-text-tiny"><%= dumper $tuples if defined $tuples %>
 <pre class="mt-5 umi-text-tiny text-muted"><%= dumper stash->{'mojo.validation'}->{error} if %{stash->{'mojo.validation'}->{error}} %></pre>
 
 % if ( stash->{'mojo.validation'}->{error} ) {
@@ -67,3 +120,5 @@
  });
 
 </script>
+
+<script src="/assets/js/umi-tool-modify.js"></script>

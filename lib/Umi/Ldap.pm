@@ -31,12 +31,13 @@ use Net::LDAP::Util qw(
 use Try::Tiny;
 
 sub new {
-  my ($class, $app, $uid, $pwd) = @_;
+  my ($class, $app, $uid, $pwd, $uid_is_dn) = @_;
   my $self =
     bless {
 	   app => $app,
 	   uid => $uid,
 	   pwd => $pwd,
+	   uid_is_dn => defined $uid_is_dn && $uid_is_dn =~ /^(?:0|1)$/ ? $uid_is_dn : 0,
 	  }, $class;
 
   my $cf = $self->{app}->{cfg}->{ldap};
@@ -48,41 +49,60 @@ sub new {
     return undef;
   }
 
-  my $m = $ldap->bind(sprintf("uid=%s,%s",
-			      $self->{uid},
-			      $cf->{base}->{acc_root}),
+  my $dn = $self->{uid_is_dn} ? $self->{uid} : sprintf("uid=%s,%s",
+						       $self->{uid},
+						       $cf->{base}->{acc_root});
+  
+  my $m = $ldap->bind($dn,
 		      password => $self->{pwd},
 		      version  => 3,);
   if ( $m->is_error ) {
     $self->{app}->h_log(sprintf("Ldap.pm: ldap(): code: %s; mesg: %s; txt: %s",
 				$m->code, $m->error_name, $m->error_text) );
-      $self->{ldap} = $m;
+    $self->{ldap} = $m;
   }
+
+  # if ( exists $cf->{conn}->{start_tls} ) {
+  #   # $self->{log}->debug(dumper($cf->{conn}->{start_tls}));
+  #   $m = try {
+  #     $ldap->start_tls(
+  # 		       verify     => $cf->{conn}->{start_tls}->{verify},
+  # 		       cafile     => $cf->{conn}->{start_tls}->{cafile},
+  # 		       checkcrl   => $cf->{conn}->{start_tls}->{checkcrl},
+  # 		       sslversion => $cf->{conn}->{start_tls}->{sslversion},
+  # 		      );
+  #   }
+  #   catch {
+  #     $self->{app}->h_log("ERROR: Net::LDAP start_tls: $@"); # if $m->error;
+  #   } finally {
+  #     if (@_) {
+  # 	$self->{ldap} = @_;
+  #     } else {
+  # 	$self->{ldap} = $ldap;
+  #     }
+  #   };
+  # }
 
   if ( exists $cf->{conn}->{start_tls} ) {
     # $self->{log}->debug(dumper($cf->{conn}->{start_tls}));
-    $m = try {
-      $ldap->start_tls(
-		       verify     => $cf->{conn}->{start_tls}->{verify},
-		       cafile     => $cf->{conn}->{start_tls}->{cafile},
-		       checkcrl   => $cf->{conn}->{start_tls}->{checkcrl},
-		       sslversion => $cf->{conn}->{start_tls}->{sslversion},
-		      );
+    try {
+      $m = $ldap->start_tls(
+			    verify     => $cf->{conn}->{start_tls}->{verify},
+			    cafile     => $cf->{conn}->{start_tls}->{cafile},
+			    checkcrl   => $cf->{conn}->{start_tls}->{checkcrl},
+			    sslversion => $cf->{conn}->{start_tls}->{sslversion},
+			   );
+      $self->{app}->h_log("ERROR: Net::LDAP start_tls: $m->error") if $m->code;
     }
     catch {
-      $self->{app}->h_log("Net::LDAP start_tls error: $@") if $m->error;
-    } finally {
-      if (@_) {
-	$self->{ldap} = @_;
-      } else {
-	$self->{ldap} = $ldap;
-      }
-    }
+      $self->{app}->h_log("ERROR: Net::LDAP start_tls caught message: $_");
+    };
   }
 
-  $self->{ldap} = $ldap if ! exists $self->{ldap};
+  $self->{ldap} = $ldap;
 
-  # $self->{log}->debug(dumper($mesg));
+  # $self->{app}->h_log($self->{ldap});
+  # $self->{app}->h_log($m->code);
 
   return $self;
 }

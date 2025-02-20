@@ -21,7 +21,7 @@ sub do_login ($self) {
     # Umi::Authentication::validate_user() which is called by
     # Mojolicious::Plugin::Authentication::authenticate()
     my $ldap = Umi::Ldap->new( $self->{app}, $username, $password );
-    # $self->h_log($ldap);
+    # $self->h_log($ldap->{ldap});
     if ($self->authenticate($username, $password, {ldap => $ldap->ldap})) {
       my ($search_arg, $search, $user_obj, $role, %privileges);
 
@@ -31,8 +31,13 @@ sub do_login ($self) {
 		      scope => 'one',
 		      attrs => [qw(uid givenName sn cn gecos mail title description)] };
       $search = $ldap->search($search_arg);
-      $self->{app}->h_log( $self->{app}->h_ldap_err($search, $search_arg) ) if $search->code;
-      my $e = $search->entry; # $self->h_log($e);
+      if ( $search->code ) {
+	$self->{app}->h_log( $self->{app}->h_ldap_err($search, $search_arg) );
+	$self->session( debug => { error => ['Authentication failed'] } );
+	return $self->redirect_to('public_root');
+      }
+
+      my $e = $search->entry;  $self->h_log($search->count);
       %$user_obj = map { lc($_) => $e->get_value($_) } $e->attributes;
       $user_obj->{dn} = $e->dn;
 
@@ -60,12 +65,12 @@ sub do_login ($self) {
 				user_obj => $user_obj,
 				role => $role,
 				privileges => \%privileges });
-      return $self->redirect_to('protected_root')
+      return $self->redirect_to('protected_root');
     }
   }
 
   $self->session( debug => { error => ['Authentication failed'] } );
-  return $self->redirect_to('public_root')
+  return $self->redirect_to('public_root');
 }
 
 sub do_logout ($self) {

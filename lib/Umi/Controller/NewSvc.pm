@@ -39,12 +39,19 @@ sub newsvc ($self) {
   my $search = $ldap->search( $search_arg );
   $self->h_log( $self->h_ldap_err($search, $search_arg) ) if $search->code && $search->code != LDAP_NO_SUCH_OBJECT;
 
-  my ($domains, $domains_ref);
+  my ($domains, $domains_arr, $domains_ref);
   foreach ($search->entries) {
     $domains_ref = $_->get_value('associatedDomain', asref => 1);
-    push @$domains, @$domains_ref if $domains_ref->[0] ne 'unknown';
+    push @$domains_arr, @$domains_ref if $domains_ref->[0] ne 'unknown';
   }
-  @$domains = sort @$domains;
+
+  $search_arg = { base => $self->{app}->{cfg}->{ldap}->{base}->{machines},
+		  attrs => ['cn'] };
+  $search = $ldap->search( $search_arg );
+  $self->h_log( $self->{app}->h_ldap_err($search, $search_arg) ) if $search->code && $search->code != 32;
+  push @$domains_arr, $_->get_value('cn') foreach ($search->entries);
+  my %domains_hash = map { $_ => 1 } @$domains_arr;
+  @$domains = sort keys %domains_hash;
 
   $search_arg = { base => $self->{app}->{cfg}->{ldap}->{base}->{rad_groups},
 		  filter => '(cn=*)' };

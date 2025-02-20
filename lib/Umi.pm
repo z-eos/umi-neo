@@ -205,12 +205,18 @@ sub _startup_routes ($self) {
   # - anything not dealt with explicitly is a 404
   my $root           = $self->routes;
 
-  $self->_authentication_routes($root);
-
   # public routes: a home page and some other page
   my $public_root = $root->any('/public');
   $public_root->get('/')->to('public#homepage')->name('public_root');
   $public_root->get('/other')->to('public#other');
+
+  ## MACHINES
+  $public_root->get( '/machines')->to('machines#list');
+  $public_root->post('/machines')->to('machines#create_or_update');
+  $public_root->put('/machines/:id')->to('machines#update');
+  $public_root->delete('/machines/:id')->to('machines#delete');
+
+  $self->_authentication_routes($root);
 
   # everything else under '/' will be protected. We make sure this will
   # be the case by attaching any following route "under" a common
@@ -236,7 +242,7 @@ sub _startup_routes ($self) {
   $protected_root->get('/other')->to('protected#other');
 
   ###
-  ### mod Authorization only starting with v.1.0.6 — $...->requires(has_priv => ['r-people,r-group', {cmp => 'and'}])->...;
+  ### mod Authorization start only with v.1.0.6 — $...->requires(has_priv => ['r-people,r-group', {cmp => 'and'}])->...;
   ###
 
   ## PROFILE
@@ -313,6 +319,24 @@ sub _startup_routes ($self) {
     ->post('/netgroup/new')
     ->requires(is_role => ['admin,coadmin', {cmp => 'or'}])
     ->to('group#new_netgrp');
+
+  # ## MACHINES
+  # $protected_root
+  #   ->get( '/machines')
+  #   ->requires(is_role => ['admin,coadmin', {cmp => 'or'}])
+  #   ->to('machines#list');
+  # $protected_root
+  #   ->post('/machines')
+  #   ->requires(is_role => ['admin,coadmin', {cmp => 'or'}])
+  #   ->to('machines#new');
+  # $protected_root
+  #   ->put('/machines/:id')
+  #   ->requires(is_role => ['admin,coadmin', {cmp => 'or'}])
+  #   ->to('machines#update');
+  # $protected_root
+  #   ->delete('/machines/:id')
+  #   ->requires(is_role => ['admin,coadmin', {cmp => 'or'}])
+  #   ->to('machines#delete');
 
   ## PROJECT
   $protected_root
