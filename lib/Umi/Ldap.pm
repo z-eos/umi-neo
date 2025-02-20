@@ -49,19 +49,6 @@ sub new {
     return undef;
   }
 
-  my $dn = $self->{uid_is_dn} ? $self->{uid} : sprintf("uid=%s,%s",
-						       $self->{uid},
-						       $cf->{base}->{acc_root});
-  
-  my $m = $ldap->bind($dn,
-		      password => $self->{pwd},
-		      version  => 3,);
-  if ( $m->is_error ) {
-    $self->{app}->h_log(sprintf("Ldap.pm: ldap(): code: %s; mesg: %s; txt: %s",
-				$m->code, $m->error_name, $m->error_text) );
-    $self->{ldap} = $m;
-  }
-
   # if ( exists $cf->{conn}->{start_tls} ) {
   #   # $self->{log}->debug(dumper($cf->{conn}->{start_tls}));
   #   $m = try {
@@ -83,6 +70,11 @@ sub new {
   #   };
   # }
 
+  my $dn = $self->{uid_is_dn} ? $self->{uid} : sprintf("uid=%s,%s",
+						       $self->{uid},
+						       $cf->{base}->{acc_root});
+
+  my $m;
   if ( exists $cf->{conn}->{start_tls} ) {
     # $self->{log}->debug(dumper($cf->{conn}->{start_tls}));
     try {
@@ -97,6 +89,15 @@ sub new {
     catch {
       $self->{app}->h_log("ERROR: Net::LDAP start_tls caught message: $_");
     };
+  }
+
+  $m = $ldap->bind($dn,
+		   password => $self->{pwd},
+		   version  => 3,);
+  if ( $m->is_error ) {
+    $self->{app}->h_log(sprintf("Ldap.pm: ldap(): code: %s; mesg: %s; txt: %s",
+				$m->code, $m->error_name, $m->error_text) );
+    $self->{ldap} = $m;
   }
 
   $self->{ldap} = $ldap;
