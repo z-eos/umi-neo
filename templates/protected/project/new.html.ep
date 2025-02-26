@@ -75,45 +75,4 @@
   </script>
 % }
 
-<script>
- /* $('select').select2({
-  *   placeholder: {
-  *     id: -1,
-  *     text: "➔"
-  *   },
-  *   allowClear: true,
-  *   theme: "classic"
-  * }); */
-</script>
-
-<script>
- document.addEventListener('DOMContentLoaded', function() {
-   const choicesConfig = {
-     allowHTML: true,
-     placeholder: true,
-     placeholderValue: 'Pick a group',
-     removeItemButton: true,
-     removeItemIconText: '×',
-     renderChoiceLimit: -1,
-   };
-
-   // Initialize Choices.js on every <select> element on the page.
-   document.querySelectorAll('select').forEach(function(selectElement) {
-     new Choices(selectElement, choicesConfig);
-   });
- });
-
- /* document.addEventListener('DOMContentLoaded', function() {
-  *   var multipleCancelButton = new Choices(
-  *     '#group',
-  *     {
-  *       allowHTML: true,
-  *       placeholder: true,
-  *       placeholderValue: 'Pick a group',
-  *       removeItemButton: true,
-  *       removeItemIconText: '×',
-  *       renderChoiceLimit: -1,
-  *     }
-  *   );
-  * }); */
-</script>
+<script src="/assets/js/umi-lib-choicesjs.js"></script>

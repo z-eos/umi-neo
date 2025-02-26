@@ -669,3 +669,18 @@ details[open] summary::before {
   content: "\f0d7"; /* Example: Font Awesome up arrow (angle-up) */
 }
 
+
+
+/* -------------------------------
+
+   fix issue where the clone/delete button overlaps unfolded
+   <select> element list (original: `.input-group .btn`)
+
+   look public/assets/js/umi-tool-modify.js
+
+   ------------------------------- */
+
+.btn-add, .btn-delete {
+  z-index: 0 !important;
+}
+

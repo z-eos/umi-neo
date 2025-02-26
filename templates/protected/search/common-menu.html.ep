@@ -3,6 +3,7 @@
 %# column affinity defines which type of objects the item belongs (can appear for), an empty means available for all
 % my $menu = {
   % "block"    => { act => "modal",          affinity => [],              class => "disabled", ico => "fa-user-slash",   col => "danger" },
+  % "clone"   => { act => "/tool/clone",     affinity => [],              class =>         "", ico => "fa-clone",        col => "warning" },
   % "delete"   => { act => "modal",          affinity => [],              class =>         "", ico => "fa-skull",        col => "danger" },
   % "demo"     => { act => "",               affinity => [],              class =>         "", ico => "fa-person-chalkboard", col => "success" },
   % "fire"     => { act => "modal",          affinity => [qw(root)],      class =>         "", ico => "fa-fire",         col => "danger" },

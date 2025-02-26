@@ -23,70 +23,131 @@
     </div>
   </div>
 
-  <div class="row mb-3" title="">
-    %= label_for memberUid => 'Member:', class => 'col-sm-2 col-form-label text-end fw-bold text-uppercase'
-    <div class="col-sm-10">
-      %= select_field memberUid => stash->{emploees}, id => 'memberUid', class => 'form-select', multiple => 'multiple'
-    </div>
-  </div>
+  <button type="button" class="btn btn-secondary btn-sm" id="cloneButton">
+    <i class="fa-solid fa-fw fa-clone text-success-emphasis"></i>
+  </button>
+  <button type="button" class="btn btn-secondary btn-sm" id="deleteButton">
+    <i class="fa-solid fa-fw fa-trash text-danger-emphasis"></i>
+  </button>
 
-  <div class="row mb-3" title="">
-    %= label_for hosts => 'Hosts:', class => 'col-sm-2 col-form-label text-end fw-bold text-uppercase'
-    <div class="col-sm-10">
-      %= select_field hosts => stash->{hosts}, id => 'hosts', class => 'form-select', multiple => 'multiple'
+  <div id="to-clone" class="border border-1 m-2 p-2">
+    <div class="row mb-3" title="">
+      %= label_for memberUid => 'Member:', class => 'col-sm-2 col-form-label text-end fw-bold text-uppercase'
+      <div class="col-sm-10">
+	%= select_field 'memberUid[]' => stash->{emploees}, id => 'memberUid', class => 'form-select', multiple => 'multiple'
+      </div>
     </div>
-  </div>
 
-  <div class="row mb-3" title="">
-    %= label_for host => 'New Host:', class => 'col-sm-2 col-form-label text-end fw-bold text-uppercase'
-    <div class="col-sm-10">
-      % my $host = stash->{host};
-      % if ( defined $host && ref($host) eq 'ARRAY' )
-      % {
-	% foreach (@$host) {
+    <div class="row mb-3" title="">
+      %= label_for hosts => 'Hosts:', class => 'col-sm-2 col-form-label text-end fw-bold text-uppercase'
+      <div class="col-sm-10">
+	%= select_field 'hosts[]' => stash->{hosts}, id => 'hosts', class => 'form-select', multiple => 'multiple'
+      </div>
+    </div>
+
+    <div class="row mb-3" title="">
+      %= label_for host => 'New Host:', class => 'col-sm-2 col-form-label text-end fw-bold text-uppercase'
+      <div class="col-sm-10">
+	% my $host = stash->{host};
+	% if ( defined $host && ref($host) eq 'ARRAY' )
+	% {
+	  % foreach (@$host) {
+	    <div id="" class="input-group input-group-sm entry-removable entry-at-least-one">
+	      <span class="input-group-btn">
+		<!-- Clone Button -->
+		<button class="btn btn-secondary btn-sm btn-add element-add"
+			id="" type="button" title="click to add another host">
+		  <i class="fa-solid fa-fw fa-clone text-success-emphasis"></i>
+		</button>
+	      </span>
+	      <input type="text" name="host" id="" class="form-control" value="<%= $_ %>">
+	      <span class="input-group-btn">
+		<!-- Delete Button -->
+		<button class="btn btn-secondary btn-sm btn-delete element-delete" type="button" title="Click to delete host">
+		  <i class="fa-solid fa-fw fa-trash text-danger-emphasis"></i>
+		</button>
+	      </span>
+	    </div>	  
+	  % }
+	% } else {
 	  <div id="" class="input-group input-group-sm entry-removable entry-at-least-one">
 	    <span class="input-group-btn">
 	      <!-- Clone Button -->
 	      <button class="btn btn-secondary btn-sm btn-add element-add"
-		      id="" type="button" title="click to add another host">
+			     id="" type="button" title="click to add another host">
 		<i class="fa-solid fa-fw fa-clone text-success-emphasis"></i>
 	      </button>
 	    </span>
-	    <input type="text" name="host" id="" class="form-control" value="<%= $_ %>">
+	    %= text_field 'host[]' => $host, class => 'form-control', title => ''
 	    <span class="input-group-btn">
 	      <!-- Delete Button -->
 	      <button class="btn btn-secondary btn-sm btn-delete element-delete" type="button" title="Click to delete host">
 		<i class="fa-solid fa-fw fa-trash text-danger-emphasis"></i>
 	      </button>
 	    </span>
-	  </div>	  
+	  </div>
 	% }
-      % } else {
-	<div id="" class="input-group input-group-sm entry-removable entry-at-least-one">
-	  <span class="input-group-btn">
-	    <!-- Clone Button -->
-	    <button class="btn btn-secondary btn-sm btn-add element-add"
-		    id="" type="button" title="click to add another host">
-	      <i class="fa-solid fa-fw fa-clone text-success-emphasis"></i>
-	    </button>
-	  </span>
-	  %= text_field host => $host, class => 'form-control', title => ''
-	  <span class="input-group-btn">
-	    <!-- Delete Button -->
-	    <button class="btn btn-secondary btn-sm btn-delete element-delete" type="button" title="Click to delete host">
-	      <i class="fa-solid fa-fw fa-trash text-danger-emphasis"></i>
-	    </button>
-	  </span>
-	</div>
-      % }
+      </div>
     </div>
   </div>
-  
-  %= submit_button 'Submit', class => 'btn btn-success font-weight-bold text-uppercase text-end'
+
+  <div id="to-clone-container" class="border border-1 m-2 p-2"></div>
+
+  %= submit_button 'Submit', class => 'btn btn-success font-weight-bold text-uppercase text-end mt-3'
 
 % end
+
+<script>
+ document.addEventListener('DOMContentLoaded', function() {
+   // Initialize Choices on the original select elements
+   const originalSelect1 = document.getElementById('memberUid');
+   const originalSelect2 = document.getElementById('hosts');
+   new Choices(originalSelect1, { removeItemButton: true });
+   new Choices(originalSelect2, { removeItemButton: true });
+
+   // Save the original markup of the section to clone
+   const originalContainer = document.getElementById('to-clone');
+   const originalContainerHTML = originalContainer.outerHTML;
+
+   // Function to clone the section and reinitialize Choices on cloned selects
+   function cloneSection() {
+     // Create a temporary container and insert the original markup
+     const tempContainer = document.createElement('div');
+     tempContainer.innerHTML = originalContainerHTML;
+     
+     // Get the cloned section (first child of tempContainer)
+     const clonedSection = tempContainer.firstElementChild;
+     
+     // Append the cloned section to the designated container
+     document.getElementById('to-clone-container').appendChild(clonedSection);
+     
+     // Reinitialize Choices on each select in the cloned section.
+     // Remove the cloned select's id attribute to avoid duplicates.
+     clonedSection.querySelectorAll('select').forEach(function(select) {
+       select.removeAttribute('id');
+       new Choices(select, { removeItemButton: true });
+     });
+   }
+
+   // Function to delete the last cloned section
+   function deleteLastClone() {
+     const container = document.getElementById('to-clone-container');
+     if (container.lastElementChild) {
+       container.removeChild(container.lastElementChild);
+     }
+   }
+
+   // Attach event listeners to the clone and delete buttons
+   document.getElementById('cloneButton').addEventListener('click', cloneSection);
+   document.getElementById('deleteButton').addEventListener('click', deleteLastClone);
+ });
+</script>
+
+
+
 % my $tuples = stash->{tuples};
-<pre class="p-5 font-monospace umi-text-tiny"><%= dumper $tuples if defined $tuples %>
+<pre class="p-5 font-monospace umi-text-tiny"><%= dumper $tuples if defined $tuples %></pre>
+
 <pre class="mt-5 umi-text-tiny text-muted"><%= dumper stash->{'mojo.validation'}->{error} if %{stash->{'mojo.validation'}->{error}} %></pre>
 
 % if ( stash->{'mojo.validation'}->{error} ) {
@@ -102,23 +163,5 @@
   </script>
 % }
 
-<script>
- document.addEventListener('DOMContentLoaded', function() {
-   const choicesConfig = {
-     allowHTML: true,
-     placeholder: true,
-     placeholderValue: 'Pick member/s',
-     removeItemButton: true,
-     removeItemIconText: '×',
-     renderChoiceLimit: -1,
-   };
-
-   // Initialize Choices.js on every <select> element on the page.
-   document.querySelectorAll('select').forEach(function(selectElement) {
-     new Choices(selectElement, choicesConfig);
-   });
- });
-
-</script>
-
+<script src="/assets/js/umi-lib-choicesjs.js"></script>
 <script src="/assets/js/umi-tool-modify.js"></script>

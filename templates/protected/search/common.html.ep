@@ -4,7 +4,7 @@
 % my $j = 0;
 % my $attr_val_class = "";
 
-<div class="row w-100 py-5">
+<div class="row w-100 <%= app->{cfg}->{ui}->{page}->{header}->{css} %>">
   <div class="col-xs-6 col-sm-6 col-md-4 col-lg-4">
     <h3 class="fw-bold">
       <i class="fa-solid fa-search fa-lg text-muted me-2"></i>

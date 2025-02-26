@@ -430,6 +430,11 @@ sub _startup_routes ($self) {
     ->to('protected#ldif_import');
 
   $protected_root
+    ->post('/tool/clone')
+    ->requires(is_role => ['admin', {cmp => 'or'}])
+    ->to('protected#ldif_clone');
+
+  $protected_root
     ->get( '/tool/modify')
     ->requires(is_role => ['admin,coadmin,hr', {cmp => 'or'}])
     ->to('protected#modify');

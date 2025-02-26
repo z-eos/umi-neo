@@ -1,0 +1,23 @@
+%# -*- mode: web; eval: (follow-mode); -*-
+
+<h2 class="<%= app->{cfg}->{ui}->{page}->{header}->{css} %>">
+  <i class="fas fa-file-import fa-lg mr-3 text-muted"></i>
+  LDIF to import <small><em class="text-muted font-monospace umi-text-tiny">( clone of <%= $dn_to_clone %> )</em></small>
+</h2>
+<hr>
+
+%= form_for '/tool/clone' => (class => "form-horizontal", method => 'POST', enctype => 'multipart/form-data') => begin
+  <div class="row mb-3" id="text">
+    <label class="col-1 col-form-label text-end fw-bold" for="keyText">LDIF</label>
+    <div class="input-sm col-11">
+      %= text_area 'ldif' => ( id => 'keyText', cols => 10, rows => 20, class => 'font-monospace form-control umi-text-xs' ) => begin
+	<%= $ldif if defined $ldif =%>
+      % end
+    </div>
+  </div>
+
+  <button type="reset" id="resetButton" class="btn btn-danger fw-bold text-uppercase">reset</button>
+  <button type="submit" class="btn btn-success fw-bold text-uppercase">
+    <i class="fa-solid fa-file-import me-1"></i> import
+  </button>
+% end

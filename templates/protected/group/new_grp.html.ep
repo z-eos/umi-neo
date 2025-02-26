@@ -49,21 +49,4 @@
   </script>
 % }
 
-<script>
- document.addEventListener('DOMContentLoaded', function() {
-   const choicesConfig = {
-     allowHTML: true,
-     placeholder: true,
-     placeholderValue: 'Pick member/s',
-     removeItemButton: true,
-     removeItemIconText: '×',
-     renderChoiceLimit: -1,
-   };
-
-   // Initialize Choices.js on every <select> element on the page.
-   document.querySelectorAll('select').forEach(function(selectElement) {
-     new Choices(selectElement, choicesConfig);
-   });
- });
-
-</script>
+<script src="/assets/js/umi-lib-choicesjs.js"></script>

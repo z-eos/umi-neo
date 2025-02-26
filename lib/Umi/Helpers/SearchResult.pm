@@ -26,15 +26,16 @@ sub register {
   $app->helper(
 	       h_dn_color => sub {
 		 my ($c, $e) = @_;
+		 my $time = time;
 
 		 if ( $e->exists('gidNumber') &&
 		      $e->get_value('gidNumber') eq $app->{cfg}->{ldap}->{defaults}->{group_blocked_gidnumber} ) {
 		   return 'danger';
 		 } elsif ( $e->dn =~ /^cn=.*,authorizedService=ovpn@.*/ && $e->exists('umiUserCertificateNotAfter') &&
-			   time > generalizedTime_to_time($e->get_value('umiUserCertificateNotAfter') . 'Z') ) {
+			   $time > generalizedTime_to_time($e->get_value('umiUserCertificateNotAfter') . 'Z') ) {
 		   return 'danger';
 		 } elsif ( $e->dn =~ /^pgpCertID=.*,$app->{cfg}->{ldap}->{base}->{pgp}/ &&
-			   time > generalizedTime_to_time($e->get_value('pgpKeyExpireTime') . 'Z') ) {
+			   $time > generalizedTime_to_time($e->get_value('pgpKeyExpireTime')) ) {
 		   return 'danger';
 		 } elsif ( $e->dn =~ /^author/ ) {
 		   return 'warning';

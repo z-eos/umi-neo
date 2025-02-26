@@ -1,6 +1,6 @@
 %# -*- mode: web; eval: (follow-mode) -*-
 
-%= t 'h1', class => 'mt-3 mb-4', 'User profile'
+%= t 'h1', class => app->{cfg}->{ui}->{page}->{header}->{css}, 'User profile'
 
 % use Net::LDAP::Util qw(generalizedTime_to_time);
 % use POSIX qw(strftime);

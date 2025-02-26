@@ -108,7 +108,7 @@ sub create_or_update ($self) {
   $self->h_log( $self->h_ldap_err($search, $search_arg) ) if $search->code && $search->code != LDAP_NO_SUCH_OBJECT;
   $self->h_log($search->error);
 
-  my ($msg, $message, $diff, $add, $delete, $replace, $changes, $e_orig, $e_tmp);
+  my ($msg, $diff, $add, $delete, $replace, $changes, $e_orig, $e_tmp);
   my $dn = sprintf("cn=%s,%s", $data->{hostname}, $self->{app}->{cfg}->{ldap}->{base}->{machines});
   if ($search->count) {
     foreach ($search->entry->attributes) {
@@ -144,7 +144,6 @@ sub create_or_update ($self) {
     }
   } else {
 
-    $message = sprintf('Machine to be created by %s : %s', $user, $pass);
     $host_data->{objectClass} = $self->{app}->{cfg}->{ldap}->{objectClass}->{machines};
     $host_data->{cn} = $data->{hostname};
     $host_data->{uid} = $data->{hostname};

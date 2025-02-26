@@ -354,6 +354,30 @@ sub ldif_export    ($self) {
   return $self->render(template => 'protected/tool/ldif-export'); #, layout => undef);
 }
 
+sub ldif_clone ($self) {
+  my $p = $self->req->params->to_hash;
+
+  my $ldap = Umi::Ldap->new( $self->{app}, $self->session('uid'), $self->session('pwd') );
+
+  my $ldif;
+  if ( ! exists $p->{ldif} ) {
+    my $search_arg = { base => $p->{dn_to_clone}, scope => 'base', attrs => [] };
+    my $search = $ldap->search( $search_arg );
+    $self->h_log( $self->h_ldap_err($search, $search_arg) ) if $search->code;
+
+    foreach ($search->entry) {
+      $ldif .= $_->ldif;
+    }
+  } else {
+    my $res = $ldap->ldif_read( $p->{ldif} );
+    $self->stash(debug => $res->{debug});
+  }
+
+  $self->stash(ldif => exists $p->{ldif} ? $p->{ldif} : $ldif,
+	       dn_to_clone => $p->{dn_to_clone});
+  return $self->render( template => 'protected/tool/ldif-clone', );
+}
+
 sub sysinfo    ($self) {
   my $ldap = Umi::Ldap->new( $self->{app},
 			     $self->session('uid'),
@@ -595,7 +619,7 @@ sub modify ($self) {
   return $self->render(template => 'protected/tool/modify') unless $v->has_data;
   # return $self->render(template => 'protected/tool/modify') unless %$par;
 
-  $self->h_log($par);
+  # $self->h_log($par);
 
   my $ldap = Umi::Ldap->new( $self->{app}, $self->session('uid'), $self->session('pwd') );
   my $search_arg = { base => $par->{dn_to_modify},
@@ -678,7 +702,7 @@ sub modify ($self) {
     }
 
     if ($changes) {
-      $self->h_log($changes);
+      # $self->h_log($changes);
       my $msg = $ldap->modify($s->entry->dn, $changes);
       $self->stash(debug => {$msg->{status} => [ $msg->{message} ]});
     }
@@ -1249,10 +1273,15 @@ sub moddn ($self) {
 sub groups ($self) {
   my $p = $self->req->params->to_hash;
   $self->h_log($p);
+  if ( exists $p->{group} ) {
+    $p->{group} = ref($p->{group}) eq 'ARRAY' ? $p->{group} : [ $p->{group} ];
+  }
   $self->h_log($self->h_get_rdn_val($p->{dn_to_group}));
   $self->stash( dn_to_group => $p->{dn_to_group} );
 
   my $ldap = Umi::Ldap->new( $self->{app}, $self->session('uid'), $self->session('pwd') );
+
+  #--- BEFORE SUBMIT start --------------------------------------
   my $search_arg = { base => $self->{app}->{cfg}->{ldap}->{base}->{group},
 		     filter => '(memberUid=' . $self->h_get_rdn_val($p->{dn_to_group}) .')',};
   my $search = $ldap->search( $search_arg );
@@ -1263,20 +1292,21 @@ sub groups ($self) {
   $search_arg = { base => $self->{app}->{cfg}->{ldap}->{base}->{group}, scope => 'one' };
   $search = $ldap->search( $search_arg );
   $self->h_log( $self->{app}->h_ldap_err($search, $search_arg) ) if $search->code;
+  my @group_names = $search->sorted('cn');
 
   my @e = map {
     exists $u{$_->get_value('cn')} ?
       [ $_->get_value('cn') => $_->get_value('cn'), selected => 'selected'] :
       $_->get_value('cn')
-    } $search->sorted('cn');
+    } @group_names;
 
-  $self->stash( select_options => \@e );
   my @o = keys(%u);
   my $diff = $self->h_array_diff(\@o,$p->{group});
   $self->h_log($diff);
+  #--- BEFORE SUBMIT stop ---------------------------------------
 
   my ($debug, $msg);
-  if ( exists $p->{group} ) {
+  #if ( exists $p->{group} ) {
     foreach (@{$diff->{added}}) {
       $msg = $ldap->modify( sprintf('cn=%s,%s',$_, $self->{app}->{cfg}->{ldap}->{base}->{group}),
 			    [ add => [ memberUid => $self->h_get_rdn_val($p->{dn_to_group}) ]] );
@@ -1289,12 +1319,25 @@ sub groups ($self) {
       $self->h_log( $msg->{message} ) if $msg->{status} eq 'error';
       push @{$debug->{$msg->{status}}}, $msg->{message};
     }
-  }
+  #}
 
-  # my $msg = $ldap->moddn($par);
+  #--- AFTER SUBMIT start --------------------------------------
+  $search_arg = { base => $self->{app}->{cfg}->{ldap}->{base}->{group},
+		  filter => '(memberUid=' . $self->h_get_rdn_val($p->{dn_to_group}) .')',};
+  $search = $ldap->search( $search_arg );
+  $self->h_log( $self->{app}->h_ldap_err($search, $search_arg) ) if $search->code;
 
-  $self->stash( debug => $debug );
+  %u = map { $_->get_value('cn') => 1 } $search->entries;
 
+  @e = map {
+    exists $u{$_->get_value('cn')} ?
+      [ $_->get_value('cn') => $_->get_value('cn'), selected => 'selected'] :
+      $_->get_value('cn')
+    } @group_names;
+
+  #--- AFTER SUBMIT stop ---------------------------------------
+
+  $self->stash( select_options => \@e, debug => $debug );
   $self->render(template => 'protected/profile/groups');
 }
 
