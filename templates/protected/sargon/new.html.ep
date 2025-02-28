@@ -10,42 +10,42 @@
 %= form_for '/sargon/new' => {class => "form-horizontal"} => (method => 'POST') => begin
 
   <div class="row mb-3">
-    %= label_for cn => 'CN', class => 'col-sm-2 col-form-label text-end fw-bold text-uppercase'
+    %= label_for cn => 'CN', class => 'col-sm-2 col-form-label text-end fw-bold text-uppercase', title => stash->{schema}->{cn}->{desc}
     <div class="col-sm-10">
       %= text_field 'cn', class => 'form-control', id => 'cn', placeholder => 'Group name'
     </div>
   </div>
 
   <div class="row mb-3">
-    %= label_for description => 'Description', class => 'col-sm-2 col-form-label text-end fw-bold text-uppercase'
+    %= label_for description => 'Description', class => 'col-sm-2 col-form-label text-end fw-bold text-uppercase', title => stash->{schema}->{description}->{desc}
     <div class="col-sm-10">
       %= text_area 'description', cols => 3, class => 'form-control', placeholder => 'Short description'
     </div>
   </div>
 
   <div class="row mb-3">
-    %= label_for sargonOrder => 'Order', class => 'col-sm-2 col-form-label text-end fw-bold text-uppercase'
+    %= label_for sargonOrder => 'Order', class => 'col-sm-2 col-form-label text-end fw-bold text-uppercase', title => stash->{schema}->{sargonOrder}->{desc}
     <div class="col-sm-10">
       %= text_field 'sargonOrder', class => 'form-control', id => 'sargonOrder', placeholder => 'An integer to order sargonACL entries. If not present, 0 is assumed.', title => 'An integer to order sargonACL entries. If not present, 0 is assumed.'
     </div>
   </div>
 
   <div class="row mb-3" title="">
-    %= label_for sargonUser => 'Users', class => 'col-sm-2 col-form-label text-end fw-bold text-uppercase'
+    %= label_for sargonUser => 'Users', class => 'col-sm-2 col-form-label text-end fw-bold text-uppercase', title => stash->{schema}->{sargonUser}->{desc}
     <div class="col-sm-10">
       %= select_field sargonUser => stash->{sargonUser}, id => 'sargonUser', class => 'form-select', multiple => 'multiple'
     </div>
   </div>
 
   <div class="row mb-3" title="">
-    %= label_for uid => 'Groups', class => 'col-sm-2 col-form-label text-end fw-bold text-uppercase'
+    %= label_for groups => 'Groups', class => 'col-sm-2 col-form-label text-end fw-bold text-uppercase', title => stash->{schema}->{memberUid}->{desc}
     <div class="col-sm-10">
       %= select_field groups => stash->{groups}, id => 'groups', class => 'form-select', multiple => 'multiple'
     </div>
   </div>
 
   <div class="row mb-3" title="">
-    %= label_for sargonHost => 'Hosts', class => 'col-sm-2 col-form-label text-end fw-bold text-uppercase'
+    %= label_for sargonHost => 'Hosts', class => 'col-sm-2 col-form-label text-end fw-bold text-uppercase', title => stash->{schema}->{sargonHost}->{desc}
     <div class="col-sm-10">
       %= select_field sargonHost => stash->{sargonHost}, id => 'sargonHost', class => 'form-select', multiple => 'multiple'
     </div>
@@ -53,21 +53,21 @@
 
   % my $actions = [ map { [ constant('SARGON')->{ENDPOINTS}->{$_} => $_ ] } keys %{constant('SARGON')->{ENDPOINTS}} ];
   <div class="row mb-3" title="">
-    %= label_for sargonAllow => 'Allow', class => 'col-sm-2 col-form-label text-end fw-bold text-uppercase'
+    %= label_for sargonAllow => 'Allow', class => 'col-sm-2 col-form-label text-end fw-bold text-uppercase', title => stash->{schema}->{sargonAllow}->{desc}
     <div class="col-sm-10">
       %= select_field sargonAllow => $actions, id => 'sargonAllow', class => 'form-select', multiple => 'multiple', title => 'allowed actions'
     </div>
   </div>
 
   <div class="row mb-3" title="">
-    %= label_for sargonDeny => 'Deny', class => 'col-sm-2 col-form-label text-end fw-bold text-uppercase'
+    %= label_for sargonDeny => 'Deny', class => 'col-sm-2 col-form-label text-end fw-bold text-uppercase', title => stash->{schema}->{sargonDeny}->{desc}
     <div class="col-sm-10">
       %= select_field sargonDeny => $actions, id => 'sargonDeny', class => 'form-select', multiple => 'multiple', title => 'dinied actions'
     </div>
   </div>
 
   <div class="row mb-3" title="">
-    %= label_for host => 'Mount', class => 'col-sm-2 col-form-label text-end fw-bold text-uppercase'
+    %= label_for sargonMount => 'Mount', class => 'col-sm-2 col-form-label text-end fw-bold text-uppercase', title => stash->{schema}->{sargonMount}->{desc}
     <div class="col-sm-10">
       %# my $sargonMount = stash->{sargonMount};
       %# $mount = [$mount] if defined $mount && ref($mount) ne 'ARRAY';
@@ -93,35 +93,35 @@
   </div>
 
   <div class="row mb-3" title="">
-    %= label_for sargonAllowCapability => 'Capabilities', class => 'col-sm-2 col-form-label text-end fw-bold text-uppercase'
+    %= label_for sargonAllowCapability => 'Capabilities', class => 'col-sm-2 col-form-label text-end fw-bold text-uppercase', title => stash->{schema}->{sargonAllowCapability}->{desc}
     <div class="col-sm-10">
       %= select_field sargonAllowCapability => constant('SARGON')->{CAPABILITIES}, id => 'sargonAllowCapability', class => 'form-select', multiple => 'multiple'
     </div>
   </div>
 
   <div class="row mb-3">
-    %= label_for sargonMaxMemory => 'MaxMem', class => 'col-sm-2 col-form-label text-end fw-bold text-uppercase'
+    %= label_for sargonMaxMemory => 'MaxMem', class => 'col-sm-2 col-form-label text-end fw-bold text-uppercase', title => stash->{schema}->{sargonMaxMemory}->{desc}
     <div class="col-sm-10">
       %= text_field 'sargonMaxMemory', class => 'form-control', id => 'sargonMaxMemory', placeholder => 'Limit on memory usage. The value is an integer optionally suffixed with K, M, or G (case-insensitive).', title => 'Limit on memory usage. The value is an integer optionally suffixed with K, M, or G (case-insensitive).'
     </div>
   </div>
 
   <div class="row mb-3">
-    %= label_for sargonMaxKernelMemory => 'MaxKernMem', class => 'col-sm-2 col-form-label text-end fw-bold text-uppercase'
+    %= label_for sargonMaxKernelMemory => 'MaxKernMem', class => 'col-sm-2 col-form-label text-end fw-bold text-uppercase', title => stash->{schema}->{sargonMaxKernelMemory}->{desc}
     <div class="col-sm-10">
       %= text_field 'sargonMaxKernelMemory', class => 'form-control', id => 'sargonMaxKernelMemory', placeholder => 'Limit on kernel memory usage. The value is an integer optionally suffixed with K, M, or G (case-insensitive).', title => 'Limit on kernel memory usage. The value is an integer optionally suffixed with K, M, or G (case-insensitive).'
     </div>
   </div>
 
   <div class="row mb-3">
-    %= label_for sargonAllowPrivileged => 'Privileged', class => 'col-sm-2 col-form-label text-end fw-bold text-uppercase'
+    %= label_for sargonAllowPrivileged => 'Privileged', class => 'col-sm-2 col-form-label text-end fw-bold text-uppercase', title => stash->{schema}->{sargonAllowPrivileged}->{desc}
     <div class="col-sm-10">
       %= check_box 'sargonAllowPrivileged'
     </div>
   </div>
 
   <div class="row mb-3">
-    %= label_for sargonNotBefore => 'Not Before', class => 'col-sm-2 col-form-label text-end fw-bold text-uppercase'
+    %= label_for sargonNotBefore => 'Not Before', class => 'col-sm-2 col-form-label text-end fw-bold text-uppercase', title => stash->{schema}->{sargonNotBefore}->{desc}
     <div class="col-sm-10">
       <div class="input-group">
 	<span class="input-group-text"><i class="fa-regular fa-calendar"></i></span>
@@ -131,7 +131,7 @@
   </div>
 
   <div class="row mb-3">
-    %= label_for sargonNotAfter => 'Not After', class => 'col-sm-2 col-form-label text-end fw-bold text-uppercase'
+    %= label_for sargonNotAfter => 'Not After', class => 'col-sm-2 col-form-label text-end fw-bold text-uppercase', title => stash->{schema}->{sargonNotAfter}->{desc}
     <div class="col-sm-10">
       <div class="input-group">
 	<span class="input-group-text"><i class="fa-regular fa-calendar"></i></span>

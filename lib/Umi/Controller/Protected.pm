@@ -1473,6 +1473,7 @@ sub sargon ($self) {
   $self->h_log($p);
 
   my $ldap = Umi::Ldap->new( $self->{app}, $self->session('uid'), $self->session('pwd') );
+  my %schema_all_attributes = map { $_->{name} => $_ } $ldap->schema->all_attributes;
 
   my ($sargonUser, $groups, $sargonHost, $err);
   ($sargonUser, $err) = $ldap->all_users;
@@ -1492,6 +1493,7 @@ sub sargon ($self) {
 	       groups => $groups,
 	       sargonHost => $sargonHost,
 	       sargonMount => $p->{sargonMount},
+	       schema => \%schema_all_attributes,
 	       debug => \%debug,
 	      );
 
@@ -1522,7 +1524,7 @@ sub sargon ($self) {
 		       $attrs);
   push @{$debug{$msg->{status}}}, $msg->{message};
 
-  $self->stash( debug => \%debug );
+  $self->stash( debug => \%debug, schema => \%schema_all_attributes );
   $self->render(template => 'protected/sargon/new');
 
 }
