@@ -183,6 +183,7 @@ sub _startup_config ($self) {
   $self->cfg($self->plugin('NotYAMLConfig', {file => 'conf/umi.yml'}));
   $self->plugin('StaticCache' => { even_in_dev => 0 });
 
+  ### TODO
   # # variables to be taken remapped from the environment
   # if (defined(my $remaps = $config->{remap_env})) {
   #    for my $definition (split m{,}mxs, $remaps) {
@@ -319,6 +320,16 @@ sub _startup_routes ($self) {
     ->post('/netgroup/new')
     ->requires(is_role => ['admin,coadmin', {cmp => 'or'}])
     ->to('group#new_netgrp');
+
+  ## SARGON
+  $protected_root
+    ->get( '/sargon/new')
+    ->requires(is_role => ['admin,coadmin', {cmp => 'or'}])
+    ->to('protected#sargon');
+  $protected_root
+    ->post('/sargon/new')
+    ->requires(is_role => ['admin,coadmin', {cmp => 'or'}])
+    ->to('protected#sargon');
 
   # ## MACHINES
   # $protected_root

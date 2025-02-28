@@ -310,6 +310,119 @@ sub last_num {
   return [ $res, $err ];
 }
 
+=head2 all_hosts
+
+get all hosts used in ou=machines and ou=Netgroups
+
+return array/ref of host names arrayref and error (if any)
+
+=cut
+
+sub all_hosts ($self) {
+  my ($mesg, $search_arg, $err, %hosts, $res);
+
+  $search_arg = { base => $self->{app}->{cfg}->{ldap}->{base}->{machines},
+		  scope => 'one', attrs => [qw(cn associatedDomain)] };
+  # $self->{app}->h_log( $search_arg );
+  $mesg = $self->search( $search_arg );
+  if ( $mesg->code && $mesg->code != 32 ) {
+    $self->{app}->h_log( $self->{app}->h_ldap_err($mesg, $search_arg) );
+    $err = $self->{app}->h_ldap_err($mesg, $search_arg);
+  } else {
+    if ( $mesg->count ) {
+      foreach my $e ($mesg->entries) {
+	$hosts{$e->get_value('cn')}++;
+	if ($e->exists('associatedDomain')) {
+	  $hosts{$_}++ foreach (@{$e->get_value('associatedDomain', asref => 1)});
+	}
+      }
+    }
+  }
+  # $self->{app}->h_log( \%hosts );
+
+  $search_arg = { base => 'ou=access,' . $self->{app}->{cfg}->{ldap}->{base}->{netgroup},
+		  filter => '(nisNetgroupTriple=*)',
+		  scope => 'one',
+		  attrs => [qw(cn nisNetgroupTriple)] };
+  $mesg = $self->search( $search_arg );
+  if ( $mesg->code && $mesg->code != 32 ) {
+    $self->{app}->h_log( $self->{app}->h_ldap_err($mesg, $search_arg) );
+    $err = $self->{app}->h_ldap_err($mesg, $search_arg);
+  } else {
+    if ( $mesg->count ) {
+      my @tuple;
+      foreach my $e ($mesg->entries) {
+	foreach (@{$e->get_value('nisnetgrouptriple', asref => 1)}) {
+	  @tuple = split(/,/, substr($_, 1, -1));
+	  $hosts{sprintf("%s.%s", $tuple[0], $tuple[2])}++;
+	}
+      }
+    }
+  }
+  # $self->{app}->h_log( \%hosts );
+
+  @$res = sort keys %hosts if %hosts;
+  # $self->{app}->h_log( $res );
+  return wantarray ? ( $res, $err ) : [ $res, $err ];
+}
+
+=head2 all_groups
+
+get all hosts used in ou=machines and ou=Netgroups
+
+return array/ref of group names arrayref and error (if any)
+
+=cut
+
+sub all_groups ($self) {
+  my ($search_arg, $mesg, $res, $err);
+  $search_arg = { base => $self->{app}->{cfg}->{ldap}->{base}->{group}, attrs => ['cn'] };
+  $mesg = $self->search( $search_arg );
+  if ( $mesg->code && $mesg->code != 32 ) {
+    $self->{app}->h_log( $self->{app}->h_ldap_err($mesg, $search_arg) );
+    $err = $self->{app}->h_ldap_err($mesg, $search_arg);
+  } else {
+    @$res = map { $_->get_value('cn') } $mesg->sorted('cn');
+  }
+  return wantarray ? ( $res, $err ) : [ $res, $err ];
+}
+
+=head2 all_root_uids
+
+get all users list (root objects only)
+
+return array/ref of users arrayref and error (if any)
+
+=cut
+
+sub all_users ($self) {
+  my ($search_arg, $mesg, $res, $err);
+  $search_arg = { base => $self->{app}->{cfg}->{ldap}->{base}->{acc_root},
+		  scope => 'one',
+		  filter => "(&(uid=*)(!(gidNumber=" . $self->{app}->{cfg}->{ldap}->{defaults}->{group_blocked_gidnumber} . ")))",
+		  attrs => ['givenName', 'sn', 'uid'] };
+  # $self->h_log($search_arg);
+  $mesg = $self->search( $search_arg );
+  if ( $mesg->code && $mesg->code != 32 ) {
+    $self->{app}->h_log( $self->{app}->h_ldap_err($mesg, $search_arg) );
+    $err = $self->{app}->h_ldap_err($mesg, $search_arg);
+  } else {
+    my ($i, $l,$r);
+    $res = [
+	    map {
+	      $i = sprintf("%s %s",
+			   $_->get_value('sn') // '',
+			   $_->get_value('givenName') // '');
+	      utf8::decode($i) if ! utf8::is_utf8($i);
+
+	      [ $i => $_->get_value('uid') ]
+
+	    } $mesg->entries
+	   ];
+  }
+  return wantarray ? ( $res, $err ) : [ $res, $err ];
+}
+
 sub delete {
   my ($self, $dn, $recursively, $scope) = @_;
   $recursively = 0 if ! defined $recursively;

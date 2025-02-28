@@ -35,6 +35,7 @@
       %= label_for memberUid => 'Member:', class => 'col-sm-2 col-form-label text-end fw-bold text-uppercase'
       <div class="col-sm-10">
 	%= select_field 'memberUid[]' => stash->{emploees}, id => 'memberUid', class => 'form-select', multiple => 'multiple'
+	%# = text_field 'memberUid', id => 'memberUid', class => 'form-control'
       </div>
     </div>
 
@@ -97,51 +98,59 @@
 
 % end
 
-<script>
- document.addEventListener('DOMContentLoaded', function() {
-   // Initialize Choices on the original select elements
-   const originalSelect1 = document.getElementById('memberUid');
-   const originalSelect2 = document.getElementById('hosts');
-   new Choices(originalSelect1, { removeItemButton: true });
-   new Choices(originalSelect2, { removeItemButton: true });
-
-   // Save the original markup of the section to clone
-   const originalContainer = document.getElementById('to-clone');
-   const originalContainerHTML = originalContainer.outerHTML;
-
-   // Function to clone the section and reinitialize Choices on cloned selects
-   function cloneSection() {
-     // Create a temporary container and insert the original markup
-     const tempContainer = document.createElement('div');
-     tempContainer.innerHTML = originalContainerHTML;
-     
-     // Get the cloned section (first child of tempContainer)
-     const clonedSection = tempContainer.firstElementChild;
-     
-     // Append the cloned section to the designated container
-     document.getElementById('to-clone-container').appendChild(clonedSection);
-     
-     // Reinitialize Choices on each select in the cloned section.
-     // Remove the cloned select's id attribute to avoid duplicates.
-     clonedSection.querySelectorAll('select').forEach(function(select) {
-       select.removeAttribute('id');
-       new Choices(select, { removeItemButton: true });
-     });
-   }
-
-   // Function to delete the last cloned section
-   function deleteLastClone() {
-     const container = document.getElementById('to-clone-container');
-     if (container.lastElementChild) {
-       container.removeChild(container.lastElementChild);
-     }
-   }
-
-   // Attach event listeners to the clone and delete buttons
-   document.getElementById('cloneButton').addEventListener('click', cloneSection);
-   document.getElementById('deleteButton').addEventListener('click', deleteLastClone);
- });
-</script>
+%# <script>
+%#  document.addEventListener('DOMContentLoaded', function() {
+%#    // Initialize Choices on the original select elements
+%#    const originalSelect1 = document.getElementById('memberUid');
+%#    const originalSelect2 = document.getElementById('hosts');
+%#    new Choices(originalSelect1, { removeItemButton: true });
+%#    new Choices(originalSelect2, { removeItemButton: true });
+%# 
+%#    // Save the original markup of the section to clone
+%#    const originalContainer = document.getElementById('to-clone');
+%#    const originalContainerHTML = originalContainer.outerHTML;
+%# 
+%#    // Function to clone the section and reinitialize Choices on cloned selects
+%#    function cloneSection() {
+%#      // Create a temporary container and insert the original markup
+%#      const tempContainer = document.createElement('div');
+%#      tempContainer.innerHTML = originalContainerHTML;
+%#      
+%#      // Get the cloned section (first child of tempContainer)
+%#      const clonedSection = tempContainer.firstElementChild;
+%#      
+%#      // Append the cloned section to the designated container
+%#      document.getElementById('to-clone-container').appendChild(clonedSection);
+%#      
+%#      // Reinitialize Choices on each select in the cloned section.
+%#      // Remove the cloned select's id attribute to avoid duplicates.
+%#      /* clonedSection.querySelectorAll('select').forEach(function(select) {
+%# 	select.removeAttribute('id');
+%# 	new Choices(select, { removeItemButton: true });
+%# 	}); */
+%# 
+%#      document.getElementById('to-clone-container').querySelectorAll('select').forEach(function(select) {
+%#        select.removeAttribute('id');
+%#        new Choices(select, { removeItemButton: true });
+%#      });
+%# 
+%# 
+%# 
+%#    }
+%# 
+%#    // Function to delete the last cloned section
+%#    function deleteLastClone() {
+%#      const container = document.getElementById('to-clone-container');
+%#      if (container.lastElementChild) {
+%#        container.removeChild(container.lastElementChild);
+%#      }
+%#    }
+%# 
+%#    // Attach event listeners to the clone and delete buttons
+%#    document.getElementById('cloneButton').addEventListener('click', cloneSection);
+%#    document.getElementById('deleteButton').addEventListener('click', deleteLastClone);
+%#  });
+%# </script>
 
 
 
@@ -162,6 +171,39 @@
    % }
   </script>
 % }
+
+%# <script>
+%#  document.addEventListener('DOMContentLoaded', function() {
+%#    const choicesConfig = {
+%#      allowHTML: true,
+%#      addItems: true,
+%# %#     choices: [
+%# %#       % my $emploees = stash->{emploees};
+%# %#       % foreach my $e (@{$emploees}) {
+%# %#       { value: '<%= $e->{value} %>', label: '<%= $e->{label} %>', selected: false, disabled: false },
+%# %#       % }
+%# %#     ],
+%#      duplicateItemsAllowed: false,
+%#      fuseOptions: {
+%#        threshold: 0.24,
+%#        includeScore: true,
+%#        ignoreDiacritics: true,
+%#        ignoreLocation: true
+%#      },
+%#      placeholder: true,
+%#      placeholderValue: 'Pick member/s',
+%#      removeItemButton: true,
+%#      removeItemIconText: '×',
+%#      renderChoiceLimit: -1,
+%#      searchResultLimit: -1,
+%#    };
+%# 
+%#    // Initialize Choices.js on every <select> element on the page.
+%#    document.querySelectorAll('select').forEach(function(selectElement) {
+%#      new Choices(selectElement, choicesConfig);
+%#    });
+%#  });
+%#  </select>
 
 <script src="/assets/js/umi-lib-choicesjs.js"></script>
 <script src="/assets/js/umi-tool-modify.js"></script>

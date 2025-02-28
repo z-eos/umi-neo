@@ -1,0 +1,258 @@
+%# -*- mode: web; eval: (follow-mode) -*-
+
+<h3 class="<%= app->{cfg}->{ui}->{page}->{header}->{css} %>">
+  <i class="fas fa-dragon fa-lg mr-3 text-muted"></i>
+  New Sargon Rule <small><em class="text-muted font-monospace"></em></small>
+</h3>
+<hr>
+
+% my $em = stash->{emploees};
+%= form_for '/sargon/new' => {class => "form-horizontal"} => (method => 'POST') => begin
+
+  <div class="row mb-3">
+    %= label_for cn => 'CN', class => 'col-sm-2 col-form-label text-end fw-bold text-uppercase'
+    <div class="col-sm-10">
+      %= text_field 'cn', class => 'form-control', id => 'cn', placeholder => 'Group name'
+    </div>
+  </div>
+
+  <div class="row mb-3">
+    %= label_for description => 'Description', class => 'col-sm-2 col-form-label text-end fw-bold text-uppercase'
+    <div class="col-sm-10">
+      %= text_area 'description', cols => 3, class => 'form-control', placeholder => 'Short description'
+    </div>
+  </div>
+
+  <div class="row mb-3">
+    %= label_for sargonOrder => 'Order', class => 'col-sm-2 col-form-label text-end fw-bold text-uppercase'
+    <div class="col-sm-10">
+      %= text_field 'sargonOrder', class => 'form-control', id => 'sargonOrder', placeholder => 'An integer to order sargonACL entries. If not present, 0 is assumed.', title => 'An integer to order sargonACL entries. If not present, 0 is assumed.'
+    </div>
+  </div>
+
+  <div class="row mb-3" title="">
+    %= label_for sargonUser => 'Users', class => 'col-sm-2 col-form-label text-end fw-bold text-uppercase'
+    <div class="col-sm-10">
+      %= select_field sargonUser => stash->{sargonUser}, id => 'sargonUser', class => 'form-select', multiple => 'multiple'
+    </div>
+  </div>
+
+  <div class="row mb-3" title="">
+    %= label_for uid => 'Groups', class => 'col-sm-2 col-form-label text-end fw-bold text-uppercase'
+    <div class="col-sm-10">
+      %= select_field groups => stash->{groups}, id => 'groups', class => 'form-select', multiple => 'multiple'
+    </div>
+  </div>
+
+  <div class="row mb-3" title="">
+    %= label_for sargonHost => 'Hosts', class => 'col-sm-2 col-form-label text-end fw-bold text-uppercase'
+    <div class="col-sm-10">
+      %= select_field sargonHost => stash->{sargonHost}, id => 'sargonHost', class => 'form-select', multiple => 'multiple'
+    </div>
+  </div>
+
+  % my $actions = [ map { [ constant('SARGON')->{ENDPOINTS}->{$_} => $_ ] } keys %{constant('SARGON')->{ENDPOINTS}} ];
+  <div class="row mb-3" title="">
+    %= label_for sargonAllow => 'Allow', class => 'col-sm-2 col-form-label text-end fw-bold text-uppercase'
+    <div class="col-sm-10">
+      %= select_field sargonAllow => $actions, id => 'sargonAllow', class => 'form-select', multiple => 'multiple', title => 'allowed actions'
+    </div>
+  </div>
+
+  <div class="row mb-3" title="">
+    %= label_for sargonDeny => 'Deny', class => 'col-sm-2 col-form-label text-end fw-bold text-uppercase'
+    <div class="col-sm-10">
+      %= select_field sargonDeny => $actions, id => 'sargonDeny', class => 'form-select', multiple => 'multiple', title => 'dinied actions'
+    </div>
+  </div>
+
+  <div class="row mb-3" title="">
+    %= label_for host => 'Mount', class => 'col-sm-2 col-form-label text-end fw-bold text-uppercase'
+    <div class="col-sm-10">
+      %# my $sargonMount = stash->{sargonMount};
+      %# $mount = [$mount] if defined $mount && ref($mount) ne 'ARRAY';
+      %# $mount = [$mount] if ! defined $mount;
+      % foreach (@{stash->{sargonMount}}) {
+	<div class="input-group input-group entry-removable entry-at-least-one">
+	  <span class="input-group-btn">
+	    <!-- Clone Button -->
+	    <button class="btn btn-secondary btn btn-add element-add" type="button" title="click to add another host">
+	      <i class="fa-solid fa-fw fa-clone text-success-emphasis"></i>
+	    </button>
+	  </span>
+	  <input type="text" name="sargonMount" class="form-control" value="<%= $_ %>">
+	  <span class="input-group-btn">
+	    <!-- Delete Button -->
+	    <button class="btn btn-secondary btn btn-delete element-delete" type="button" title="Click to delete host">
+	      <i class="fa-solid fa-fw fa-trash text-danger-emphasis"></i>
+	    </button>
+	  </span>
+	</div>	  
+      % }
+    </div>
+  </div>
+
+  <div class="row mb-3" title="">
+    %= label_for sargonAllowCapability => 'Capabilities', class => 'col-sm-2 col-form-label text-end fw-bold text-uppercase'
+    <div class="col-sm-10">
+      %= select_field sargonAllowCapability => constant('SARGON')->{CAPABILITIES}, id => 'sargonAllowCapability', class => 'form-select', multiple => 'multiple'
+    </div>
+  </div>
+
+  <div class="row mb-3">
+    %= label_for sargonMaxMemory => 'MaxMem', class => 'col-sm-2 col-form-label text-end fw-bold text-uppercase'
+    <div class="col-sm-10">
+      %= text_field 'sargonMaxMemory', class => 'form-control', id => 'sargonMaxMemory', placeholder => 'Limit on memory usage. The value is an integer optionally suffixed with K, M, or G (case-insensitive).', title => 'Limit on memory usage. The value is an integer optionally suffixed with K, M, or G (case-insensitive).'
+    </div>
+  </div>
+
+  <div class="row mb-3">
+    %= label_for sargonMaxKernelMemory => 'MaxKernMem', class => 'col-sm-2 col-form-label text-end fw-bold text-uppercase'
+    <div class="col-sm-10">
+      %= text_field 'sargonMaxKernelMemory', class => 'form-control', id => 'sargonMaxKernelMemory', placeholder => 'Limit on kernel memory usage. The value is an integer optionally suffixed with K, M, or G (case-insensitive).', title => 'Limit on kernel memory usage. The value is an integer optionally suffixed with K, M, or G (case-insensitive).'
+    </div>
+  </div>
+
+  <div class="row mb-3">
+    %= label_for sargonAllowPrivileged => 'Privileged', class => 'col-sm-2 col-form-label text-end fw-bold text-uppercase'
+    <div class="col-sm-10">
+      %= check_box 'sargonAllowPrivileged'
+    </div>
+  </div>
+
+  <div class="row mb-3">
+    %= label_for sargonNotBefore => 'Not Before', class => 'col-sm-2 col-form-label text-end fw-bold text-uppercase'
+    <div class="col-sm-10">
+      <div class="input-group">
+	<span class="input-group-text"><i class="fa-regular fa-calendar"></i></span>
+	%= text_field 'sargonNotBefore', class => 'form-control tempus-dominus-field', id => 'sargonNotBefore', title => 'Employee birth date', placeholder => 'yyyyMMddHHMMss'
+      </div>
+    </div>
+  </div>
+
+  <div class="row mb-3">
+    %= label_for sargonNotAfter => 'Not After', class => 'col-sm-2 col-form-label text-end fw-bold text-uppercase'
+    <div class="col-sm-10">
+      <div class="input-group">
+	<span class="input-group-text"><i class="fa-regular fa-calendar"></i></span>
+	%= text_field 'sargonNotAfter', class => 'form-control tempus-dominus-field', id => 'sargonNotAfter', title => 'Employee birth date', placeholder => 'yyyyMMddHHMMss'
+      </div>
+    </div>
+  </div>
+
+  %= submit_button 'Submit', class => 'btn btn-success font-weight-bold text-uppercase text-end mt-3'
+
+% end
+
+% my $tuples = stash->{tuples};
+<pre class="p-5 font-monospace umi-text-tiny"><%= dumper $tuples if defined $tuples %></pre>
+
+<pre class="mt-5 umi-text-tiny text-muted"><%= dumper stash->{'mojo.validation'}->{error} if %{stash->{'mojo.validation'}->{error}} %></pre>
+
+% if ( stash->{'mojo.validation'}->{error} ) {
+  <script>
+   % while (my ($k, $v) = each %{stash->{'mojo.validation'}->{error}}) {
+     $('#<%= $k %>').addClass('is-invalid').after('<div id="<%= $k %>ValidationFeedback" class="invalid-feedback font-monospace"></div>');
+     % if (scalar(@$v) == 1) {
+     $('#<%= $k %>ValidationFeedback').text('<%= $v->[0] %>');
+     % } else {
+     $('#<%= $k %>ValidationFeedback').text('is not <%= $v->[0] %>: <%= $v->[2] %>');
+     % }
+   % }
+  </script>
+% }
+
+<script src="/assets/js/umi-lib-choicesjs.js"></script>
+<script src="/assets/js/umi-tool-modify.js"></script>
+<script>
+ document.addEventListener('DOMContentLoaded', function () {
+   const config = {
+     display: {
+       viewMode: 'calendar',
+       toolbarPlacement: 'top',
+       components: {
+         calendar: true,
+         date: true,
+         month: true,
+         year: true,
+         decades: true,
+         clock: false,
+         hours: false,
+         minutes: false,
+         seconds: false
+       },
+       buttons: {
+         clear: true,
+         close: true,
+         today: true
+       }
+     },
+     localization: {
+       format: 'yyyyMMdd000000'
+     }
+   };
+
+   // Array of element IDs to initialize
+   ['sargonNotBefore', 'sargonNotAfter'].forEach(id => {
+     new tempusDominus.TempusDominus(document.getElementById(id), config);
+   });
+ });
+</script>
+
+%# <script>
+%#  document.addEventListener('DOMContentLoaded', function () {
+%#    const picker = new tempusDominus.TempusDominus(document.getElementById('sargonNotBefore'), {
+%#      display: {
+%#        viewMode: 'calendar',
+%#        toolbarPlacement: 'top',
+%#        components: {
+%# 	 calendar: true,
+%# 	 date: true,
+%# 	 month: true,
+%# 	 year: true,
+%# 	 decades: true,
+%# 	 clock: false,
+%# 	 hours: false,
+%# 	 minutes: false,
+%# 	 seconds: false
+%#        },
+%#        buttons: {
+%# 	 clear: true,
+%# 	 close: true,
+%# 	 today: true
+%#        }
+%#      },
+%#      localization: {
+%#        format: 'yyyyMMdd000000'
+%#      }
+%#    });
+%#  });
+%# 
+%#  document.addEventListener('DOMContentLoaded', function () {
+%#    const picker = new tempusDominus.TempusDominus(document.getElementById('sargonNotAfter'), {
+%#      display: {
+%#        viewMode: 'calendar',
+%#        toolbarPlacement: 'top',
+%#        components: {
+%# 	 calendar: true,
+%# 	 date: true,
+%# 	 month: true,
+%# 	 year: true,
+%# 	 decades: true,
+%# 	 clock: false,
+%# 	 hours: false,
+%# 	 minutes: false,
+%# 	 seconds: false
+%#        },
+%#        buttons: {
+%# 	 clear: true,
+%# 	 close: true,
+%# 	 today: true
+%#        }
+%#      },
+%#      localization: {
+%#        format: 'yyyyMMdd000000'
+%#      }
+%#    });
+%#  });
+%# </script>

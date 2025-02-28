@@ -6,6 +6,7 @@
   % "clone"   => { act => "/tool/clone",     affinity => [],              class =>         "", ico => "fa-clone",        col => "warning" },
   % "delete"   => { act => "modal",          affinity => [],              class =>         "", ico => "fa-skull",        col => "danger" },
   % "demo"     => { act => "",               affinity => [],              class =>         "", ico => "fa-person-chalkboard", col => "success" },
+  % "dhcp"     => { act => "/tool/dhcp",     affinity => [qw(root)],      class => "disabled", ico => "fa-ethernet",     col => "info" },
   % "fire"     => { act => "modal",          affinity => [qw(root)],      class =>         "", ico => "fa-fire",         col => "danger" },
   % "group"    => { act => "/profile/groups",affinity => [qw(root)],      class =>         "", ico => "fa-users-gear",   col => "warning" },
   % "history"  => { act => "/search/common", affinity => [],              class =>         "", ico => "fa-history",      col => "info" },

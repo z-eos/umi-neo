@@ -1460,4 +1460,71 @@ sub onboarding ($self) {
   $self->render(template => 'protected/profile/onboarding');
 }
 
+sub sargon ($self) {
+  my (%debug, $p);
+  $p = $self->req->params->to_hash;
+  foreach (keys %$p) {
+     if ( $p->{$_} eq '' ) {
+       delete $p->{$_};
+     } elsif (ref($p->{$_}) eq 'ARRAY') {
+       @{$p->{$_}} = grep { $_ ne "" } @{$p->{$_}};
+     }
+  }
+  $self->h_log($p);
+
+  my $ldap = Umi::Ldap->new( $self->{app}, $self->session('uid'), $self->session('pwd') );
+
+  my ($sargonUser, $groups, $sargonHost, $err);
+  ($sargonUser, $err) = $ldap->all_users;
+  push @{$debug{$err->{status}}}, $err->{message} if defined $err;
+  undef $err;
+  ($groups, $err) = $ldap->all_groups;
+  push @{$debug{$err->{status}}}, $err->{message} if defined $err;
+  undef $err;
+  ($sargonHost, $err) = $ldap->all_hosts;
+  push @{$debug{$err->{status}}}, $err->{message} if defined $err;
+
+  $p->{sargonMount} = [$p->{sargonMount}] if exists $p->{sargonMount} && ref($p->{sargonMount}) ne 'ARRAY';
+  $p->{sargonMount} = [''] if ! exists $p->{sargonMount};
+
+  $self->stash(
+	       sargonUser => $sargonUser,
+	       groups => $groups,
+	       sargonHost => $sargonHost,
+	       sargonMount => $p->{sargonMount},
+	       debug => \%debug,
+	      );
+
+  my $v = $self->validation;
+  return $self->render(template => 'protected/sargon/new') unless $v->has_data;
+
+  my $re_cn = qr/^[[:alnum:]_-]+$/;
+  $v->required('cn')->like($re_cn);
+  $v->error( cn => ['ASCII alnum, - and _ characters only'] ) if $v->error('cn');
+
+  my $attrs;
+  $attrs->{$_} = $p->{$_} foreach keys %$p;
+  $attrs->{objectClass} = $self->{app}->{cfg}->{ldap}->{objectClass}->{sargon};
+
+  if ( exists $attrs->{groups} ) {
+    my @g = map { '+'.$_ } @{$attrs->{groups}};
+    $attrs->{sargonUser} = [ @{$attrs->{sargonUser}}, @g ];
+    delete $attrs->{groups};
+  }
+  if ( exists $attrs->{sargonAllowPrivileged} ) {
+    $attrs->{sargonAllowPrivileged} = $attrs->{sargonAllowPrivileged} eq 'on' ? 'TRUE' : 'FALSE';
+  }
+  $attrs->{sargonNotBefore} .= 'Z' if exists $attrs->{sargonNotBefore};
+  $attrs->{sargonNotAfter} .= 'Z' if exists $attrs->{sargonNotAfter};
+  $self->h_log($attrs);
+
+  my $msg = $ldap->add(sprintf("cn=%s,%s", $attrs->{cn}, $self->{app}->{cfg}->{ldap}->{base}->{sargon}),
+		       $attrs);
+  push @{$debug{$msg->{status}}}, $msg->{message};
+
+  $self->stash( debug => \%debug );
+  $self->render(template => 'protected/sargon/new');
+
+}
+
 1;

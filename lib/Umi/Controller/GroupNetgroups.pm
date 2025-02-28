@@ -98,6 +98,17 @@ sub new_netgrp ($self) {
 
 		  } $search->entries
 		 ];
+# input #   my $emploees = [
+# input # 		  map {
+# input # 		    $i = sprintf("%s %s",
+# input # 				 $_->get_value('sn') // '',
+# input # 				 $_->get_value('givenName') // '');
+# input # 		    utf8::decode($i) if ! utf8::is_utf8($i);
+# input # 
+# input # 		    { label => $i, value => $_->get_value('uid') }
+# input # 
+# input # 		  } $search->entries
+# input # 		 ];
   # $self->h_log($emploees);
 
 
