@@ -33,21 +33,21 @@
   <div class="row mb-3" title="">
     %= label_for sargonUser => 'Users', class => 'col-sm-2 col-form-label text-end fw-bold text-uppercase', title => stash->{schema}->{sargonUser}->{desc}
     <div class="col-sm-10">
-      %= select_field sargonUser => stash->{sargonUser}, id => 'sargonUser', class => 'form-select', multiple => 'multiple'
+      %= select_field sargonUser => stash->{sargonUser}, id => 'sargonUser', class => 'form-select select2', multiple => 'multiple'
     </div>
   </div>
 
   <div class="row mb-3" title="">
     %= label_for groups => 'Groups', class => 'col-sm-2 col-form-label text-end fw-bold text-uppercase', title => stash->{schema}->{memberUid}->{desc}
     <div class="col-sm-10">
-      %= select_field groups => stash->{groups}, id => 'groups', class => 'form-select', multiple => 'multiple'
+      %= select_field groups => stash->{groups}, id => 'groups', class => 'form-select select2', multiple => 'multiple'
     </div>
   </div>
 
   <div class="row mb-3" title="">
     %= label_for sargonHost => 'Hosts', class => 'col-sm-2 col-form-label text-end fw-bold text-uppercase', title => stash->{schema}->{sargonHost}->{desc}
     <div class="col-sm-10">
-      %= select_field sargonHost => stash->{sargonHost}, id => 'sargonHost', class => 'form-select', multiple => 'multiple'
+      %= select_field sargonHost => stash->{sargonHost}, id => 'sargonHost', class => 'form-control', multiple => 'multiple'
     </div>
   </div>
 
@@ -55,14 +55,14 @@
   <div class="row mb-3" title="">
     %= label_for sargonAllow => 'Allow', class => 'col-sm-2 col-form-label text-end fw-bold text-uppercase', title => stash->{schema}->{sargonAllow}->{desc}
     <div class="col-sm-10">
-      %= select_field sargonAllow => $actions, id => 'sargonAllow', class => 'form-select', multiple => 'multiple', title => 'allowed actions'
+      %= select_field sargonAllow => $actions, id => 'sargonAllow', class => 'form-select select2', multiple => 'multiple', title => 'allowed actions'
     </div>
   </div>
 
   <div class="row mb-3" title="">
     %= label_for sargonDeny => 'Deny', class => 'col-sm-2 col-form-label text-end fw-bold text-uppercase', title => stash->{schema}->{sargonDeny}->{desc}
     <div class="col-sm-10">
-      %= select_field sargonDeny => $actions, id => 'sargonDeny', class => 'form-select', multiple => 'multiple', title => 'dinied actions'
+      %= select_field sargonDeny => $actions, id => 'sargonDeny', class => 'form-select select2', multiple => 'multiple', title => 'dinied actions'
     </div>
   </div>
 
@@ -95,7 +95,7 @@
   <div class="row mb-3" title="">
     %= label_for sargonAllowCapability => 'Capabilities', class => 'col-sm-2 col-form-label text-end fw-bold text-uppercase', title => stash->{schema}->{sargonAllowCapability}->{desc}
     <div class="col-sm-10">
-      %= select_field sargonAllowCapability => constant('SARGON')->{CAPABILITIES}, id => 'sargonAllowCapability', class => 'form-select', multiple => 'multiple'
+      %= select_field sargonAllowCapability => constant('SARGON')->{CAPABILITIES}, id => 'sargonAllowCapability', class => 'form-select select2', multiple => 'multiple'
     </div>
   </div>
 
@@ -162,97 +162,24 @@
   </script>
 % }
 
-<script src="/assets/js/umi-lib-choicesjs.js"></script>
 <script src="/assets/js/umi-tool-modify.js"></script>
-<script>
- document.addEventListener('DOMContentLoaded', function () {
-   const config = {
-     display: {
-       viewMode: 'calendar',
-       toolbarPlacement: 'top',
-       components: {
-         calendar: true,
-         date: true,
-         month: true,
-         year: true,
-         decades: true,
-         clock: false,
-         hours: false,
-         minutes: false,
-         seconds: false
-       },
-       buttons: {
-         clear: true,
-         close: true,
-         today: true
-       }
-     },
-     localization: {
-       format: 'yyyyMMdd000000'
-     }
-   };
+%###<script src="/assets/js/umi-lib-choicesjs.js"></script>
 
-   // Array of element IDs to initialize
-   ['sargonNotBefore', 'sargonNotAfter'].forEach(id => {
-     new tempusDominus.TempusDominus(document.getElementById(id), config);
+<script>
+ $(document).ready(function() {
+
+   $('.select2').select2({
+     placeholder: "Select or add options", // Optional placeholder text
+     allowClear: true                 // Optional: allows the user to clear selection
    });
+
+   $('#sargonHost').select2({
+     tags: true,                      // Enable tagging for custom user input
+     tokenSeparators: [',', ' '],     // Allow comma and space as delimiters
+     placeholder: "Select or add options", // Optional placeholder text
+     allowClear: true                 // Optional: allows the user to clear selection
+   });
+
  });
 </script>
 
-%# <script>
-%#  document.addEventListener('DOMContentLoaded', function () {
-%#    const picker = new tempusDominus.TempusDominus(document.getElementById('sargonNotBefore'), {
-%#      display: {
-%#        viewMode: 'calendar',
-%#        toolbarPlacement: 'top',
-%#        components: {
-%# 	 calendar: true,
-%# 	 date: true,
-%# 	 month: true,
-%# 	 year: true,
-%# 	 decades: true,
-%# 	 clock: false,
-%# 	 hours: false,
-%# 	 minutes: false,
-%# 	 seconds: false
-%#        },
-%#        buttons: {
-%# 	 clear: true,
-%# 	 close: true,
-%# 	 today: true
-%#        }
-%#      },
-%#      localization: {
-%#        format: 'yyyyMMdd000000'
-%#      }
-%#    });
-%#  });
-%# 
-%#  document.addEventListener('DOMContentLoaded', function () {
-%#    const picker = new tempusDominus.TempusDominus(document.getElementById('sargonNotAfter'), {
-%#      display: {
-%#        viewMode: 'calendar',
-%#        toolbarPlacement: 'top',
-%#        components: {
-%# 	 calendar: true,
-%# 	 date: true,
-%# 	 month: true,
-%# 	 year: true,
-%# 	 decades: true,
-%# 	 clock: false,
-%# 	 hours: false,
-%# 	 minutes: false,
-%# 	 seconds: false
-%#        },
-%#        buttons: {
-%# 	 clear: true,
-%# 	 close: true,
-%# 	 today: true
-%#        }
-%#      },
-%#      localization: {
-%#        format: 'yyyyMMdd000000'
-%#      }
-%#    });
-%#  });
-%# </script>

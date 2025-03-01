@@ -45,7 +45,7 @@
 
 /* Style change when the element is focused */
 .select2-container--focus .select2-selection {
-  border-color: #777; /* Border color when focused */
+  border-color: #777;
 }
 
 /* Highlighted item in the classic theme (with focus) */
@@ -97,11 +97,11 @@
 }
 
 .select2-selection__choice__remove {
-    color: var(--bs-body-color);    /* Color of the "×" button */
+    color: var(--bs-body-color) !important;    /* Color of the "×" button */
     opacity: 0.75;
 }
 .select2-selection__choice__remove:hover {
-    color: var(--bs-danger);        /* Change color on hover to indicate action */
+    color: var(--bs-danger) !important;        /* Change color on hover to indicate action */
 }
 
 .select2-container .select2-selection__arrow b {
@@ -114,20 +114,14 @@
 }
 
 /* clear button ("x" icon) on the select box when a value is selected */
-.select2-container--classic .select2-selection--multiple .select2-selection__clear {
+.select2-selection__clear {
   display: inline-flex;
-  color: var(--bs-danger);
+  color: var(--bs-body-color) !important;
   cursor: auto;
 }
 
-.select2-container--classic .select2-selection--multiple .select2-selection__choice__remove {
-  color: var(--bs-danger);
-  font-weight: bold;
-  cursor: auto;
-}
-
-.select2-container--classic .select2-selection--multiple .select2-selection__choice__remove:hover {
-  color: var(--bs-danger);
-  font-weight: bold;
+.select2-selection__clear:hover {
+  display: inline-flex;
+  color: var(--bs-danger) !important;
   cursor: auto;
 }

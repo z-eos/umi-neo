@@ -1463,6 +1463,7 @@ sub onboarding ($self) {
 sub sargon ($self) {
   my (%debug, $p);
   $p = $self->req->params->to_hash;
+  $self->h_log($p);
   foreach (keys %$p) {
      if ( $p->{$_} eq '' ) {
        delete $p->{$_};
@@ -1504,25 +1505,27 @@ sub sargon ($self) {
   $v->required('cn')->like($re_cn);
   $v->error( cn => ['ASCII alnum, - and _ characters only'] ) if $v->error('cn');
 
-  my $attrs;
-  $attrs->{$_} = $p->{$_} foreach keys %$p;
-  $attrs->{objectClass} = $self->{app}->{cfg}->{ldap}->{objectClass}->{sargon};
+  if ( ! $v->has_error ) {
+    my $attrs;
+    $attrs->{$_} = $p->{$_} foreach keys %$p;
+    $attrs->{objectClass} = $self->{app}->{cfg}->{ldap}->{objectClass}->{sargon};
 
-  if ( exists $attrs->{groups} ) {
-    my @g = map { '+'.$_ } @{$attrs->{groups}};
-    $attrs->{sargonUser} = [ @{$attrs->{sargonUser}}, @g ];
-    delete $attrs->{groups};
-  }
-  if ( exists $attrs->{sargonAllowPrivileged} ) {
-    $attrs->{sargonAllowPrivileged} = $attrs->{sargonAllowPrivileged} eq 'on' ? 'TRUE' : 'FALSE';
-  }
-  $attrs->{sargonNotBefore} .= 'Z' if exists $attrs->{sargonNotBefore};
-  $attrs->{sargonNotAfter} .= 'Z' if exists $attrs->{sargonNotAfter};
-  $self->h_log($attrs);
+    if ( exists $attrs->{groups} ) {
+      my @g = map { '+'.$_ } @{$attrs->{groups}};
+      $attrs->{sargonUser} = [ @{$attrs->{sargonUser}}, @g ];
+      delete $attrs->{groups};
+    }
+    if ( exists $attrs->{sargonAllowPrivileged} ) {
+      $attrs->{sargonAllowPrivileged} = $attrs->{sargonAllowPrivileged} eq 'on' ? 'TRUE' : 'FALSE';
+    }
+    $attrs->{sargonNotBefore} .= 'Z' if exists $attrs->{sargonNotBefore};
+    $attrs->{sargonNotAfter} .= 'Z' if exists $attrs->{sargonNotAfter};
+    $self->h_log($attrs);
 
-  my $msg = $ldap->add(sprintf("cn=%s,%s", $attrs->{cn}, $self->{app}->{cfg}->{ldap}->{base}->{sargon}),
-		       $attrs);
-  push @{$debug{$msg->{status}}}, $msg->{message};
+    my $msg = $ldap->add(sprintf("cn=%s,%s", $attrs->{cn}, $self->{app}->{cfg}->{ldap}->{base}->{sargon}),
+			 $attrs);
+    push @{$debug{$msg->{status}}}, $msg->{message};
+  }
 
   $self->stash( debug => \%debug, schema => \%schema_all_attributes );
   $self->render(template => 'protected/sargon/new');
