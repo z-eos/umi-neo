@@ -28,7 +28,7 @@
 <pre><%# = dumper $servers_alive_list %></pre>
 <div class="table-responsive">
   <table id="dataTableToDraw" class="table table-sm table-hover">
-    % my @fields = exists stash->{type} && stash->{type} eq 'users-by-server' ? qw(№ Server UIDs) : qw( № LName FName block Project Servers Email uid );
+    % my @fields = exists stash->{type} && stash->{type} eq 'users-by-server' ? qw(№ Server UIDs) : qw( № LName FName block Project Servers Services Email uid );
     <thead class="bg-dark text-white">
       <tr class="text-uppercase">
 	% foreach (@fields) {
@@ -116,6 +116,20 @@
 		  % }
 		</form>	    
 	      </td>
+	      <td>
+		% if ( defined $services && exists $services->{$dn} ) {
+		  % foreach my $k (sort keys %{$services->{$dn}}) {
+		    % my $svc = $services->{$dn}->{$k}->{obj};
+	            <span class="badge text-bg-secondary fw-bold">
+		      <b><%= $k %></b> <i class="fa-solid fa-ellipsis-vertical"></i>
+		      % foreach my $s (sort keys %$svc) {
+			<i class="fa-solid fa-ellipsis-vertical"></i>
+			<%= exists $svc->{$s}->{uid} ? $svc->{$s}->{uid}->[0] : $svc->{$s}->{cn}->[0] %>
+		      % }
+		    </span>
+		  % }
+		% }
+	      </td>
 	      <td><%== exists $v->{mail} ? sprintf('<a %s href="mailto:%s">%s</a>', $a_class, $v->{mail}->[0], $v->{mail}->[0]) : 'unavailable' %></td>
 	      <td><%== sprintf('<a %s href="/profile/%s">%s</a>', $a_class, $v->{uid}->[0], $v->{uid}->[0]) %></td>
 	    </tr>
@@ -153,6 +167,7 @@
 		    </form>
 		  % }
 		</td>
+		<td></td>
 		<td><%== exists $v->{mail} ? sprintf('<a %s href="mailto:%s">%s</a>', $a_class, $v->{mail}->[0], $v->{mail}->[0]) : 'unavailable' %></td>
 		<td><%== sprintf('<a %s href="/profile/%s">%s</a>', $a_class, $v->{uid}->[0], $v->{uid}->[0]) %></td>
 	      </tr>

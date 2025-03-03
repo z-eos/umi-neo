@@ -42,6 +42,9 @@
   background-color: var(--bs-tertiary-bg);  /* Background color for the highlighted item */
   color: var(--bs-body-color); /* Text color for the highlighted item */
 }
+.select2-container--default .select2-results__option[aria-selected="true"] {
+  background-color: var(--bs-tertiary-bg);  /* Background color for the highlighted item */
+}
 
 /* Style change when the element is focused */
 .select2-container--focus .select2-selection {

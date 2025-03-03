@@ -23,17 +23,10 @@ sub new_grp ($self) {
 
   my $ldap = Umi::Ldap->new( $self->{app}, $self->session('uid'), $self->session('pwd') );
 
-  my $search_arg = { base => $self->{app}->{cfg}->{ldap}->{base}->{acc_root},
-		     scope => 'one',
-		     filter => "(&(uid=*)(!(gidNumber=" . $self->{app}->{cfg}->{ldap}->{defaults}->{group_blocked_gidnumber} . ")))",
-		     attrs => ['givenName', 'sn', 'uid'] };
-  # $self->h_log($search_arg);
-  my $search = $ldap->search( $search_arg );
-  $self->h_log( $self->h_ldap_err($search, $search_arg) ) if $search->code && $search->code != LDAP_NO_SUCH_OBJECT;
-
-  my $emploees = [ map {
-    [ $_->get_value('sn') . ' ' . $_->get_value('givenName') => $_->get_value('uid') ]
-  } $search->entries ];
+  my ($emploees, $err);
+  ($emploees, $err) = $ldap->all_users;
+  push @{$debug{$err->{status}}}, $err->{message} if defined $err;
+  undef $err;
   # $self->h_log($emploees);
 
   $self->stash( debug => \%debug,
@@ -78,62 +71,13 @@ sub new_netgrp ($self) {
 
   my $ldap = Umi::Ldap->new( $self->{app}, $self->session('uid'), $self->session('pwd') );
 
-  my $search_arg = { base => $self->{app}->{cfg}->{ldap}->{base}->{acc_root},
-		     scope => 'one',
-		     filter => "(&(uid=*)(!(gidNumber=" . $self->{app}->{cfg}->{ldap}->{defaults}->{group_blocked_gidnumber} . ")))",
-		     attrs => ['givenName', 'sn', 'uid'] };
-  # $self->h_log($search_arg);
-  my $search = $ldap->search( $search_arg );
-  $self->h_log( $self->h_ldap_err($search, $search_arg) ) if $search->code && $search->code != LDAP_NO_SUCH_OBJECT;
-
-  my ($i, $l,$r);
-  my $emploees = [
-		  map {
-		    $i = sprintf("%s %s",
-				 $_->get_value('sn') // '',
-				 $_->get_value('givenName') // '');
-		    utf8::decode($i) if ! utf8::is_utf8($i);
-
-		    [ $i => $_->get_value('uid') ]
-
-		  } $search->entries
-		 ];
-# input #   my $emploees = [
-# input # 		  map {
-# input # 		    $i = sprintf("%s %s",
-# input # 				 $_->get_value('sn') // '',
-# input # 				 $_->get_value('givenName') // '');
-# input # 		    utf8::decode($i) if ! utf8::is_utf8($i);
-# input # 
-# input # 		    { label => $i, value => $_->get_value('uid') }
-# input # 
-# input # 		  } $search->entries
-# input # 		 ];
-  # $self->h_log($emploees);
-
-
-
-  ### SERVERS: list of all servers available for the user
-  $search_arg = { base => 'ou=access,' . $self->{app}->{cfg}->{ldap}->{base}->{netgroup},
-		  filter => '(nisNetgroupTriple=*)',
-		  attrs => ['nisNetgroupTriple'] };
-  $search = $ldap->search( $search_arg );
-  $self->h_log( $self->h_ldap_err($search, $search_arg) ) if $search->code;
-  my $netgroups = $search->as_struct;
-  my (@tuple, %servers, $hostnames);
-  while (my ($kk, $vv) = each %$netgroups) {
-    foreach (@{$vv->{nisnetgrouptriple}}) {
-      @tuple = split(/,/, substr($_, 1, -1));
-      $servers{sprintf("%s.%s", $tuple[0], $tuple[2])} = 1;
-    }
-  }
-  $search_arg = { base => $self->{app}->{cfg}->{ldap}->{base}->{machines},
-		  attrs => ['cn'] };
-  $search = $ldap->search( $search_arg );
-  $self->h_log( $self->{app}->h_ldap_err($search, $search_arg) ) if $search->code && $search->code != 32;
-  $servers{$_->get_value('cn')} = 1 foreach ($search->entries);
-  my $hosts = [ map { [ $_ => $_ ] } sort keys %servers ];
-  # $self->h_log($hosts);
+  my ($i, $l, $r, $emploees, $hosts, $err, $search, $search_arg);
+  ($emploees, $err) = $ldap->all_users;
+  push @{$debug{$err->{status}}}, $err->{message} if defined $err;
+  undef $err;
+  ($hosts, $err) = $ldap->all_hosts;
+  push @{$debug{$err->{status}}}, $err->{message} if defined $err;
+  undef $err;
 
   $self->stash( debug => \%debug,
 		emploees => $emploees,
@@ -150,10 +94,10 @@ sub new_netgrp ($self) {
   $v->error( host => ['can not be empty'] ) if ! exists $p->{hosts} && ! exists $p->{host};
   $v->error( hosts => ['can not be empty'] ) if ! exists $p->{hosts} && ! exists $p->{host};
 
-  $hostnames = [
-		map { defined($_) ? (ref $_ eq 'ARRAY' ? @$_ : $_) : () }
-		($p->{hosts}, $p->{host})
-	       ];
+  my $hostnames = [
+		   map { defined($_) ? (ref $_ eq 'ARRAY' ? @$_ : $_) : () }
+		   ($p->{hosts}, $p->{host})
+		  ];
 
   my (@tuples, @t);
   my @memberUid = ref($p->{memberUid}) eq 'ARRAY'

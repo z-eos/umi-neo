@@ -387,9 +387,9 @@ sub all_groups ($self) {
   return wantarray ? ( $res, $err ) : [ $res, $err ];
 }
 
-=head2 all_root_uids
+=head2 all_users
 
-get all users list (root objects only)
+get all active (not disabled) users list (root objects only)
 
 return array/ref of users arrayref and error (if any)
 
@@ -417,7 +417,7 @@ sub all_users ($self) {
 
 	      [ $i => $_->get_value('uid') ]
 
-	    } $mesg->entries
+	    } $mesg->sorted('sn')
 	   ];
   }
   return wantarray ? ( $res, $err ) : [ $res, $err ];
