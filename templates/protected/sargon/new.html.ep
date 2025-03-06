@@ -1,7 +1,7 @@
 %# -*- mode: web; eval: (follow-mode) -*-
 
 <h3 class="<%= app->{cfg}->{ui}->{page}->{header}->{css} %>">
-  <i class="fas fa-dragon fa-lg mr-3 text-muted"></i>
+  <i class="fas fa-shield-cat fa-lg me-3 text-muted"></i>
   New Sargon Rule <small><em class="text-muted font-monospace"></em></small>
 </h3>
 <hr>
@@ -163,7 +163,6 @@
 % }
 
 <script src="/assets/js/umi-tool-modify.js"></script>
-%###<script src="/assets/js/umi-lib-choicesjs.js"></script>
 
 <script>
  $(document).ready(function() {
@@ -183,3 +182,36 @@
  });
 </script>
 
+<script>
+ document.addEventListener('DOMContentLoaded', function() {
+   const config = {
+     display: {
+       viewMode: 'calendar',
+       toolbarPlacement: 'top',
+       components: {
+         calendar: true,
+         date: true,
+         month: true,
+         year: true,
+         decades: true,
+         clock: false,
+         hours: false,
+         minutes: false,
+         seconds: false
+       },
+       buttons: {
+         clear: true,
+         close: true,
+         today: true
+       }
+     },
+     localization: {
+       format: 'yyyyMMdd000000'
+     }
+   };
+
+   ['sargonNotAfter', 'sargonNotBefore'].forEach(id => {
+     new tempusDominus.TempusDominus(document.getElementById(id), config);
+   });
+ });
+</script>

@@ -87,11 +87,10 @@ sub new_netgrp ($self) {
   my $v = $self->validation;
   return $self->render(template => 'protected/group/new_netgrp') unless $v->has_data;
 
-  my $re_cn = qr/^[[:alnum:]]+$/;
+  my $re_cn = qr/^[[:alnum:]_-]+$/;
   $v->required('cn')->like($re_cn);
   $v->error( cn => ['ASCII alnum characters only'] ) if $v->error('cn');
   $v->required('memberUid');
-  $v->error( host => ['can not be empty'] ) if ! exists $p->{hosts} && ! exists $p->{host};
   $v->error( hosts => ['can not be empty'] ) if ! exists $p->{hosts} && ! exists $p->{host};
 
   my $hostnames = [
@@ -113,7 +112,29 @@ sub new_netgrp ($self) {
   }
   $self->h_log(\@tuples);
   $self->stash( tuples => \@tuples );
-  
+
+  # Step 1: Build a mapping of `hostname.domain` to users
+  my %host_to_users;
+  for my $entry (@tuples) {
+    my ($hostname, $user, $domain) = split /,/, $entry;
+    my $host_domain = "$hostname.$domain";
+    push @{ $host_to_users{$host_domain} }, { user => $user, host => $hostname, domain => $domain };
+  }
+
+  # Step 2: Identify unique sets of users (Cartesian product groups)
+  my %grouped;
+  for my $host_domain (keys %host_to_users) {
+    my @users = sort map { $_->{user} } @{ $host_to_users{$host_domain} };
+    my $key   = join ',', @users; # Unique signature for this user set
+    push @{ $grouped{$key} }, @{ $host_to_users{$host_domain} };
+  }
+
+  # Step 3: Convert to the required flat format
+  my @result = map {
+    [ map { "$_->{host},$_->{user},$_->{domain}" } @$_ ]
+  } values %grouped;
+  $self->stash( result => \@result );
+
   # my $attrs = {
   # 	       objectClass => $self->{app}->{cfg}->{ldap}->{objectClass}->{group},
   # 	       cn => $p->{cn},

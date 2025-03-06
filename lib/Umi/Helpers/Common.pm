@@ -29,7 +29,8 @@ sub register {
     my ($self, $app) = @_;
 
     my $re = {
-	      ip    => '(?:(?:[0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}(?:[0-9]|[1-9][0-9]|1[0-9]{2}|2[0-5][0-9])',
+	      # looks incorrect# ip    => '(?:(?:[0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}(?:[0-9]|[1-9][0-9]|1[0-9]{2}|2[0-5][0-9])',
+	      ip    => '(?:(?:[0-9]|[1-9]\d|1\d{2}|2[0-4]\d|25[0-5])\.){3}(?:[0-9]|[1-9]\d|1\d{2}|2[0-4]\d|25[0-5])',
 	      net3b => '(?:(?:[0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){2}',
 	      net2b => '(?:(?:[0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){1}',
 	     };
@@ -95,16 +96,30 @@ simple transliteration to ASCII with normalization to [:alnum:]
 
 =head2 h_is_ip
 
-checks whether the argument is ASCII
+checks whether the argument is a space delimited pair of ip addresses
 
-returns 0 if it is and 1 if not
+returns 1 if it is and 0 if not
+
+=cut
+
+    $app->helper(
+		 h_is_ip_pair => sub {
+		     my ($self, $arg) = @_;
+		     return (($arg // '') ne '' && $arg =~ /^$re->{ip}\s+$re->{ip}$/) ? 1 : 0;
+		 });
+
+=head2 h_is_ip_pair
+
+checks whether the argument is ip address
+
+returns 1 if it is and 0 if not
 
 =cut
 
     $app->helper(
 		 h_is_ip => sub {
 		     my ($self, $arg) = @_;
-		     return $arg // '' ne '' && $arg =~ /^$re->{ip}$/ ? 1 : 0;
+		     return (($arg // '') ne '' && $arg =~ /^$re->{ip}$/) ? 1 : 0;
 		 });
 
 =head2 ipam_dec2ip

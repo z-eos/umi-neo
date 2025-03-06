@@ -11,6 +11,7 @@
 .*~
 /umi.yml
 .tt
+README.URL
 
 # Devel::Cover
 cover_db/

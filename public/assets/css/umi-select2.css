@@ -46,6 +46,10 @@
   background-color: var(--bs-tertiary-bg);  /* Background color for the highlighted item */
 }
 
+.select2-container--default .select2-selection--single .select2-selection__rendered {
+  color: var(--bs-body-color); /* Text color for the highlighted item */
+}
+
 /* Style change when the element is focused */
 .select2-container--focus .select2-selection {
   border-color: #777;

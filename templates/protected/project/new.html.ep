@@ -47,7 +47,7 @@
 	<%= substr($_,5) %>:
       % end
       <div class="col-sm-10">
-	%= select_field $_ => $em, id => $_, class => 'form-select', multiple => 'multiple'
+	%= select_field $_ => $em, id => $_, class => 'form-select select2', multiple => 'multiple'
       </div>
     </div>
   % }
@@ -75,4 +75,13 @@
   </script>
 % }
 
-<script src="/assets/js/umi-lib-choicesjs.js"></script>
+<script>
+ $(document).ready(function() {
+
+   $('.select2').select2({
+     placeholder: "Select or add options", // Optional placeholder text
+     allowClear: true                 // Optional: allows the user to clear selection
+   });
+
+ });
+</script>

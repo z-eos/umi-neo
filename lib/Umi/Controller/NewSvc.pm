@@ -26,7 +26,7 @@ sub newsvc ($self) {
   my (%debug, $p);
   my $par = $self->req->params->to_hash;
   %$p = map { $_ => $par->{$_} } grep { defined $par->{$_} && $par->{$_} ne '' } keys %$par;
-  # $self->h_log($p);
+  $self->h_log($p);
 
   my $ldap = Umi::Ldap->new( $self->{app}, $self->session('uid'), $self->session('pwd') );
   my %schema_all_attributes = map { $_->{name} => $_ } $ldap->schema->all_attributes;
@@ -107,6 +107,18 @@ sub newsvc ($self) {
       # $v->error( password2 => [ 'field password2 is required' ] ) if ! exists $p->{password2};
       $v->error( password1 => [ 'new password and its confirmation do not match' ] )
 	if exists $p->{password1} && exists $p->{password2} && $p->{password1} ne $p->{password2};
+    } elsif ( $_ eq 'umiOvpnCfgIfconfigPush' ) {
+      my ($l, $r) = split / /, $p->{umiOvpnCfgIfconfigPush};
+      $v->error( umiOvpnCfgIfconfigPush => [ 'wrong ip address/es' ] )
+	if exists $p->{umiOvpnCfgIfconfigPush} && (! $self->h_is_ip($l) || ! $self->h_is_ip($r) );
+    } elsif ( $_ eq 'umiOvpnCfgIroute' ) {
+      if ( $_ =~ /^\S+\s+\S+$/ ) {
+	$v->error( umiOvpnCfgIroute => [ 'wrong network address and/or netmask' ] )
+	  if exists $p->{umiOvpnCfgIroute} && ! $self->h_is_ip_pair($_);
+      } else {
+	$v->error( umiOvpnCfgIroute => [ 'wrong network address' ] )
+	  if exists $p->{umiOvpnCfgIroute} && ! $self->h_is_ip($_);
+      }
     } else {
       # # $self->h_log($_);
       # $v->required($_);
@@ -117,19 +129,21 @@ sub newsvc ($self) {
 
   # $self->h_log($p);
 
-  #---------------------------------------------------------------------
-  # newsvc branch
-  #---------------------------------------------------------------------
+  if ( ! $v->has_error ) {
+    #---------------------------------------------------------------------
+    # newsvc branch
+    #---------------------------------------------------------------------
 
-  my $br = $self->h_branch_add_if_not_exists($p, $ldap, $root, \%debug);
-  # $self->h_log(\%debug);
+    my $br = $self->h_branch_add_if_not_exists($p, $ldap, $root, \%debug);
+    # $self->h_log(\%debug);
 
-  #---------------------------------------------------------------------
-  # newsvc account
-  #---------------------------------------------------------------------
+    #---------------------------------------------------------------------
+    # newsvc account
+    #---------------------------------------------------------------------
 
-  my $svc = $self->h_service_add_if_not_exists($p, $ldap, $root, $br, \%debug);
-  # $self->h_log(\%debug);
+    my $svc = $self->h_service_add_if_not_exists($p, $ldap, $root, $br, \%debug);
+    # $self->h_log(\%debug);
+  }
 
   $self->stash( debug => \%debug );
 

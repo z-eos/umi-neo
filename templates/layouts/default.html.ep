@@ -19,16 +19,10 @@
     <link href="/assets/css/select2.min.css" rel="stylesheet" />
     <link href="/assets/css/umi-select2.css" rel="stylesheet" />
 
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@eonasdan/tempus-dominus@6.9.4/dist/css/tempus-dominus.min.css" crossorigin="anonymous">
+    <link href="/assets/css/tempus-dominus/tempus-dominus.min.css" rel="stylesheet" />
     
     <link href="/assets/css/umi.css" rel="stylesheet" type="text/css">
     <link href="/assets/css/nprogress.css" rel="stylesheet" type="text/css">
-
-    <!-- Choices includes -->
-    <link rel="stylesheet" href="/assets/css/choices.min.css" />
-    <script src="/assets/js/choices.js"></script>
-    <link href="/assets/css/umi-choices-js.css" rel="stylesheet" />
-    <!-- End Choices includes -->
 
   </head>
   <body>
@@ -39,7 +33,7 @@
     <!-- Popperjs -->
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js" integrity="sha256-BRqBN7dYgABqtY9Hd4ynE+1slnEw+roEPFzQ7TRRfcg=" crossorigin="anonymous"></script>
     <!-- Tempus Dominus JavaScript -->
-    <script src="https://cdn.jsdelivr.net/npm/@eonasdan/tempus-dominus@6.9.4/dist/js/tempus-dominus.min.js" crossorigin="anonymous"></script>
+    <script src="/assets/js/tempus-dominus/tempus-dominus.min.js"></script>
     <!-- script src="https://cdn.jsdelivr.net/npm/moment@2.29.1/moment.min.js"></script -->
 
     <script src="/assets/js/vue.js"></script>

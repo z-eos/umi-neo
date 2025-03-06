@@ -78,9 +78,66 @@
 
 <pre class="mt-5 umi-text-tiny text-muted"><%= dumper stash->{'mojo.validation'}->{error} if %{stash->{'mojo.validation'}->{error}} %></pre>
 
+%# <script>
+%#  document.addEventListener('DOMContentLoaded', function () {
+%#    const picker = new tempusDominus.TempusDominus(document.getElementById('birth'), {
+%#      display: {
+%#        viewMode: 'calendar',
+%#        toolbarPlacement: 'top',
+%#        components: {
+%#          calendar: true,
+%#          date: true,
+%#          month: true,
+%#          year: true,
+%#          decades: true,
+%#          clock: false,
+%#          hours: false,
+%#          minutes: false,
+%#          seconds: false
+%#        },
+%#        buttons: {
+%# 	 clear: true,
+%# 	 close: true,
+%# 	 today: true
+%#        }
+%#      },
+%#      localization: {
+%#        format: 'yyyyMMdd000000'
+%#      }
+%#    });
+%#  });
+%# 
+%#  document.addEventListener('DOMContentLoaded', function () {
+%#    const picker = new tempusDominus.TempusDominus(document.getElementById('employment'), {
+%#      display: {
+%#        viewMode: 'calendar',
+%#        toolbarPlacement: 'top',
+%#        components: {
+%#          calendar: true,
+%#          date: true,
+%#          month: true,
+%#          year: true,
+%#          decades: true,
+%#          clock: false,
+%#          hours: false,
+%#          minutes: false,
+%#          seconds: false
+%#        },
+%#        buttons: {
+%# 	 clear: true,
+%# 	 close: true,
+%# 	 today: true
+%#        }
+%#      },
+%#      localization: {
+%#        format: 'yyyyMMdd000000'
+%#      }
+%#    });
+%#  });
+%# </script>
 <script>
- document.addEventListener('DOMContentLoaded', function () {
-   const picker = new tempusDominus.TempusDominus(document.getElementById('birth'), {
+ document.addEventListener('DOMContentLoaded', function() {
+   const config = {
      display: {
        viewMode: 'calendar',
        toolbarPlacement: 'top',
@@ -96,42 +153,18 @@
          seconds: false
        },
        buttons: {
-	 clear: true,
-	 close: true,
-	 today: true
+         clear: true,
+         close: true,
+         today: true
        }
      },
      localization: {
        format: 'yyyyMMdd000000'
      }
-   });
- });
+   };
 
- document.addEventListener('DOMContentLoaded', function () {
-   const picker = new tempusDominus.TempusDominus(document.getElementById('employment'), {
-     display: {
-       viewMode: 'calendar',
-       toolbarPlacement: 'top',
-       components: {
-         calendar: true,
-         date: true,
-         month: true,
-         year: true,
-         decades: true,
-         clock: false,
-         hours: false,
-         minutes: false,
-         seconds: false
-       },
-       buttons: {
-	 clear: true,
-	 close: true,
-	 today: true
-       }
-     },
-     localization: {
-       format: 'yyyyMMdd000000'
-     }
+   ['birth', 'employment'].forEach(id => {
+     new tempusDominus.TempusDominus(document.getElementById(id), config);
    });
  });
 </script>

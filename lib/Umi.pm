@@ -331,6 +331,16 @@ sub _startup_routes ($self) {
     ->requires(is_role => ['admin,coadmin', {cmp => 'or'}])
     ->to('protected#sargon');
 
+  ## SUDO
+  $protected_root
+    ->get( '/sudo/new')
+    ->requires(is_role => ['admin,coadmin', {cmp => 'or'}])
+    ->to('protected#sudo');
+  $protected_root
+    ->post('/sudo/new')
+    ->requires(is_role => ['admin,coadmin', {cmp => 'or'}])
+    ->to('protected#sudo');
+
   # ## MACHINES
   # $protected_root
   #   ->get( '/machines')

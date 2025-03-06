@@ -101,68 +101,73 @@ sub ipa ($self) {
 					dhcpStatements ) ], };
   my $search = $ldap->search($search_arg);
   $self->{app}->h_log( $self->{app}->h_ldap_err($search, $search_arg) ) if $search->code;
+  # $self->h_log($search_arg);
 
   $val = $search->as_struct;
-    # log_debug { np($val) };
-    foreach $key (keys ( %{$val} )) {
-      undef $l;
-      undef $r;
+  # $self->h_log($val);
+  foreach $key (keys ( %{$val} )) {
+    undef $l;
+    undef $r;
 
-      # log_debug { np($key) };
-      # log_debug { np($val->{$key}) };
+    # log_debug { np($key) };
+    # log_debug { np($val->{$key}) };
 
-      # OpenVPN option --ifconfig-push local remote-netmask [alias]
-      if ( exists $val->{$key}->{umiovpncfgifconfigpush} ) {
-        foreach ( @{$val->{$key}->{umiovpncfgifconfigpush}} ) {
-          # log_debug { np($_) };
-          ($l, $r, $tmp) = split(/ /, $_);
-          if ( $self->h_ipam_ip2dec($r) - $self->h_ipam_ip2dec($l) == 1 ) {
-            $ipa->add($l . '/30');
-          } else {
-            $ipa->add($l);
-          }
-        }
-        undef $tmp;
+    # OpenVPN option --ifconfig-push local remote-netmask [alias]
+    if ( exists $val->{$key}->{umiovpncfgifconfigpush} ) {
+      foreach ( @{$val->{$key}->{umiovpncfgifconfigpush}} ) {
+	# log_debug { np($_) };
+	($l, $r, $tmp) = split(/ /, $_);
+	next if ! $self->h_is_ip($l);
+	if ( $self->h_ipam_ip2dec($r) - $self->h_ipam_ip2dec($l) == 1 ) {
+	  $ipa->add($l . '/30');
+	} else {
+	  $ipa->add($l);
+	}
       }
-
-      # # OpenVPN option  --iroute network [netmask]
-      # # Generate an internal route to a specific client.
-      # # The netmask parameter, if omitted, defaults to 255.255.255.255.
-      # if ( exists $val->{$key}->{umiovpncfgiroute} ) {
-      #   foreach ( @{$val->{$key}->{umiovpncfgiroute}} ) {
-      #     next if $_ eq 'NA';
-      #     # log_debug { np($_) };
-      #     ($l, $r) = split(/ /, $_);
-      #     if ( length($r) == 0 ) {
-      #       $ipa->add($l);
-      #     } else {
-      #       $ipa->add($l . '/' . $self->ipam_msk_ip2dec($r));
-      #     }
-      #   }
-      # }
-
-      # ISC DHCP Manual Pages - dhcpd.conf
-      # The fixed-address declaration `fixed-address address [, address ... ];`
-      # The fixed-address declaration is used to assign one or more fixed IP addresses to a client.
-      # BUT WE EXPECT ONE SINGLE IP ADDRESS
-      if ( exists $val->{$key}->{dhcpstatements} ) {
-      	foreach ( @{$val->{$key}->{dhcpstatements}} ) {
-      	  next if $_ !~ /^fixed-address/;
-          # log_debug { np($_) };
-      	  ($l, $r) = split(/ /, $_);
-      	  $ipa->add($r);
-      	}
-      }
-
-      if ( exists $val->{$key}->{iphostnumber} ) {
-        foreach ( @{$val->{$key}->{iphostnumber}} ) {
-          next if $_ eq 'NA' || ! $self->h_is_ip($_);
-          # log_debug { np($_) };
-          $ipa->add($_);
-        }
-      }
-
+      undef $tmp;
     }
+    # $self->h_log(@{[$ipa->as_address_array]});
+
+    # # OpenVPN option  --iroute network [netmask]
+    # # Generate an internal route to a specific client.
+    # # The netmask parameter, if omitted, defaults to 255.255.255.255.
+    # if ( exists $val->{$key}->{umiovpncfgiroute} ) {
+    #   foreach ( @{$val->{$key}->{umiovpncfgiroute}} ) {
+    #     next if $_ eq 'NA';
+    #     # log_debug { np($_) };
+    #     ($l, $r) = split(/ /, $_);
+    #     if ( length($r) == 0 ) {
+    #       $ipa->add($l);
+    #     } else {
+    #       $ipa->add($l . '/' . $self->ipam_msk_ip2dec($r));
+    #     }
+    #   }
+    # }
+
+    # ISC DHCP Manual Pages - dhcpd.conf
+    # The fixed-address declaration `fixed-address address [, address ... ];`
+    # The fixed-address declaration is used to assign one or more fixed IP addresses to a client.
+    # BUT WE EXPECT ONE SINGLE IP ADDRESS
+    if ( exists $val->{$key}->{dhcpstatements} ) {
+      foreach ( @{$val->{$key}->{dhcpstatements}} ) {
+	next if $_ !~ /^fixed-address/;
+	# log_debug { np($_) };
+	($l, $r) = split(/ /, $_);
+	next if ! $self->h_is_ip($r);
+	$ipa->add($r);
+      }
+    }
+    # $self->h_log(@{[$ipa->as_address_array]});
+
+    if ( exists $val->{$key}->{iphostnumber} ) {
+      foreach ( @{$val->{$key}->{iphostnumber}} ) {
+	next if ! $self->h_is_ip($_);
+	# $self->h_log($_ . ' --- ' . $self->h_is_ip($_));
+	$ipa->add($_);
+      }
+    }
+
+  }
 
   # log_debug { np(@{[$ipa->as_address_array]}) };
 

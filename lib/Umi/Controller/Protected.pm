@@ -1532,4 +1532,84 @@ sub sargon ($self) {
 
 }
 
+=head1 sudo
+
+https://www.sudo.ws/docs/man/sudoers.ldap.man/
+
+=cut
+
+sub sudo ($self) {
+  my (%debug, $p);
+  $p = $self->req->params->to_hash;
+  $self->h_log($p);
+  foreach (keys %$p) {
+     if ( $p->{$_} eq '' ) {
+       delete $p->{$_};
+     } elsif (ref($p->{$_}) eq 'ARRAY') {
+       @{$p->{$_}} = grep { $_ ne "" } @{$p->{$_}};
+     }
+  }
+  $self->h_log($p);
+
+  my $ldap = Umi::Ldap->new( $self->{app}, $self->session('uid'), $self->session('pwd') );
+  my %schema_all_attributes = map { $_->{name} => $_ } $ldap->schema->all_attributes;
+
+  my ($msg, $sudoUser, $groups, $sudoHost, $err);
+  ($sudoUser, $err) = $ldap->all_users;
+  push @{$debug{$err->{status}}}, $err->{message} if defined $err;
+  undef $err;
+  unshift @$sudoUser, '', 'ALL';
+  ($groups, $err) = $ldap->all_groups;
+  push @{$debug{$err->{status}}}, $err->{message} if defined $err;
+  undef $err;
+  unshift @$groups, '', 'ALL';
+  ($sudoHost, $err) = $ldap->all_hosts;
+  push @{$debug{$err->{status}}}, $err->{message} if defined $err;
+  unshift @$sudoHost, '', 'ALL';
+
+  $p->{sudoCommand} = [$p->{sudoCommand}] if exists $p->{sudoCommand} && ref($p->{sudoCommand}) ne 'ARRAY';
+  $p->{sudoCommand} = [''] if ! exists $p->{sudoCommand};
+
+  $p->{sudoOption} = [$p->{sudoOption}] if exists $p->{sudoOption} && ref($p->{sudoOption}) ne 'ARRAY';
+  $p->{sudoOption} = [''] if ! exists $p->{sudoOption};
+
+  $self->stash(
+	       sudoUser => $sudoUser,
+	       groups => $groups,
+	       sudoHost => $sudoHost,
+	       sudoCommand => $p->{sudoCommand},
+	       sudoOption => $p->{sudoOption},
+	       schema => \%schema_all_attributes,
+	       debug => \%debug,
+	      );
+
+  my $v = $self->validation;
+  return $self->render(template => 'protected/sudo/new') unless $v->has_data;
+  my $re_cn = qr/^[[:alnum:]_-]+$/;
+  $v->required('cn')->like($re_cn);
+  $v->error( cn => ['ASCII alnum, - and _ characters only'] ) if $v->error('cn');
+  $v->error( sudoUser => ['user or group are mandatory'] ) if ! exists $p->{sudoUser} && ! exists $p->{groups};
+  $v->error( groups => ['user or group are mandatory'] ) if ! exists $p->{sudoUser} && ! exists $p->{groups};
+
+  if ( ! $v->has_error ) {
+    my $attrs;
+    $attrs->{$_} = $p->{$_} foreach keys %$p;
+    $attrs->{objectClass} = $self->{app}->{cfg}->{ldap}->{objectClass}->{sudo};
+
+    if ( exists $attrs->{groups} ) {
+      $attrs->{sudoUser} = '%' . $attrs->{groups};
+      delete $attrs->{groups};
+    }
+    $self->h_log($attrs);
+
+    # $msg = $ldap->add(sprintf("cn=%s,%s", $attrs->{cn}, $self->{app}->{cfg}->{ldap}->{base}->{sargon}),
+    # 			 $attrs);
+    $self->stash(attrs => $attrs);
+    push @{$debug{$msg->{status}}}, $msg->{message};
+  }
+
+  $self->stash( debug => \%debug, schema => \%schema_all_attributes );
+  $self->render(template => 'protected/sudo/new');
+}
+
 1;
