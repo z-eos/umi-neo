@@ -1,0 +1,252 @@
+%# -*- mode: web; eval: (follow-mode) -*-
+
+<h3 class="<%= app->{cfg}->{ui}->{page}->{header}->{css} %>">
+  <i class="fas fa-user-shield fa-lg me-3 text-muted"></i>
+  New Sudo Rule <small><em class="text-muted font-monospace"></em></small>
+</h3>
+<hr>
+
+% my $em = stash->{emploees};
+%= form_for '/sudo/new' => {class => "form-horizontal"} => (method => 'POST') => begin
+
+  <div class="row mb-3">
+    %= label_for cn => 'CN', class => 'col-sm-2 col-form-label text-end fw-bold text-uppercase', title => stash->{schema}->{cn}->{desc}
+    <div class="col-sm-10">
+      %= text_field 'cn', class => 'form-control', id => 'cn', placeholder => 'Group name'
+    </div>
+  </div>
+
+  <div class="row mb-3">
+    %= label_for description => 'Description', class => 'col-sm-2 col-form-label text-end fw-bold text-uppercase', title => stash->{schema}->{description}->{desc}
+    <div class="col-sm-10">
+      %= text_area 'description', cols => 3, class => 'form-control', placeholder => 'Short description'
+    </div>
+  </div>
+
+  <div class="row mb-3">
+    %= label_for sudoOrder => 'Order', class => 'col-sm-2 col-form-label text-end fw-bold text-uppercase', title => stash->{schema}->{sudoOrder}->{desc}
+    <div class="col-sm-10">
+      %= text_field 'sudoOrder', class => 'form-control', id => 'sudoOrder'
+    </div>
+  </div>
+
+  <div id="sudoUser-container" class="row mb-3" title="">
+    %= label_for sudoUser => 'User', class => 'col-sm-2 col-form-label text-end fw-bold text-uppercase', title =>  stash->{schema}->{sudoUser}->{desc}
+    <div class="col-sm-10">
+      %= select_field sudoUser => stash->{sudoUser}, id => 'sudoUser', class => 'form-select select2'
+    </div>
+  </div>
+
+  <div id="groups-container" class="row mb-3" title="">
+    %= label_for groups => 'Group', class => 'col-sm-2 col-form-label text-end fw-bold text-uppercase', title => stash->{schema}->{memberUid}->{desc}
+    <div class="col-sm-10">
+      %= select_field groups => stash->{groups}, id => 'groups', class => 'form-select select2'
+    </div>
+  </div>
+
+  <div class="row mb-3" title="">
+    %= label_for sudoHost => 'Host', class => 'col-sm-2 col-form-label text-end fw-bold text-uppercase', title => stash->{schema}->{sudoHost}->{desc}
+    <div class="col-sm-10">
+      %= select_field sudoHost => stash->{sudoHost}, id => 'sudoHost', class => 'form-select select2'
+    </div>
+  </div>
+
+  <div id="sudoRunAsUser-container" class="row mb-3" title="">
+    %= label_for sudoRunAsUser => 'Run As User', class => 'col-sm-2 col-form-label text-end fw-bold text-uppercase', title => stash->{schema}->{sudoRunAsUser}->{desc}
+    <div class="col-sm-10">
+      %= select_field sudoRunAsUser => stash->{sudoUser}, id => 'sudoRunAsUser', class => 'form-select select2'
+    </div>
+  </div>
+
+  <div id="sudoRunAsGroup-container" class="row mb-3" title="">
+    %= label_for sudoRunAsGroup => 'Run As Group', class => 'col-sm-2 col-form-label text-end fw-bold text-uppercase', title => stash->{schema}->{memberUid}->{desc}
+    <div class="col-sm-10">
+      %= select_field sudoRunAsGroup => stash->{groups}, id => 'sudoRunAsGroup', class => 'form-select select2'
+    </div>
+  </div>
+
+  <div class="row mb-3" title="">
+    %= label_for sudoCommand => 'sudoCommand', class => 'col-sm-2 col-form-label text-end fw-bold text-uppercase', title => stash->{schema}->{sudoCommand}->{desc}
+    <div class="col-sm-10">
+      % foreach (@{stash->{sudoCommand}}) {
+	<div class="input-group input-group entry-removable entry-at-least-one">
+	  <span class="input-group-btn">
+	    <!-- Clone Button -->
+	    <button class="btn btn-secondary btn btn-add element-add" type="button" title="click to add another host">
+	      <i class="fa-solid fa-fw fa-clone text-success-emphasis"></i>
+	    </button>
+	  </span>
+	  <input type="text" name="sudoCommand" class="form-control" value="<%= $_ %>">
+	  <span class="input-group-btn">
+	    <!-- Delete Button -->
+	    <button class="btn btn-secondary btn btn-delete element-delete" type="button" title="Click to delete host">
+	      <i class="fa-solid fa-fw fa-trash text-danger-emphasis"></i>
+	    </button>
+	  </span>
+	</div>	  
+      % }
+    </div>
+  </div>
+
+  <div class="row mb-3" title="">
+    %= label_for sudoOption => 'sudoOption', class => 'col-sm-2 col-form-label text-end fw-bold text-uppercase', title => stash->{schema}->{sudoOption}->{desc}
+    <div class="col-sm-10">
+      % foreach (@{stash->{sudoOption}}) {
+	<div class="input-group input-group entry-removable entry-at-least-one">
+	  <span class="input-group-btn">
+	    <!-- Clone Button -->
+	    <button class="btn btn-secondary btn btn-add element-add" type="button" title="click to add another host">
+	      <i class="fa-solid fa-fw fa-clone text-success-emphasis"></i>
+	    </button>
+	  </span>
+	  <input type="text" name="sudoOption" class="form-control" value="<%= $_ %>">
+	  <span class="input-group-btn">
+	    <!-- Delete Button -->
+	    <button class="btn btn-secondary btn btn-delete element-delete" type="button" title="Click to delete host">
+	      <i class="fa-solid fa-fw fa-trash text-danger-emphasis"></i>
+	    </button>
+	  </span>
+	</div>	  
+      % }
+    </div>
+  </div>
+
+  <div class="row mb-3">
+    %= label_for sudoNotBefore => 'Not Before', class => 'col-sm-2 col-form-label text-end fw-bold text-uppercase', title => stash->{schema}->{sudoNotBefore}->{desc}
+    <div class="col-sm-10">
+      <div class="input-group">
+	<span class="input-group-text"><i class="fa-regular fa-calendar"></i></span>
+	%= text_field 'sudoNotBefore', class => 'form-control tempus-dominus-field', id => 'sudoNotBefore', title => 'Employee birth date', placeholder => 'yyyyMMddHHMMss'
+      </div>
+    </div>
+  </div>
+
+  <div class="row mb-3">
+    %= label_for sudoNotAfter => 'Not After', class => 'col-sm-2 col-form-label text-end fw-bold text-uppercase', title => stash->{schema}->{sudoNotAfter}->{desc}
+    <div class="col-sm-10">
+      <div class="input-group">
+	<span class="input-group-text"><i class="fa-regular fa-calendar"></i></span>
+	%= text_field 'sudoNotAfter', class => 'form-control tempus-dominus-field', id => 'sudoNotAfter', title => 'Employee birth date', placeholder => 'yyyyMMddHHMMss'
+      </div>
+    </div>
+  </div>
+
+  %= submit_button 'Submit', class => 'btn btn-success font-weight-bold text-uppercase text-end mt-3'
+
+% end
+
+<pre class="p-5 font-monospace umi-text-tiny"><%= dumper stash->{attrs} if defined stash->{attrs} %></pre>
+
+% my $tuples = stash->{tuples};
+<pre class="p-5 font-monospace umi-text-tiny"><%= dumper $tuples if defined $tuples %></pre>
+
+<pre class="mt-5 umi-text-tiny text-muted"><%= dumper stash->{'mojo.validation'}->{error} if %{stash->{'mojo.validation'}->{error}} %></pre>
+
+% if ( stash->{'mojo.validation'}->{error} ) {
+  <script>
+   % while (my ($k, $v) = each %{stash->{'mojo.validation'}->{error}}) {
+     $('#<%= $k %>').addClass('is-invalid').after('<div id="<%= $k %>ValidationFeedback" class="invalid-feedback font-monospace"></div>');
+     % if (scalar(@$v) == 1) {
+     $('#<%= $k %>ValidationFeedback').text('<%= $v->[0] %>');
+     % } else {
+     $('#<%= $k %>ValidationFeedback').text('is not <%= $v->[0] %>: <%= $v->[2] %>');
+     % }
+   % }
+  </script>
+% }
+
+<script src="/assets/js/umi-tool-modify.js"></script>
+
+<script>
+ $(document).ready(function() {
+
+   $('.select2').select2({
+     tags: true,                      // Enable tagging for custom user input
+     placeholder: " --- select an item ---", // Optional placeholder text
+     allowClear: true                 // Optional: allows the user to clear selection
+   });
+
+ });
+</script>
+
+<script>
+ document.addEventListener('DOMContentLoaded', function() {
+   const config = {
+     display: {
+       viewMode: 'calendar',
+       toolbarPlacement: 'top',
+       components: {
+         calendar: true,
+         date: true,
+         month: true,
+         year: true,
+         decades: true,
+         clock: false,
+         hours: false,
+         minutes: false,
+         seconds: false
+       },
+       buttons: {
+         clear: true,
+         close: true,
+         today: true
+       }
+     },
+     localization: {
+       format: 'yyyyMMdd000000'
+     }
+   };
+
+   ['sudoNotBefore', 'sudoNotAfter'].forEach(id => {
+     new tempusDominus.TempusDominus(document.getElementById(id), config);
+   });
+ });
+</script>
+
+<script>
+ $(document).ready(function() {
+   // Configuration for each pair of selects
+   const configs = [
+     {
+       userSelect: '#sudoUser',
+       groupSelect: '#groups',
+       userContainer: '#sudoUser-container',
+       groupContainer: '#groups-container'
+     },
+     {
+       userSelect: '#sudoRunAsUser',
+       groupSelect: '#sudoRunAsGroup',
+       userContainer: '#sudoRunAsUser-container',
+       groupContainer: '#sudoRunAsGroup-container'
+     }
+   ];
+
+   // For each configuration, attach change events and set initial state
+   configs.forEach(config => {
+     function updateVisibility() {
+       const usrVal = $(config.userSelect).val();
+       const grpVal = $(config.groupSelect).val();
+
+       // If a value is selected in the user select, hide the group container
+       if (usrVal) {
+         $(config.groupContainer).addClass('d-none');
+       } else {
+         $(config.groupContainer).removeClass('d-none');
+       }
+       
+       // If a value is selected in the group select, hide the user container
+       if (grpVal) {
+         $(config.userContainer).addClass('d-none');
+       } else {
+         $(config.userContainer).removeClass('d-none');
+       }
+     }
+
+     // Bind the change event to both select elements
+     $(config.userSelect + ', ' + config.groupSelect).on('change', updateVisibility);
+
+     // Run once on page load to set the initial state
+     updateVisibility();
+   });
+ });
+</script>
