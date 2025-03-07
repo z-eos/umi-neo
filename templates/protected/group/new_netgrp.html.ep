@@ -1,14 +1,16 @@
 %# -*- mode: web; eval: (follow-mode) -*-
 
+% my $dn_to_modify_netgr = stash->{dn_to_modify_netgr};
 <h3 class="fw-bold p-5">
-  <i class="fas fa-user-friends fa-lg mr-3 text-muted"></i>
-  New NetGroup <small><em class="text-muted font-monospace"></em></small>
+  <i class="fas fa-user-friends fa-lg me-3 text-muted"></i>
+  <%= defined $dn_to_modify_netgr ? 'Modify' : 'New' %> NetGroup <small><em class="text-muted font-monospace"></em></small>
 </h3>
 <hr>
 
 % my $em = stash->{emploees};
 %= form_for '/netgroup/new' => {class => "form-horizontal"} => (method => 'POST') => begin
 
+  % param cn => stash->{cn} unless param 'cn';
   <div class="row mb-3">
     %= label_for cn => 'CN', class => 'col-sm-2 col-form-label text-end fw-bold text-uppercase'
     <div class="col-sm-10">
@@ -16,6 +18,7 @@
     </div>
   </div>
 
+  % param description => stash->{description} unless param 'description';
   <div class="row mb-3">
     %= label_for description => 'Description', class => 'col-sm-2 col-form-label text-end fw-bold text-uppercase'
     <div class="col-sm-10">
@@ -23,32 +26,85 @@
     </div>
   </div>
 
-  <div class="btn-group" role="group">
-    <button type="button" class="btn btn-secondary btn-sm" id="cloneButton">
-      <i class="fa-solid fa-fw fa-clone text-success-emphasis"></i>
-    </button>
-    <button type="button" class="btn btn-secondary btn-sm" id="deleteButton">
-      <i class="fa-solid fa-fw fa-trash text-danger-emphasis"></i>
-    </button>
-  </div>
-
-  <div id="to-clone" class="border border-1 m-2 p-2">
-    <div class="row mb-3" title="">
-      %= label_for memberUid => 'Member:', class => 'col-sm-2 col-form-label text-end fw-bold text-uppercase'
-      <div class="col-sm-10">
-	%= select_field 'memberUid' => stash->{emploees}, id => 'memberUid', class => 'form-select select2', multiple => 'multiple'
-      </div>
-    </div>
-
-    <div class="row" title="">
-      %= label_for hosts => 'Hosts:', class => 'col-sm-2 col-form-label text-end fw-bold text-uppercase'
-      <div class="col-sm-10">
-	%= select_field 'hosts' => stash->{hosts}, id => 'hosts', class => 'form-select', multiple => 'multiple'
+  <div class="row mb-3">
+    <div class="col-sm-2">
+      <div class="btn-group float-end" role="group">
+	<button type="button" class="btn btn-secondary btn-sm" id="cloneButton">
+	  <i class="fa-solid fa-fw fa-clone text-success-emphasis"></i>
+	</button>
+	<button type="button" class="btn btn-secondary btn-sm" id="deleteButton">
+	  <i class="fa-solid fa-fw fa-trash text-danger-emphasis"></i>
+	</button>
       </div>
     </div>
   </div>
 
-  <div id="clones-container" class="border border-1 m-2 p-2"></div>
+  % my ($hosts_orig, $hosts, $memberUid_orig, $memberUid);
+
+  % $hosts = stash->{hosts};
+  % $hosts_orig = stash->{hosts_orig};
+  % $memberUid = stash->{memberUid};
+  % $memberUid_orig = stash->{memberUid_orig};
+  
+  % my ($opts_h, $opts_m, %s, $class);
+  % for ( my $i = 0; $i < scalar @$hosts; $i++)
+  % {
+    % $class = '" id="to-clone';
+    % if ( h_is_empty_nested_arr($hosts) )
+    % {
+      % $opts_h = $hosts_orig;
+      % $opts_m = $memberUid_orig;
+    % } else
+    % {
+      % $class = ' clone-section' if $i == 0;
+      
+      % %s = map { $_ => 1 } @{$hosts->[$i]};
+      % @$opts_h = map { $s{$_} ? [ $_ => $_, selected => 'selected' ] : $_ } @$hosts_orig;
+
+      % %s = map { $_ => 1 } @{$memberUid->[$i]};
+      % @$opts_m = map {
+	% my $e = $_;
+	% $s{$e->[1]} ? [ @$e, selected => 'selected' ] : $e
+      % } @$memberUid_orig;
+      
+    % }
+    
+    <div class="my-2 py-2 <%== $class %>">
+      <div class="row mb-3" title="">
+	%= label_for memberUid => 'Member', class => 'col-sm-2 col-form-label text-end fw-bold text-uppercase'
+	<div class="col-sm-10">
+	  %= select_field 'memberUid[' . $i . ']' => $opts_m, id => 'memberUid[' . $i . ']', class => 'form-select select2', multiple => 'multiple'
+	</div>
+      </div>
+
+      <div class="row" title="">
+	%= label_for hosts => 'Hosts', class => 'col-sm-2 col-form-label text-end fw-bold text-uppercase'
+	<div class="col-sm-10">
+	  %= select_field 'hosts[' . $i . ']' => $opts_h, id => 'hosts[' . $i . ']', class => 'form-select select2-hosts', multiple => 'multiple'
+	</div>
+      </div>
+    </div>
+  % }
+  
+  <div id="clones-container" class="m-2 p-2"></div>
+
+  <div class="d-none">
+    <div id="to-clone-meta" class="my-2 py-2">
+      <div class="row mb-3" title="">
+	%= label_for memberUid => 'Member', class => 'col-sm-2 col-form-label text-end fw-bold text-uppercase'
+	<div class="col-sm-10">
+	  %= select_field 'memberUidMeta' => stash->{memberUid_orig}, class => 'form-select', multiple => 'multiple'
+	</div>
+      </div>
+
+      <div class="row" title="">
+	%= label_for hosts => 'Hosts', class => 'col-sm-2 col-form-label text-end fw-bold text-uppercase'
+	<div class="col-sm-10">
+	  %= select_field 'hostsMeta' => stash->{hosts_orig}, class => 'form-select', multiple => 'multiple'
+	</div>
+      </div>
+    </div>
+  </div>
 
   %= submit_button 'Submit', class => 'btn btn-success font-weight-bold text-uppercase text-end mt-3'
 
@@ -56,8 +112,12 @@
 
 % my $tuples = stash->{tuples};
 <pre class="p-5 font-monospace umi-text-tiny"><%= dumper $tuples if defined $tuples %></pre>
-% my $result = stash->{result};
-<pre class="p-5 font-monospace umi-text-tiny"><%= dumper $result if defined $result %></pre>
+% my $tuples_grouped = stash->{tuples_grouped};
+<pre class="p-5 font-monospace umi-text-tiny">
+Object tuples grouped by Cartesian products:
+--------------------------------------------
+  <%= dumper $tuples_grouped if defined $tuples_grouped %>
+</pre>
 
 <pre class="mt-5 umi-text-tiny text-muted"><%= dumper stash->{'mojo.validation'}->{error} if %{stash->{'mojo.validation'}->{error}} %></pre>
 
@@ -76,67 +136,6 @@
 
 <script src="/assets/js/umi-tool-modify.js"></script>
 
-%#<script>
-%# $(document).ready(function() {
-%#   // Store the original markup of the section to be cloned.
-%#   // We store the outer HTML of #to-clone BEFORE any Select2 transformation.
-%#   var originalMarkup = $('#to-clone').prop('outerHTML');
-%#
-%#   // Initialize Select2 on the original selects.
-%#   $('#to-clone .select2').select2({
-%#     placeholder: "Select or add options",
-%#     allowClear: true
-%#   });
-%#   $('#hosts').select2({
-%#     tags: true,
-%#     tokenSeparators: [',', ' '],
-%#     placeholder: "Select or add options",
-%#     allowClear: true
-%#   });
-%#
-%#   // Function to clone the section.
-%#   function cloneSection() {
-%#     // Create a clone from the stored original markup.
-%#     var $newClone = $(originalMarkup);
-%#     // Remove the container's id and add a marker class so we can identify clones.
-%#     $newClone.removeAttr('id').addClass('clone-section');
-%#     // Remove any IDs from cloned select elements to avoid duplicates.
-%#     $newClone.find('select').removeAttr('id');
-%#     // Append the cloned section to a dedicated container (or after the original).
-%#     $('#clones-container').append($newClone);
-%#     
-%#     // Reinitialize Select2 on cloned select elements.
-%#     $newClone.find('select.select2').each(function() {
-%#       $(this).select2({
-%#         placeholder: "Select or add options",
-%#         allowClear: true
-%#       });
-%#     });
-%#     // For the hosts select in the clone (if present), reinitialize with tagging.
-%#     $newClone.find('select[name="hosts"]').each(function() {
-%#       $(this).select2({
-%#         tags: true,
-%#         tokenSeparators: [',', ' '],
-%#         placeholder: "Select or add options",
-%#         allowClear: true
-%#       });
-%#     });
-%#   }
-%#
-%#   // Function to delete the last cloned section.
-%#   function deleteLastClone() {
-%#     var $clones = $('#clones-container .clone-section');
-%#     if ($clones.length > 0) {
-%#       $clones.last().remove();
-%#     }
-%#   }
-%#
-%#   // Attach click event listeners.
-%#   $('#cloneButton').on('click', cloneSection);
-%#   $('#deleteButton').on('click', deleteLastClone);
-%# });
-%#</script>
-
 <script>
  $(document).ready(function() {
 
@@ -145,13 +144,39 @@
      allowClear: true                 // Optional: allows the user to clear selection
    });
 
-   $('#hosts').select2({
+   $('.select2-hosts').select2({
      tags: true,                      // Enable tagging for custom user input
      tokenSeparators: [',', ' '],     // Allow comma and space as delimiters
      placeholder: "Select or add options", // Optional placeholder text
      allowClear: true                 // Optional: allows the user to clear selection
    });
 
+   //
+   $('#cloneButton').on('click', function () {
+     const originalMarkup = $('#to-clone-meta').prop('outerHTML');
+     const $newClone = $(originalMarkup);
+     $newClone.removeAttr('id').addClass('clone-section');
+     
+     $newClone.insertBefore('#clones-container');
+     const elementIndex = $('.clone-section').length;
+     
+     $newClone.find('[name=memberUidMeta]').attr('name', 'memberUid['+elementIndex+']').select2({
+       placeholder: "Select or add options",
+       allowClear: true
+     });
+     $newClone.find('[name=hostsMeta]').attr('name', 'hosts['+elementIndex+']').select2({
+       tags: true,
+       tokenSeparators: [',', ' '],
+       placeholder: "Select or add options",
+       allowClear: true
+     });
+
+   });
+
+   $('#deleteButton').on('click', function () {
+     $('.clone-section').last().remove();
+   });
+   
  });
 </script>
 

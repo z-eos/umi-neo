@@ -1,25 +1,26 @@
 %# -*- mode: web; eval: (follow-mode) -*-
 
-%# column affinity defines which type of objects the item belongs (can appear for), an empty means available for all
-% my $menu = {
-  % "block"    => { act => "modal",          affinity => [],              class => "disabled", ico => "fa-user-slash",   col => "danger" },
-  % "clone"   => { act => "/tool/clone",     affinity => [],              class =>         "", ico => "fa-clone",        col => "warning" },
-  % "delete"   => { act => "modal",          affinity => [],              class =>         "", ico => "fa-skull",        col => "danger" },
-  % "demo"     => { act => "",               affinity => [],              class =>         "", ico => "fa-person-chalkboard", col => "success" },
-  % "dhcp"     => { act => "/tool/dhcp",     affinity => [qw(root)],      class => "disabled", ico => "fa-ethernet",     col => "info" },
-  % "fire"     => { act => "modal",          affinity => [qw(root)],      class =>         "", ico => "fa-fire",         col => "danger" },
-  % "group"    => { act => "/profile/groups",affinity => [qw(root)],      class =>         "", ico => "fa-users-gear",   col => "warning" },
-  % "history"  => { act => "/search/common", affinity => [],              class =>         "", ico => "fa-history",      col => "info" },
-  % "image"    => { act => "/profile",       affinity => [qw(root)],      class =>         "", ico => "fa-image",        col => "warning" },
-  % "ldif"     => { act => "modal",          affinity => [],              class =>         "", ico => "fa-code",         col => "info" },
-  % "moddn"    => { act => "modal",          affinity => [qw(branch leaf)], class =>       "", ico => "fa-recycle",      col => "danger" },
-  % "modify"   => { act => "/tool/modify",   affinity => [],              class =>         "", ico => "fa-screwdriver-wrench", col => "warning" },
-  % "new_svc"  => { act => "/profile/newsvc",affinity => [qw(root)],      class =>         "", ico => "fa-file-circle-plus", col => "success" },
-  % "password" => { act => "/tool/pwdgen",   affinity => [qw(root leaf)], class =>         "", ico => "fa-fingerprint",  col => "danger" },
-  % "profile"  => { act => "/profile/$rrdn", affinity => [qw(root)],      class =>         "", ico => "fa-address-card", col => "info" },
-  % "vCard"    => { act => "/profile",       affinity => [qw(root)],      class => "disabled", ico => "fa-upload",       col => "info" },
-% };
+%# deprecated, moved to config %# column affinity defines which type of objects the item belongs (can appear for), an empty means available for all
+%# deprecated, moved to config % my $menu_old = {
+%# deprecated, moved to config   % "block"    => { act => "modal",          affinity => [],              class => "disabled", ico => "fa-user-slash",   col => "danger" },
+%# deprecated, moved to config   % "clone"   => { act => "/tool/clone",     affinity => [],              class =>         "", ico => "fa-clone",        col => "warning" },
+%# deprecated, moved to config   % "delete"   => { act => "modal",          affinity => [],              class =>         "", ico => "fa-skull",        col => "danger" },
+%# deprecated, moved to config   % "demo"     => { act => "",               affinity => [],              class =>         "", ico => "fa-person-chalkboard", col => "success" },
+%# deprecated, moved to config   % "dhcp"     => { act => "/tool/dhcp",     affinity => [qw(root)],      class => "disabled", ico => "fa-ethernet",     col => "info" },
+%# deprecated, moved to config   % "fire"     => { act => "modal",          affinity => [qw(root)],      class =>         "", ico => "fa-fire",         col => "danger" },
+%# deprecated, moved to config   % "group"    => { act => "/profile/groups",affinity => [qw(root)],      class =>         "", ico => "fa-users-gear",   col => "warning" },
+%# deprecated, moved to config   % "history"  => { act => "/search/common", affinity => [],              class =>         "", ico => "fa-history",      col => "info" },
+%# deprecated, moved to config   % "image"    => { act => "/profile",       affinity => [qw(root)],      class =>         "", ico => "fa-image",        col => "warning" },
+%# deprecated, moved to config   % "ldif"     => { act => "modal",          affinity => [],              class =>         "", ico => "fa-code",         col => "info" },
+%# deprecated, moved to config   % "moddn"    => { act => "modal",          affinity => [qw(branch leaf)], class =>       "", ico => "fa-recycle",      col => "danger" },
+%# deprecated, moved to config   % "modify"   => { act => "/tool/modify",   affinity => [],              class =>         "", ico => "fa-screwdriver-wrench", col => "warning" },
+%# deprecated, moved to config   % "new_svc"  => { act => "/profile/newsvc",affinity => [qw(root)],      class =>         "", ico => "fa-file-circle-plus", col => "success" },
+%# deprecated, moved to config   % "password" => { act => "/tool/pwdgen",   affinity => [qw(root leaf)], class =>         "", ico => "fa-fingerprint",  col => "danger" },
+%# deprecated, moved to config   % "profile"  => { act => "/profile/$rrdn", affinity => [qw(root)],      class =>         "", ico => "fa-address-card", col => "info" },
+%# deprecated, moved to config   % "vCard"    => { act => "/profile",       affinity => [qw(root)],      class => "disabled", ico => "fa-upload",       col => "info" },
+%# deprecated, moved to config % };
 
+% my $menu = app->{cfg}->{ui}->{menu};
 % my $ppl_base = app->{cfg}->{ldap}->{base}->{acc_root};
 % my $re_root_ppl = qr/^uid=[^,]+,$ppl_base$/;
 % my $is_root_ppl = $e->dn =~ /$re_root_ppl/i ? 1 : 0;
@@ -45,14 +46,16 @@
     
     % for my $item (sort(keys(%$menu))) {
       % if (
+      %# -*- for not Netgroup objects, skip item 'modify_netgr'
+      %     ( exists $menu->{$item}->{re} && $e->dn !~ /$menu->{$item}->{re}/ ) ||
       %#
-      %# -*- for base people or project, not root objects, skip item 'demo'
-      %     ( $is_root_ppl == 0 && $is_root_prj == 0 && $item eq 'demo' ) ||
+      %# -*- for base `people` or `project`, not root objects, skip item 'demo'
+      %     ( $item eq 'demo' && $is_root_ppl == 0 && $is_root_prj == 0 ) ||
       %#
-      %# -*- for not base people objects, skip item 'password'
-      %     ( ( $is_ppl == 0 || $e->dn =~ /^authorizedService=.+/ ) && $item eq 'password' ) ||
+      %# -*- for not base `people` objects, skip item 'password'
+      %     ( $item eq 'password' && ( $is_ppl == 0 || $e->dn =~ /^authorizedService=.+/ ) ) ||
       %#
-      %# -*- for base acc_root, not root objects, skip each item with the single afinity `root`
+      %# -*- for base `acc_root`, not root objects, skip each item with the single afinity `root`
       %     ( join('', @{$menu->{$item}->{affinity}}) eq 'root' && $is_root_ppl == 0) ||
       %#
       %# -*- for branch objects, skip items with non-empty affinity that doesn’t contain `branch`
@@ -68,7 +71,7 @@
 	% if ($menu->{$item}->{act} eq "modal") {
 	  <button type="button" title="" class="btn btn-sm border-0 <%= $menu->{$item}->{class} %>"
 		  value="<%= $e->dn %>" name="<%= $item %>" data-bs-toggle="modal" data-bs-target="#modal_<%= $item %><%= $i %>">
-	    <i class="fa-solid fa-fw <%= $menu->{$item}->{ico} %> text-<%= $menu->{$item}->{col} %>"></i>
+	    <i class="fa-solid fa-fw <%= $menu->{$item}->{ico} %> <%= $menu->{$item}->{col} %>"></i>
 	    <%= $item %>
 	  </button>
 	% } else {
@@ -81,7 +84,7 @@
 	  % } else {
 	    % $action = $menu->{$item}->{act};
 	  % }
-	      <form role="form" method="POST" class="injectable-form" action="<%= $action %>">
+	  <form role="form" method="POST" class="injectable-form" action="<%= $action %>">
 	    % if ( $item eq 'password' ) {
 	      <input type="hidden" name="pwd_chg_dn" value="<%= $e->dn %>">
 	      % 
@@ -91,7 +94,7 @@
 	      <input type="hidden" name="dn_to_<%= $item %>" value="<%= $e->dn %>">
 	    % }
 	    <button type="submit" title="" class="btn btn-sm border-0 <%= $menu->{$item}->{class} %>" data-order="20">
-	      <i class="fa-solid fa-fw <%= $menu->{$item}->{ico} %> text-<%= $menu->{$item}->{col} %>"></i>
+	      <i class="fa-solid fa-fw <%= $menu->{$item}->{ico} %> <%= $menu->{$item}->{col} %>"></i>
 	      <%= $item =~ s/_/ /gr %>
 	    </button>
 	  </form>

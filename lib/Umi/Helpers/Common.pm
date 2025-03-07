@@ -951,6 +951,48 @@ data taken, generally, from
 		   return $html;
 		 });
 
+=head2 h_nested_params
+
+helper to convert parameters with names like `hosts[0]` into a nested array structure
+
+=cut
+
+    $app->helper(
+		 h_nested_params => sub {
+		   my $c = shift;
+		   my $params = $c->req->params->to_hash;
+		   my %nested;
+
+		   for my $key (keys %$params) {
+		     if ($key =~ /^(\w+)\[(\d+)\]$/) {
+		       if ( ref($params->{$key}) eq 'ARRAY' ) {
+			 # For keys like hosts[0], memberUid[1], etc.
+			 $nested{$1}[$2] = $params->{$key};
+		       } else {
+			 push @{$nested{$1}[$2]}, $params->{$key};
+		       }
+		     } else {
+		       $nested{$key} = $params->{$key};
+		     }
+		   }
+		   return \%nested;
+		 });
+
+=head2 h_is_empty_nested_arr
+
+verify that an array reference is equal to `[ [] ]`
+
+=cut
+
+    $app->helper(
+		 h_is_empty_nested_arr => sub {
+		   my ($self, $arr) = @_;
+		   return ref($arr) eq 'ARRAY'
+		     && scalar(@$arr) == 1
+		     && ref($arr->[0]) eq 'ARRAY'
+		     && scalar(@{ $arr->[0] }) == 0;
+		 });
+
 # =head2 h_domains_to_hash
 
 # convert an array of domain names into a hash where the keys are the

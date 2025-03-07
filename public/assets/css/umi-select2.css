@@ -1,3 +1,5 @@
+/* -*- mode: css; eval: (follow-mode t) -*-
+
 /* Main container for Select2 single selection */
 .select2-container .select2-selection--single {
   background-color: var(--bs-body-bg); /* Background color for the selection area */
@@ -103,14 +105,6 @@
     color: var(--bs-body-color);               /* Ensure the text color remains consistent */
 }
 
-.select2-selection__choice__remove {
-    color: var(--bs-body-color) !important;    /* Color of the "×" button */
-    opacity: 0.75;
-}
-.select2-selection__choice__remove:hover {
-    color: var(--bs-danger) !important;        /* Change color on hover to indicate action */
-}
-
 .select2-container .select2-selection__arrow b {
     border-color: var(--bs-gray-500) transparent transparent transparent; /* Subtle arrow color */
 }
@@ -121,9 +115,19 @@
 }
 
 /* clear button ("x" icon) on the select box when a value is selected */
+
+.select2-selection__choice__remove {
+    color: var(--bs-tertiary-color) !important;    /* Color of the "×" button */
+    opacity: 0.75;
+}
+
+.select2-selection__choice__remove:hover {
+    color: var(--bs-danger) !important;        /* Change color on hover to indicate action */
+}
+
 .select2-selection__clear {
   display: inline-flex;
-  color: var(--bs-body-color) !important;
+  color: var(--bs-tertiary-color) !important;
   cursor: auto;
 }
 

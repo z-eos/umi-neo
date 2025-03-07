@@ -389,38 +389,90 @@ sub all_groups ($self) {
 
 =head2 all_users
 
-get all active (not disabled) users list (root objects only)
+get all active (not disabled) users list of categories
 
-return array/ref of users arrayref and error (if any)
+    root           root objects only
+    root_and_ssh   root objects and ssh service accounts
+    ssh            ssh service accounts only
+    web            web service accounts only
+
+return all, unique users arrayref and error (if any)
 
 =cut
 
-sub all_users ($self) {
-  my ($search_arg, $mesg, $res, $err);
-  $search_arg = { base => $self->{app}->{cfg}->{ldap}->{base}->{acc_root},
-		  scope => 'one',
-		  filter => "(&(uid=*)(!(gidNumber=" . $self->{app}->{cfg}->{ldap}->{defaults}->{group_blocked_gidnumber} . ")))",
-		  attrs => ['givenName', 'sn', 'uid'] };
-  # $self->h_log($search_arg);
-  $mesg = $self->search( $search_arg );
+sub all_users {
+  my ($self, $args) = @_;
+  my $arg = { with => $args->{with} // 'root' };
+  my $o = {
+	   root => {
+		    base   => $self->{app}->{cfg}->{ldap}->{base}->{acc_root},
+		    filter => sprintf("(&(uid=*)(!(gidNumber=%s))(!(objectClass=authorizedServiceObject)))",
+				      $self->{app}->{cfg}->{ldap}->{defaults}->{group_blocked_gidnumber}),
+		    scope  => 'sub',
+		    attrs  => [qw(givenName sn uid)]
+		   },
+	   root_and_ssh => {
+			    base   => $self->{app}->{cfg}->{ldap}->{base}->{acc_root},
+			    filter => sprintf("(|(&(uid=*)(!(gidNumber=%s))(!(objectClass=authorizedServiceObject)))(&(objectClass=posixAccount)(authorizedService=ssh-acc@*)))",
+					      $self->{app}->{cfg}->{ldap}->{defaults}->{group_blocked_gidnumber}),
+			    scope  => 'sub',
+			    attrs  => [qw(givenName sn uid)]
+			},
+	   ssh => {
+		   base => $self->{app}->{cfg}->{ldap}->{base}->{acc_root},
+		   filter => "(&(objectClass=posixAccount)(authorizedService=ssh-acc@*))",
+		   scope => 'sub',
+		   attrs => [qw(givenName sn uid)]
+		  },
+	   web => {
+		   base => $self->{app}->{cfg}->{ldap}->{base}->{acc_root},
+		   filter => "(&(objectClass=simpleSecurityObject)(authorizedService=ssh-acc@*))",
+		   scope => 'sub',
+		   attrs => ['uid']
+		  },
+	  };
+  my ($mesg, $res, $err, @users);
+  $self->{app}->h_log($o->{$arg->{with}});
+  $mesg = $self->search( $o->{$arg->{with}} );
   if ( $mesg->code && $mesg->code != 32 ) {
-    $self->{app}->h_log( $self->{app}->h_ldap_err($mesg, $search_arg) );
-    $err = $self->{app}->h_ldap_err($mesg, $search_arg);
+    $self->{app}->h_log( $self->{app}->h_ldap_err($mesg, $o->{$arg->{with}}) );
+    $err = $self->{app}->h_ldap_err($mesg, $o->{$arg->{with}});
   } else {
-    my ($i, $l,$r);
+    # $self->{app}->h_log( $mesg->as_struct );
+    my ($i, %seen, $res);
+    # $res = [
+    # 	    map {
+    # 	      $i = sprintf( "%s %s (%s)",
+    # 			    $_->get_value('sn') // '',
+    # 			    $_->get_value('givenName') // '',
+    # 			    $_->get_value('uid') );
+
+    # 	      utf8::decode($i) if ! utf8::is_utf8($i);
+
+    # 	      [ $i => $_->get_value('uid') ]
+
+    # 	    } $mesg->sorted('sn')
+    # 	   ];
     $res = [
 	    map {
-	      $i = sprintf("%s %s",
-			   $_->get_value('sn') // '',
-			   $_->get_value('givenName') // '');
-	      utf8::decode($i) if ! utf8::is_utf8($i);
-
-	      [ $i => $_->get_value('uid') ]
-
+	      my $sn  = $_->get_value('sn') // '';
+	      my $gn  = $_->get_value('givenName') // '';
+	      my $uid = $_->get_value('uid');
+	      my $i   = sprintf("%s %s (%s)", $sn, $gn, $uid);
+	      utf8::decode($i) unless utf8::is_utf8($i);
+	      # $self->{app}->h_log( $i );
+	      [ $i => $uid ]
+	    }
+	    grep {
+	      my $key = sprintf("%s|%s|%s", $_->get_value('sn') // '', $_->get_value('givenName') // '', $_->get_value('uid'));
+	      !$seen{$key}++
 	    } $mesg->sorted('sn')
 	   ];
+    # $self->{app}->h_log( $res );
+    @users = @$res;
   }
-  return wantarray ? ( $res, $err ) : [ $res, $err ];
+  # $self->{app}->h_log( \@users );
+  return wantarray ? ( \@users, $err ) : [ \@users, $err ];
 }
 
 sub delete {
