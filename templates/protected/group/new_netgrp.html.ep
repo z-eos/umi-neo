@@ -10,6 +10,10 @@
 % my $em = stash->{emploees};
 %= form_for '/netgroup/new' => {class => "form-horizontal"} => (method => 'POST') => begin
 
+  % if ( defined $dn_to_modify_netgr ) {
+    %= hidden_field dn_to_modify_netgr => $dn_to_modify_netgr
+  % }
+  
   % param cn => stash->{cn} unless param 'cn';
   <div class="row mb-3">
     %= label_for cn => 'CN', class => 'col-sm-2 col-form-label text-end fw-bold text-uppercase'
@@ -42,6 +46,7 @@
   % my ($hosts_orig, $hosts, $memberUid_orig, $memberUid);
 
   % $hosts = stash->{hosts};
+  % $hosts = [[]] if ! defined $hosts;
   % $hosts_orig = stash->{hosts_orig};
   % $memberUid = stash->{memberUid};
   % $memberUid_orig = stash->{memberUid_orig};
@@ -110,14 +115,15 @@
 
 % end
 
-% my $tuples = stash->{tuples};
-<pre class="p-5 font-monospace umi-text-tiny"><%= dumper $tuples if defined $tuples %></pre>
-% my $tuples_grouped = stash->{tuples_grouped};
-<pre class="p-5 font-monospace umi-text-tiny">
-Object tuples grouped by Cartesian products:
---------------------------------------------
-  <%= dumper $tuples_grouped if defined $tuples_grouped %>
-</pre>
+%# % my $attrs = stash->{attrs};
+%# <pre class="p-5 font-monospace umi-text-tiny"><%= dumper $attrs if defined $attrs %></pre>
+%# 
+%# % my $tuples_grouped = stash->{tuples_grouped};
+%# <pre class="p-5 font-monospace umi-text-tiny">
+%# Object tuples grouped by Cartesian products:
+%# --------------------------------------------
+%#   <%= dumper $tuples_grouped if defined $tuples_grouped %>
+%# </pre>
 
 <pre class="mt-5 umi-text-tiny text-muted"><%= dumper stash->{'mojo.validation'}->{error} if %{stash->{'mojo.validation'}->{error}} %></pre>
 

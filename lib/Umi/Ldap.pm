@@ -432,7 +432,7 @@ sub all_users {
 		  },
 	  };
   my ($mesg, $res, $err, @users);
-  $self->{app}->h_log($o->{$arg->{with}});
+  # $self->{app}->h_log($o->{$arg->{with}});
   $mesg = $self->search( $o->{$arg->{with}} );
   if ( $mesg->code && $mesg->code != 32 ) {
     $self->{app}->h_log( $self->{app}->h_ldap_err($mesg, $o->{$arg->{with}}) );

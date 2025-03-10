@@ -73,10 +73,8 @@ sub new_netgrp ($self) {
 
   my $ldap = Umi::Ldap->new( $self->{app}, $self->session('uid'), $self->session('pwd') );
 
-  my ($i, $l, $r, $memberUid, $hosts, $err, $msg, $entry, $search_arg, @tuples, @t);
+  my ($i, $l, $r, $memberUid, $hosts, $err, $msg, $entry, $search_arg, @tuples, @t, $attrs);
   ($memberUid, $err) = $ldap->all_users({with => 'root_and_ssh'});
-  $self->h_log($memberUid);
-  $self->h_log($err);
   push @{$debug{$err->{status}}}, $err->{message} if defined $err;
   undef $err;
   my %memberUid_hash = map { $_->[1] => $_->[0] } @$memberUid;
@@ -90,64 +88,66 @@ sub new_netgrp ($self) {
 		hosts => [[]],
 		memberUid_orig => $memberUid,
 		hosts_orig => $hosts );
-  $self->stash( host => $p->{host} ) if exists $p->{host};
 
   if ( ! exists $p->{dn_to_modify_netgr} ) {
-
-    ### ---[ start of new object creation ]-------------------------------
+    ### ---[ new object creation ]-------------------------------
 
     my $v = $self->validation;
     return $self->render(template => 'protected/group/new_netgrp') unless $v->has_data;
 
     my $re_cn = qr/^[[:alnum:]_-]+$/;
     $v->required('cn')->like($re_cn);
+    # $self->h_log($v->input);
     $v->error( cn => ['ASCII alnum characters only'] ) if $v->error('cn');
-    $v->required('memberUid');
-    $v->error( hosts => ['can not be empty'] ) if ! exists $p->{hosts} && ! exists $p->{host};
+    $v->required('memberUid[0]');
+    $v->error( 'memberUid[0]' => ['can not be empty'] ) if ! $self->h_is_empty_nested_arr($memberUid);
+    $v->required('hosts[0]');
+    $v->error( 'hosts[0]' => ['can not be empty'] ) if ! $self->h_is_empty_nested_arr($hosts);
 
     $i = 0;
     foreach my $n (@{$p->{memberUid}}) {
       @t = map {
 	my ($hostname, $domain) = split /\./, $_, 2;
 	map {
-	  sprintf("%s,%s,%s", $hostname, $_, $domain)
+	  sprintf("(%s,%s,%s)", $hostname, $_, $domain)
 	} @{$p->{memberUid}->[$i]} }
 	@{$p->{hosts}->[$i]};
       @tuples = (@tuples, @t);
       $i++;
     }
 
-    # my $attrs = {
-    # 	       objectClass => $self->{app}->{cfg}->{ldap}->{objectClass}->{netgroup},
-    # 	       cn => $p->{cn},
-    # 	       memberUid => $p->{memberUid}
-    # 	      };
-    # my $gn = $ldap->last_num($self->{app}->{cfg}->{ldap}->{base}->{group}, '(cn=*)', 'gidNumber');
-    # $self->h_log($attrs);
+    $attrs = {
+	      objectClass => $self->{app}->{cfg}->{ldap}->{objectClass}->{netgroup},
+	      cn => $p->{cn},
+	      nisNetgroupTriple => \@tuples
+	     };
 
-    # my $msg = $ldap->add(sprintf("cn=%s,%s", $p->{cn}, $self->{app}->{cfg}->{ldap}->{base}->{group}),
-    # 		       $attrs);
-    # push @{$debug{$msg->{status}}}, $msg->{message};
+    $msg = $ldap->add(sprintf("cn=%s,ou=access,%s", $p->{cn}, $self->{app}->{cfg}->{ldap}->{base}->{netgroup}),
+		      $attrs);
+    push @{$debug{$msg->{status}}}, $msg->{message};
 
-    ### ---[ stop  of new object creation ]-------------------------------
+    ($hosts, $err) = $ldap->all_hosts;
+    push @{$debug{$err->{status}}}, $err->{message} if defined $err;
+    undef $err;
 
-    $self->h_log(\@tuples);
-    $self->stash( tuples => \@tuples,
+    # $self->h_log($p);
+    $self->stash( attrs => $attrs,
 		  memberUid => $p->{memberUid},
-		  hosts => $p->{hosts} );
+		  hosts => $p->{hosts},
+		  hosts_orig => $hosts );
 
   } else {
+    ### ---[ object modification (Cartesian product grouping) ]------------------------
 
     $search_arg = { base => $p->{dn_to_modify_netgr}, scope => 'base' };
     $msg = $ldap->search( $search_arg );
     $self->h_log( $self->h_ldap_err($msg, $search_arg) ) if $msg->code;
     $entry = $msg->entry;
 
-    ### ---[ start of Cartesian product grouping ]------------------------
-
     #- STEP1: Build a mapping of `hostname.domain` to `user`s
     my %host_to_users;
-    for my $triple ( @{$entry->get_value('nisNetgroupTriple', asref => 1)} ) {
+    my $nisNetgroupTriple = $entry->get_value('nisNetgroupTriple', asref => 1);
+    for my $triple ( @$nisNetgroupTriple ) {
       my ($hostname, $user, $domain) = split /,/, substr($triple,1,-1);
       my $host_domain = "$hostname.$domain";
       push @{ $host_to_users{$host_domain} }, { user => $user, host => $hostname, domain => $domain };
@@ -161,13 +161,25 @@ sub new_netgrp ($self) {
       push @{ $grouped{$key} }, @{ $host_to_users{$host_domain} };
     }
 
-    #- STEP3: Convert to the required flat format
+    #- STEP3: Convert to a flat format to be compared with data from LDAP object
     my @tuples_grouped = map {
-      [ map { "$_->{host},$_->{user},$_->{domain}" } @$_ ]
+      map { "($_->{host},$_->{user},$_->{domain})" } @$_
     } values %grouped;
-    # $self->h_log(\%grouped);
+    # $self->h_log(\@tuples_grouped);
 
-    ### ---[ stop  of Cartesian product grouping ]------------------------
+    if ( exists $p->{memberUid} ) {
+      $i = 0;
+      foreach my $n (@{$p->{memberUid}}) {
+	@t = map {
+	  my ($hostname, $domain) = split /\./, $_, 2;
+	  map {
+	    sprintf("(%s,%s,%s)", $hostname, $_, $domain)
+	  } @{$p->{memberUid}->[$i]} }
+	  @{$p->{hosts}->[$i]};
+	@tuples = (@tuples, @t);
+	$i++;
+      }
+    }
 
     my @keys = sort keys %grouped;
     my @tuples_users = map {
@@ -185,57 +197,66 @@ sub new_netgrp ($self) {
     # $self->h_log(\@tuples_users);
     # $self->h_log(\@tuples_hosts);
 
-    ### ---[ start object users/hosts existence check ]-----------------
+    ### ---[ start existence check for users/hosts  ]-----------------
 
-    my %object_unique_tuples_users;
-    my %object_unique_tuples_hosts;
-
-    # Iterate over all groups (values of %grouped)
+    # Build uniqueness hashes for users and hosts
+    my (%object_unique_tuples_users, %object_unique_tuples_hosts);
     for my $group (values %grouped) {
-      # Iterate over each record in the group
-      for my $entry (@$group) {
-        $object_unique_tuples_users{$entry->{user}} = 1;
-        $object_unique_tuples_hosts{"$entry->{host}.$entry->{domain}"} = 1;
+      $object_unique_tuples_users{ $_->{user} } = 1 for @$group;
+      $object_unique_tuples_hosts{ "$_->{host}.$_->{domain}" } = 1 for @$group;
+    }
+
+    # Extract sorted unique keys
+    my @all_object_unique_tuples_users = sort keys %object_unique_tuples_users;
+    my @all_object_unique_tuples_hosts = sort keys %object_unique_tuples_hosts;
+
+    # Push warnings for users not in %memberUid_hash
+    my @memberUid_warnings = map {
+      sprintf("no active user <mark>%s</mark> was found, corresponding tuple will be removed", $_)
+    } grep { ! exists $memberUid_hash{$_} } @all_object_unique_tuples_users;
+    push @{$debug{warn}}, @memberUid_warnings if @memberUid_warnings;
+
+    # Push warnings for hosts not in %hosts_hash
+    my @hosts_warnings = map {
+      sprintf("no host <mark>%s</mark> was found, corresponding tuple will be removed", $_)
+    } grep { ! exists $hosts_hash{$_} } @all_object_unique_tuples_hosts;
+    push @{$debug{warn}}, @hosts_warnings if @hosts_warnings;
+
+    ### ---[ stop  existence check for users/hosts  ]-----------------
+
+    # if form was submited
+    $self->h_log($p);
+    if ( keys %$p > 1 ) { # no data ==> no changes
+      my $diff = $self->h_array_diff($nisNetgroupTriple, \@tuples);
+      # $self->h_log($diff);
+      my ($add, $delete, $changes);
+      if ( @{$diff->{added}} ) {
+	push @$add, nisNetgroupTriple => $diff->{added};
+	push @$changes, add => $add;
       }
-    }
+      if ( @{$diff->{removed}} ) {
+	push @$delete, nisNetgroupTriple => [];
+	push @$changes, delete => $delete;
+      }
 
-    my @all_object_unique_tuples_users  = sort keys %object_unique_tuples_users;
-    my @all_object_unique_tuples_hosts  = sort keys %object_unique_tuples_hosts;
+      if ($changes) {
+	$self->h_log($changes);
+	$msg = $ldap->modify($entry->dn, $changes);
+	$self->stash(debug => {$msg->{status} => [ $msg->{message} ]});
+      }
 
-    foreach (@all_object_unique_tuples_users) {
-      push @{$debug{warn}}, sprintf("no active user <mark>%s</mark> was found, corresponding tuple will be ignored", $_)
-	       if ! exists $memberUid_hash{$_};
-    }
-    foreach (@all_object_unique_tuples_hosts) {
-      push @{$debug{warn}}, sprintf("no host <mark>%s</mark> was found, corresponding tuple will be ignored", $_)
-	       if ! exists $hosts_hash{$_};
-    }
+      ($hosts, $err) = $ldap->all_hosts;
+      push @{$debug{$err->{status}}}, $err->{message} if defined $err;
+      undef $err;
 
-    ### ---[ start object users/hosts existence check ]-----------------
+      $self->stash( hosts_orig => $hosts );
+    }
 
     $self->stash( dn_to_modify_netgr => $p->{dn_to_modify_netgr},
 		  cn => $entry->get_value('cn'),
 		  tuples_grouped => \@tuples_grouped,
 		  memberUid => \@tuples_users,
 		  hosts => \@tuples_hosts );
-
-    # my $attrs = {
-    # 	       objectClass => $self->{app}->{cfg}->{ldap}->{objectClass}->{group},
-    # 	       cn => $p->{cn},
-    # 	       memberUid => $p->{memberUid}
-    # 	      };
-    # my $gn = $ldap->last_num($self->{app}->{cfg}->{ldap}->{base}->{group}, '(cn=*)', 'gidNumber');
-    # if ( $gn->[1] ) {
-    #   $self->h_log($gn->[1]);
-    #   $attrs->{gidNumber} = undef;
-    # } else {
-    #   $attrs->{gidNumber} = $gn->[0] + 1;
-    # }
-    # $self->h_log($attrs);
-
-    # my $msg = $ldap->add(sprintf("cn=%s,%s", $p->{cn}, $self->{app}->{cfg}->{ldap}->{base}->{group}),
-    # 		       $attrs);
-    # push @{$debug{$msg->{status}}}, $msg->{message};
 
   }
 

@@ -706,32 +706,32 @@ END_INPUT
 		     return $p->{return};
 		 });
 
-    ## HASH DIFF
-    #
-    # 1. It takes two hash references as input: the original hash and
-    # the modified hash.
-    #
-    # 2. It iterates through the keys of the original hash to find
-    # removed and changed keys.
-    #
-    # 3. It then iterates through the keys of the modified hash to
-    # find added keys.
-    #
-    # 4. For changed keys, it stores both the old and new values.
-    #
-    # 5. It returns a hash reference containing four hashes: removed,
-    # added, changed, and unchanged keys and their values.
-    #
-    # [
-    #     [0] "add",
-    #     [1] [
-    #             [0] "roomNumber",
-    #             [1] 2
-    #         ]
-    # ]
+=head2 h_hash_diff
 
+    1. It takes two hash references as input: the original hash and
+    the modified hash.
 
-    
+    2. It iterates through the keys of the original hash to find
+    removed and changed keys.
+
+    3. It then iterates through the keys of the modified hash to
+    find added keys.
+
+    4. For changed keys, it stores both the old and new values.
+
+    5. It returns a hash reference containing four hashes: removed,
+    added, changed, and unchanged keys and their values.
+
+    [
+        [0] "add",
+        [1] [
+                [0] "roomNumber",
+                [1] 2
+            ]
+    ]
+
+=cut
+
     $app->helper(
 		 h_hash_diff => sub {
 		   my ($self, $original_ref, $modified_ref) = @_;
@@ -795,24 +795,27 @@ END_INPUT
 			  };
 		 });
 
-    ## ARRAY DIFF
-    #
-    # 1. It takes two array references as input: the original array and
-    # the modified array.
-    #
-    # 2. It creates hash maps of both arrays for efficient lookups.
-    #
-    # 3. It finds removed elements by checking which elements from the
-    # original array don't exist in the modified array.
-    #
-    # 4. It finds added elements by checking which elements from the
-    # modified array don't exist in the original array.
-    #
-    # 5. It finds unchanged elements by checking which elements from the
-    # original array still exist in the modified array.
-    #
-    # 6. It returns a hash reference containing three arrays: removed,
-    # added, and unchanged elements.
+=head2 h_array_diff
+
+    1. It takes two array references as input: the original array and
+    the modified array.
+
+    2. It creates hash maps of both arrays for efficient lookups.
+
+    3. It finds removed elements by checking which elements from the
+    original array don't exist in the modified array.
+
+    4. It finds added elements by checking which elements from the
+    modified array don't exist in the original array.
+
+    5. It finds unchanged elements by checking which elements from the
+    original array still exist in the modified array.
+
+    6. It returns a hash reference containing three arrays: removed,
+    added, and unchanged elements.
+
+=cut
+
     $app->helper(
 		 h_array_diff => sub {
 		     my ($self, $original_ref, $modified_ref) = @_;
@@ -955,6 +958,8 @@ data taken, generally, from
 
 helper to convert parameters with names like `hosts[0]` into a nested array structure
 
+empty parameters are ignored
+
 =cut
 
     $app->helper(
@@ -972,7 +977,7 @@ helper to convert parameters with names like `hosts[0]` into a nested array stru
 			 push @{$nested{$1}[$2]}, $params->{$key};
 		       }
 		     } else {
-		       $nested{$key} = $params->{$key};
+		       $nested{$key} = $params->{$key} if $params->{$key} ne '';
 		     }
 		   }
 		   return \%nested;
@@ -987,6 +992,10 @@ verify that an array reference is equal to `[ [] ]`
     $app->helper(
 		 h_is_empty_nested_arr => sub {
 		   my ($self, $arr) = @_;
+		   # $self->h_log(ref($arr) eq 'ARRAY'
+		   #   && scalar(@$arr) == 1
+		   #   && ref($arr->[0]) eq 'ARRAY'
+		   #   && scalar(@{ $arr->[0] }) == 0);
 		   return ref($arr) eq 'ARRAY'
 		     && scalar(@$arr) == 1
 		     && ref($arr->[0]) eq 'ARRAY'
