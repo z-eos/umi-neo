@@ -197,7 +197,7 @@ sub new_netgrp ($self) {
     # $self->h_log(\@tuples_users);
     # $self->h_log(\@tuples_hosts);
 
-    ### ---[ start existence check for users/hosts  ]-----------------
+    ### ---[ start existence check for users/hosts ]--------------------
 
     # Build uniqueness hashes for users and hosts
     my (%object_unique_tuples_users, %object_unique_tuples_hosts);
@@ -212,19 +212,19 @@ sub new_netgrp ($self) {
 
     # Push warnings for users not in %memberUid_hash
     my @memberUid_warnings = map {
-      sprintf("no active user <mark>%s</mark> was found, corresponding tuple will be removed", $_)
+      sprintf("no active user <mark>%s</mark> was found, corresponding tuple will be removed on submit", $_)
     } grep { ! exists $memberUid_hash{$_} } @all_object_unique_tuples_users;
     push @{$debug{warn}}, @memberUid_warnings if @memberUid_warnings;
 
     # Push warnings for hosts not in %hosts_hash
     my @hosts_warnings = map {
-      sprintf("no host <mark>%s</mark> was found, corresponding tuple will be removed", $_)
+      sprintf("no host <mark>%s</mark> was found, corresponding tuple will be removed on submit", $_)
     } grep { ! exists $hosts_hash{$_} } @all_object_unique_tuples_hosts;
     push @{$debug{warn}}, @hosts_warnings if @hosts_warnings;
 
-    ### ---[ stop  existence check for users/hosts  ]-----------------
+    ### ---[ stop  existence check for users/hosts ]--------------------
 
-    # if form was submited
+    # on form submit
     $self->h_log($p);
     if ( keys %$p > 1 ) { # no data ==> no changes
       my $diff = $self->h_array_diff($nisNetgroupTriple, \@tuples);

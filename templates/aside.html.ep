@@ -116,7 +116,7 @@
 	<ul class="font-monospace ldap-tree text-secondary" id="ldap-tree">
 	  
           <li class="">
-	    <button type="button" class="btn btn-secondary btn-sm" title="re/load tree">
+	    <button type="button" class="btn btn-secondary btn-sm mb-2" title="re/load tree">
               <i class="fa-solid fa-arrows-rotate"
 		 :class="{ 'fa-spin': loading }"
 		 @click.exact="getTreeData()"

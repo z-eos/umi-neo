@@ -1,7 +1,7 @@
 %# -*- mode: web; eval: (follow-mode) -*-
 
 <h2 class="mt-3">
-    <i class="fa-solid fa-circle-info mr-3 text-muted"></i>
+    <i class="fa-solid fa-circle-info me-3 text-muted"></i>
     Sysinfo <small><em class="text-muted font-monospace fs-6">
     </em></small>
 </h2>

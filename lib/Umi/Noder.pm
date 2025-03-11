@@ -85,7 +85,7 @@ sub insert {
   my $arg;
   if ($#rest >= 0) {
     while (defined($arg = pop @rest)) {
-      $dn_cur                   = $found->dn;
+      $dn_cur                   = $found->dn // '';
       $found->{subnode}{$arg}   = Umi::Noder->new();
       $found                    = $found->{subnode}{$arg};
       $dn_cur eq '' ? $found->dn($arg) : $found->dn($arg . ',' . $dn_cur);

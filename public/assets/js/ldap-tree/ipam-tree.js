@@ -170,7 +170,16 @@ var ipamTree = new Vue({
     el: '#ipam-tree',
 
     data: function () {
-        return { ipamtree: {},
+	let ipamtree;
+	try {
+	    ipamtree = JSON.parse(localStorage.getItem('ipamTree'));
+	    if ( ! ipamtree ) {
+		ipamtree = {};
+	    }
+	} catch {
+	    ipamtree = {};
+	}
+	return { ipamtree: ipamtree,
 		 loading: false }
     },
     
@@ -204,6 +213,8 @@ var ipamTree = new Vue({
 		    console.debug('IPA Data received: ', typeof data);
 		    // Assuming a function to process the data
 		    sortIpaRecursively(data);
+		    // localStorage stuff
+		    localStorage.setItem('ipamTree', JSON.stringify(data));
 		    // Update the tree with the new data
 		    _this.ipamtree = data;
 		    _this.hover = false;

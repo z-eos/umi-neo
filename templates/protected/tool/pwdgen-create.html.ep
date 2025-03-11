@@ -317,5 +317,5 @@
   <input type="hidden" name="pwd_chg_rdn" value="<%= stash('pwd_chg_rdn') %>">
   <input type="hidden" name="pwd_chg_svc" value="<%= stash('pwd_chg_svc') %>">
 
-  <input type="submit" name="aux_submit" id="aux_submit" value="Submit" class="btn btn-success my-3 mr-2 fw-bold text-uppercase">	
+  <input type="submit" name="aux_submit" id="aux_submit" value="Submit" class="btn btn-success my-3 me-2 fw-bold text-uppercase">	
 </form>

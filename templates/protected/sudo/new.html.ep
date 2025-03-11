@@ -3,6 +3,9 @@
 <h3 class="<%= app->{cfg}->{ui}->{page}->{header}->{css} %>">
   <i class="fas fa-user-shield fa-lg me-3 text-muted"></i>
   New Sudo Rule <small><em class="text-muted font-monospace"></em></small>
+  <a href="https://www.sudo.ws/docs/man/sudoers.ldap.man/" class="btn btn-link text-info" target="_blank" title="options manual">
+    <i class="fa-solid fa-circle-exclamation"></i>
+  </a>
 </h3>
 <hr>
 
@@ -76,7 +79,7 @@
 	      <i class="fa-solid fa-fw fa-clone text-success-emphasis"></i>
 	    </button>
 	  </span>
-	  <input type="text" name="sudoCommand" class="form-control" value="<%= $_ %>">
+	  <input type="text" name="sudoCommand" class="form-control" value="<%= $_ %>" placeholder="/path/to/* or /path/bin/tool">
 	  <span class="input-group-btn">
 	    <!-- Delete Button -->
 	    <button class="btn btn-secondary btn btn-delete element-delete" type="button" title="Click to delete host">
@@ -89,7 +92,8 @@
   </div>
 
   <div class="row mb-3" title="">
-    %= label_for sudoOption => 'sudoOption', class => 'col-sm-2 col-form-label text-end fw-bold text-uppercase', title => stash->{schema}->{sudoOption}->{desc}
+    %# = label_for sudoOption => 'sudoOption', class => 'col-sm-2 col-form-label text-end fw-bold text-uppercase', title => stash->{schema}->{sudoOption}->{desc}
+    <label class="col-sm-2 col-form-label text-end fw-bold text-uppercase" for="sudoOption" title="Options(s) followed by sudo">sudoOption <a href="https://www.sudo.ws/docs/man/sudoers.man/#SUDOERS_OPTIONS" class="btn btn-link text-info" target="_blank" title="options manual"><i class="fa-solid fa-circle-exclamation"></i></a></label>
     <div class="col-sm-10">
       % foreach (@{stash->{sudoOption}}) {
 	<div class="input-group input-group entry-removable entry-at-least-one">

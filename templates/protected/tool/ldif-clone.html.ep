@@ -1,7 +1,7 @@
 %# -*- mode: web; eval: (follow-mode); -*-
 
 <h2 class="<%= app->{cfg}->{ui}->{page}->{header}->{css} %>">
-  <i class="fas fa-file-import fa-lg mr-3 text-muted"></i>
+  <i class="fas fa-file-import fa-lg me-3 text-muted"></i>
   LDIF to import <small><em class="text-muted font-monospace umi-text-tiny">( clone of <%= $dn_to_clone %> )</em></small>
 </h2>
 <hr>

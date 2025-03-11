@@ -4,7 +4,7 @@
 % use Mojo::Util qw(html_attr_unescape);
 
 <h2 class="my-5">
-  <i class="fa-solid fa-file-code mr-3 text-muted"></i>
+  <i class="fa-solid fa-file-code me-3 text-muted"></i>
   Modify DN: <small><em class="align-middle text-muted font-monospace fs-6">
     <%= $entry->dn %>
   </em></small>

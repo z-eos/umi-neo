@@ -180,7 +180,7 @@
 	      </li>
 	      <li class="nav-item">
 		<a class="nav-link btn btn-link text-secondary text-start" href="/netgroup/new" tabindex="3">
-		  <i class="fa-solid fa-fw fa-user-friends"> </i>
+		  <i class="fa-solid fa-fw fa-users-line"> </i>
 		  NetGr
 		</a>
 	      </li>

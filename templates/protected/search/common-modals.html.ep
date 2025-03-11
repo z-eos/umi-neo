@@ -93,7 +93,7 @@
       <div class="modal-content border border-<%= $menu->{$it}->{col} %> border-1">
 	  <div class="modal-header bg-<%= $menu->{$it}->{col} %> row m-0">
 	      <h4 class="modal-title mb-3" id="modal_<%= $it %><%= $i %>_label">
-		  <i class="fa <%= $menu->{$it}->{ico} %> mr-3"></i>
+		  <i class="fa <%= $menu->{$it}->{ico} %> me-3"></i>
 		  Block DN: <b><%= $dn %></b>
 	      </h4>
 	  </div>
@@ -120,7 +120,7 @@
     <div class="modal-content border border-<%= $menu->{$it}->{col} %> border-1">
       <div class="modal-header bg-<%= $menu->{$it}->{col} %> row m-0">
 	<h4 class="modal-title mb-3" id="modal_<%= $it %><%= $i %>_label">
-	  <i class="fa <%= $menu->{$it}->{ico} %> mr-3"></i>
+	  <i class="fa <%= $menu->{$it}->{ico} %> me-3"></i>
 	  Modify DN:<br><b><%= $dn %></b>
 	</h4>
       </div>
@@ -166,7 +166,7 @@
 	<div class="modal-content border border-<%= $menu->{$it}->{col} %> border-1">
 	    <div class="modal-header bg-<%= $menu->{$it}->{col} %> row m-0">
 		<h4 class="modal-title mb-3" id="modal_<%= $it %><%= $i %>_label">
-		    <i class="fa <%= $menu->{$it}->{ico} %> mr-3"></i>
+		    <i class="fa <%= $menu->{$it}->{ico} %> me-3"></i>
 		    LDIF of DN: <b><%= $dn %></b>
 		</h4>
 	    </div>

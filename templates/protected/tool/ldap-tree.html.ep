@@ -44,13 +44,13 @@
   <script type="text/x-template" id="item-template">
     <li>
       <div class="ldap-tree-point">
-	<div class="umi-text-xs mr-1" v-if="isFolder"
+	<div class="umi-text-xs me-1" v-if="isFolder"
 	     @click.exact="toggleItem"
 	     @click.ctrl.exact="toggleTree">
 	  <i class="fa-solid fa-plus-circle" v-if="!item.isOpen"></i>
 	  <i class="fa-solid fa-minus-circle"              v-if="item.isOpen"></i>
 	</div>
-	<div class="umi-text-xs mr-1" v-if="!isFolder"> 
+	<div class="umi-text-xs me-1" v-if="!isFolder"> 
 	  <i class="fa-solid fa-minus"></i>
 	</div>
 	<div :class="{'fw-bold': item.isOpen, '': !item.isOpen}"

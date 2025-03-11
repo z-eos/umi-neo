@@ -2,7 +2,7 @@
 
 % my $dn_to_modify_netgr = stash->{dn_to_modify_netgr};
 <h3 class="fw-bold p-5">
-  <i class="fas fa-user-friends fa-lg me-3 text-muted"></i>
+  <i class="fas fa-users-line fa-lg me-3 text-muted"></i>
   <%= defined $dn_to_modify_netgr ? 'Modify' : 'New' %> NetGroup <small><em class="text-muted font-monospace"></em></small>
 </h3>
 <hr>
@@ -146,15 +146,15 @@
  $(document).ready(function() {
 
    $('.select2').select2({
-     placeholder: "Select or add options", // Optional placeholder text
-     allowClear: true                 // Optional: allows the user to clear selection
+     placeholder: "Select or add options",
+     allowClear: true
    });
 
    $('.select2-hosts').select2({
-     tags: true,                      // Enable tagging for custom user input
-     tokenSeparators: [',', ' '],     // Allow comma and space as delimiters
-     placeholder: "Select or add options", // Optional placeholder text
-     allowClear: true                 // Optional: allows the user to clear selection
+     tags: true,
+     tokenSeparators: [',', ' '],
+     placeholder: "Select or add options",
+     allowClear: true
    });
 
    //
