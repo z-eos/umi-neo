@@ -57,6 +57,15 @@ attrs: %s\n", $message->error_name, $message->code // 'NO_MESSAGE_CODE',
 				   );
 		   });
 
+=head1 h_pad_base64
+
+ensures a given Base64-encoded string is correctly padded by appending the necessary C<=> characters.
+
+  say $c->h_pad_base64('YWJjZA');   # Outputs 'YWJjZA=='
+  say $c->h_pad_base64('dGVzdA');   # Outputs 'dGVzdA=='
+
+=cut
+
     $app->helper(
 		 h_pad_base64 => sub {
 		     my ( $self, $to_pad ) = @_;

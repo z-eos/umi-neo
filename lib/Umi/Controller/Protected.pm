@@ -476,7 +476,6 @@ sub pwdgen ($self) {
 			   }});
   }
 
-
   return $self->render(template => 'protected/tool/pwdgen',
 		       pwdgen_params => $par,
 		       pwdgen => $pwdgen,

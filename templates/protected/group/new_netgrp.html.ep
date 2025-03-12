@@ -54,6 +54,7 @@
   % my ($opts_h, $opts_m, %s, $class);
   % for ( my $i = 0; $i < scalar @$hosts; $i++)
   % {
+
     % $class = '" id="to-clone';
     % if ( h_is_empty_nested_arr($hosts) )
     % {

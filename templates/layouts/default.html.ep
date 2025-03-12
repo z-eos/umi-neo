@@ -36,7 +36,9 @@
     <script src="/assets/js/tempus-dominus/tempus-dominus.min.js"></script>
     <!-- script src="https://cdn.jsdelivr.net/npm/moment@2.29.1/moment.min.js"></script -->
 
-    <script src="/assets/js/vue.js"></script>
+    %# <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <script src="/assets/js/vue.global.js"></script>
+    %# <script src="/assets/js/vue.js"></script>
 
     <script src="/assets/js/bs-theme-switcher.js"></script>
 
@@ -79,8 +81,8 @@
     <script src="/assets/js/umi-common.js"></script>
     <script src="/assets/js/umi-tool-pwdgen.js"></script>
 
-    <script src="/assets/js/ldap-tree/ldap-tree.js"></script>
-    <script src="/assets/js/ldap-tree/ipam-tree.js"></script>
+    <script type="module" src="/assets/js/ldap-tree/ldap-tree.js"></script>
+    <script type="module" src="/assets/js/ldap-tree/ipam-tree.js"></script>
 
     <!-- <script src="/assets/js/nprogress.js"></script>   
 	 <script>
