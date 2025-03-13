@@ -124,7 +124,6 @@ export const IpamTreeItem = {
 
 		    if (typeof faddrData === 'object') {
 			console.log('IPAM: faddr is object');
-			// console.log(faddrData);
 			sortIpaRecursively(faddrData);
 			// event.target.dispatchEvent(new CustomEvent('update-faddr', {
 			//   bubbles: true,
