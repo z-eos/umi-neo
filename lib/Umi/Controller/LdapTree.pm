@@ -6,8 +6,8 @@ use Mojo::Base 'Umi::Controller', -signatures;
 use Mojo::Util qw( dumper );
 
 use Umi::Ldap;
-
 use Umi::Noder;
+use Umi::Constants qw(RE);
 
 sub obj ($self) {
   my $par = $self->req->params->to_hash;
@@ -55,13 +55,13 @@ sub ipa ($self) {
   my $p = $self->req->params->to_hash;
   $self->h_log( $p );
 
-  my $re = {
-	     ip    => '(?:(?:[0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}(?:[0-9]|[1-9][0-9]|1[0-9]{2}|2[0-5][0-9])',
-	     net3b => '(?:(?:[0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){2}',
-	     net2b => '(?:(?:[0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){1}',
-	    };
+  # my $re = {
+  # 	     ip    => '(?:(?:[0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}(?:[0-9]|[1-9][0-9]|1[0-9]{2}|2[0-5][0-9])',
+  # 	     net3b => '(?:(?:[0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){2}',
+  # 	     net2b => '(?:(?:[0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){1}',
+  # 	    };
 
-
+  my $re = RE; # defined in Umi::Constants;
 
   my $arg = { svc    => $p->{svc}    // 'ovpn',
               naddr  => $p->{naddr}  // '',
@@ -75,9 +75,7 @@ sub ipa ($self) {
   $return->{arg} = $arg;
 
   my ( $key, $val, $k, $v, $l, $r, $f, $tmp, $entry_svc, $entry_dhcp, $entry_ovpn, $ipspace, $ip_used );
-
   my $ipa = Net::CIDR::Set->new;
-
   my $ldap = Umi::Ldap->new( $self->{app}, $self->session('uid'), $self->session('pwd') );
 
   if ( $arg->{naddr} =~ /$re->{net2b}/ || $arg->{naddr} =~ /$re->{net3b}/ ) {
@@ -112,8 +110,10 @@ sub ipa ($self) {
     # log_debug { np($key) };
     # log_debug { np($val->{$key}) };
 
-    # OpenVPN option --ifconfig-push local remote-netmask [alias]
     if ( exists $val->{$key}->{umiovpncfgifconfigpush} ) {
+      ###############################################################
+      # OpenVPN option --ifconfig-push local remote-netmask [alias] #
+      ###############################################################
       foreach ( @{$val->{$key}->{umiovpncfgifconfigpush}} ) {
 	# log_debug { np($_) };
 	($l, $r, $tmp) = split(/ /, $_);
@@ -170,9 +170,13 @@ sub ipa ($self) {
   }
 
   # log_debug { np(@{[$ipa->as_address_array]}) };
-
   # log_debug { np($arg) };
+
   if ( length($arg->{naddr}) > 0 ) {
+    ###########################################################
+    # calculation of a single /24 network unused ip addresses #
+    # (click on aa.bb.cc item of ipam tree in aside tab IPAM) #
+    ###########################################################
     my $re_net3b = $re->{net3b};
     my $net_sufix;
     if ( $arg->{naddr} =~ /$re->{net3b}/ ) {
@@ -204,7 +208,6 @@ sub ipa ($self) {
   $return->{ipa} = {} if ! defined $return->{ipa};
 
   # $self->h_log($return->{ipa});
-
   $self->render(json => $return->{ipa});
 }
 

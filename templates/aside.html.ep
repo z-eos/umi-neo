@@ -1,9 +1,7 @@
 <% # -*- mode: web; mode: follow -*- %>
 
 <aside id="aside" class="collapse show">
-  <nav id="sidebar-right"
-       class="float-right"
-       data-url-tree="/ldap_tree">
+  <nav id="sidebar-right" class="float-right" data-url-tree="/ldap_tree">
     <ul class="nav nav-pills nav-fill" role="tablist">
       
       <li class="nav-item" title="LDAP tree">
@@ -18,17 +16,6 @@
 	</a>
       </li>
       
-      <!-- <li class="nav-item" title="statistics"> -->
-      <!-- 	<a class="nav-link" data-bs-toggle="tab" href="#statistics" role="tab"> -->
-      <!-- 	  <i class="fa-solid fa-chart-pie"></i> -->
-      <!-- 	</a> -->
-      <!-- </li> -->
-      <!-- <li class="nav-item"> -->
-      <!-- 	<a class="nav-link" data-bs-toggle="tab" href="#messages" role="tab"> -->
-      <!-- 	  <i class="fa-solid fa-globe"></i> -->
-      <!-- 	</a> -->
-      <!-- </li> -->
-
       <li class="nav-item">
 	<a class="nav-link" data-bs-toggle="tab" href="#settings" role="tab">
 	  <i class="fa-solid fa-cogs text-secondary"></i>
@@ -234,12 +221,15 @@
 		     @click.ctrl.exact = "showIpaItem(1)"
 		     v-bind:title="ipaitem.host">
 		  {{ipaitem.dn}}
+		  <!-- START: IP-USED BADGE RIGHT OF NET ADDR -->
 		  <small v-if="faddr && ipaitem.dn && (ipaitem.dn.match(/\./g) || []).length == 2 && ipaitem.children && ipaitem.children.length"
 			 class="badge badge-pill badge-info pt-2">
 		    used {{ipaitem.children.length}} ip
 		  </small>
+		  <!-- STOP:  IP-USED BADGE RIGHT OF NET ADDR -->
 		</div>
 	      </div>
+	      <!-- START: HEADER OF UNUSED IP SUBTREE -->
 	      <div class="faddr ldap-tree-point ml-4 text-info" v-if="faddr && faddr.children && faddr.children.length"
 		   @click.exact="isOpenFaddr = !isOpenFaddr">
 		<div class="umi-text-xs me-2">
@@ -248,6 +238,8 @@
 		</div>
 		unused {{faddr.children.length}} ip
 	      </div>
+	      <!-- STOP:  HEADER OF UNUSED IP SUBTREE -->
+	      <!-- START: THE VERY, UNUSED IP SUBTREE -->
 	      <ul class="font-monospace ldap-tree text-info" v-if="faddr && faddr.children && faddr.children.length && isOpenFaddr">
 		<li class="faddr-leaf ldap-tree-item ml-4" v-for="(child, index) in faddr.children"
 		    @click.exact="copyText($event)"
@@ -255,13 +247,16 @@
 		    title="click to copy to clipboard"
 		    :key="index">{{child.dn}}</li>
 	      </ul>
+	      <!-- STOP:  THE VERY, UNUSED IP SUBTREE -->
+	      <!-- START: IPA TREE -->
 	      <ul class="font-monospace ldap-tree" v-if="isIpaFolder && ipaitem.isOpen">
 		<ipam-tree-item class="ldap-tree-item"
-				       v-for="(child, index) in ipaitem.children"
+				v-for="(child, index) in ipaitem.children"
 	   			:key="index"
-				       :ipaitem="child">
+				:ipaitem="child">
 		</ipam-tree-item>
 	      </ul>
+	      <!-- STOP:  IPA TREE -->
 	    </li>
 	  </script>
 
@@ -278,7 +273,8 @@
 	    </li>
 	    <ipam-tree-item class="ipam-tree-item"
 			    :ipaitem="ipamtree"
-			    @make-folder="makeIpaFolder">
+			    @make-folder="makeIpaFolder"
+			    @update-faddr="updateFaddr">
 	    </ipam-tree-item>
 	  </ul>
 	  <!-- the very IPA tree end -->
@@ -286,62 +282,7 @@
 	</div>
 	
       </div>
-      
-      
-      
-      <!-- <\!-- === STATISTICS ===  -\-> -->
-      <!-- <div class="tab-pane p-3" id="statistics" role="tabpanel"> -->
-      <!-- 	<div id="stat-to" class="message"> -->
-      <!-- 	</div> -->
-      <!-- </div> -->
 
-      
-      <!-- <\!-- === MESSAGES ===  -\-> -->
-      <!-- <div class="tab-pane p-3" id="messages" role="tabpanel"> -->
-      <!-- 	<div class="message"> -->
-      <!--     <div> -->
-      <!--       <small class="text-muted">Lukasz Holeczek</small> -->
-      <!--       <small class="text-muted float-right mt-1">1:52 PM</small> -->
-      <!--     </div> -->
-      <!--     <div class="text-truncate fw-bold">Lorem ipsum dolor sit amet</div> -->
-      <!--     <small class="text-muted">Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt...</small> -->
-      <!-- 	</div> -->
-      <!-- 	<hr> -->
-      <!-- 	<div class="message"> -->
-      <!--     <div class="py-3 pb-5 me-3 float-left"> -->
-      <!--     </div> -->
-      <!--     <div> -->
-      <!--       <small class="text-muted">Lukasz Holeczek</small> -->
-      <!--       <small class="text-muted float-right mt-1">1:52 PM</small> -->
-      <!--     </div> -->
-      <!--     <div class="text-truncate fw-bold">Lorem ipsum dolor sit amet</div> -->
-      <!--     <small class="text-muted">Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt...</small> -->
-      <!-- 	</div> -->
-      <!-- 	<hr> -->
-      <!-- 	<div class="message"> -->
-      <!--     <div class="py-3 pb-5 me-3 float-left"> -->
-      <!--     </div> -->
-      <!--     <div> -->
-      <!--       <small class="text-muted">Lukasz Holeczek</small> -->
-      <!--       <small class="text-muted float-right mt-1">1:52 PM</small> -->
-      <!--     </div> -->
-      <!--     <div class="text-truncate fw-bold">Lorem ipsum dolor sit amet</div> -->
-      <!--     <small class="text-muted">Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt...</small> -->
-      <!-- 	</div> -->
-      <!-- 	<hr> -->
-      <!-- 	<div class="message"> -->
-      <!--     <div class="py-3 pb-5 me-3 float-left"> -->
-      <!--     </div> -->
-      <!--     <div> -->
-      <!--       <small class="text-muted">Lukasz Holeczek</small> -->
-      <!--       <small class="text-muted float-right mt-1">1:52 PM</small> -->
-      <!--     </div> -->
-      <!--     <div class="text-truncate fw-bold">Lorem ipsum dolor sit amet</div> -->
-      <!--     <small class="text-muted">Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt...</small> -->
-      <!-- 	</div> -->
-      <!-- </div> -->
-
-      
       <!-- === SETTINGS ===  -->
       <div class="tab-pane p-3 text-light" id="settings" role="tabpanel">
 	<div class="callout m-0 py-2 text-center text-uppercase">
@@ -424,6 +365,7 @@
 	  </div>
 	</form>
       </div>
+      
     </div>
   </nav>
 </aside>

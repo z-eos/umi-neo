@@ -7,10 +7,21 @@ use warnings;
 use Exporter 'import';
 
 our @EXPORT_OK = qw(
-    COUNTRIES
-    );
+		     COUNTRIES
+		     GENDER
+		     RE
+		     SARGON
+		     UMIOVPNADDDEVOS
+		     UMIOVPNADDDEVTYPE
+		     UMIOVPNADDSTATUS
+		  );
 
 use constant {
+	      RE => {
+		     ip    => '(?:(?:[0-9]|[1-9]\d|1\d{2}|2[0-4]\d|25[0-5])\.){3}(?:[0-9]|[1-9]\d|1\d{2}|2[0-4]\d|25[0-5])',
+		     net3b => '(?:(?:[0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){2}',
+		     net2b => '(?:(?:[0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){1}',
+		    },
 	      SARGON => {
 			 ENDPOINTS => {
 				       'ALL'                      => 'ALL',
