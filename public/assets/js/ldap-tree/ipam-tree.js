@@ -1,16 +1,27 @@
-// Vue 3 IPAM Tree Component - This file creates a tree view component for IP Address Management
+/**
+ * Vue 3 IPAM Tree Component
+ * 
+ * This file creates a tree view component for IP Address Management.
+ * It allows users to browse IP addresses and networks in a hierarchical tree structure,
+ * with features for expanding/collapsing nodes, copying IP addresses, and resolving hostnames.
+ */
+
+// Import required Vue 3 functionality
 const { ref, computed, reactive, createApp } = Vue;
 
 // Define the tree-item component - This is the recursive component for each node in the tree
 export const IpamTreeItem = {
     // Template reference - Refers to an HTML template with id='ipam-template' defined elsewhere
     template: '#ipam-template',
+    
     // Component props - Receives an ipaitem object that contains IP node data
     props: {
         ipaitem: Object
     },
+    
     // Events emitted by this component
     emits: ['make-folder', 'show-toast'],
+    
     // Component setup function with props and context
     setup(props, { emit }) {
         // Reactive state variables
@@ -23,14 +34,20 @@ export const IpamTreeItem = {
             return props.ipaitem && props.ipaitem.children && props.ipaitem.children.length;
         });
 
-        // Toggle open/close state of the current node
+        /**
+         * Toggle open/close state of the current node
+         */
         const toggleIpaItem = () => {
             if (isIpaFolder.value) {
                 props.ipaitem.isOpen = !props.ipaitem.isOpen;
             }
         };
 
-        // Recursively set the open state for all children of a branch
+        /**
+         * Recursively set the open state for all children of a branch
+         * @param {Object} branch - The branch node to update
+         * @param {Boolean} isOpenState - Whether nodes should be open or closed
+         */
         const setIpaState = (branch, isOpenState) => {
             if (branch.children) {
                 branch.isOpen = isOpenState;
@@ -38,14 +55,18 @@ export const IpamTreeItem = {
             }
         };
 
-        // Toggle the entire tree branch open or closed
+        /**
+         * Toggle the entire tree branch open or closed
+         */
         const toggleIpaTree = () => {
             if (isIpaFolder.value) {
                 setIpaState(props.ipaitem, !props.ipaitem.isOpen);
             }
         };
 
-        // Convert a regular node to a folder node
+        /**
+         * Convert a regular node to a folder node
+         */
         const makeIpaFolder = () => {
             if (!isIpaFolder.value) {
                 emit('make-folder', { ipaitem: props.ipaitem });
@@ -53,7 +74,10 @@ export const IpamTreeItem = {
             }
         };
 
-        // Copy IP address to clipboard when clicked
+        /**
+         * Copy IP address to clipboard when clicked
+         * @param {Event} event - The click event
+         */
         const copyText = (event) => {
             // Create a text selection on the clicked element
             const textNode = event.target;
@@ -75,7 +99,10 @@ export const IpamTreeItem = {
             selection.removeAllRanges();
         };
         
-        // Show details for the IP address - fetches related data from server
+        /**
+         * Show details for the IP address - fetches related data from server
+         * @param {String} scope - Optional scope parameter for the search
+         */
         const showIpaItem = async (scope) => {
             let url;
             // Regular expression to validate IPv4 address (first 3 octets)
@@ -140,7 +167,9 @@ export const IpamTreeItem = {
             }
         };
 
-        // Resolve IP address to hostname using reverse DNS lookup
+        /**
+         * Resolve IP address to hostname using reverse DNS lookup
+         */
         const resolveThis = async () => {
             const item = props.ipaitem;
             
@@ -179,7 +208,11 @@ export const IpamTreeItem = {
 
 // Utility functions for IP address sorting and handling
 
-// Convert an IP address to a numeric value for comparison
+/**
+ * Convert an IP address to a numeric value for comparison
+ * @param {String} ip - IP address in dotted decimal notation
+ * @returns {Number} - Numeric representation of the IP address
+ */
 function inet_aton(ip) {
     const a = ip.split('.');
     const buffer = new ArrayBuffer(4);
@@ -190,7 +223,12 @@ function inet_aton(ip) {
     return dv.getUint32(0);
 }
 
-// Comparison function for sorting IP addresses
+/**
+ * Comparison function for sorting IP addresses
+ * @param {Object} a - First IP node to compare
+ * @param {Object} b - Second IP node to compare
+ * @returns {Number} - Comparison result (-1, 0, or 1)
+ */
 const compareIpaFunc = (a, b) => {
     const aVal = a.name.toLowerCase();
     const bVal = b.name.toLowerCase();
@@ -198,7 +236,11 @@ const compareIpaFunc = (a, b) => {
     return inet_aton(aVal) > inet_aton(bVal) ? 1 : -1;
 };
 
-// Recursively sort the IP tree by numeric IP value
+/**
+ * Recursively sort the IP tree by numeric IP value
+ * @param {Object} arr - Tree node to sort
+ * @returns {Object} - Sorted tree node
+ */
 const sortIpaRecursively = arr => {
     if (arr.children) {
         arr.children = arr.children.map(sortIpaRecursively).sort(compareIpaFunc);
@@ -227,7 +269,9 @@ const app = createApp({
         // Reactive reference to the tree data
         const ipamtree = ref(tree);
 
-        // Initialize Bootstrap toast after component is mounted
+        /**
+         * Initialize Bootstrap toast after component is mounted
+         */
         const initToast = () => {
             const toastEl = document.getElementById('ip-copied-toast');
             if (toastEl) {
@@ -237,7 +281,10 @@ const app = createApp({
 
         // Event handlers for the tree components
         
-        // Handler for 'make-folder' event - converts node to a folder
+        /**
+         * Handler for 'make-folder' event - converts node to a folder
+         * @param {Object} event - Event object containing the node to convert
+         */
         const makeIpaFolder = (event) => {
             const { ipaitem } = event;
             if (!ipaitem.children) {
@@ -245,14 +292,18 @@ const app = createApp({
             }
         };
 
-        // Handler to show the "IP copied" toast notification
+        /**
+         * Handler to show the "IP copied" toast notification
+         */
         const showToast = () => {
             if (toastInstance.value) {
                 toastInstance.value.show();
             }
         };
 
-        // Fetch the IP tree data from the server
+        /**
+         * Fetch the IP tree data from the server
+         */
         const getIpaTreeData = async () => {
             loading.value = true;
 
