@@ -1,21 +1,32 @@
-<% # -*- mode: web; mode: follow -*- %>
+%# -*- mode: web; mode: follow -*-
 
+<!-- 
+  MAIN ASIDE PANEL
+  This component renders the right sidebar panel with multiple tabs:
+  - LDAP tree navigator
+  - IPAM (IP Address Management) interface
+  - Settings panel
+-->
 <aside id="aside" class="collapse show">
   <nav id="sidebar-right" class="float-right" data-url-tree="/ldap_tree">
+    <!-- Tab navigation buttons -->
     <ul class="nav nav-pills nav-fill" role="tablist">
       
+      <!-- LDAP Tree Tab Button -->
       <li class="nav-item" title="LDAP tree">
 	<a class="nav-link active" data-bs-toggle="tab" href="#ldap-tree-tab" role="tab">
 	  <i class="fa-solid fa-project-diagram text-secondary"></i>
 	</a>
       </li>
 
+      <!-- IPAM Tab Button -->
       <li class="nav-item" title="IPAM">
 	<a class="nav-link" data-bs-toggle="tab" href="#ipam-tab" role="tab">
 	  <i class="fa-solid fa-network-wired text-secondary"></i>
 	</a>
       </li>
       
+      <!-- Settings Tab Button -->
       <li class="nav-item">
 	<a class="nav-link" data-bs-toggle="tab" href="#settings" role="tab">
 	  <i class="fa-solid fa-cogs text-secondary"></i>
@@ -23,29 +34,35 @@
       </li>
     </ul>
 
-    <!-- === *** TAB PANES *** === -->
+    <!-- === *** TAB PANES CONTENT *** === -->
     <div class="tab-content">
 
-      <!-- === LDAP tree ===  -->
+      <!-- === LDAP TREE TAB CONTENT === -->
+      
+      <!-- Vue.js template for LDAP tree items -->
       <script type="text/x-template" id="item-template">
 	<li>
 	  <div class="ldap-tree-point"> <!-- d-flex align-items-start"> -->
+	    <!-- Expand/collapse controls for folders -->
 	    <div class="umi-text-xs me-1" v-if="isFolder"
 		 @click.exact="toggleItem"
 		 @click.ctrl.exact="toggleTree">
 	      <i class="fa-solid fa-plus" v-if="!item.isOpen"></i>
 	      <i class="fa-solid fa-minus" v-else></i>
 	    </div>
+	    <!-- Bullet for leaf nodes -->
 	    <div class="umi-text-xs me-1" v-if="!isFolder"> 
 	      <!-- <i class="fa-solid fa-code-commit"></i> -->
 	      <span>&bull;</span>
 	    </div>
+	    <!-- Item name, bold if open -->
 	    <div :class="{'fw-bold': item.isOpen, '': !item.isOpen}"
 		 @click.exact="showItem(0)"
 		 @click.ctrl.exact="showItem(1)">
 	      {{ item.name }}
 	    </div>
 	  </div>	 
+	  <!-- Recursively render child items when folder is open -->
 	  <ul class="font-monospace ldap-tree navbar-nav-scroll" v-show="item.isOpen" v-if="isFolder">
 	    <ldap-tree-item class="ldap-tree-item"
 			    v-for="(child, index) in item.children"
@@ -56,8 +73,10 @@
 	</li>
       </script>
 
+      <!-- LDAP Tree tab panel content -->
       <div class="tab-pane active" id="ldap-tree-tab" role="tabpanel">
 	
+	<!-- Help section header - collapsible -->
 	<div class="callout m-0 py-2 text-center text-uppercase">
 	  <button type="button"
 		  class="btn border-0 fw-bold"
@@ -67,14 +86,17 @@
 		  aria-expanded="false"
 		  aria-controls="collapseExample">
 	    LDAP tree
-	      <sup><i class="fa-solid fa-question-circle"></i></sup>
+	    <sup><i class="fa-solid fa-question-circle"></i></sup>
 	  </button>
 	</div>
+	
+	<!-- Collapsible help content -->
 	<div class="collapse" id="collapseExample">
 	  <div class=" umi-text-tiny pb-3">
 	    <b>NOTE:</b> search result is in accordance
 	    with the filter shown on the top of the result page.
 	  </div>
+	  <!-- Usage instructions in definition list format -->
 	  <dl class="row umi-text-tiny mx-3">
 	    <dt class="col-sm-3 text-right">Click</dt>
 	    <dd class="col-sm-9 mb-0 pb-0">
@@ -99,9 +121,10 @@
 	  </dl>
 	</div>
 
-	<!-- the very LDAP tree start -->
+	<!-- LDAP tree component -->
 	<ul class="font-monospace ldap-tree text-secondary" id="ldap-tree">
 	  
+          <!-- Reload button for LDAP tree -->
           <li class="">
 	    <button type="button" class="btn btn-secondary btn-sm mb-2" title="re/load tree">
               <i class="fa-solid fa-arrows-rotate"
@@ -112,19 +135,20 @@
 	    </button>
           </li>
 
+          <!-- Root Vue component that renders the entire LDAP tree -->
 	  <ldap-tree-item class="ldap-tree-item"
 			  :item="tree"
 			  @make-folder="makeFolder">
 	  </ldap-tree-item>
 
 	</ul>
-	<!-- the very LDAP tree end -->
+	<!-- LDAP tree end -->
 
       </div>
 
-      
-      <!-- === IPAM ===  -->
+      <!-- === IPAM TAB SECTION START ===  -->
       <div class="tab-pane" id="ipam-tab" role="tabpanel">
+	<!-- Help section header - collapsible -->
 	<div class="callout m-0 py-2 text-center text-uppercase">
 	  <button class="btn border-0"
 		  type="button"
@@ -133,35 +157,41 @@
 		  data-bs-target="#collapseIpaHelp"
 		  aria-expanded="false"
 		  aria-controls="collapseIpaHelp">
-            <b>IPAM<sup><i class="fa-solid fa-question-circle"></i></sup></b>
+	    <b>IPAM<sup><i class="fa-solid fa-question-circle"></i></sup></b>
 	  </button>
 	</div>
+
+	<!-- Collapsible help content with detailed usage instructions -->
 	<div class="collapse" id="collapseIpaHelp">
 	  <div class=" umi-text-tiny pb-3">
 	    <b>NOTE:</b> search result is in accordance with the filter shown on the top of the result page.
 	  </div>
 	  <dl class="row umi-text-tiny mx-3">
+	    <!-- Click instructions -->
 	    <dt class="col-sm-3 text-right">Click</dt>
 	    <dd class="col-sm-9 mb-0 pb-0">
-	      <ul class="my-0 py-0 ml-0 pl-0 list-unstyled">
-		<li>on <i class="fa-solid fa-plus""></i>/<i class="fa-solid fa-minus"></i> to expand/collapse item</li>
+              <ul class="my-0 py-0 ms-0 pl-0 list-unstyled">
+		<li>on <i class="fa-solid fa-plus"></i>/<i class="fa-solid fa-minus"></i> to expand/collapse item</li>
 		<li>on <b>item</b> to search it<sup class="text-pink">*</sup></li>
-	      </ul>
+              </ul>
 	    </dd>
+	    <!-- Ctrl+Click instructions -->
 	    <dt class="pt-0 mt-0 col-sm-3 text-right">Ctrl+Click</dt>
 	    <dd class="col-sm-9">
-	      <ul class="my-0 py-0 ml-0 pl-0 list-unstyled">
-		<li>on <i class="fa-solid fa-plus""></i>/<i class="fa-solid fa-minus"></i> to expand/collapse whole branch<sup class="text-pink">*</sup></li>
+              <ul class="my-0 py-0 ms-0 pl-0 list-unstyled">
+		<li>on <i class="fa-solid fa-plus"></i>/<i class="fa-solid fa-minus"></i> to expand/collapse whole branch<sup class="text-pink">*</sup></li>
 		<li>on <b>item</b> searches whole branch</li>
-	      </ul>
+              </ul>
 	    </dd>
+	    <!-- Special note about 3-byte network addresses -->
 	    <dt class="col-sm-3 text-right text-pink">*</dt>
 	    <dd class="col-sm-9">
-	      click on 3 net byte <b>item</b> (A.B.C) shows unused ip addresses of that /24 network
+              click on 3 net byte <b>item</b> (A.B.C) shows unused ip addresses of that /24 network
 	    </dd>
+	    <!-- MouseOver instructions for DNS resolution -->
 	    <dt class="col-sm-3 text-right">MouseOver</dt>
 	    <dd class="col-sm-9 mb-0 pb-0">
-	      <ul class="my-0 py-0 ml-0 pl-0 list-unstyled">
+              <ul class="my-0 py-0 ms-0 pl-0 list-unstyled">
 		<li>on <b>item</b> launch DNS resolve of that IP address,
 		  to color and mark the <b>item</b> with
 		  <i class="fa-solid fa-globe text-success"></i>,
@@ -169,27 +199,32 @@
 		  <i class="fa-solid fa-globe text-danger"></i>
 		  according to the results of the resolve
 		</li>
-	      </ul>
+              </ul>
 	    </dd>
 	  </dl>
 	</div>
 
+	<!-- Main IPAM container -->
 	<div id="ipam" class="">
 	  
+	  <!-- Toast notification for IP copied to clipboard -->
 	  <div id="ip-copied-toast"
-	       class="toast border border-info" data-bs-delay="6000"
-	       style="position: absolute; top: 50px; right: 20px;"
-	       role="alert" aria-live="assertive" aria-atomic="true">
+               class="toast border border-info" data-bs-delay="6000"
+               style="position: absolute; top: 50px; right: 20px;"
+               role="alert" aria-live="assertive" aria-atomic="true">
 	    <div class="toast-header bg-info fw-bold">
-	      <i class="fa-solid fa-clipboard me-4"></i>
-	      IP Copied
+              <i class="fa-solid fa-clipboard me-4"></i>
+              IP Copied
 	    </div>
 	    <div id="ip-copied" class="toast-body text-center fw-bold"></div>
 	  </div>
 
+	  <!-- Vue.js template for IPAM tree items -->
 	  <script type="text/x-template" id="ipam-template">
 	    <li>
-	      <div class="ldap-tree-point">
+              <!-- Item header with expand/collapse controls -->
+              <div class="ldap-tree-point">
+		<!-- Expand/collapse controls for folders -->
 		<div class="umi-text-xs me-1" v-if="isIpaFolder"
 		     @click.exact="toggleIpaItem"
 		     @click.ctrl.exact="toggleIpaTree"> 
@@ -197,19 +232,21 @@
 		  <i class="fa-solid fa-minus me-1" v-else></i>
 		</div>
 		
+		<!-- Icon for leaf nodes with DNS resolution status indicators -->
 		<div class="umi-text-xs me-1" v-if="!isIpaFolder"> 
 		  <i class="fa-solid me-1"
 		     :class="{
-			     'fw-bold': ipaitem.isOpen,
-			     '': !ipaitem.isOpen,
-			     'fa-minus': !ipaitem.host,
-			     'text-success fa-globe': ipaitem.host && ipaitem.host.indexOf('.') !== -1,
-			     'text-danger  fa-globe': ipaitem.host === 'query timed out',
-			     'text-warning fa-globe': ipaitem.host && ipaitem.host === 'NXDOMAIN',
-			     'text-danger fa-exclamation-circle': ipaitem.host && ipaitem.host !== 'NXDOMAIN' && ipaitem.host !== 'NOERROR' && ipaitem.host.indexOf('.') === -1 
-			     }"></i>
+			    'fw-bold': ipaitem.isOpen,
+			    '': !ipaitem.isOpen,
+			    'fa-minus': !ipaitem.host,
+			    'text-success fa-globe': ipaitem.host && ipaitem.host.indexOf('.') !== -1,
+			    'text-danger  fa-globe': ipaitem.host === 'query timed out',
+			    'text-warning fa-globe': ipaitem.host && ipaitem.host === 'NXDOMAIN',
+			    'text-danger fa-exclamation-circle': ipaitem.host && ipaitem.host !== 'NXDOMAIN' && ipaitem.host !== 'NOERROR' && ipaitem.host.indexOf('.') === -1 
+			    }"></i>
 		</div>
 
+		<!-- Display item name with DNS resolution status coloring -->
 		<div :class="{ 'fw-bold': ipaitem.isOpen,
 			     '': !ipaitem.isOpen,
 			     'text-success': ipaitem.host && ipaitem.host.indexOf('.') !== -1,
@@ -221,85 +258,94 @@
 		     @click.ctrl.exact = "showIpaItem(1)"
 		     v-bind:title="ipaitem.host">
 		  {{ipaitem.dn}}
-		  <!-- START: IP-USED BADGE RIGHT OF NET ADDR -->
+		  <!-- Badge showing count of used IPs in a subnet -->
 		  <small v-if="faddr && ipaitem.dn && (ipaitem.dn.match(/\./g) || []).length == 2 && ipaitem.children && ipaitem.children.length"
 			 class="badge badge-pill badge-info pt-2">
 		    used {{ipaitem.children.length}} ip
 		  </small>
-		  <!-- STOP:  IP-USED BADGE RIGHT OF NET ADDR -->
 		</div>
-	      </div>
-	      <!-- START: HEADER OF UNUSED IP SUBTREE -->
-	      <div class="faddr ldap-tree-point ml-4 text-info" v-if="faddr && faddr.children && faddr.children.length"
+              </div>
+              
+              <!-- Expandable section for showing unused IPs in a subnet -->
+              <div class="faddr ldap-tree-point ms-2 text-info" v-if="faddr && faddr.children && faddr.children.length"
 		   @click.exact="isOpenFaddr = !isOpenFaddr">
 		<div class="umi-text-xs me-2">
 		  <i class="fa-solid fa-plus"  v-if="!isOpenFaddr"></i>
 		  <i class="fa-solid fa-minus" v-else></i>
 		</div>
 		unused {{faddr.children.length}} ip
-	      </div>
-	      <!-- STOP:  HEADER OF UNUSED IP SUBTREE -->
-	      <!-- START: THE VERY, UNUSED IP SUBTREE -->
-	      <ul class="font-monospace ldap-tree text-info" v-if="faddr && faddr.children && faddr.children.length && isOpenFaddr">
-		<li class="faddr-leaf ldap-tree-item ml-4" v-for="(child, index) in faddr.children"
+              </div>
+              
+              <!-- List of unused IPs that can be clicked to copy to clipboard -->
+              <ul class="font-monospace ldap-tree text-info" v-if="faddr && faddr.children && faddr.children.length && isOpenFaddr">
+		<li class="faddr-leaf ldap-tree-item ms-2" v-for="(child, index) in faddr.children"
 		    @click.exact="copyText($event)"
 		    data-bs-toggle="popover" data-bs-placement="top"
 		    title="click to copy to clipboard"
 		    :key="index">{{child.dn}}</li>
-	      </ul>
-	      <!-- STOP:  THE VERY, UNUSED IP SUBTREE -->
-	      <!-- START: IPA TREE -->
-	      <ul class="font-monospace ldap-tree" v-if="isIpaFolder && ipaitem.isOpen">
+              </ul>
+              
+              <!-- Recursively rendered child items when expanded -->
+              <ul class="font-monospace ldap-tree" v-if="isIpaFolder && ipaitem.isOpen">
 		<ipam-tree-item class="ldap-tree-item"
 				v-for="(child, index) in ipaitem.children"
-	   			:key="index"
-				:ipaitem="child">
+				:key="index"
+				:ipaitem="child"
+				@make-folder="$emit('make-folder', $event)"
+				@show-toast="$emit('show-toast')">
 		</ipam-tree-item>
-	      </ul>
-	      <!-- STOP:  IPA TREE -->
+              </ul>
 	    </li>
 	  </script>
 
-	  <!-- the very IPA tree start -->
+	  <!-- Main IPAM tree container with reload button -->
 	  <ul class="font-monospace text-secondary ldap-tree" id="ipam-tree">
 	    <li class="mb-1">
-	      <button type="button" class="btn btn-secondary btn-sm" title="re/load tree">
+              <button type="button" class="btn btn-secondary btn-sm" title="re/load tree">
 		<i class="fa-solid fa-arrows-rotate"
 		   :class="{ 'fa-spin': loading }"
 		   @click.exact="getIpaTreeData()"
 		   title="reload the tree">
 		</i>
-	      </button>
+              </button>
 	    </li>
+	    
+	    <!-- Root IPAM tree item component that loads the entire tree -->
 	    <ipam-tree-item class="ipam-tree-item"
 			    :ipaitem="ipamtree"
 			    @make-folder="makeIpaFolder"
-			    @update-faddr="updateFaddr">
+			    @show-toast="showToast">
 	    </ipam-tree-item>
 	  </ul>
-	  <!-- the very IPA tree end -->
-
 	</div>
-	
       </div>
+      <!-- === IPAM TAB SECTION END ===  -->
 
-      <!-- === SETTINGS ===  -->
+
+      <!-- === SETTINGS TAB SECTION === -->
       <div class="tab-pane p-3 text-light" id="settings" role="tabpanel">
 	<div class="callout m-0 py-2 text-center text-uppercase">
 	  <b>Settings</b>
 	</div>
+	
+	<!-- Settings form that posts to /settings_save endpoint -->
 	<form role="form" id="settings-save" class="settings-save" method="POST" action="/settings_save">
 	  <div class="aside-options">
+	    <!-- Sidebar visibility setting -->
 	    <div class="custom-control custom-switch">
 	      <input type="checkbox" class="custom-control-input" id="checkboxSidebar"
 		     name="sidebar" [% c.session.settings.ui.sidebar ? ' checked=""' : '' %]>
 	      <label class="custom-control-label" for="checkboxSidebar">Sidebar On Start</label>
 	    </div>
+	    
+	    <!-- Aside panel visibility setting -->
 	    <div class="custom-control custom-switch">
 	      <input type="checkbox" class="custom-control-input" id="checkboxAside"
 		     name="aside" [% c.session.settings.ui.aside ? ' checked=""' : '' %]>
 	      <label class="custom-control-label" for="checkboxAside">Aside On Start</label>
 	    </div>
+	    
+	    <!-- Object blocked state checking setting -->
 	    <div class="custom-control custom-switch">
 	      <input type="checkbox" class="custom-control-input" id="checkboxIsObjBlocked"
 		     name="isblock" [% c.session.settings.ui.isblock ? ' checked=""' : '' %]>
@@ -308,6 +354,8 @@
 		Is Blocked Check
 	      </label>
 	    </div>
+	    
+	    <!-- Raw data storage setting -->
 	    <div class="custom-control custom-switch">
 	      <input type="checkbox" class="custom-control-input" id="checkboxStoreData"
 		     name="storedata" [% c.session.settings.ui.storedata ? ' checked=""' : '' %]>
@@ -316,6 +364,8 @@
 		Store Data
 	      </label>
 	    </div>
+	    
+	    <!-- IPAM DNS debug output setting -->
 	    <div class="custom-control custom-switch">
 	      <input type="checkbox" class="custom-control-input" id="checkboxIpamDns"
 		     name="ipamdns" [% c.session.settings.ui.ipamdns ? ' checked=""' : '' %]>
@@ -324,6 +374,8 @@
 		DNS resolve debug
 	      </label>
 	    </div>
+	    
+	    <!-- RFC4515 setting (always enabled, cannot be changed) -->
 	    <div class="custom-control custom-switch">
 	      <input type="checkbox" class="custom-control-input" disabled id="rfc4515"
 		     name="rfc4515" checked="" aria-describedby="rfc4515help">
@@ -332,6 +384,7 @@
 	    </div>
 	  </div>
 	  
+	  <!-- Debug level slider control -->
 	  <div class="aside-options">
             <div class="clearfix mt-4">
               <small><b>Debug: <span id="debug_level" class="text-primary"></span></b></small>
@@ -343,6 +396,8 @@
 		     [% END %]>
 	    </div>
 	  </div>
+	  
+	  <!-- JavaScript to update debug level display when slider moves -->
 	  <script>
 	   $(function () {
 	     var slider = document.getElementById("debug");
@@ -357,15 +412,20 @@
 	  
 	  <hr>
 	  
+	  <!-- Submit button - Note: This appears to be cut off in the original file -->
 	  <div>
 	    <button type="submit" class="btn btn-success col-12">
-	      <i class="fa-solid fa-save fa-lg"></i>
-	      Save
-	    </button>
+              <i class="fa-solid fa-save fa-lg"></i>
+              Save
+            </button>
+
 	  </div>
 	</form>
       </div>
-      
+      <!-- === SETTINGS TAB SECTION END === -->
+		    
     </div>
+    <!-- === END TAB CONTENT === -->
+		    
   </nav>
 </aside>

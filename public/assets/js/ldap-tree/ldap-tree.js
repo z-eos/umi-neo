@@ -1,26 +1,42 @@
-// Define the tree-item component using Vue 3 syntax
-//import { defineComponent, ref, computed, reactive, createApp } from 'vue';
-const { defineComponent, ref, computed, reactive, createApp } = Vue;
+// Import Vue components from global Vue object
+const { defineComponent, ref, computed, createApp } = Vue;
 
+/**
+ * Tree item component for displaying LDAP entries
+ * Provides functionality for expanding/collapsing nodes and viewing LDAP data
+ */
 export const LdapTreeItem = defineComponent({
   name: 'LdapTreeItem',
   template: '#item-template',
   props: {
-    item: Object
+    item: {
+      type: Object,
+      required: true
+    }
   },
   setup(props, { emit }) {
+    // Track if the current item is open/expanded
     const isOpen = ref(props.item.isOpen);
 
-    const isFolder = computed(() => {
-      return props.item.children && props.item.children.length;
-    });
+    // Determine if item is a folder (has children)
+    const isFolder = computed(() => 
+      props.item.children && props.item.children.length > 0
+    );
 
+    /**
+     * Toggle open/close state of current item
+     */
     const toggleItem = () => {
       if (isFolder.value) {
         props.item.isOpen = !props.item.isOpen;
       }
     };
 
+    /**
+     * Recursively set open state for an item and all its children
+     * @param {Object} branch - Branch to modify
+     * @param {Boolean} isOpenState - State to set (true=open, false=closed)
+     */
     const setState = (branch, isOpenState) => {
       branch.isOpen = isOpenState;
       if (branch.children) {
@@ -28,52 +44,53 @@ export const LdapTreeItem = defineComponent({
       }
     };
 
+    /**
+     * Toggle entire tree/subtree open or closed
+     */
     const toggleTree = () => {
       if (isFolder.value) {
         setState(props.item, !props.item.isOpen);
       }
     };
 
-    // const makeFolder = () => {
-    //   if (!isFolder.value) {
-    //     // Using context.emit in Vue 3
-    //     context.emit('make-folder', props.item);
-    //     isOpen.value = true;
-    //   }
-    // };
-
+    /**
+     * Convert an item into a folder by adding children array
+     */
     const makeFolder = () => {
       if (!isFolder.value) {
-        // Using context.emit in Vue 3
         emit('make-folder', props.item);
         isOpen.value = true;
       }
     };
 
+    /**
+     * Show the details of an LDAP item in the working field
+     * @param {Boolean} scope - If true, show subtree; if false, show only this item
+     */
     const showItem = (scope) => {
-      const url = scope ?
-        '/search/common?no_layout=1&search_scope=sub&search_base_case=' + props.item.dn :
-        '/search/common?no_layout=1&search_scope=base&search_base_case=' + props.item.dn;
+      // Build URL based on whether we want to show subtree or just this item
+      const searchScope = scope ? 'sub' : 'base';
+      const url = `/search/common?no_layout=1&search_scope=${searchScope}&search_base_case=${props.item.dn}`;
 
-      // Using fetch API
+      // Fetch and display the LDAP entry
       fetch(url)
         .then(response => {
           if (!response.ok) {
-            throw new Error('Network response was not ok');
+            throw new Error(`Network response was not ok: ${response.status}`);
           }
           return response.text();
         })
         .then(html => {
           document.getElementById('workingfield').innerHTML = html;
           
-          // Scroll to the top of the page after loading the content
+          // Smooth scroll to top of page
           window.scrollTo({
             top: 0,
             behavior: 'smooth'
           });
         })
         .catch(error => {
-          console.warn('Fetch failed: ', error);
+          console.error('Failed to fetch LDAP entry:', error);
         });
     };
 
@@ -89,81 +106,90 @@ export const LdapTreeItem = defineComponent({
   }
 });
 
-// Create the main application
-// import { createApp } from 'vue';
-
+/**
+ * Compare function for sorting LDAP entries alphabetically (case-insensitive)
+ */
 const compareFunc = (a, b) => {
   const aVal = a.name.toLowerCase();
   const bVal = b.name.toLowerCase();
-  if (aVal === bVal) return 0;
-  return aVal > bVal ? 1 : -1;
+  return aVal === bVal ? 0 : (aVal > bVal ? 1 : -1);
 };
 
-const sortRecursively = arr => {
-  if (arr.children) {
-    arr.children = arr.children.map(sortRecursively).sort(compareFunc);
+/**
+ * Sort an LDAP tree recursively
+ * @param {Object} arr - The node to sort children of
+ * @returns {Object} The sorted node
+ */
+const sortRecursively = node => {
+  if (node.children && node.children.length > 0) {
+    // Map and sort children recursively
+    node.children = node.children.map(sortRecursively).sort(compareFunc);
   }
-  return arr;
+  return node;
 };
 
-// Boot up the Vue 3 app
+// Create and configure the main Vue application
 const app = createApp({
   setup() {
-    // State management with Vue 3 Composition API
+    // UI state tracking
     const loading = ref(false);
-    let treeData;
     
+    // Try to load previously saved tree from localStorage
+    let initialTreeData;
     try {
-      treeData = JSON.parse(localStorage.getItem('ldapTree'));
-      if (!treeData) {
-        treeData = {};
-      }
-    } catch {
-      treeData = {};
+      initialTreeData = JSON.parse(localStorage.getItem('ldapTree')) || {};
+    } catch (error) {
+      console.warn('Failed to parse LDAP tree from localStorage:', error);
+      initialTreeData = {};
     }
     
-    const tree = ref(treeData);
+    // Reactive tree data
+    const tree = ref(initialTreeData);
     
+    /**
+     * Convert an item into a folder by adding children array
+     * @param {Object} item - Item to convert to folder
+     */
     const makeFolder = (item) => {
-      // Vue 3 way to set reactive properties
       item.children = [];
     };
     
+    /**
+     * Fetch LDAP tree data from server
+     * Updates tree state and saves to localStorage
+     */
     const getTreeData = async () => {
-      console.warn('LDAP getTreeData called');
-      loading.value = true;  // Start the loading spinner
+      console.log('Fetching LDAP tree data...');
+      loading.value = true;
       
       try {
-        // Fetch the data from the server
+        // Request tree data from server
         const response = await fetch('/tool/ldap-tree');
         
-        // Check if the response is ok (status code 200–299)
         if (!response.ok) {
-          throw new Error('LDAP Tree Network response was not ok');
+          throw new Error(`LDAP Tree API error: ${response.status}`);
         }
         
-        // Parse the response as JSON
         const data = await response.json();
         
-        // If data is valid, process it
-        if (typeof data === 'object') {
-          console.warn('LDAP Tree Data received: ', typeof data);
-          // Process the data
+        if (data && typeof data === 'object') {
+          console.log('LDAP tree data received successfully');
+          
+          // Sort the data hierarchically
           sortRecursively(data);
-          // localStorage stuff
+          
+          // Save to localStorage for future visits
           localStorage.setItem('ldapTree', JSON.stringify(data));
-          // Update the tree with the new data
+          
+          // Update the UI
           tree.value = data;
         } else {
-          console.warn("LDAP Tree Received data is not in usable format: ", typeof data);
+          console.error('Invalid LDAP tree data format:', typeof data);
         }
       } catch (error) {
-        // Handle any errors during the fetch operation
-        console.warn('LDAP Tree Fetch request failed: ', error);
+        console.error('Failed to fetch LDAP tree data:', error);
       } finally {
-        // Stop loading spinner, whether the request succeeds or fails
         loading.value = false;
-        console.warn('LDAP Tree Loading spinner stopped');
       }
     };
     
@@ -176,8 +202,8 @@ const app = createApp({
   }
 });
 
-// In Vue 3, we need to register components before mounting
+// Register the tree item component
 app.component('ldap-tree-item', LdapTreeItem);
 
-// Mount the app to the element
+// Mount the app to the DOM
 app.mount('#ldap-tree');
