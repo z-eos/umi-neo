@@ -90,27 +90,8 @@
 		  % next if ref($role) eq 'HASH';
 		  <dt class="col-sm-1 text-end pe-2">
 		    % my $team_role = substr($role,3+length($en)+1,index($role,',')-length($role));
-		    % if ($team_role eq 'devops' ) {
-		      <i class="fa-solid fa-lg fa-user-doctor" title="DevOps"></i>
-		    % }
-		    % elsif ($team_role eq 'back' ) {
-		      <i class="fa-solid fa-lg fa-flask-vial" title="BackEnd"></i>
-		    % }
-		    % elsif ($team_role eq 'front' ) {
-		      <i class="fa-solid fa-lg fa-palette" title="FrontEnd"></i>
-                    % }
-		    % elsif ($team_role eq 'qa' ) {
-                      <i class="fa-solid fa-lg fa-bug-slash" title="QA"></i>
-		    % }
-		    % elsif ($team_role eq 'pm' ) {
-		      <i class="fa-solid fa-lg fa-person-military-pointing" title="ProjectManager"></i>
-		    % }
-		    % elsif ($team_role eq 'tl' ) {
-		      <i class="fa-solid fa-lg fa-person-through-window" title="TeamLead"></i>
-		    % }
-		    % else {
-		      <%= $team_role =%>:
-		    % }
+		    <i class="fa-solid fa-lg <%= app->{cfg}->{ui}->{project}->{team}->{roles}->{$team_role}->{ico} %>"
+		       title="<%= app->{cfg}->{ui}->{project}->{team}->{roles}->{$team_role}->{title} %>"></i>
 		  </dt>
 		  <dd class="col-sm-11 my-0">
 		    <div class="row row-cols-1 row-cols-md-2 g-4">

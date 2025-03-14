@@ -380,7 +380,7 @@ sub _startup_routes ($self) {
     ->to('protected#project_modify');
 
   $protected_root
-    ->get( '/project/:proj')
+    ->get( '/project/:proj' => [ proj => qr/[^\/]+/ ])
     ->to('search#search_projects', proj => '*');
   $protected_root
     ->post('/project/:proj')

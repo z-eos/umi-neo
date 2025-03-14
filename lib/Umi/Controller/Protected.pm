@@ -734,106 +734,6 @@ sub modify ($self) {
   return $self->render(template => 'protected/tool/modify'); #, layout => undef);
 }
 
-sub project_new ($self) {
-  my $ldap = Umi::Ldap->new( $self->{app}, $self->session('uid'), $self->session('pwd') );
-  my $search_arg = { base => $self->{app}->{cfg}->{ldap}->{base}->{acc_root},
-		     filter => "(&(uid=*)(!(gidNumber=" . $self->{app}->{cfg}->{ldap}->{defaults}->{group_blocked_gidnumber} . ")))",
-		     scope => "one",
-		     attrs => [qw(uid givenName sn)] };
-  my $search = $ldap->search( $search_arg );
-  $self->{app}->h_log( $self->{app}->h_ldap_err($search, $search_arg) ) if $search->code;
-
-  my $e = $search->as_struct;
-  # $self->h_log($e);
-  my $employees;
-  foreach my $k (keys(%$e)) {
-    next if ! exists $e->{$k}->{givenname} || ! exists $e->{$k}->{sn};
-    push @$employees, [ $e->{$k}->{sn}->[0] . " " . $e->{$k}->{givenname}->[0] => $e->{$k}->{uid}->[0] ];
-  }
-  my $es;
-  @$es = sort {$a->[0] cmp $b->[0]} @$employees;
-  # $self->h_log($es);
-
-  my $par = $self->req->params->to_hash;
-  # $self->h_log($par);
-  $self->stash(project_new_params => $par, employees => $es);
-
-  my $v = $self->validation;
-  return $self->render(template => 'protected/project/new') unless $v->has_data;
-
-  $v->required('proj_name')->check('size', 2, 50)->check('like', qr/^[A-Za-z0-9.-_]+$/);
-  $v->required('team_pm');
-  $v->required('team_back');
-  $v->required('team_front');
-  $v->required('team_devops');
-  # $v->required('team_qa');
-
-  $v->error( proj_name   => ['Must be 2-50 charaters in length and can be only ASCII characters: A-Za-z0-9.-_'] ) if $v->error('proj_name');
-  $v->error( team_pm     => ['Select at least one member.'])                 if $v->error('team_pm');
-  $v->error( team_back   => ['Select at least one member.'])                 if $v->error('team_back');
-  $v->error( team_front  => ['Select at least one member.'])                 if $v->error('team_front');
-  $v->error( team_devops => ['Select at least one member.'])                 if $v->error('team_devops');
-  # $v->error( team_qa    => ['Select at least one mamber.'])                 if $v->error('team_qa');
-
-  # $self->h_log($v->error);
-
-  if ( ! $v->has_error ) {
-    $search_arg = { base => $self->{app}->{cfg}->{ldap}->{base}->{project},
-		    filter => "(cn=" . $par->{proj_name} . ")",
-		    scope => "one",
-		    attrs => ['cn'] };
-    $search = $ldap->search( $search_arg );
-    $self->{app}->h_log( $self->{app}->h_ldap_err($search, $search_arg) ) if $search->code;
-    $v->error(proj_name => ['Project with such name exists']) if $search->count > 0;
-
-    ### attribute associatedDomain is been set by admins after project object creation
-    my $attrs = {
-		 objectClass => $self->{app}->{cfg}->{ldap}->{objectClass}->{project},
-		 ### FIX proj_name must comply regex ^[A-Za-z0-9.-_]+$
-		 cn => lc $par->{proj_name},
-		 description => $par->{proj_descr},
-		 associatedDomain => 'unknown'
-		};
-
-    $self->h_log($attrs);
-
-    my $msg = $ldap->add(sprintf("cn=%s,%s",
-				 lc $par->{proj_name},
-				 $self->{app}->{cfg}->{ldap}->{base}->{project}),
-			 $attrs);
-    my $debug;
-    push @{$debug->{$msg->{status}}}, $msg->{message};
-    my @groups = qw(pm tl back front qa devops);
-    foreach my $g (@groups) {
-      next if ! exists $par->{'team_' . $g};
-      ### FIX proj_name must comply regex ^[A-Za-z0-9.-_]+$
-      $attrs = {
-		objectClass => $self->{app}->{cfg}->{ldap}->{objectClass}->{project_groups},
-		cn => sprintf("%s_%s", lc $par->{proj_name}, $g),
-		memberUid => $par->{'team_' . $g}
-	       };
-      my $gn = $ldap->last_num($self->{app}->{cfg}->{ldap}->{base}->{project_groups}, '(cn=*)', 'gidNumber');
-      if ( $gn->[1] ) {
-	$self->h_log($gn->[1]);
-	$attrs->{gidNumber} = undef;
-      } else {
-	$attrs->{gidNumber} = $gn->[0] + 1;
-      }
-      $self->h_log($attrs);
-
-      $msg = $ldap->add(sprintf("cn=%s,%s",
-				sprintf("%s_%s", lc $par->{proj_name}, $g),
-				$self->{app}->{cfg}->{ldap}->{base}->{project_groups}),
-			$attrs);
-      push @{$debug->{$msg->{status}}}, $msg->{message};
-    }
-    $self->h_log($debug);
-    $self->stash(debug => $debug);
-  }
-
-  $self->render(template => 'protected/project/new'); #, layout => undef);
-}
-
 sub profile_new ($self) {
   my $par = $self->req->params->to_hash;
   $self->h_log($par);
@@ -1071,6 +971,91 @@ sub profile_modify ($self) {
   $self->render(template => 'protected/profile/modify'); #, layout => undef);
 }
 
+sub project_new ($self) {
+  my $ldap = Umi::Ldap->new( $self->{app}, $self->session('uid'), $self->session('pwd') );
+  my ($search, $search_arg);
+  my ($employees, $err) = $ldap->all_users;
+
+  my $par = $self->req->params->to_hash;
+  # $self->h_log($par);
+  $self->stash(project_new_params => $par, employees => $employees);
+
+  my $v = $self->validation;
+  return $self->render(template => 'protected/project/new') unless $v->has_data;
+
+  $v->required('proj_name')->check('size', 2, 50)->check('like', qr/^[A-Za-z0-9.-_]+$/);
+  $v->required('team_pm');
+  $v->required('team_back');
+  $v->required('team_front');
+  $v->required('team_devops');
+  # $v->required('team_qa');
+
+  $v->error( proj_name   => ['Must be 2-50 charaters in length and can be only ASCII characters: A-Za-z0-9.-_'] ) if $v->error('proj_name');
+  $v->error( team_pm     => ['Select at least one member.'])                 if $v->error('team_pm');
+  $v->error( team_back   => ['Select at least one member.'])                 if $v->error('team_back');
+  $v->error( team_front  => ['Select at least one member.'])                 if $v->error('team_front');
+  $v->error( team_devops => ['Select at least one member.'])                 if $v->error('team_devops');
+  # $v->error( team_qa    => ['Select at least one mamber.'])                 if $v->error('team_qa');
+
+  # $self->h_log($v->error);
+
+  if ( ! $v->has_error ) {
+    $search_arg = { base => $self->{app}->{cfg}->{ldap}->{base}->{project},
+		    filter => "(cn=" . $par->{proj_name} . ")",
+		    scope => "one",
+		    attrs => ['cn'] };
+    $search = $ldap->search( $search_arg );
+    $self->{app}->h_log( $self->{app}->h_ldap_err($search, $search_arg) ) if $search->code;
+    $v->error(proj_name => ['Project with such name exists']) if $search->count > 0;
+
+    ### attribute associatedDomain is been set by admins after project object creation
+    my $attrs = {
+		 objectClass => $self->{app}->{cfg}->{ldap}->{objectClass}->{project},
+		 ### FIX proj_name must comply regex ^[A-Za-z0-9.-_]+$
+		 cn => lc $par->{proj_name},
+		 description => $par->{proj_descr},
+		 associatedDomain => 'unknown'
+		};
+
+    $self->h_log($attrs);
+
+    my $msg = $ldap->add(sprintf("cn=%s,%s",
+				 lc $par->{proj_name},
+				 $self->{app}->{cfg}->{ldap}->{base}->{project}),
+			 $attrs);
+    my $debug;
+    push @{$debug->{$msg->{status}}}, $msg->{message};
+    my @groups = keys %{$self->{app}->{cfg}->{ui}->{project}->{team}->{roles}};
+    foreach my $g (@groups) {
+      next if ! exists $par->{'team_' . $g};
+      ### FIX proj_name must comply regex ^[A-Za-z0-9.-_]+$
+      $attrs = {
+		objectClass => $self->{app}->{cfg}->{ldap}->{objectClass}->{project_groups},
+		cn => sprintf("%s_%s", lc $par->{proj_name}, $g),
+		memberUid => $par->{'team_' . $g}
+	       };
+      my $gn = $ldap->last_num($self->{app}->{cfg}->{ldap}->{base}->{project_groups}, '(cn=*)', 'gidNumber');
+      if ( $gn->[1] ) {
+	$self->h_log($gn->[1]);
+	$attrs->{gidNumber} = undef;
+      } else {
+	$attrs->{gidNumber} = $gn->[0] + 1;
+      }
+      $self->h_log($attrs);
+
+      $msg = $ldap->add(sprintf("cn=%s,%s",
+				sprintf("%s_%s", lc $par->{proj_name}, $g),
+				$self->{app}->{cfg}->{ldap}->{base}->{project_groups}),
+			$attrs);
+      push @{$debug->{$msg->{status}}}, $msg->{message};
+    }
+    $self->h_log($debug);
+    $self->stash(debug => $debug);
+  }
+
+  $self->render(template => 'protected/project/new'); #, layout => undef);
+}
+
 sub project_modify ($self) {
   my $from_form = $self->req->params->to_hash;
   my $debug;
@@ -1121,6 +1106,7 @@ sub project_modify ($self) {
     foreach my $k (keys(%$e_str)) {
       next if ! exists $e_str->{$k}->{givenname} || ! exists $e_str->{$k}->{sn};
       my $gecos = $e_str->{$k}->{sn}->[0] . " " . $e_str->{$k}->{givenname}->[0];
+      utf8::decode($gecos) unless utf8::is_utf8($gecos);
       if ( grep {$e_str->{$k}->{uid}->[0] eq $_} @{$from_ldap->{groups}->{$g}} ) {
 	push @$team, [ $gecos => $e_str->{$k}->{uid}->[0], selected => 'selected' ];
       } else {
@@ -1145,7 +1131,9 @@ sub project_modify ($self) {
   $self->h_log($from_form);
   $self->stash(from_form => $from_form);
 
-  $self->stash( proj => $self->stash->{proj}, from_ldap => $self->stash->{from_ldap}, project_team_roles => $self->{app}->{cfg}->{ldap}->{defaults}->{project_team_roles} );
+  $self->stash( proj => $self->stash->{proj},
+		from_ldap => $self->stash->{from_ldap},
+		project_team_roles => [ keys %{$self->{app}->{cfg}->{ui}->{project}->{team}->{roles}} ] );
 
   my $v = $self->validation;
   return $self->render(template => 'protected/project/modify') unless $v->has_data;
@@ -1179,9 +1167,9 @@ sub project_modify ($self) {
   }
   $diff = $add = $delete = $replace = $changes = undef;
 
-  # $self->h_log($self->{app}->{cfg}->{ldap}->{defaults}->{project_team_roles});
+  # $self->h_log($self->{app}->{cfg}->{ui}->{project}->{team}->{roles});
 
-  foreach my $team_role (@{$self->{app}->{cfg}->{ldap}->{defaults}->{project_team_roles}}) {
+  foreach my $team_role ( @{[ keys %{$self->{app}->{cfg}->{ui}->{project}->{team}->{roles}} ]} ) {
     my $ldap_group_name = $from_ldap->{proj}->{obj}->{cn} . '_' . $team_role;
     if ( ! exists $from_form->{$team_role} && ! exists $from_ldap->{groups}->{ $ldap_group_name } ) {
       next;

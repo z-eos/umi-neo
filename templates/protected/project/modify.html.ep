@@ -29,11 +29,10 @@
   </div>
   
   % foreach (@{$project_team_roles}) {
-    %# $option_checked .= sprintf("#%s option:checked {\n     background-color: #808080;\n}\n\n", $_);
     <div class="row mb-3">
       %= label_for $_ => $_, class => 'col-sm-2 col-form-label text-end fw-bold text-uppercase'
       <div class=" col-sm-10">
-	%= select_field $_ => exists $em->{$proj . '_' . $_} ? $em->{$proj . '_' . $_} : $em->{asis} , id => $_, class => 'form-select', multiple => 'multiple'
+	%= select_field $_ => exists $em->{$proj . '_' . $_} ? $em->{$proj . '_' . $_} : $em->{asis} , id => $_, class => 'form-select select2', multiple => 'multiple'
       </div>
     </div>
   % }
@@ -42,10 +41,6 @@
 
 % end
 
-<style>
-  <%#  %>= $option_checked %>
-</style>
-
 % if ( stash->{'mojo.validation'}->{error} ) {
   <script>
    % while (my ($k, $v) = each %{stash->{'mojo.validation'}->{error}}) {
@@ -72,5 +67,15 @@
   </script>
 % }
 
-<script src="/assets/js/umi-lib-choicesjs.js"></script>
+<script>
+ $(document).ready(function() {
+
+   $('.select2').select2({
+     placeholder: "Select or add options",
+     allowClear: true
+   });
+
+ });
+</script>
+
 

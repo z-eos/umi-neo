@@ -224,11 +224,12 @@ sub search_projects  ($self) {
     $self->{app}->h_log( $self->{app}->h_ldap_err($search, $search_arg) ) if $search->code;
     $entries->{$p}->{group} = $search->as_struct;
     # $self->h_log($entries->{$p}->{group});
-    
+
     ### TEAM
     $entries->{$p}->{team} = {};
     my @groups = $search->entries;
     foreach my $gr (@groups) {
+      next if ! $gr->exists('memberUid');
       foreach my $mu (@{$gr->get_value('memberUid', asref => 1)}) {
 	$search_arg = { base => $self->{app}->{cfg}->{ldap}->{base}->{acc_root},
 			filter => sprintf("(uid=%s)", $mu),
