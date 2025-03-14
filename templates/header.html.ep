@@ -85,3 +85,60 @@
       
     </div>
 </nav>
+
+<style>
+ /* Custom tooltip width and improved contrast */
+ .custom-tooltip .tooltip-inner {
+   max-width: 500px !important;  /* Adjust width as needed */
+   white-space: normal;         /* Allows multi-line content */
+   text-align: left;            /* Align text properly */
+   
+   /* Improved background opacity for readability */
+   background-color: rgba(var(--bs-body-bg-rgb), 0.95); /* Uses theme-aware background with higher opacity */
+   color: var(--bs-body-color); /* Matches current theme */
+   border: 1px solid var(--bs-border-color); /* Uses Bootstrap's border color */
+   padding: 10px;
+
+   /* Optional: Adds slight shadow for better visibility */
+   box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
+   backdrop-filter: blur(4px); /* Reduces underlying brightness */
+ }
+
+ /* Ensure the tooltip arrow matches the tooltip background */
+ .custom-tooltip .tooltip-arrow::before {
+   border-width: 6px; /* Adjust arrow size */
+   border-top-color: rgba(var(--bs-body-bg-rgb), 0.95) !important; /* Match tooltip background */
+ }
+
+ /* Fix for dark themes: Override Bootstrap arrow default white color */
+ [data-bs-theme="dark"] .custom-tooltip .tooltip-arrow::before {
+   border-top-color: rgba(33, 37, 41, 0.95) !important; /* Adjust for dark mode */
+ }
+</style>
+<script>
+ document.addEventListener("DOMContentLoaded", function () {
+   var inputElement = document.getElementById("search_filter");
+   var tooltip = new bootstrap.Tooltip(inputElement, {
+     html: true,
+     placement: "bottom",
+     delay: { show: 600, hide: 200 },
+     // trigger: "click",
+     title: `Shortcut key to focus this field is: <b>s</b><br>
+<i class="fa-brands fa-firefox-browser ms-3"></i>: <i>Alt-Shift-s</i><i class="fa-brands fa-chrome ms-3"></i>: <i>Alt-s</i>
+<ul>
+  <li>default sort criteria is by name (First/Last Name, uid and cn)</li>
+  <li>for each search criteria, <b>objectClass=*</b> is used if empty</li>
+  <li>use <b>*</b> as substring</li>
+  <li>narrow search results for non &laquo;by ...&raquo; presets, by providing attribute in filter, like: <b>uid=*dreii.*</b></li>
+  <li>to search in access log, use base <b><%= app->{cfg}->{ldap}->{accesslog} %></b></li>
+</ul>
+<a href="https://www.rfc-editor.org/rfc/rfc4515.html#section-4" target="_blank">RFC4515: LDAP Search Filters</a>`,
+     template: `
+       <div class="tooltip custom-tooltip" role="tooltip">
+	 <div class="tooltip-arrow"></div>
+	 <div class="tooltip-inner umi-text-xs p-3"></div>
+       </div>
+     `
+   });
+ });
+</script>

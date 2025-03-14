@@ -10,7 +10,12 @@
       <i class="fas fa-eraser"></i>
     </button>
   </div>
-  <input type="text" id="shared_input" class="form-control font-monospace" placeholder='attributeName=*value*' accesskey="s" value="<%= $par->{shared_input} %>">
+  <input type="text"
+	 id="shared_input"
+	 class="form-control font-monospace"
+	 placeholder='attributeName=*value*'
+	 accesskey="s"
+	 value="<%= $par->{shared_input} %>">
   
   <div class="btn-group">
     %# --- DEFAULT, SEARCH_BY_NAME BUTTON
