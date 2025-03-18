@@ -8,8 +8,9 @@
 
 % my $root_uid = session('user_obj')->{dn};
 % my ($dn, $v);
-% foreach $dn (sort keys %$hash) {
-  % $v = $hash->{$dn};
+% my $na = '<i class="text-muted text-opacity-50">unavailable</i>';
+% foreach $dn (sort keys %$profiled_user) {
+  % $v = $profiled_user->{$dn};
   %# <pre><%= dumper $v %></pre>
   % my $card_col = '';
   % if ($group_blocked_gidnumber eq $v->{gidnumber}->[0]) {
@@ -25,9 +26,6 @@
 		 alt="<%= $dn %>">
 	  % } else {
 	    <i class="fa-solid fa-person-circle-question fa-10x"></i>
-	    <!-- <img src="/assets/images/unknown-user-symbol-svgrepo-com.svg"
-		 class="img-thumbnail img-fluid <%= 'border-' . $card_col if $card_col ne '' %> float-end" style="max-width: 300px;"
-		 alt="<%= $dn %>"> -->
 	  % }
 	</picture>
       </div>
@@ -48,13 +46,13 @@
 	    % }
 
 	    <dt class="col-sm-1 text-end" title="title"><i class="fa-lg fa-regular fa-address-card"></i></dt>
-	    <dd class="col-sm-11 user-select-all"><%= exists $v->{title} ? $v->{title}->[0] : 'unavailable' %></dd>
+	    <dd class="col-sm-11 user-select-all"><%== exists $v->{title} ? $v->{title}->[0] : $na %></dd>
 
 	    <dt class="col-sm-1 text-end" title="description"><i class="fa-lg fa-solid fa-feather-pointed"></i></dt>
-	    <dd class="col-sm-11 user-select-all"><%= exists $v->{description} ? $v->{description}->[0] : 'unavailable' %></dd>
+	    <dd class="col-sm-11 user-select-all"><%== exists $v->{description} ? $v->{description}->[0] : $na %></dd>
 
 	    <dt class="col-sm-1 text-end" title="uid"><i class="fa-lg fa-solid fa-id-card-clip"></i></dt>
-	    <dd class="col-sm-11 user-select-all"><%= exists $v->{uid} ? $v->{uid}->[0] : 'unavailable' %></dd>
+	    <dd class="col-sm-11 user-select-all"><%== exists $v->{uid} ? $v->{uid}->[0] : $na %></dd>
 
 	    % if ($dn eq $root_uid) {
 	      <dt class="col-sm-1 text-end" title="password">
@@ -75,13 +73,13 @@
 
 	    %# !!! WARNING FIX error check for existance of all values used
 	    <dt class="col-sm-1 text-end" title="Email"><i class="fa-lg fa-solid fa-at"></i></dt>
-	    <dd class="col-sm-11 user-select-all"><%== exists $v->{mail} ? sprintf('<a href="mailto:%s">%s</a>', $v->{mail}->[0], $v->{mail}->[0]) : 'unavailable' %></dd>
+	    <dd class="col-sm-11 user-select-all"><%== exists $v->{mail} ? sprintf('<a href="mailto:%s">%s</a>', $v->{mail}->[0], $v->{mail}->[0]) : $na %></dd>
 
 	      <dt class="col-sm-1 text-end" title="Location: City, Country"><i class="fa-lg fa-solid fa-location-dot"></i></dt>
-	      <dd class="col-sm-11 user-select-all"><%= exists $v->{l} ? $v->{l}->[0] : 'unavailable' %>, <%= exists $v->{registeredaddress} ? $v->{registeredaddress}->[0] : 'unavailable' %></dd>
+	      <dd class="col-sm-11 user-select-all"><%== exists $v->{l} ? $v->{l}->[0] : $na %>, <%== exists $v->{umiusercountryofresidence} ? $v->{umiusercountryofresidence}->[0] : $na %></dd>
 
 	      <dt class="col-sm-1 text-end" title="Birth Date"><i class="fa-lg fa-solid fa-cake-candles"></i></dt>
-	      <dd class="col-sm-11 user-select-all"><%== exists $v->{carlicense} ? $v->{carlicense}->[0] : 'unavailable' %></dd>
+	      <dd class="col-sm-11 user-select-all"><%== exists $v->{umiuserdateofbirth} ? strftime( "%F", localtime(generalizedTime_to_time($v->{umiuserdateofbirth}->[0]))) : $na %></dd>
 
 	      <dt class="col-sm-1 text-end" title="Hire Date"><i class="fa-lg fa-solid fa-calendar-plus"></i></dt>
 	      <dd class="col-sm-11 user-select-all"><%= strftime( "%F", localtime(generalizedTime_to_time($v->{createtimestamp}->[0]))) %></dd>
@@ -91,17 +89,22 @@
 		<dt class="col-sm-1 text-end" title="GPG"><i class="fa-lg fa-solid fa-lock"></i></dt>
 		<dd class="col-sm-11">
 		  <details>
-		    <summary>GPG keys</summary>
+		    <summary>
+		      GPG keys
+		    </summary>
 		    <table class="table table-sm table-responsive" style="font-size: 0.75rem;">
 		      % foreach (sort keys %{$pgp->{$dn}}) {
+			% my $id = h_gen_id;
 			<tr class="table-secondary">
-			  <td class="fw-bold umi-text-xs user-select-all"><i class="fa-solid fa-lock me-1"></i>
-			    <span class="font-monospace me-2"><%= $pgp->{$dn}->{$_}->{keyid} %></span><%= $_ %>
+			  <td class="fw-bold umi-text-xs user-select-all p-0 ps-2 border-0"><i class="fa-solid fa-lock me-1"></i>
+			    <span class="font-monospace me-2"><%= $pgp->{$dn}->{$_}->{keyid} %></span>
+			    <span class="me-2"><%= $_ %></span>
+			    %== h_element_cp_download_btns( 'gpgKey' . $id, 'gpg-key-' . $pgp->{$dn}->{$_}->{keyid} . '.pub' );
 			  </td>
 			</tr>
 			<tr>
 			  <td class="font-monospace text-muted user-select-all umi-text-tiny">
-			    <pre><%= $pgp->{$dn}->{$_}->{key} =%></pre>
+			    <pre id="gpgKey<%= $id %>"><%= $pgp->{$dn}->{$_}->{key} =%></pre>
 			  </td>
 			</tr>
 		      % }

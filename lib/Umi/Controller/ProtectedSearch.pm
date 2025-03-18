@@ -163,11 +163,12 @@ sub search_common  ($self) {
   foreach ($search->entries) {
     $e_info->{$_->dn}->{root_dn} = $self->h_get_root_dn($_->dn) if ! exists $e_info->{$_->dn}->{root_dn};
     $e_info->{$_->dn}->{disabled} = 0;
-    if ( $e_info->{$_->dn}->{root_dn} eq $_->dn ) {
+    if ( defined $e_info->{$_->dn}->{root_dn} && $e_info->{$_->dn}->{root_dn} eq $_->dn ) {
       $e_info->{$_->dn}->{disabled} = 1 if $_->get_value('gidNumber') eq $self->{app}->{cfg}->{ldap}->{defaults}->{group_blocked_gidnumber};
     } else {
       my $e_tmp = $ldap->search( { base => $e_info->{$_->dn}->{root_dn}, scope => 'base' } );
-      $e_info->{$_->dn}->{disabled} = 1 if $e_tmp->entry->get_value('gidNumber') eq $self->{app}->{cfg}->{ldap}->{defaults}->{group_blocked_gidnumber};
+      my $e_tmp_entry = $e_tmp->entry;
+      $e_info->{$_->dn}->{disabled} = 1 if $e_tmp_entry->exists('gidNumber') && $e_tmp_entry->get_value('gidNumber') eq $self->{app}->{cfg}->{ldap}->{defaults}->{group_blocked_gidnumber};
     }
   }
   # $self->h_log($search->as_struct);

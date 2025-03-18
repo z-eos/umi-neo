@@ -120,7 +120,7 @@
     <div class="modal-content border border-<%= $menu->{$it}->{col} %> border-1">
       <div class="modal-header bg-<%= $menu->{$it}->{col} %> row m-0">
 	<h4 class="modal-title mb-3" id="modal_<%= $it %><%= $i %>_label">
-	  <i class="fa <%= $menu->{$it}->{ico} %> me-3"></i>
+	  <i class="fa-solid <%= app->{cfg}->{ui}->{menu}->{$it}->{ico} . ' ' .  app->{cfg}->{ui}->{menu}->{$it}->{col} %> me-3"></i>
 	  Modify DN:<br><b><%= $dn %></b>
 	</h4>
       </div>

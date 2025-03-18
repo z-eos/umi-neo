@@ -61,7 +61,7 @@ attrs: %s\n", $message->error_name, $message->code // 'NO_MESSAGE_CODE',
 				   );
 		   });
 
-=head1 h_pad_base64
+=head2 h_pad_base64
 
 ensures a given Base64-encoded string is correctly padded by appending the necessary C<=> characters.
 
@@ -105,6 +105,29 @@ simple transliteration to ASCII with normalization to [:alnum:]
 		   my $ou = unidecode($in);
 		   $ou =~ s/[^[:alnum:]\.-_]//g;s/[^[:alnum:]\s]//g;
 		   return $ou;
+		 });
+
+=head2 h_compact
+
+removes empty string values from an array or a hash by modifying the data structure in place
+
+returns compacted array or hash
+
+=cut
+
+    $app->helper(
+		 h_compact => sub {
+		   my ($c, $target) = @_;
+		   if (ref $target eq 'ARRAY') {
+		     # Filter out any undefined or empty string elements.
+		     @$target = grep { defined($_) && $_ ne '' } @$target;
+		   } elsif (ref $target eq 'HASH') {
+		     # Remove hash keys with undefined or empty string values.
+		     foreach my $key (keys %$target) {
+		       delete $target->{$key} if ! defined($target->{$key}) || $target->{$key} eq '';
+		     }
+		   }
+		   return $target;
 		 });
 
 =head2 h_is_ip
@@ -195,9 +218,14 @@ get RDN (outmost left attribute) value of the given DN
 		   return (split(/=/, (split(/,/, $dn))[0]))[1];
 		 });
 
-    # MAC address normalyzer
+=head2 h_macnorm
+
+MAC address normalyzer
+
+=cut
+
     $app->helper(
-		 macnorm => sub {
+		 h_macnorm => sub {
 		     my ( $c, $args ) = @_;
 		     my $arg = {
 				mac => $args->{mac},
@@ -218,7 +246,26 @@ get RDN (outmost left attribute) value of the given DN
 		     }
 		 });
 
-    # QR CODE
+=head2 h_gen_id
+
+get random id of length N passed as input, default is 8
+
+=cut
+
+    $app->helper(
+		 h_gen_id => sub {
+		   my ($self, $len) = @_;
+		   $len = $len // 8;
+		   my @chars = ('A'..'Z', 'a'..'z', 0..9);
+		   return join '', map { $chars[rand @chars] } 1 .. $len;
+		 });
+
+=head2 h_qrcode
+
+QR CODE generator
+
+=cut
+
     $app->helper(
 		 h_qrcode => sub {
 		     my ($self, $args) = @_;
@@ -942,6 +989,19 @@ data taken, generally, from
 		   }
 		 });
 
+=head2 h_element_cp_download_btns
+
+helper to place two buttons to copy to clipboard and download as file
+a content of an element with id passed to helper
+
+on input expects:
+
+    target_id:    mandatory
+    file_name:    optional
+    button_class: optional
+
+=cut
+
     $app->helper(
 		 h_element_cp_download_btns => sub {
 		   my ($c, $target_id, $file_name, $button_class) = @_;
@@ -952,7 +1012,7 @@ data taken, generally, from
 		   $button_class ||= 'btn btn-secondary btn-sm';
 
 		   my $html = qq{
-<div class="btn-group mb-2">
+<div class="btn-group" id="h_element_cp_download_btns">
     <button type="button" class="$button_class" title="Copy to clipboard"
             onclick="copyToClipboard('#$target_id')">
         <i class="fas fa-copy"></i>

@@ -10,7 +10,7 @@
 <hr>
 
 % my $em = stash->{emploees};
-%= form_for '/sudo/new' => {class => "form-horizontal"} => (method => 'POST') => begin
+%= form_for '/sudo/new' => (class => "form-horizontal", method => 'POST') => begin
 
   <div class="row mb-3">
     %= label_for cn => 'CN', class => 'col-sm-2 col-form-label text-end fw-bold text-uppercase', title => stash->{schema}->{cn}->{desc}
@@ -93,7 +93,7 @@
 
   <div class="row mb-3" title="">
     %# = label_for sudoOption => 'sudoOption', class => 'col-sm-2 col-form-label text-end fw-bold text-uppercase', title => stash->{schema}->{sudoOption}->{desc}
-    <label class="col-sm-2 col-form-label text-end fw-bold text-uppercase" for="sudoOption" title="Options(s) followed by sudo">sudoOption <a href="https://www.sudo.ws/docs/man/sudoers.man/#SUDOERS_OPTIONS" class="btn btn-link text-info" target="_blank" title="options manual"><i class="fa-solid fa-circle-exclamation"></i></a></label>
+    <label class="col-sm-2 col-form-label text-end fw-bold text-uppercase" for="sudoOption" title="Options(s) followed by sudo">sudoOption <a href="https://www.sudo.ws/docs/man/sudoers.man/#SUDOERS_OPTIONS" class="text-info text-decoration-none align-text-top" target="_blank" title="options manual"><i class="fa-solid fa-circle-exclamation"></i></a></label>
     <div class="col-sm-10">
       % foreach (@{stash->{sudoOption}}) {
 	<div class="input-group input-group entry-removable entry-at-least-one">

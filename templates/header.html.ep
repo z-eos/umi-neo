@@ -27,7 +27,7 @@
       <ul class="navbar-nav me-auto my-2 my-lg-0 navbar-nav-scroll float-end">
         <li class="nav-item dropdown">
           <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-	    <i class="fa-solid fa-fw fa-user-alt"></i>
+	    <i class="fa-solid fa-fw fa-user-alt umi-text-indigo"></i>
 	    % if ($c->is_user_authenticated) {
 	      %= $c->session('uid');
 	    % }

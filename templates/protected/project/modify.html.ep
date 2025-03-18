@@ -10,7 +10,7 @@
 % my $proj = $from_ldap->{proj}->{obj}->{cn};
 % my $p = stash->{project_new_params};
 % my $option_checked = '';
-%= form_for '/project/modify' => {class => "form-horizontal"} => (method => 'POST') => begin
+%= form_for '/project/modify' => (class => "form-horizontal", method => 'POST') => begin
 
 %= hidden_field proj_to_modify => 'proj_to_modify', id => 'proj_to_modify', value => exists stash->{from_form}->{proj_to_modify} ? stash->{from_form}->{proj_to_modify} : ''
 

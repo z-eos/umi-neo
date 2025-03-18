@@ -9,7 +9,7 @@
 % my $em = stash->{employees};
 % my $p = stash->{project_new_params};
 % my $option_checked = '';
-%= form_for '/project/new' => {class => "form-horizontal"} => (method => 'POST') => begin
+%= form_for '/project/new' => (class => "form-horizontal", method => 'POST') => begin
 
   <div class="row mb-3">
     %= label_for proj_name => (class => 'col-sm-2 col-form-label text-end fw-bold') => begin

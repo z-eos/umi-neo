@@ -279,7 +279,7 @@ sub profile ($self) {
   }
 
   $self->stash(
-	       hash => $profiled_user,
+	       profiled_user => $profiled_user,
 	       groups => $groups,
 	       group_blocked_gidnumber => $self->{app}->{cfg}->{ldap}->{defaults}->{group_blocked_gidnumber},
 	       pgp => $pgp,
@@ -621,18 +621,24 @@ sub modify ($self) {
   # $self->h_log($par);
 
   my $ldap = Umi::Ldap->new( $self->{app}, $self->session('uid'), $self->session('pwd') );
-  my $search_arg = { base => $par->{dn_to_modify},
-		     filter => '(objectClass=*)',
-		     scope => 'base' };
+  my $search_arg = { base => $par->{dn_to_modify}, scope => 'base' };
   $search_arg->{attrs} = defined $attr_to_add ? [$attr_to_add] : [];
   $self->h_log( $search_arg );
   my $s = $ldap->search( $search_arg );
   $self->h_log( $self->h_ldap_err($s, $search_arg) ) if $s->code;
   # $self->h_log( $s->as_struct );
 
+  my %skip = (
+	      jpegPhoto => 1,
+	      cACertificate => 1,
+	      certificateRevocationList => 1,
+	      userCertificate => 1,
+	     );
   my ($e_orig, $e_tmp);
   foreach ($s->entry->attributes) {
     next if $_ eq $rdn;
+    # change only on uploaded image, not absent form field
+    next if $skip{$_} && exists $par->{$_} && $par->{$_} eq '';
     $e_tmp = $s->entry->get_value($_, asref => 1);
     if ( scalar @$e_tmp == 1 ) {
       $e_orig->{$_} = $e_tmp->[0];
@@ -640,6 +646,9 @@ sub modify ($self) {
       $e_orig->{$_} = $e_tmp;
     }
   }
+
+  # $self->h_log($par);
+  # $self->h_log($e_orig);
 
   # `UNUSED ATTRIBUTES` select element
   my ($schema, %oc, %aa, %as, @attr_unused);
@@ -681,9 +690,6 @@ sub modify ($self) {
     foreach (keys %$par) {
       delete $par->{$_} if $par->{$_} eq '';
     }
-
-    # $self->h_log($par);
-    # $self->h_log($self->session->{e_orig});
 
     my $diff = $self->h_hash_diff( $e_orig, $par);
     #$self->h_log($diff);
@@ -850,6 +856,7 @@ sub profile_modify ($self) {
   if ( @$uploads ) {
     %$upload = map { $_->name => $_ } @$uploads;
   }
+  $self->h_compact($from_form);
 
   my $uid = $self->stash->{uid} // $from_form->{uid_to_modify} // '';
   $from_form->{uid_to_modify} = $self->stash->{uid} if exists $self->stash->{uid};
@@ -857,7 +864,18 @@ sub profile_modify ($self) {
   my $search_arg = { base => $self->{app}->{cfg}->{ldap}->{base}->{acc_root},
 		     filter => '(uid=' . $uid .')',
 		     scope => 'one',
-		     attrs => [qw(givenName sn mail l umiUserCountryOfResidence title umiUserDateOfBirth umiUserDateOfEmployment umiUserDateOfTermination umiUserGender jpegPhoto)], };
+		     attrs => [qw(
+				   givenName
+				   jpegPhoto
+				   l
+				   sn
+				   title
+				   umiUserCountryOfResidence
+				   umiUserDateOfBirth
+				   umiUserDateOfEmployment
+				   umiUserDateOfTermination
+				   umiUserGender
+				)], };
   my $search = $ldap->search( $search_arg );
   $self->{app}->h_log( $self->{app}->h_ldap_err($search, $search_arg) ) if $search->code;
   my ($from_ldap, $dn, $e);

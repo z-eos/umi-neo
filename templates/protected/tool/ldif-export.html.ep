@@ -1,7 +1,7 @@
 %# -*- mode: web; eval: (follow-mode) -*-
 
 <h2 class="my-4">
-  <i class="fa-solid fa-file-code me-3 text-muted"></i>
+  <i class="fa-solid <%= app->{cfg}->{ui}->{menu}->{ldif}->{ico} . ' ' .  app->{cfg}->{ui}->{menu}->{ldif}->{col} %> me-3"></i>
   LDIF <small><em class="text-muted font-monospace fs-6">
     dn: <%= $ldif_export_params->{dn} %>; &nbsp; scope: <%= $ldif_export_params->{scope} %>
   </em></small>

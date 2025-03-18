@@ -1,7 +1,7 @@
 %# -*- mode: web; eval: (follow-mode) -*-
 
 <h3 class="fw-bold p-3">
-  <i class="fa-solid fa-users fa-lg me-3 text-muted"></i>
+  <i class="fa-solid <%= app->{cfg}->{ui}->{menu}->{group}->{ico} . ' ' .  app->{cfg}->{ui}->{menu}->{group}->{col} %> me-3"></i>
   Groups of user <small><em class="text-muted font-monospace"><%= $dn_to_group %></em></small>
 </h3>
 <hr class="pb-3">

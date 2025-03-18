@@ -7,8 +7,14 @@
 <div class="row w-100 <%= app->{cfg}->{ui}->{page}->{header}->{css} %>">
   <div class="col-xs-6 col-sm-6 col-md-4 col-lg-4">
     <h3 class="fw-bold">
-      <i class="fa-solid fa-search fa-lg text-muted me-2"></i>
-      Search Results
+      % if ( exists  $search_common_params->{dn_to_history} ) {
+	<i class="fa-solid <%= app->{cfg}->{ui}->{menu}->{history}->{ico} . ' ' .  app->{cfg}->{ui}->{menu}->{history}->{col} %> me-3"></i>
+	History
+      % }
+      % else {
+	<i class="fa-solid fa-search fa-lg text-muted me-2"></i>
+	Search Results
+      % }
     </h3>
   </div>
   <div class="col-xs-6 col-sm-6 col-md-8 col-lg-8">
@@ -65,21 +71,19 @@
 	  % }
 	  
 	  %# ICO after BURGER MENU
+	  % my $re_accesslog = app->{cfg}->{ldap}->{accesslog};
 	  %= form_for '/search/common' => (class => "injectable-form", method => 'POST') => begin
-	  %= hidden_field 'ldap_subtree' => $root_usr_dn ne '' ? $root_usr_dn : $e->dn
-	  <button type="submit" class="btn"
-		  % if ($root_usr_dn ne '') {
-		  title="Click to get whole root object subtree">
-	    <i class="fa-solid fa-user-tag"></i>
-		  % } elsif ($e->dn =~ /^.*,cn=accesslog$/)
-		  % {
-		    >
-		    <i class="fa-solid fa-history"></i>
-		  % } else {
-		    >
-		    <i class="fa-solid fa-shapes"></i>
-		  % }
-	  </button>
+	    %= hidden_field 'ldap_subtree' => $root_usr_dn ne '' ? $root_usr_dn : $e->dn
+	    <button type="submit" class="btn"
+		    % if ($root_usr_dn ne '') {
+		    title="Click to get whole root object subtree"><i class="fa-solid fa-user-tag"></i>
+		    % } elsif ($e->dn =~ /^.*,$re_accesslog$/)
+		    % {
+		      ><i class="fa-solid fa-history"></i>
+		    % } else {
+		      ><i class="fa-solid fa-shapes"></i>
+		    % }
+	    </button>
 	  % end
 
 	  %# REWRITTEN DN with ICO

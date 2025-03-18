@@ -5,7 +5,7 @@
   Modify User <small><em class="text-muted font-monospace"></em></small>
 </h3>
 
-%= form_for '/profile/modify' => {class => "form-horizontal"} => (method => 'POST', enctype => 'multipart/form-data') => begin
+%= form_for '/profile/modify' => (class => "form-horizontal", method => 'POST', enctype => 'multipart/form-data') => begin
 
 %= hidden_field uid_to_modify => 'uid_to_modify', id => 'uid_to_modify', value => exists stash->{from_form}->{uid_to_modify} ? stash->{from_form}->{uid_to_modify} : ''
 

@@ -50,6 +50,12 @@ sub register {
 		 }
 	       });
 
+=head1 h_get_root_dn
+
+extract root object dn (root account dn) from current object dn
+
+=cut
+
   $app->helper(
 	       h_get_root_dn => sub {
 		 my ($c, $dn) = @_;
