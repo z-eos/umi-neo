@@ -86,6 +86,7 @@ sub newsvc ($self) {
 		rad_profiles => $rad_profiles );
 
   my $uploads = $self->req->uploads;
+  # $self->h_log($uploads);
   if ( @$uploads ) {
     foreach ( @$uploads ) {
       # $self->h_log($_);

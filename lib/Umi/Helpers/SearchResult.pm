@@ -4,6 +4,8 @@ package Umi::Helpers::SearchResult;
 
 use Mojo::Base 'Mojolicious::Plugin';
 
+use Umi::Constants qw(UMIAUTH);
+
 use Net::DNS;
 use Net::LDAP::Util qw(generalizedTime_to_time);
 
@@ -52,7 +54,10 @@ sub register {
 
 =head1 h_get_root_dn
 
-extract root object dn (root account dn) from current object dn
+returns root object dn (root account dn) from current object dn if it
+matches $app->{cfg}->{ldap}->{base}->{acc_root}
+
+returns undef if it doesn't
 
 =cut
 
@@ -65,6 +70,48 @@ extract root object dn (root account dn) from current object dn
 		 return $root_dn;
 	       });
 
+=head1 h_get_root_uid_val
+
+returns uid value of root dn if dn matches $app->{cfg}->{ldap}->{base}->{acc_root}
+
+returns undef if it doesn't
+
+=cut
+
+  $app->helper(
+	       h_get_root_uid_val => sub {
+		 my ($c, $dn) = @_;
+		 my $val;
+		 my $re = qr/^.*uid=([^,]+),$app->{cfg}->{ldap}->{base}->{acc_root}$/i;
+		 $val = $1 if $dn =~ /$re/;
+		 return $val;
+	       });
+
+
+=head2 h_is_authorized
+
+returns 0 or 1 if role of current user is superior to role of the user the
+manipulated object belongs to
+
+relation of roles defined with constant UMIAUTH in lib/Umi/Constants.pm
+
+=cut
+
+  $app->helper(
+	       h_is_authorized => sub {
+		 my ($self, $dn) = @_;
+		 # $self->h_log( $dn );
+		 my $ldap = Umi::Ldap->new( $self->{app}, $self->session('uid'), $self->session('pwd') );
+		 my $uid = $self->h_get_root_uid_val($dn);
+		 # $self->h_log( $uid );
+		 my $role = $ldap->get_role($uid);
+		 # $self->h_log( $role );
+
+		 my $auth = exists UMIAUTH->{role}->{$role->[0]} &&
+		   UMIAUTH->{role}->{$role->[0]} < UMIAUTH->{role}->{$self->session('role')} ? 0 : 1;
+
+		 return $auth;
+	       });
 
 =head1 h_attr_unused
 

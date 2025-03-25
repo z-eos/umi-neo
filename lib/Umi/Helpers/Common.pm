@@ -20,34 +20,28 @@ use Net::CIDR::Set;
 use Net::LDAP::Util qw(ldap_explode_dn);
 use POSIX qw(strftime :sys_wait_h);
 use Text::Unidecode;
+use Time::Piece;
 use Try::Tiny;
 use Crypt::X509;
 # use Crypt::X509::CRL;
 
 sub register {
 
-    ### BEGINNING OF REGISTER
-
     my ($self, $app) = @_;
-
-    # my $re = {
-    # 	      # looks incorrect# ip    => '(?:(?:[0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}(?:[0-9]|[1-9][0-9]|1[0-9]{2}|2[0-5][0-9])',
-    # 	      ip    => '(?:(?:[0-9]|[1-9]\d|1\d{2}|2[0-4]\d|25[0-5])\.){3}(?:[0-9]|[1-9]\d|1\d{2}|2[0-4]\d|25[0-5])',
-    # 	      net3b => '(?:(?:[0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){2}',
-    # 	      net2b => '(?:(?:[0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){1}',
-    # 	     };
 
     my $re = RE; # defined in Umi::Constants;
 
+    ### BEGINNING OF REGISTER
+
     $app->helper(
 		 header_form_subsearch_button => sub {
-		     my ($c, $text) = @_;
+		     my ($self, $text) = @_;
 		     return uc($text);
 		 });
 
     $app->helper(
 		 h_ldap_err => sub {
-		     my ($c, $message, $search_arg) = @_;
+		     my ($self, $message, $search_arg) = @_;
 		     return sprintf("
 ERROR: %s
 code: %s; text: %s
@@ -220,30 +214,50 @@ get RDN (outmost left attribute) value of the given DN
 
 =head2 h_macnorm
 
-MAC address normalyzer
+MAC address field value normalizator.
+
+The standard (IEEE 802) format for printing MAC-48 addresses in
+human-friendly form is six groups of two hexadecimal digits, separated
+by hyphens (-) or colons (:), in transmission order
+(e.g. 01-23-45-67-89-ab or 01:23:45:67:89:ab ) is casted to the twelve
+hexadecimal digits without delimiter.
+
+For the examples above it will look: 0123456789ab
+
+=over
+
+=item mac
+
+MAC address to process
+
+=item dlm
+
+I<delimiter>, if defined (allowed characters: `-` and `:`), then returned mac is normalyzed to human-friendly form as six groups of two hexadecimal digits, separated by this I<delimiter>
+
+=back
 
 =cut
 
     $app->helper(
 		 h_macnorm => sub {
-		     my ( $c, $args ) = @_;
-		     my $arg = {
-				mac => $args->{mac},
-				dlm => $args->{dlm} || '',
-			       };
-		     my $re1 = $self->{a}->{re}->{mac}->{mac48};
-		     my $re2 = $self->{a}->{re}->{mac}->{cisco};
-		     if ( ($arg->{mac} =~ /^$re1$/ || $arg->{mac} =~ /^$re2$/) &&
-			  ($arg->{dlm} eq '' || $arg->{dlm} eq ':' || $arg->{dlm} eq '-') ) {
-			 my $sep = $1 eq '.' ? '\.' : $1;
-			 my @mac_arr = split(/$sep/, $arg->{mac});
-			 @mac_arr = map { substr($_, 0, 2), substr($_, 2) } @mac_arr
-			     if scalar(@mac_arr) == 3;
-			 # log_debug { np(@mac_arr) };
-			 return lc( join( $arg->{dlm}, @mac_arr ) );
-		     } else {
-			 return 0;
+		   my ( $self, $args ) = @_;
+		   my $mac = $args->{mac};
+		   my $dlm = $args->{dlm} // '';
+		   my $re1 = $re->{mac}->{mac48};
+		   my $re2 = $re->{mac}->{cisco};
+
+		   $self->h_log($args);
+		   if ( $mac =~ /^$re1$/ || $mac =~ /^$re2$/ ) {
+		     my $normalized = lc($mac);
+		     $normalized =~ s/[-:]//g;
+		     if ($dlm ne '') {
+		       $normalized = join($dlm, $normalized =~ /(..)/g);
 		     }
+		     $self->h_log($normalized);
+		     return $normalized;
+		   } else {
+		     return 0;
+		   }
 		 });
 
 =head2 h_gen_id
@@ -925,69 +939,72 @@ TODO: error handling
 		   return defined $return_as_arr && $return_as_arr == 1 ? \@file_in_arr : $file_in_str;
 		 });
 
-=head2 cert_info
+=head2 h_cert_info
 
 data taken, generally, from
 
-    openssl x509 -in target.crt -text -noout
-    openssl crl  -inform der -in crl.der -text -noout
+    openssl x509 -text -noout -in target.crt
+    openssl crl  -text -noout -in crl.der -inform der
 
 =cut
 
-    $app->helper(
-		 h_cert_info => sub {
-		   my ( $self, $args ) = @_;
-		   my $arg = {
-			      attr => $args->{attr} || 'userCertificate;binary',
-			      cert => $args->{cert},
-			      ts => defined $args->{ts} && $args->{ts} ? $args->{ts} : "%a %b %e %H:%M:%S %Y",
-			     };
+$app->helper(
+  h_cert_info => sub {
+    my ( $self, $args ) = @_;
 
-		   my ( $cert, $key, $hex, $return );
-		   if ( $arg->{attr} eq 'userCertificate;binary' ||
-			$arg->{attr} eq 'cACertificate;binary' ) {
-		     $cert = Crypt::X509->new( cert => join('', $arg->{cert}) );
-		     if ( $cert->error ) {
-		       return { 'error' => sprintf('Error on parsing Certificate: %s', $cert->error) };
-		     } else {
-		       return  {
-				'Subject' => join(',',@{$cert->Subject}),
-				'CN' => $cert->subject_cn,
-				'Issuer' => join(',',@{$cert->Issuer}),
-				'S/N' => $cert->serial,
-				'Not Before' => strftime ($arg->{ts}, localtime($cert->not_before)),
-				'Not  After' => strftime ($arg->{ts}, localtime( $cert->not_after)),
-				'cert' => $arg->{cert},
-				'error' => undef,
-			       };
-		     }
-		   } elsif ( $arg->{attr} eq 'certificateRevocationList;binary' ) {
-		     # $cert = Crypt::X509::CRL->new( crl => $arg->{cert} );
-		     # if ( $cert->error ) {
-		     #   return { 'error' => sprintf('Error on parsing CertificateRevocationList: %s', $cert->error) };
-		     # } else {
-		     #   $arg->{sn} = $cert->revocation_list;
-		     #   foreach $key (sort (keys %{$arg->{sn}} )) {
-		     # 	 $hex = sprintf("%X", $key);
-		     # 	 $hex = length($hex) % 2 ? '0' . $hex : $hex;
-		     # 	 $arg->{sn}->{$key}->{sn_hex} = $hex;
-		     # 	 $arg->{sn}->{$key}->{revocationDate} =
-		     # 	   strftime ($arg->{ts}, localtime($arg->{sn}->{$key}->{revocationDate}));
-		     #   }
-		     #   return {
-		     # 	       'Issuer' => join(',',@{$cert->Issuer}),
-		     # 	       'AuthIssuer' => join(',',@{$cert->authorityCertIssuer}),
-		     # 	       'RevokedCertificates' => $arg->{sn},
-		     # 	       'Update This' => strftime ($arg->{ts}, localtime($cert->this_update)),
-		     # 	       'Update Next' => strftime ($arg->{ts}, localtime( $cert->next_update)),
-		     # 	       'error' => undef,
-		     # 	       'cert' => $arg->{cert},
-		     # 	      };
-		     # }
-		   } else {
-		     return { 'error' => sprintf('Unknown certificate type'), };
-		   }
-		 });
+    # Validate input arguments
+    return { error => 'No certificate data provided' } unless $args->{cert};
+
+    my $attr = $args->{attr} // 'userCertificate;binary';
+    my $ts   = defined $args->{ts} && $args->{ts} ? $args->{ts} : "%a %b %e %H:%M:%S %Y";
+    my $cert;
+
+    if ( $attr eq 'userCertificate;binary' || $attr eq 'cACertificate;binary' ) {
+      # Parse X.509 certificate
+      $cert = Crypt::X509->new( cert => join('', $args->{cert}) );
+
+      return { error => sprintf('Error parsing certificate: %s', $cert->error) } if $cert->error;
+
+      return {
+        Subject      => join(',', @{ $cert->Subject }),
+        CN           => $cert->subject_cn,
+        Issuer       => join(',', @{ $cert->Issuer }),
+        'S/N'        => $cert->serial,
+        'Not Before' => strftime($ts, localtime($cert->not_before)),
+        'Not After'  => strftime($ts, localtime($cert->not_after)),
+        cert         => $args->{cert},
+        error        => undef,
+      };
+
+    }
+    elsif ( $attr eq 'certificateRevocationList;binary' ) {
+      # Uncomment and implement CRL parsing when needed
+      # $cert = Crypt::X509::CRL->new( crl => $args->{cert} );
+      # return { error => sprintf('Error parsing CRL: %s', $cert->error) } if $cert->error;
+      # my %revoked;
+      # foreach my $key (sort keys %{ $cert->revocation_list }) {
+      #   my $hex = sprintf("%X", $key);
+      #   $hex = length($hex) % 2 ? '0' . $hex : $hex;
+      #   $revoked{$key} = {
+      #     sn_hex         => $hex,
+      #     revocationDate => strftime($ts, localtime($cert->revocation_list->{$key}->{revocationDate})),
+      #   };
+      # }
+      # return {
+      #   Issuer            => join(',', @{ $cert->Issuer }),
+      #   AuthIssuer        => join(',', @{ $cert->authorityCertIssuer }),
+      #   RevokedCertificates => \%revoked,
+      #   'Update This'     => strftime($ts, localtime($cert->this_update)),
+      #   'Update Next'     => strftime($ts, localtime($cert->next_update)),
+      #   cert             => $args->{cert},
+      #   error            => undef,
+      # };
+    }
+
+    return { error => 'Unknown certificate type' };
+  }
+);
+
 
 =head2 h_element_cp_download_btns
 
@@ -1214,15 +1231,26 @@ EXAMPLE
 
 		   $dry_run = 0 if ! defined $dry_run;
 
+		   $self->h_log($p) if $dry_run == 1;
+
+		   $p->{login} = $self->h_macnorm({mac => $p->{login}}) if $p->{authorizedService} eq 'dot1x-eap-md5';
+
 		   # Construct the service DN using parameters from $p and configuration.
+		   my ($ci, $rdn_val);
+		   if ( exists $p->{'userCertificate;binary'} ) {
+		     $ci = $self->h_cert_info({ cert => $p->{'userCertificate;binary'}, ts => "%Y%m%d%H%M%S" });
+		     $rdn_val = $ci->{CN};
+		   } elsif (exists $p->{login}) {
+		     $rdn_val = $p->{login};
+		   } else {
+		     $rdn_val = lc(sprintf("%s.%s", $root->get_value('givenName'), $root->get_value('sn')));
+		   }
 		   my $svc_dn = sprintf(
 					'%s=%s,%s',
 					(exists $self->{app}->{cfg}->{ldap}->{authorizedService}->{$p->{authorizedService}}->{rdn}
 					 ? $self->{app}->{cfg}->{ldap}->{authorizedService}->{$p->{authorizedService}}->{rdn}
 					 : $self->{app}->{cfg}->{ldap}->{defaults}->{rdn}),
-					(exists $p->{login}
-					 ? $p->{login}
-					 : lc(sprintf("%s.%s", $root->get_value('givenName'), $root->get_value('sn')))),
+					$rdn_val,
 					$br->{br_dn}
 				       );
 		   # Search for an existing entry with that DN.
@@ -1259,6 +1287,8 @@ EXAMPLE
 		       foreach my $attr (@{$objectclasses{$oc}->{must}}) {
 			 if ($attr eq 'userid') {
 			   $svc_attrs_must->{uid}++;
+			 } elsif ($attr eq 'userCertificate') {
+			   $svc_attrs_must->{'userCertificate;binary'}++;
 			 } else {
 			   $svc_attrs_must->{$attr}++;
 			 }
@@ -1269,6 +1299,8 @@ EXAMPLE
 			 next unless exists $self->{app}->{cfg}->{ldap}->{authorizedService}->{$p->{authorizedService}}->{attr}->{$attr};
 			 if ($attr eq 'userid') {
 			   $svc_attrs_may->{uid}++;
+			 } elsif ($attr eq 'userCertificate') {
+			   $svc_attrs_may->{'userCertificate;binary'}++;
 			 } else {
 			   $svc_attrs_may->{$attr}++;
 			 }
@@ -1334,12 +1366,26 @@ EXAMPLE
 		   # Substitute placeholders like: `%uid%`, `%associatedDomain%`, etc.
 		   #---------------------------------------------------------------------
 		   my %replace;
-		   $replace{'%uid%'} = $svc_attrs->{uid};
 		   $replace{'%associatedDomain%'} = $svc_attrs->{associatedDomain} if exists $svc_attrs->{associatedDomain};
 		   $replace{'%givenName%'} = $root->get_value('givenName');
 		   $replace{'%sn%'} = $root->get_value('sn') // 'NA';
-		   $replace{'%cn%'} = $root->get_value('cn') // 'NA';
 		   $replace{'%sshPublicKey%'} = $p->{sshPublicKey} // [];
+
+		   if ( exists $p->{'userCertificate;binary'} ) {
+		     $replace{'%umiUserCertificateSn%'} = '' . $ci->{'S/N'};
+		     $replace{'%umiUserCertificateNotBefore%'} = $ci->{'Not Before'};
+		     $replace{'%umiUserCertificateNotAfter%'} = $ci->{'Not After'};
+		     $replace{'%umiUserCertificateSubject%'} = $ci->{'Subject'};
+		     $replace{'%umiUserCertificateIssuer%'} = $ci->{'Issuer'};
+		     $replace{'%cn%'} = $ci->{CN};
+		     push @{$debug->{error}}, $ci->{error} if defined $ci->{error};
+		     $pwd->{clear} = $ci->{CN};
+		     delete $svc_attrs->{uid};
+		     delete $svc_attrs->{userPassword};
+		   } else {
+		     $replace{'%uid%'} = $svc_attrs->{uid};
+		     $replace{'%cn%'} = $root->get_value('cn') // 'NA';
+		   }
 
 		   foreach my $attr (keys %$svc_attrs_must) {
 		     next if exists $svc_attrs->{$attr};
@@ -1347,7 +1393,11 @@ EXAMPLE
 		       $svc_attrs->{$attr} = $uidNumber_last->[0] + 1;
 		     } elsif (exists $self->{app}->{cfg}->{ldap}->{authorizedService}->{$p->{authorizedService}}->{attr}->{$attr}) {
 		       $svc_attrs->{$attr} = $self->{app}->{cfg}->{ldap}->{authorizedService}->{$p->{authorizedService}}->{attr}->{$attr};
-		       $svc_attrs->{$attr} =~ s/%(\w+)%/exists $replace{"%$1%"} ? $replace{"%$1%"} : $&/ge;
+		       if ( $attr eq 'userCertificate;binary' ) { # binary data shouldn't be substituted
+			 $svc_attrs->{$attr} = $p->{'userCertificate;binary'};
+		       } else {
+			 $svc_attrs->{$attr} =~ s/^%([[:alpha:]]+(?:;[[:alpha:]]+)*)%$/exists $replace{"%$1%"} ? $replace{"%$1%"} : $&/ge;
+		       }
 		     } else {
 		       $svc_attrs->{$attr} = undef;
 		       $self->h_log('ERROR: absent must attribute: ' . $attr);
@@ -1356,11 +1406,18 @@ EXAMPLE
 		   foreach my $attr (keys %$svc_attrs_may) {
 		     next if exists $svc_attrs->{$attr} || !exists $self->{app}->{cfg}->{ldap}->{authorizedService}->{$p->{authorizedService}}->{attr}->{$attr};
 		     $svc_attrs->{$attr} = $self->{app}->{cfg}->{ldap}->{authorizedService}->{$p->{authorizedService}}->{attr}->{$attr};
-		     $svc_attrs->{$attr} =~ s/%(\w+)%/exists $replace{"%$1%"} ? $replace{"%$1%"} : $&/ge;
+		       if ( $attr eq 'userCertificate;binary' ) { # binary data shouldn't be substituted
+			 $svc_attrs->{$attr} = $p->{'userCertificate;binary'};
+		       } else {
+			 $svc_attrs->{$attr} =~ s/^%([[:alpha:]]+(?:;[[:alpha:]]+)*)%$/exists $replace{"%$1%"} ? $replace{"%$1%"} : $&/ge;
+		       }
 		   }
 
+		   $svc_attrs->{authorizedService} = sprintf('%s@%s', $p->{authorizedService},
+							     $p->{associatedDomain});
+		   # $dry_run=1;
 		   # $self->h_log($svc_dn);
-		   # $self->h_log($svc_attrs);
+		   $self->h_log($svc_attrs) if $dry_run == 1;
 
 		   # Add the service entry to LDAP.
 		   my $msg;

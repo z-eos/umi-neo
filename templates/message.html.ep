@@ -1,21 +1,27 @@
 %# -*- mode: web; eval: (follow-mode) -*-
 
-%# status => [ 'message', ... ]
-% if ( exists stash->{debug} ) {
-  % my $status = { ok => 'success',
-    % warn => 'warning',
-    % error => 'danger',
-    % debug => 'info' };
-  % my $ico = { ok => 'circle-check',
-    % warn => 'triangle-exclamation',
-    % error => 'circle-exclamation',
-    % debug => 'circle-info' };
-  % foreach my $k (sort(keys(%{stash->{debug}}))) {
-    <div id="message" class="alert alert-<%= $status->{$k} %> mt-4 ">
+% my $debug;
+% if ( flash('debug') && ! stash('debug') ) {
+  % $debug = flash('debug');
+  % delete flash->{debug};
+% } elsif ( session('debug') && ! stash('debug') )
+% {
+  % $debug = session('debug');
+  % delete session->{debug};
+% } elsif ( stash('debug') )
+% {
+  % $debug = stash('debug');
+  % delete stash->{debug};
+% }
+
+%# expected debug message format: status => [ 'message', ... ]
+% if ( defined $debug ) {
+  % foreach my $k (sort(keys(%$debug))) {
+    <div id="message" class="alert alert-<%= app->{cfg}->{ui}->{page}->{debug}->{status}->{$k} %> mt-4 ">
       <div class="">
-	<i class="fa-solid fa-<%= $ico->{$k} %>"></i>
+	<i class="fa-solid fa-<%= app->{cfg}->{ui}->{page}->{debug}->{ico}->{$k} %>"></i>
 	<ul class="fload-start">
-	  % foreach (@{stash->{debug}->{$k}}) {
+	  % foreach (@{$debug->{$k}}) {
 	    %# <li class="user-select-all"><%== $_ %></li>
 	    <li><%== $_ %></li>
 	  % }

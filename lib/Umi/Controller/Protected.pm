@@ -32,20 +32,26 @@ sub homepage ($self) {
 sub other ($self) { $self->render(template => 'protected/other'); }
 
 sub delete ($self) {
-  my $par = $self->req->params->to_hash;
-  $self->h_log($par);
+  my $p = $self->req->params->to_hash;
+  $self->h_log($p);
 
   my $ldap = Umi::Ldap->new( $self->{app}, $self->session('uid'), $self->session('pwd') );
-  my $msg = $ldap->delete($par->{delete_dn},
-			  exists $par->{delete_recursive} && $par->{delete_recursive} eq 'on' ? 1 : 0);
+
+  my $auth = $self->h_is_authorized($p->{delete_dn});
+  $self->h_log($auth);
+  return $self->render(template => 'not_allowed',
+		       debug => { warn => ['attempt to delete dn: ' . $p->{delete_dn}]})
+    unless $auth;
+  my $msg = $ldap->delete($p->{delete_dn},
+			  exists $p->{delete_recursive} && $p->{delete_recursive} eq 'on' ? 1 : 0);
   $self->session( debug => $msg );
 
   ### alas, this redirect by nature performs a GET request
   return $self
     ->redirect_to($self->url_for('search_common')
-		  ->query( search_base_case => $par->{search_base_case},
-			   search_filter => $par->{search_filter},
-			   ldap_subtree => $par->{ldap_subtree} )
+		  ->query( search_base_case => $p->{search_base_case},
+			   search_filter => $p->{search_filter},
+			   ldap_subtree => $p->{ldap_subtree} )
 		 );
 }
 
@@ -333,9 +339,6 @@ sub ldif_export    ($self) {
   my $par = $self->req->params->to_hash;
   # $self->h_log($par);
   $par->{dn} =~ s/ //g;
-  # my $search_arg = { base => substr($par->{dn}, index($par->{dn}, ",")+1),
-  # 		     filter => substr($par->{dn}, 0, index($par->{dn}, ",")),
-  # 		     scope => $par->{scope} };
   my $search_arg = { base => $par->{dn},
 		     scope => $par->{scope} };
   $search_arg->{attrs} = [] if !exists $par->{sysinfo};
@@ -349,7 +352,6 @@ sub ldif_export    ($self) {
   }
 
   # $self->h_log($ldif);
-
   $self->stash(ldif_export_params => $par, ldif => $ldif);
   return $self->render(template => 'protected/tool/ldif-export'); #, layout => undef);
 }
@@ -536,7 +538,7 @@ sub keygen_gpg ($self) {
 
 =head2 keyimport_gpg
 
-Import GPG from file or TextArea field
+Import GPG from file or string
 
 =cut
 
@@ -585,48 +587,68 @@ attr_to_modify exists)
 =cut
 
 sub modify ($self) {
-  my $par = $self->req->params->to_hash;
+  my $p = $self->req->params->to_hash;
   my $uploads = $self->req->uploads;
+  my ($crt, %debug, $service);
   # $self->h_log($uploads);
   if ( @$uploads ) {
+    ($service) = $p->{authorizedService} =~ /([^@]+)/;
+
     foreach ( @$uploads ) {
       # $self->h_log($_);
       my $n = $_->name;
       $n =~ s/_binary/;binary/;
-      $par->{$n} = $_->slurp;
+      $p->{$n} = $_->slurp;
 
       if ( $n eq 'userCertificate;binary' ) {
-	my $crt = $self->h_cert_info({ cert => $par->{$n}, ts => "%Y%m%d%H%M%S", });
-        $par->{umiUserCertificateSn}        = '' . $crt->{'S/N'},
-	$par->{umiUserCertificateNotBefore} = '' . $crt->{'Not Before'},
-	$par->{umiUserCertificateNotAfter}  = '' . $crt->{'Not  After'},
-	$par->{umiUserCertificateSubject}   = '' . $crt->{'Subject'},
-	$par->{umiUserCertificateIssuer}    = '' . $crt->{'Issuer'};
+	$crt = $self->h_cert_info({ cert => $p->{$n}, ts => "%Y%m%d%H%M%S", });
+        $p->{umiUserCertificateSn}        = '' . $crt->{'S/N'},
+	$p->{umiUserCertificateNotBefore} = '' . $crt->{'Not Before'},
+	$p->{umiUserCertificateNotAfter}  = '' . $crt->{'Not After'},
+	$p->{umiUserCertificateSubject}   = '' . $crt->{Subject},
+	$p->{umiUserCertificateIssuer}    = '' . $crt->{Issuer};
+	$p->{cn} = $crt->{CN}
+	  if exists $p->{cn} && $self->{app}->{cfg}->{ldap}->{authorizedService}->{$service}->{rdn} ne 'cn';
+	# FIX ?? this relates to the services like `dot1x-eap-tls`
+	# and not necesseraly should be equal to certificate CN
+	# need to check, wheather userPassword was provided to not overwrite it
+	$p->{userPassword} = $crt->{CN} if exists $p->{userPassword};
       }
     }
   }
+  # $self->h_log($p);
 
-  my $attr_to_add = exists $par->{attr_to_add} && $par->{attr_to_add} ne '' ? $par->{attr_to_add} : undef;
-  my $dn_to_modify = $par->{dn_to_modify};
+  my $attr_to_add = exists $p->{attr_to_add} && $p->{attr_to_add} ne '' ? $p->{attr_to_add} : undef;
+  my $dn_to_modify = $p->{dn_to_modify};
   my $attr_to_ignore;
   my $rdn = $self->h_get_rdn($dn_to_modify);
   %{$attr_to_ignore} = map {$_ => 1}
     @{[qw(dn_to_modify attr_to_add attr_unused modifyTimestamp modifiersName creatorsName createTimestamp)]};
   $attr_to_ignore->{$rdn} = 1;
 
+  my $auth = $self->h_is_authorized($p->{dn_to_modify});
+  $self->h_log($auth);
+  return $self->render(template => 'not_allowed',
+		       debug => { warn => ['attempt to modify dn: ' . $p->{dn_to_modify}]})
+    unless $auth;
   my $v = $self->validation;
   return $self->render(template => 'protected/tool/modify') unless $v->has_data;
-  # return $self->render(template => 'protected/tool/modify') unless %$par;
-
-  # $self->h_log($par);
+  # return $self->render(template => 'protected/tool/modify') unless %$p;
 
   my $ldap = Umi::Ldap->new( $self->{app}, $self->session('uid'), $self->session('pwd') );
-  my $search_arg = { base => $par->{dn_to_modify}, scope => 'base' };
+  my $search_arg = { base => $p->{dn_to_modify}, scope => 'base' };
   $search_arg->{attrs} = defined $attr_to_add ? [$attr_to_add] : [];
-  $self->h_log( $search_arg );
+  # $self->h_log( $search_arg );
   my $s = $ldap->search( $search_arg );
-  $self->h_log( $self->h_ldap_err($s, $search_arg) ) if $s->code;
-  # $self->h_log( $s->as_struct );
+  if ( $s->code ) {
+    $self->h_log( $self->h_ldap_err($s, $search_arg) );
+    return $self->render(template => 'protected/home',
+			 debug => {
+				   status => 'error',
+				   message => $ldap->err($s, 0, $p->{dn_to_modify})->{html}
+				  });
+    # $self->h_log( $s->as_struct );
+  }
 
   my %skip = (
 	      jpegPhoto => 1,
@@ -637,8 +659,8 @@ sub modify ($self) {
   my ($e_orig, $e_tmp);
   foreach ($s->entry->attributes) {
     next if $_ eq $rdn;
-    # change only on uploaded image, not absent form field
-    next if $skip{$_} && exists $par->{$_} && $par->{$_} eq '';
+    # change only on uploaded field data, not absent field
+    next if $skip{$_} && exists $p->{$_} && $p->{$_} eq '';
     $e_tmp = $s->entry->get_value($_, asref => 1);
     if ( scalar @$e_tmp == 1 ) {
       $e_orig->{$_} = $e_tmp->[0];
@@ -647,7 +669,7 @@ sub modify ($self) {
     }
   }
 
-  # $self->h_log($par);
+   $self->h_log($p);
   # $self->h_log($e_orig);
 
   # `UNUSED ATTRIBUTES` select element
@@ -660,38 +682,38 @@ sub modify ($self) {
     @attr_unused = $self->h_attr_unused($s->entry, \%oc);
   }
   # NEED to re-check what it is for :(
-  $self->stash({ attr_to_add => $par->{attr_to_add} })
+  $self->stash({ attr_to_add => $p->{attr_to_add} })
     if defined $attr_to_add;
 
   my ($add, $delete, $replace, $changes);
-  if ( keys %$par < 3 && !exists $par->{add_objectClass} ) {
+  if ( keys %$p < 3 && !exists $p->{add_objectClass} ) {
     # here we've just clicked, search result  menu `modify` button
     $self->h_log('~~~~~-> MODIFY [' . $self->req->method . ']: FIRST RUN (search result menu choosen)');
     delete $self->session->{e_orig};
     $self->session->{e_orig} = $e_orig;
-  } elsif (exists $par->{add_objectClass}) {
+  } elsif (exists $p->{add_objectClass}) {
     # new objectClass addition is chosen
     $self->h_log('~~~~~-> MODIFY [' . $self->req->method . ']: ADD OBJECTCLASS');
-    $self->h_log($par);
-    foreach (keys(%$par)) {
+    $self->h_log($p);
+    foreach (keys(%$p)) {
       next if $_ !~ /^add_/;
-      push @$add, substr($_,4) => $par->{$_};
+      push @$add, substr($_,4) => $p->{$_};
     }
     push @$changes, add => $add;
     if ($changes) {
       $self->h_log($changes);
       my $msg = $ldap->modify($s->entry->dn, $changes);
-      $self->stash(debug => {$msg->{status} => [ $msg->{message} ]});
+      push @{$debug{$msg->{status}}}, $msg->{message};
     }
   } else {
     # form modification made
-    $self->h_log('~~~~~-> MODIFY [' . $self->req->method . ']: FORM CHANGED?');
-    delete $par->{$_} foreach (keys %{$attr_to_ignore});
-    foreach (keys %$par) {
-      delete $par->{$_} if $par->{$_} eq '';
+    $self->h_log('~~~~~-> MODIFY [' . $self->req->method . ']: IS FORM CHANGED?');
+    delete $p->{$_} foreach (keys %{$attr_to_ignore});
+    foreach (keys %$p) {
+      delete $p->{$_} if $p->{$_} eq '';
     }
 
-    my $diff = $self->h_hash_diff( $e_orig, $par);
+    my $diff = $self->h_hash_diff( $e_orig, $p);
     #$self->h_log($diff);
     if ( %{$diff->{added}} ) {
       push @$add, $_ => $diff->{added}->{$_} foreach (keys(%{$diff->{added}}));
@@ -709,7 +731,22 @@ sub modify ($self) {
     if ($changes) {
       # $self->h_log($changes);
       my $msg = $ldap->modify($s->entry->dn, $changes);
-      $self->stash(debug => {$msg->{status} => [ $msg->{message} ]});
+      push @{$debug{$msg->{status}}}, $msg->{message};
+
+      if ( exists $p->{'userCertificate;binary'} ) {
+	# ($service) = $p->{authorizedService} =~ /([^@]+)/;
+	# $self->h_log($service);
+	my $moddn = $self->{app}->{cfg}->{ldap}->{authorizedService}->{$service}->{rdn} . '=' . $crt->{CN};
+	$msg = $ldap->moddn({ src_dn => $s->entry->dn, newrdn => $moddn, });
+	# $self->h_log($msg);
+	push @{$debug{$msg->{status}}}, $msg->{message};
+	my $modified_dn = $s->entry->dn;
+	$modified_dn =~ s/^(.*?=)[^,]+(,.*)/$1$crt->{CN}$2/;
+	# $self->h_log(\%debug);
+	return $self->session(debug => \%debug)->redirect_to($self->url_for('modify')
+							   ->query( dn_to_modify => $modified_dn ));
+      }
+
     }
   }
 
@@ -729,7 +766,9 @@ sub modify ($self) {
   $self->{app}->h_log( $self->{app}->h_ldap_err($s, $search_arg) ) if $s->code;
   @attr_unused = $self->h_attr_unused($s->entry, \%oc) if ! defined $attr_to_add;
 
-  $self->stash(entry => $s->entry,
+  $self->stash(
+	       debug => \%debug,
+	       entry => $s->entry,
 	       aa => \%aa, as => \%as, oc => \%oc,
 	       attr_unused => \@attr_unused,
 	       attr_to_add => $attr_to_add,
@@ -1008,11 +1047,12 @@ sub project_new ($self) {
   $v->required('team_devops');
   # $v->required('team_qa');
 
-  $v->error( proj_name   => ['Must be 2-50 charaters in length and can be only ASCII characters: A-Za-z0-9.-_'] ) if $v->error('proj_name');
-  $v->error( team_pm     => ['Select at least one member.'])                 if $v->error('team_pm');
-  $v->error( team_back   => ['Select at least one member.'])                 if $v->error('team_back');
-  $v->error( team_front  => ['Select at least one member.'])                 if $v->error('team_front');
-  $v->error( team_devops => ['Select at least one member.'])                 if $v->error('team_devops');
+  $v->error( proj_name   => ['Must be 2-50 charaters in length and can be only ASCII characters: A-Za-z0-9.-_'] )
+    if $v->error('proj_name');
+  $v->error( team_pm     => ['Select at least one member.']) if $v->error('team_pm');
+  $v->error( team_back   => ['Select at least one member.']) if $v->error('team_back');
+  $v->error( team_front  => ['Select at least one member.']) if $v->error('team_front');
+  $v->error( team_devops => ['Select at least one member.']) if $v->error('team_devops');
   # $v->error( team_qa    => ['Select at least one mamber.'])                 if $v->error('team_qa');
 
   # $self->h_log($v->error);
@@ -1258,7 +1298,14 @@ sub resolve ($self) {
 		 text => join("\n", @{$a->{body}}) // '' );
 }
 
-sub moddn ($self) {
+=head1 moddn
+
+Rename the entry given by "DN" on the server.
+
+=cut
+
+sub moddn ($self) { 
+  
   my $par = $self->req->params->to_hash;
   # $self->h_log($par);
 

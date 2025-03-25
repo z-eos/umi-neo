@@ -3,6 +3,7 @@
 /META.yml
 /META.json
 /MYMETA.*
+/TAGS
 *.o
 *.pm.tdy
 *.bs

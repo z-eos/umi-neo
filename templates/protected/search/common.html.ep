@@ -143,7 +143,7 @@
 	    % next if $attr eq 'createTimestamp' || $attr eq 'creatorsName' || $attr eq 'modifyTimestamp' || $attr eq 'modifiersName';
 
 	    <div class="row">
-	      <div class="col-3 text-end fw-bold fs-6"><%= $attr %></div>
+	      <div class="col-3 text-end fw-bold fs-6 text-truncate"><%= $attr %></div>
 	      <div class="col-9 user-select-all">
 
 		% for my $attr_val (@{$e->get_value($attr, asref => 1)}) {

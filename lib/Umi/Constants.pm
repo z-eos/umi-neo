@@ -11,6 +11,7 @@ our @EXPORT_OK = qw(
 		     GENDER
 		     RE
 		     SARGON
+		     UMIAUTH
 		     UMIOVPNADDDEVOS
 		     UMIOVPNADDDEVTYPE
 		     UMIOVPNADDSTATUS
@@ -21,7 +22,34 @@ use constant {
 		     ip    => '(?:(?:[0-9]|[1-9]\d|1\d{2}|2[0-4]\d|25[0-5])\.){3}(?:[0-9]|[1-9]\d|1\d{2}|2[0-4]\d|25[0-5])',
 		     net3b => '(?:(?:[0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){2}',
 		     net2b => '(?:(?:[0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){1}',
+		     mac => {
+			     mac48 => '(?:[[:xdigit:]]{2}([-:]))(?:[[:xdigit:]]{2}\1){4}[[:xdigit:]]{2}',
+			     # https://stackoverflow.com/a/21457070
+			     cisco => '(?:[[:xdigit:]]{4})(?:([\.])[[:xdigit:]]{4}){2}',
+			    },
 		    },
+	      UMIAUTH => {
+			  # roles weights (supposed to be used in is_authorized method)
+			  role => {
+				   admin => 0,
+				   coadmin => 1,
+				   hr => 2,
+				   operator => 3,
+				  },
+			 },
+	      UMIOVPNADDSTATUS => {
+				disabled => 0,
+				enabled => 1
+			       },
+	      UMIOVPNADDDEVTYPE => [qw( notebook macbook wrt desktop phone other )],
+	      UMIOVPNADDDEVOS => [qw( windows unix macos ios android other )],
+	      # ISO 5218 Representation of human sex
+	      GENDER => {
+			 0 => 'Not known',
+			 1 => 'Male',
+			 2 => 'Female',
+			 9 => 'Not applicable',
+			},
 	      SARGON => {
 			 ENDPOINTS => {
 				       'ALL'                      => 'ALL',
@@ -171,19 +199,6 @@ use constant {
 					      CAP_WAKE_ALARM
 					      CAP_AUDIT_CONTROL
 					   )],
-			},
-	      UMIOVPNADDSTATUS => {
-				disabled => 0,
-				enabled => 1
-			       },
-	      UMIOVPNADDDEVTYPE => [qw( notebook macbook wrt desktop phone other )],
-	      UMIOVPNADDDEVOS => [qw( windows unix macos ios android other )],
-	      # ISO 5218 Representation of human sex
-	      GENDER => {
-			 0 => 'Not known',
-			 1 => 'Male',
-			 2 => 'Female',
-			 9 => 'Not applicable',
 			},
 	      # ISO 3166 country codes
 	      COUNTRIES => {

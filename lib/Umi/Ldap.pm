@@ -224,7 +224,7 @@ sub modify {
   my $msg = $self->ldap->modify ( $dn, changes => $changes, );
   if ($msg->is_error()) {
     $message = $self->err( $msg, 0, $dn );
-    $message->{caller} = 'call to Umi::Ldap::add from ' . (caller(1))[3] . ': ';
+    $message->{caller} = 'call to Umi::Ldap::modify from ' . (caller(1))[3] . ': ';
     $status = 'error';
   } else {
     $message->{html} = sprintf('DN: %s has been successfully modified.', $dn);
@@ -305,6 +305,36 @@ sub last_num {
       my @arr = $mesg->sorted ( $attr // 'uidNumber' );
       # $self->{app}->h_log( \@arr );
       $res = $arr[$#arr]->get_value( $attr // 'uidNumber' );
+    }
+  }
+  return [ $res, $err ];
+}
+
+=head2 get_role
+
+returns name of role uid belongs to or undef if none detected
+
+returns error if more than one role detected
+
+=cut
+
+sub get_role {
+  my ($self, $uid) = @_;
+  my ($err, $res);
+  if ( defined $uid ) {
+    my $search_arg = { base   => $self->{app}->{cfg}->{ldap}->{base}->{system_role},
+		       filter => '(memberUid=' . $uid . ')', };
+    my $msg = $self->search( $search_arg );
+    # $self->{app}->h_log( $search_arg );
+    if ( $msg->code ) {
+      $self->{app}->h_log( $self->{app}->h_ldap_err($msg, $search_arg) );
+      $err = $self->{app}->h_ldap_err($msg, $search_arg)->{html};
+    } else {
+      if ( $msg->count && $msg->count == 1 ) {
+	$res = $msg->entry->get_value( 'cn' );
+      } else {
+	$err = sprintf("root account uid: %s belongs to multiple roles");
+      }
     }
   }
   return [ $res, $err ];
@@ -514,6 +544,13 @@ sub delete {
 
 Net::LDAP->moddn wrapper
 
+expected input:
+
+    src_dn
+    newrdn
+    deleteoldrdn
+    newsuperior
+
 =cut
 
 sub moddn {
@@ -523,20 +560,23 @@ sub moddn {
   if (defined $args->{newsuperior} ) {
     $msg = $self->ldap->moddn ( $args->{src_dn},
 				newrdn       => $args->{newrdn},
-				deleteoldrdn => $args->{deleteoldrdn} // '1' );
+				deleteoldrdn => $args->{deleteoldrdn} // '1',
+				newsuperior  => $args->{newsuperior} );
   } else {
     $msg = $self->ldap->moddn ( $args->{src_dn},
 				newrdn       => $args->{newrdn},
-				deleteoldrdn => $args->{deleteoldrdn} // '1',
-				newsuperior  => $args->{newsuperior} );
+				deleteoldrdn => $args->{deleteoldrdn} // '1' );
   }
   # $self->{app}->h_log($msg);
   my $return;
   if ($msg->is_error()) {
-    $return = { error => [$self->err( $msg, 0, $args->{src_dn} )->{html}] };
+    $return = { status => 'error', message => $self->err( $msg, 0, $args->{src_dn} )->{html} };
   } else {
-    $return = { ok => [ 'DN ' . $args->{src_dn} . ' successfully modified<br>new RDN <mark class="bg-success">' . $args->{newrdn} . '</mark>'] };
+    $return = { status => 'ok',
+		message => sprintf('Entry with DN: <mark>%s</mark> successfully renamed, new RDN: <mark class="bg-success">%s</mark>',
+				   $args->{src_dn}, $args->{newrdn}) };
   }
+  # $self->{app}->h_log($return);
   return $return;
 }
 

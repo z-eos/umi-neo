@@ -1,7 +1,7 @@
 %# -*- mode: web; eval: (follow-mode) -*-
 
 <h2 class="my-4">
-  <i id="title-icon" class="fa-solid fa-file-circle-plus me-3 text-muted"></i>
+  <i class="fa-solid <%= app->{cfg}->{ui}->{menu}->{new_svc}->{ico} . ' ' .  app->{cfg}->{ui}->{menu}->{new_svc}->{col} %> me-3"></i>
   New Service <small><em class="text-muted font-monospace fs-6">
     for dn: <%= $dn_to_new_svc %>
   </em></small>
@@ -10,7 +10,7 @@
 
 %= form_for '/profile/newsvc' => {class => "form-horizontal"} => (method => 'POST', enctype => 'multipart/form-data', id => 'dynamicForm') => begin
   %= hidden_field dn_to_new_svc => $dn_to_new_svc
-  
+
   % my $options = [['--- choose service ---' => '']];
   % foreach (sort(keys(%{app->{cfg}->{ldap}->{authorizedService}}))) {
     % next if ! exists app->{cfg}->{ldap}->{authorizedService}->{$_}->{data_fields} ||
@@ -66,7 +66,7 @@
     % {
       <div class="input-group mb-3 d-none" data-field="<%= $fld %>">
 	<span class="input-group-text" title="<%= $schema->{$fld}->{desc} %>"><%= $fld_label %>:</span>
-	<select name="ovpnAddStatus" class="form-control custom-select" id="ovpnAddStatus" title="<%= app->{cfg}->{ui}->{form_fields}->{$fld}->{title} %>">
+	<select name="umiOvpnAddStatus" class="form-control custom-select" id="umiOvpnAddStatus" title="<%= app->{cfg}->{ui}->{form_fields}->{$fld}->{title} %>">
 	  % foreach (sort(keys(%{constant('UMIOVPNADDSTATUS')}))) {
 	    <option value="<%= constant('UMIOVPNADDSTATUS')->{$_} %>"<%= ' selected' if $_ eq 'enabled' %>><%= $_ %></option>
 	  % }
@@ -101,7 +101,7 @@
       %              '';
 
       % $ph .= lc sprintf('%s.%s', $root->get_value('givenName'), $root->get_value('sn')) if $fld eq 'homeDirectory' || $fld eq 'login';
-      
+
       <div class="input-group mb-3 d-none" data-field="<%= $fld %>">
 	%= label_for $fld => $fld_label, class => 'input-group-text', title => $schema->{$fld}->{desc}
 	%= text_field $fld, class => 'form-control', id => $fld, placeholder => $ph
@@ -133,7 +133,7 @@
 % }
 
 <script>
- 
+
  document.addEventListener('DOMContentLoaded', () => {
    const authorizedService = document.getElementById('authorizedService');
    const fieldMap = {
@@ -195,9 +195,9 @@
        iconNode.classList.add('fa-solid');
        iconNode.classList.add('fa-file-circle-plus');
      }
-     
+
    });
-   
+
    authorizedService.dispatchEvent(new Event('change', { bubbles: true }));
 
  });

@@ -32,15 +32,18 @@ sub startup ($self) {
   $self->plugin('Umi::Helpers::Common');
   $self->plugin('Umi::Helpers::SearchResult');
 
-  # in this example, we have a class that is devoted to handling our
-  # authentication calls.
+  # handling authentication calls.
   my $authn = Umi::Authentication->new($self->app);
-  # we use this class to provide the two callbacks required by the
-  # Authentication plugin, namely load_user and validate_user. The two
-  # sub:s close on lexical variable $authn, keeping it alive after we
-  # exit from this "startup" method.
+  ######################################################################
+  # we use this class to provide the two callbacks required by the     #
+  # Authentication plugin, namely load_user and validate_user. The two #
+  # subs close on lexical variable $authn, keeping it alive after we   #
+  # exit from this "startup" method.				       #
+  ######################################################################
 
-  ### authentication is performed in lib/Umi/Controller/Public.pm
+  ###################################################################
+  # NB: authentication is performed in lib/Umi/Controller/Public.pm #
+  ###################################################################
   $self->plugin('Authentication' =>
 		{
 		 load_user     => sub ($app, $uid) { $authn->load_user($uid) },
@@ -242,9 +245,10 @@ sub _startup_routes ($self) {
   $protected_root->get('/')->to('protected#homepage')->name('protected_root');
   $protected_root->get('/other')->to('protected#other');
 
-  ###
-  ### mod Authorization start only with v.1.0.6 — $...->requires(has_priv => ['r-people,r-group', {cmp => 'and'}])->...;
-  ###
+
+  ######################################################################################################################
+  # mod Authorization start only with v.1.0.6 — $...->requires(has_priv => ['r-people,r-group', {cmp => 'and'}])->...; #
+  ######################################################################################################################
 
   ## PROFILE
   $protected_root
@@ -458,11 +462,11 @@ sub _startup_routes ($self) {
   $protected_root
     ->get( '/tool/modify')
     ->requires(is_role => ['admin,coadmin,hr', {cmp => 'or'}])
-    ->to('protected#modify');
+    ->to('protected#modify')->name('modify');
   $protected_root
     ->post('/tool/modify')
     ->requires(is_role => ['admin,coadmin,hr', {cmp => 'or'}])
-    ->to('protected#modify');
+    ->to('protected#modify')->name('modify');
 
   $protected_root
     ->post('/tool/moddn')
@@ -491,15 +495,18 @@ sub _startup_routes ($self) {
     ->requires(is_role => ['admin,coadmin,hr', {cmp => 'or'}])
     ->to('protected#sysinfo');
 
-  # default to 404 for anything that has not been handled explicitly.
-  # This is probably reinventing a wheel already present in Mojolicious
+  #######################################################################
+  # Default to 404 for anything that has not been handled explicitly.   #
+  # This is probably reinventing a wheel already present in Mojolicious #
+  # Without this 404 is returned even on auth expiration	        #
+  #######################################################################
   my $nf = sub ($c) {$c->render(template => 'not_found', status => 404)};
   $public_root->any($_ => $nf) for qw< * / >;
   $protected_root->any($_ => $nf) for qw< * / >;
 
   $self->controller_class('Umi::Controller');
   $self->defaults(layout => 'default');
-  $self->log->info('startup complete');
+  $self->log->info('-=* STARTUP COMPLETE *=-');
 
   return $self;
 }
@@ -512,6 +519,12 @@ sub _authentication_routes ($self, $root) {
   $root->post('/login' )->to(%ctr, action => 'do_login');
   $root->get('/logout' )->to(%ctr, action => 'do_logout');
   $root->post('/logout')->to(%ctr, action => 'do_logout');
+  return $self;
+}
+
+sub _default_to_403 ($self, $root) {
+  my $nf = sub ($c) {$c->render(template => 'not_allowed', status => 403)};
+  $root->any($_ => $nf) for qw< * / >;
   return $self;
 }
 

@@ -28,7 +28,10 @@
 	</div>
 
         <div class="input-group">
-	  %= submit_button 'Login', class => 'form-control btn btn-primary btn-block rounded-0 text-uppercase'
+	  <button class="form-control btn btn-primary btn-block rounded-0 text-uppercase" type="submit" value="Login" title="Login">
+	    <i class="fa-solid fa-right-to-bracket"></i> Login
+	  </button>
+	  %# = submit_button 'Login', class => 'form-control btn btn-primary btn-block rounded-0 text-uppercase'
 	</div>
 
       </div>

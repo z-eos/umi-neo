@@ -9,33 +9,39 @@
 -->
 <aside id="aside" class="collapse show">
   <nav id="sidebar-right" class="float-right" data-url-tree="/ldap_tree">
-    <!-- Tab navigation buttons -->
-    <ul class="nav nav-pills nav-fill" role="tablist">
+    <!-- === *** TAB NAVIGATION BUTTONS *** === -->
+    <ul class="nav nav-underline nav-fill mt-2" id="asideNav" role="tablist">
       
       <!-- LDAP Tree Tab Button -->
       <li class="nav-item" title="LDAP tree">
-	<a class="nav-link active" data-bs-toggle="tab" href="#ldap-tree-tab" role="tab">
+	<a href="#ldap-tree-tab" class="nav-link active" id="idapTreeTab" role="tab"
+	   data-bs-toggle="tab" data-bs-target="#ldapTreeTabContent"
+	   aria-controls="ldapTreeTabContent" aria-selected="true">
 	  <i class="fa-solid fa-project-diagram text-secondary"></i>
 	</a>
       </li>
 
       <!-- IPAM Tab Button -->
       <li class="nav-item" title="IPAM">
-	<a class="nav-link" data-bs-toggle="tab" href="#ipam-tab" role="tab">
+	<a href="#ipam-tab" class="nav-link" id="ipamTreeTab" role="tab"
+	   data-bs-toggle="tab" data-bs-target="#ipamTreeTabContent"
+	   aria-controls="ipamTreeTabContent" aria-selected="true">
 	  <i class="fa-solid fa-network-wired text-secondary"></i>
 	</a>
       </li>
       
       <!-- Settings Tab Button -->
       <li class="nav-item">
-	<a class="nav-link" data-bs-toggle="tab" href="#settings" role="tab">
+	<a href="#settings" id="settings-tab" class="nav-link" data-bs-toggle="tab" role="tab"
+	   data-bs-toggle="tab" data-bs-target="#settings"
+	   aria-controls="settings" aria-selected="true">
 	  <i class="fa-solid fa-cogs text-secondary"></i>
 	</a>
       </li>
     </ul>
 
     <!-- === *** TAB PANES CONTENT *** === -->
-    <div class="tab-content">
+    <div class="tab-content" id="asideNavContent">
 
       <!-- === LDAP TREE TAB CONTENT === -->
       
@@ -74,7 +80,7 @@
       </script>
 
       <!-- LDAP Tree tab panel content -->
-      <div class="tab-pane active" id="ldap-tree-tab" role="tabpanel">
+      <div class="tab-pane show active" id="ldapTreeTabContent" role="tabpanel">
 	
 	<!-- Help section header - collapsible -->
 	<div class="callout m-0 py-2 text-center text-uppercase">
@@ -146,8 +152,8 @@
 
       </div>
 
-      <!-- === IPAM TAB SECTION START ===  -->
-      <div class="tab-pane" id="ipam-tab" role="tabpanel">
+      <!-- === IPAM TAB SECTION CONTENT START ===  -->
+      <div class="tab-pane" id="ipamTreeTabContent" role="tabpanel">
 	<!-- Help section header - collapsible -->
 	<div class="callout m-0 py-2 text-center text-uppercase">
 	  <button class="btn border-0"
@@ -213,8 +219,7 @@
                style="position: absolute; top: 50px; right: 20px;"
                role="alert" aria-live="assertive" aria-atomic="true">
 	    <div class="toast-header bg-info fw-bold">
-              <i class="fa-solid fa-clipboard me-4"></i>
-              IP Copied
+              <i class="fa-solid fa-clipboard me-4"></i>IP Copied
 	    </div>
 	    <div id="ip-copied" class="toast-body text-center fw-bold"></div>
 	  </div>
@@ -319,7 +324,7 @@
 	  </ul>
 	</div>
       </div>
-      <!-- === IPAM TAB SECTION END ===  -->
+      <!-- === IPAM TAB SECTION CONTENT END ===  -->
 
 
       <!-- === SETTINGS TAB SECTION === -->
@@ -421,11 +426,11 @@
 
 	  </div>
 	</form>
-      </div>
+            </div>
       <!-- === SETTINGS TAB SECTION END === -->
-		    
+      
     </div>
     <!-- === END TAB CONTENT === -->
-		    
+    
   </nav>
 </aside>

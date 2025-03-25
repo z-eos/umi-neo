@@ -3,6 +3,8 @@
 % use Mojo::JSON qw(j);
 % use Mojo::Util qw(html_attr_unescape);
 
+%= include 'message'
+
 <h2 class="my-5">
   <i class="fa-solid <%= app->{cfg}->{ui}->{menu}->{modify}->{ico} . ' ' .  app->{cfg}->{ui}->{menu}->{modify}->{col} %> me-3"></i>
   Modify DN: <small><em class="align-middle text-muted font-monospace fs-6">
