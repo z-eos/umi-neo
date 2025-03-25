@@ -79,8 +79,8 @@
       % } else
       %{
 
-	% foreach $dn (sort keys %$hash) {
-	  % $v = $hash->{$dn};
+	% foreach $dn (sort keys %$profiled_user) {
+	  % $v = $profiled_user->{$dn};
 	  % my $card_col = '';
 	  % if ($group_blocked_gidnumber eq $v->{gidnumber}->[0]) {
 	    % $card_col = 'danger';
