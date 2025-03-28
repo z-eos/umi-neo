@@ -243,10 +243,10 @@
 		     :class="{
 			    'fw-bold': ipaitem.isOpen,
 			    '': !ipaitem.isOpen,
-			    'fa-minus': !ipaitem.host,
-			    'text-success fa-globe': ipaitem.host && ipaitem.host.indexOf('.') !== -1,
-			    'text-danger  fa-globe': ipaitem.host === 'query timed out',
-			    'text-warning fa-globe': ipaitem.host && ipaitem.host === 'NXDOMAIN',
+			    'fa-circle fa-2xs': !ipaitem.host,
+			    'text-success-emphasis fa-globe': ipaitem.host && ipaitem.host.indexOf('.') !== -1,
+			    'text-danger-emphasis  fa-globe': ipaitem.host === 'query timed out',
+			    'text-warning-emphasis fa-globe': ipaitem.host && ipaitem.host === 'NXDOMAIN',
 			    'text-danger fa-exclamation-circle': ipaitem.host && ipaitem.host !== 'NXDOMAIN' && ipaitem.host !== 'NOERROR' && ipaitem.host.indexOf('.') === -1 
 			    }"></i>
 		</div>
@@ -254,10 +254,10 @@
 		<!-- Display item name with DNS resolution status coloring -->
 		<div :class="{ 'fw-bold': ipaitem.isOpen,
 			     '': !ipaitem.isOpen,
-			     'text-success': ipaitem.host && ipaitem.host.indexOf('.') !== -1,
-			     'text-danger': ipaitem.host === 'query timed out',
-			     'text-warning': ipaitem.host && ipaitem.host === 'NXDOMAIN',
-			     'text-danger': ipaitem.host && ipaitem.host !== 'NXDOMAIN' && ipaitem.host !== 'NOERROR' && ipaitem.host.indexOf('.') === -1 }"
+			     'text-success-emphasis': ipaitem.host && ipaitem.host.indexOf('.') !== -1,
+			     'text-danger-emphasis': ipaitem.host === 'query timed out',
+			     'text-warning-emphasis': ipaitem.host && ipaitem.host === 'NXDOMAIN',
+			     'text-danger-emphasis': ipaitem.host && ipaitem.host !== 'NXDOMAIN' && ipaitem.host !== 'NOERROR' && ipaitem.host.indexOf('.') === -1 }"
 		     @mouseover        = "resolveThis"
 		     @click.exact      = "showIpaItem(0)"
 		     @click.ctrl.exact = "showIpaItem(1)"
@@ -265,14 +265,14 @@
 		  {{ipaitem.dn}}
 		  <!-- Badge showing count of used IPs in a subnet -->
 		  <small v-if="faddr && ipaitem.dn && (ipaitem.dn.match(/\./g) || []).length == 2 && ipaitem.children && ipaitem.children.length"
-			 class="badge badge-pill badge-info pt-2">
+			 class="badge badge-pill umi-text-orange">
 		    used {{ipaitem.children.length}} ip
 		  </small>
 		</div>
               </div>
               
               <!-- Expandable section for showing unused IPs in a subnet -->
-              <div class="faddr ldap-tree-point ms-2 text-info" v-if="faddr && faddr.children && faddr.children.length"
+              <div class="faddr ldap-tree-point ms-2 text-info-emphasis" v-if="faddr && faddr.children && faddr.children.length"
 		   @click.exact="isOpenFaddr = !isOpenFaddr">
 		<div class="umi-text-xs me-2">
 		  <i class="fa-solid fa-plus"  v-if="!isOpenFaddr"></i>
@@ -282,7 +282,7 @@
               </div>
               
               <!-- List of unused IPs that can be clicked to copy to clipboard -->
-              <ul class="font-monospace ldap-tree text-info" v-if="faddr && faddr.children && faddr.children.length && isOpenFaddr">
+              <ul class="font-monospace ldap-tree text-info-emphasis" v-if="faddr && faddr.children && faddr.children.length && isOpenFaddr">
 		<li class="faddr-leaf ldap-tree-item ms-2" v-for="(child, index) in faddr.children"
 		    @click.exact="copyText($event)"
 		    data-bs-toggle="popover" data-bs-placement="top"

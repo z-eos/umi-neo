@@ -12,8 +12,13 @@ use Net::LDAP::Util qw(generalizedTime_to_time);
 sub register {
   my ($self, $app) = @_;
 
-  $app->helper(
-	       h_rewrite_dn => sub {
+=head1 h_rewrite_dn
+
+returns dn rewritten to be used in a header of the object on a search page
+
+=cut
+
+  $app->helper( h_rewrite_dn => sub {
 		 my ($c, $dn, $delim) = @_;
 		 $delim = ' > ' if ! defined $delim;
 		 my @x = split(/,/, $dn);
@@ -25,8 +30,13 @@ sub register {
 		 return join($delim, @y);
 	       });
 
-  $app->helper(
-	       h_dn_color => sub {
+=head1 h_dn_color
+
+returns fa- class color to be used for the entr
+
+=cut
+
+  $app->helper( h_dn_color => sub {
 		 my ($c, $e) = @_;
 		 my $time = time;
 
@@ -61,8 +71,7 @@ returns undef if it doesn't
 
 =cut
 
-  $app->helper(
-	       h_get_root_dn => sub {
+  $app->helper( h_get_root_dn => sub {
 		 my ($c, $dn) = @_;
 		 my $root_dn;
 		 my $re = qr/^.*(uid=[^,]+,$app->{cfg}->{ldap}->{base}->{acc_root})$/i;
@@ -78,8 +87,7 @@ returns undef if it doesn't
 
 =cut
 
-  $app->helper(
-	       h_get_root_uid_val => sub {
+  $app->helper( h_get_root_uid_val => sub {
 		 my ($c, $dn) = @_;
 		 my $val;
 		 my $re = qr/^.*uid=([^,]+),$app->{cfg}->{ldap}->{base}->{acc_root}$/i;
@@ -97,8 +105,7 @@ relation of roles defined with constant UMIAUTH in lib/Umi/Constants.pm
 
 =cut
 
-  $app->helper(
-	       h_is_authorized => sub {
+  $app->helper( h_is_authorized => sub {
 		 my ($self, $dn) = @_;
 		 # $self->h_log( $dn );
 		 my $ldap = Umi::Ldap->new( $self->{app}, $self->session('uid'), $self->session('pwd') );
@@ -123,8 +130,7 @@ already present
 
 =cut
 
-  $app->helper(
-	       h_attr_unused => sub {
+  $app->helper( h_attr_unused => sub {
 		 my ($c, $e, $s) = @_;
 		 my $au;
 		 foreach my $oc (@{$e->get_value('objectClass', asref => 1)}) {
@@ -164,8 +170,7 @@ on input:
 
 =cut
 
-  $app->helper(
-	       h_dns_resolver => sub {
+  $app->helper( h_dns_resolver => sub {
 		 my ($self, $A) = @_;
 		 my $a = { name           => $A->{name},
 			     fqdn           => $A->{fqdn}           // $A->{name},

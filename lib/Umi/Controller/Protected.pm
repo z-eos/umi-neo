@@ -258,7 +258,8 @@ sub profile ($self) {
     # $self->h_log($service);
 
     ### GPG
-    $filter = sprintf("(|(pgpUserID=*%s*)", $v->{sn}->[0]);
+    $filter = '(|';
+    $filter .= sprintf("(pgpUserID=*%s*)", $v->{sn}->[0]);
     $filter .= sprintf("(pgpUserID=*%s*)", $v->{mail}->[0]) if exists $v->{mail};
     $filter .= ')';
     $search_arg = { base => $self->{app}->{cfg}->{ldap}->{base}->{pgp}, filter => $filter };
@@ -268,8 +269,8 @@ sub profile ($self) {
     foreach (keys %$pgp_e) {
       $pgp->{$k}->{$pgp_e->{$_}->{pgpuserid}->[0]} =
 	{
-	 keyid  => $pgp_e->{$_}->{pgpkeyid}->[0],
-	 key    => $pgp_e->{$_}->{pgpkey}->[0],
+	 keyid => $pgp_e->{$_}->{pgpkeyid}->[0],
+	 key   => $pgp_e->{$_}->{pgpkey}->[0],
 	};
     }
     #$self->h_log($pgp);

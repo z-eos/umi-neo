@@ -27,7 +27,7 @@
       <ul class="navbar-nav me-auto my-2 my-lg-0 navbar-nav-scroll float-end">
         <li class="nav-item dropdown">
           <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-	    <i class="fa-solid fa-fw fa-user-alt umi-text-indigo"></i>
+	    <i class="fa-solid fa-fw fa-user-alt text-info"></i>
 	    % if ($c->is_user_authenticated) {
 	      %= $c->session('uid');
 	    % }
@@ -90,13 +90,13 @@
  /* Custom tooltip width and improved contrast */
  .custom-tooltip .tooltip-inner {
    max-width: 500px !important;  /* Adjust width as needed */
-   white-space: normal;         /* Allows multi-line content */
-   text-align: left;            /* Align text properly */
+   white-space: normal;          /* Allows multi-line content */
+   text-align: left;             /* Align text properly */
    
    /* Improved background opacity for readability */
    background-color: rgba(var(--bs-body-bg-rgb), 0.95); /* Uses theme-aware background with higher opacity */
-   color: var(--bs-body-color); /* Matches current theme */
-   border: 1px solid var(--bs-border-color); /* Uses Bootstrap's border color */
+   color: var(--bs-body-color);                         /* Matches current theme */
+   border: 1px solid var(--bs-border-color);            /* Uses Bootstrap's border color */
    padding: 10px;
 
    /* Optional: Adds slight shadow for better visibility */

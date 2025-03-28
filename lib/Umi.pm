@@ -124,7 +124,7 @@ sub _startup_session ($self) {
   $self->helper(
 		h_log => sub {
 		  my ($self, $data) = @_;
-		  if ($self->app->cfg->{debug}->{level} > 0) {
+		  if ($self->app->cfg->{debug} > 0) {
 		    my ($package, $filename, $line) = caller(1);
 		    p $data, caller_message => "$package $filename:$line";
 		  }
@@ -182,19 +182,40 @@ sub _startup_session ($self) {
 	      });
 }
 
+=head2 startup_config
+
+config file of I<yaml> format ingesting and environment variables processing
+
+here we update `$self->app->cfg` with a values of environment variables that
+match a specific pattern I</^UMI_CFG_.*/>.
+
+we parses these environment variables, extract their hierarchical structure
+using a double underscore (__) delimiter, and update or insert values into
+the `$self->app->cfg`.
+
+so, C<UMI_CFG__Key1__Key2__Key3 = Value> will create/update
+`$self->app->cfg->{key1}->{key2}->{key3}` with value `Value`
+
+=cut
+
 sub _startup_config ($self) {
   $self->cfg($self->plugin('NotYAMLConfig', {file => 'conf/umi.yml'}));
-  $self->plugin('StaticCache' => { even_in_dev => 0 });
 
-  ### TODO
-  # # variables to be taken remapped from the environment
-  # if (defined(my $remaps = $config->{remap_env})) {
-  #    for my $definition (split m{,}mxs, $remaps) {
-  #       my ($key, $env_key) = split m{=}mxs, $definition, 2;
-  #       $env_key = $key unless length($env_key // '');
-  #       $config->{$key} = $ENV{$env_key} if defined $ENV{$env_key};
-  #    }
-  # }
+  if (exists $self->app->cfg->{remap_env} && $self->app->cfg->{remap_env} == 1) {
+    for my $env (grep { /^UMI_CFG_(.*)/ } keys %ENV) {
+      my ($name) = $env =~ /^UMI_CFG_(.*)/;
+      my @keys = split /__/, lc $name;
+      my $current = $self->app->cfg;
+      while (@keys > 1) {
+        my $key = shift @keys;
+        $current = $current->{$key} //= {}; # Navigate or create nested hash
+      }
+      # Assign value to the last key
+      $current->{$keys[0]} = $ENV{$env};
+    }
+  }
+
+  $self->plugin('StaticCache' => { even_in_dev => 0 });
 
   return $self;
 }
