@@ -614,6 +614,8 @@ sub modify ($self) {
 	# and not necesseraly should be equal to certificate CN
 	# need to check, wheather userPassword was provided to not overwrite it
 	$p->{userPassword} = $crt->{CN} if exists $p->{userPassword};
+      } elsif ( $n eq 'jpegPhoto' ) {
+	$p->{$n} = $self->h_img_resize( $p->{$n}, $_->size );
       }
     }
   }
@@ -678,7 +680,7 @@ sub modify ($self) {
   push @{$p->{objectClass}}, 'umiUser'
     if !grep { $_ eq 'umiUser' } @{$p->{objectClass}};
 
-  $self->h_log($p);
+  # $self->h_log($p);
   # $self->h_log($e_orig);
 
   # `UNUSED ATTRIBUTES` select element
@@ -832,27 +834,27 @@ sub profile_new ($self) {
   $v->error(user_first_name => ['User with such first and last names exists']) if $search->count > 0;
   $v->error(user_last_name  => ['User with such first and last names exists']) if $search->count > 0;
 
-  my $jpegPhoto_error;
-  if ($upload->{jpegPhoto}->size) {
-    my $sides = $self->h_img_info($upload->{jpegPhoto}->slurp);
-    if ( $sides->{width} > $self->{app}->{cfg}->{ldap}->{defaults}->{attr}->{jpegPhoto}->{max_side} ) {
-      $jpegPhoto_error .= sprintf('File %s width is %s what is bigger than %s px; ',
-				  $upload->{jpegPhoto}->filename,
-				  $sides->{width},
-				  $self->{app}->{cfg}->{ldap}->{defaults}->{attr}->{jpegPhoto}->{max_side});
-    } elsif ( $sides->{height} > $self->{app}->{cfg}->{ldap}->{defaults}->{attr}->{jpegPhoto}->{max_side} ) {
-      $jpegPhoto_error .= sprintf('File %s height is %s what is bigger than %s px; ',
-				  $upload->{jpegPhoto}->filename,
-				  $sides->{height},
-				  $self->{app}->{cfg}->{ldap}->{defaults}->{attr}->{jpegPhoto}->{max_side});
-    }
-  }
-  $jpegPhoto_error .= sprintf('File %s is bigget than %s bytes.',
-			      $upload->{jpegPhoto}->filename,
-			      $self->{app}->{cfg}->{ldap}->{defaults}->{attr}->{jpegPhoto}->{max_size})
-    if $upload->{jpegPhoto}->size > $self->{app}->{cfg}->{ldap}->{defaults}->{attr}->{jpegPhoto}->{max_size};
+  # my $jpegPhoto_error;
+  # if ($upload->{jpegPhoto}->size) {
+  #   my $sides = $self->h_img_info($upload->{jpegPhoto}->slurp);
+  #   if ( $sides->{width} > $self->{app}->{cfg}->{ldap}->{defaults}->{attr}->{jpegPhoto}->{max_side} ) {
+  #     $jpegPhoto_error .= sprintf('File %s width is %s what is bigger than %s px; ',
+  # 				  $upload->{jpegPhoto}->filename,
+  # 				  $sides->{width},
+  # 				  $self->{app}->{cfg}->{ldap}->{defaults}->{attr}->{jpegPhoto}->{max_side});
+  #   } elsif ( $sides->{height} > $self->{app}->{cfg}->{ldap}->{defaults}->{attr}->{jpegPhoto}->{max_side} ) {
+  #     $jpegPhoto_error .= sprintf('File %s height is %s what is bigger than %s px; ',
+  # 				  $upload->{jpegPhoto}->filename,
+  # 				  $sides->{height},
+  # 				  $self->{app}->{cfg}->{ldap}->{defaults}->{attr}->{jpegPhoto}->{max_side});
+  #   }
+  # }
+  # $jpegPhoto_error .= sprintf('File %s is bigget than %s bytes.',
+  # 			      $upload->{jpegPhoto}->filename,
+  # 			      $self->{app}->{cfg}->{ldap}->{defaults}->{attr}->{jpegPhoto}->{max_size})
+  #   if $upload->{jpegPhoto}->size > $self->{app}->{cfg}->{ldap}->{defaults}->{attr}->{jpegPhoto}->{max_size};
 
-  $v->error( jpegPhoto => [ $jpegPhoto_error ] ) if defined $jpegPhoto_error;
+  # $v->error( jpegPhoto => [ $jpegPhoto_error ] ) if defined $jpegPhoto_error;
 
   if ( ! $v->has_error ) {
     my $attrs = {
@@ -872,7 +874,8 @@ sub profile_new ($self) {
 		 uid => sprintf("%s.%s", $nf, $nl),
 		};
 
-    $attrs->{jpegPhoto} = $upload->{jpegPhoto}->slurp if $upload->{jpegPhoto}->size > 0;
+    # $attrs->{jpegPhoto} = $upload->{jpegPhoto}->slurp if $upload->{jpegPhoto}->size > 0;
+    $attrs->{jpegPhoto} = $self->h_img_resize( $upload->{jpegPhoto}->slurp ) if $upload->{jpegPhoto}->size > 0;
 
     my $u = $ldap->last_num;
     if ( $u->[1] ) {
@@ -958,27 +961,27 @@ sub profile_modify ($self) {
   $v->error( sn        => ['UTF-8 and - characters only'] ) if $v->error('sn');
   $v->error( title     => ['UTF-8 and - characters only'] ) if $v->error('title');
 
-  my $jpegPhoto_error;
-  if ($upload->{jpegPhoto}->size) {
-    my $sides = $self->h_img_info($upload->{jpegPhoto}->slurp);
-    if ( $sides->{width} > $self->{app}->{cfg}->{ldap}->{defaults}->{attr}->{jpegPhoto}->{max_side} ) {
-      $jpegPhoto_error .= sprintf('File %s width is %s what is bigger than %s px; ',
-				  $upload->{jpegPhoto}->filename,
-				  $sides->{width},
-				  $self->{app}->{cfg}->{ldap}->{defaults}->{attr}->{jpegPhoto}->{max_side});
-    } elsif ( $sides->{height} > $self->{app}->{cfg}->{ldap}->{defaults}->{attr}->{jpegPhoto}->{max_side} ) {
-      $jpegPhoto_error .= sprintf('File %s height is %s what is bigger than %s px; ',
-				  $upload->{jpegPhoto}->filename,
-				  $sides->{height},
-				  $self->{app}->{cfg}->{ldap}->{defaults}->{attr}->{jpegPhoto}->{max_side});
-    }
-  }
-  $jpegPhoto_error .= sprintf('File %s is bigget than %s bytes.',
-			      $upload->{jpegPhoto}->filename,
-			      $self->{app}->{cfg}->{ldap}->{defaults}->{attr}->{jpegPhoto}->{max_size})
-    if $upload->{jpegPhoto}->size > $self->{app}->{cfg}->{ldap}->{defaults}->{attr}->{jpegPhoto}->{max_size};
+  # my $jpegPhoto_error;
+  # if ($upload->{jpegPhoto}->size) {
+  #   my $sides = $self->h_img_info($upload->{jpegPhoto}->slurp);
+  #   if ( $sides->{width} > $self->{app}->{cfg}->{ldap}->{defaults}->{attr}->{jpegPhoto}->{max_side} ) {
+  #     $jpegPhoto_error .= sprintf('File %s width is %s what is bigger than %s px; ',
+  # 				  $upload->{jpegPhoto}->filename,
+  # 				  $sides->{width},
+  # 				  $self->{app}->{cfg}->{ldap}->{defaults}->{attr}->{jpegPhoto}->{max_side});
+  #   } elsif ( $sides->{height} > $self->{app}->{cfg}->{ldap}->{defaults}->{attr}->{jpegPhoto}->{max_side} ) {
+  #     $jpegPhoto_error .= sprintf('File %s height is %s what is bigger than %s px; ',
+  # 				  $upload->{jpegPhoto}->filename,
+  # 				  $sides->{height},
+  # 				  $self->{app}->{cfg}->{ldap}->{defaults}->{attr}->{jpegPhoto}->{max_side});
+  #   }
+  # }
+  # $jpegPhoto_error .= sprintf('File %s is bigget than %s bytes.',
+  # 			      $upload->{jpegPhoto}->filename,
+  # 			      $self->{app}->{cfg}->{ldap}->{defaults}->{attr}->{jpegPhoto}->{max_size})
+  #   if $upload->{jpegPhoto}->size > $self->{app}->{cfg}->{ldap}->{defaults}->{attr}->{jpegPhoto}->{max_size};
 
-  $v->error( jpegPhoto => [ $jpegPhoto_error ] ) if defined $jpegPhoto_error;
+  # $v->error( jpegPhoto => [ $jpegPhoto_error ] ) if defined $jpegPhoto_error;
 
   if ( ! $v->has_error ) {
     # $self->h_log($from_form);
@@ -1010,8 +1013,13 @@ sub profile_modify ($self) {
     $self->h_log([keys(%f)]);
 
     my ($add, $delete, $replace, $changes);
-    push @$add,     jpegPhoto => $upload->{jpegPhoto}->slurp if $upload->{jpegPhoto}->size > 0 && ! exists $from_ldap->{jpegPhoto};
-    push @$replace, jpegPhoto => $upload->{jpegPhoto}->slurp if $upload->{jpegPhoto}->size > 0 &&   exists $from_ldap->{jpegPhoto};
+
+    push @$add,     jpegPhoto => $self->h_img_resize( $upload->{jpegPhoto}->slurp, $upload->{jpegPhoto}->size )
+      if ! exists $from_ldap->{jpegPhoto} && exists $upload->{jpegPhoto} && $upload->{jpegPhoto}->size > 0;
+
+    push @$replace, jpegPhoto => $self->h_img_resize( $upload->{jpegPhoto}->slurp, $upload->{jpegPhoto}->size )
+      if exists $from_ldap->{jpegPhoto} && exists $upload->{jpegPhoto} && $upload->{jpegPhoto}->size > 0;
+
     if ( %{$diff->{added}} ) {
       push @$add, $_ => $diff->{added}->{$_} foreach (keys(%{$diff->{added}}));
     }
@@ -1036,8 +1044,7 @@ sub profile_modify ($self) {
       $search_arg = { base => $self->{app}->{cfg}->{ldap}->{base}->{acc_root},
 		      filter => '(uid=' . $uid .')',
 		      scope => 'one',
-		      attrs => [qw(
-				    givenName
+		      attrs => [qw( givenName
 				    jpegPhoto
 				    l
 				    sn
@@ -1046,8 +1053,7 @@ sub profile_modify ($self) {
 				    umiUserDateOfBirth
 				    umiUserDateOfEmployment
 				    umiUserDateOfTermination
-				    umiUserGender
-				 )], };
+				    umiUserGender )], };
       $search = $ldap->search( $search_arg );
       $self->{app}->h_log( $self->{app}->h_ldap_err($search, $search_arg) ) if $search->code;
       if ($search->count) {
@@ -1058,7 +1064,6 @@ sub profile_modify ($self) {
 	    $_ => utf8::is_utf8($search->entry->get_value($_)) ? $search->entry->get_value($_) : decode_utf8($search->entry->get_value($_));
 	  }
 	} $search->entry->attributes;
-	$dn = $search->entry->dn;
       }
       $self->stash(from_ldap => $from_ldap);
     }

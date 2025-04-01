@@ -310,6 +310,52 @@ QR CODE generator
 			 };
 		});
 
+=head2 h_img_resize
+
+resize image by default limits in config file: ldap->defaults->attr->jpegPhoto
+
+return either image resized or an original
+
+=cut
+
+  $app->helper( h_img_resize => sub {
+		  my ($self, $img, $size) = @_;
+
+		  # Load the image
+		  my $image = GD::Image->new($img) or die "ERROR: h_img_resize(): Cannot load image: $!";
+
+		  # Get original dimensions
+		  my ($width, $height) = $image->getBounds();
+
+		  # Define max constraints
+		  my $max_size = $self->{app}->{cfg}->{ldap}->{defaults}->{attr}->{jpegPhoto}->{max_size};
+		  my $max_side = $self->{app}->{cfg}->{ldap}->{defaults}->{attr}->{jpegPhoto}->{max_side};
+
+		  # Determine if resizing is needed
+		  if ($width > $max_side || $height > $max_side || $size > $max_size) {
+
+		    # Calculate new dimensions while maintaining aspect ratio
+		    my ($new_width, $new_height) = ($width, $height);
+
+		    if ($width > $max_side || $height > $max_side) {
+		      if ($width > $height) {
+			$new_width  = $max_side;
+			$new_height = int(($height / $width) * $max_side);
+		      } else {
+			$new_height = $max_side;
+			$new_width  = int(($width / $height) * $max_side);
+		      }
+		    }
+		    my $resized = GD::Image->newTrueColor($new_width, $new_height);
+		    $resized->copyResampled($image, 0, 0, 0, 0, $new_width, $new_height, $width, $height);
+
+		    return $resized->jpeg($self->{app}->{cfg}->{ldap}->{defaults}->{attr}->{jpegPhoto}->{quality});
+		  } else {
+		    return $img;
+		  }
+
+		});
+
 =head2 keygen_ssh
 
 ssh key generator
@@ -1415,7 +1461,6 @@ EXAMPLE
 		  return \%r;
 
 		});
-
 
 
   ### END OF REGISTER --------------------------------------------------------------------------------------------
