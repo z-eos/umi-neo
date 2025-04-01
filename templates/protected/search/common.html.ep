@@ -8,11 +8,11 @@
   <div class="col-xs-6 col-sm-6 col-md-4 col-lg-4">
     <h3 class="fw-bold">
       % if ( exists  $search_common_params->{dn_to_history} ) {
-	<i class="fa-solid <%= app->{cfg}->{ui}->{menu}->{history}->{ico} . ' ' .  app->{cfg}->{ui}->{menu}->{history}->{col} %> me-3"></i>
+	<i class="text-info fa-solid <%= app->{cfg}->{ui}->{menu}->{history}->{ico} . ' ' .  app->{cfg}->{ui}->{menu}->{history}->{col} %> me-3"></i>
 	History
       % }
       % else {
-	<i class="fa-solid fa-search fa-lg text-muted me-2"></i>
+	<i class="fa-solid fa-search fa-lg text-info me-2"></i>
 	Search Results
       % }
     </h3>
@@ -31,7 +31,6 @@
   % my $mps = '';
   % my $acclog = app->{cfg}->{ldap}->{accesslog};
   % my $re = qr/^.*$acclog$/;
-  %# !!! TOFIX on bold request to `/search/common` $entries is empty and we need err handle that
   % for my $e (@{$entries}) {
 
     % if ( $e_info->{$e->dn}->{disabled} ) {
@@ -47,9 +46,6 @@
     % my @dn_ico = ($e->dn =~ /authorizedService=([^,]+)\@/g);
 
     %## extracting users root object dn
-    %# delete if h_get_root_dn works well # my $root_usr_dn = '';
-    %# delete if h_get_root_dn works well # my @rusr_dn = split(/uid=/, $e->dn);
-    %# delete if h_get_root_dn works well # $root_usr_dn = 'uid=' . $rusr_dn[-1] if @rusr_dn > 1;
     % my $root_usr_dn = h_get_root_dn $e->dn;
     % $root_usr_dn = '' if ! defined $root_usr_dn;
     
@@ -58,7 +54,7 @@
 	<div class="card-header bg-<%= $col %> p-0 m-0 fs-6">
 	<div class="btn-group z-10" role="group">
 	  %# COLLAPSE CARET
-	  <button class="btn<%= ' collapsed' if scalar @$entries > 1 %>" type="button"
+	  <button class="btn border-0<%= ' collapsed' if scalar @$entries > 1 %>" type="button"
 		  data-bs-toggle="collapse" data-bs-target="#collapse-<%= $i %>"
 		  aria-expanded="<%= scalar @$entries > 1 ? 'false' : 'true' %>" aria-controls="collapse-<%= $i %>">
 	    <i class="fa-solid fa-caret-right"></i>
@@ -74,7 +70,7 @@
 	  % my $re_accesslog = app->{cfg}->{ldap}->{accesslog};
 	  %= form_for '/search/common' => (class => "injectable-form", method => 'POST') => begin
 	    %= hidden_field 'ldap_subtree' => $root_usr_dn ne '' ? $root_usr_dn : $e->dn
-	    <button type="submit" class="btn"
+	    <button type="submit" class="btn border-0"
 		    % if ($root_usr_dn ne '') {
 		    title="Click to get whole root object subtree"><i class="fa-solid fa-user-tag"></i>
 		    % } elsif ($e->dn =~ /^.*,$re_accesslog$/)
@@ -89,7 +85,7 @@
 	  %# REWRITTEN DN with ICO
 	  %= form_for '/search/common' => (class => "injectable-form", method => 'POST') => begin
 	  %= hidden_field 'ldap_subtree' => $e->dn
-	    <button type="submit" class="btn px-0 fw-bold" title="Click to get branch object subtree">
+	    <button type="submit" class="btn px-0 fw-bold border-0" title="Click to get branch object subtree">
 	      % if ( scalar @dn_ico ) {
 		<%# == '<i class="' . app->{cfg}->{ui}->{ico}->{usvc}->{$dn_ico[0]} . $mps . ' me-2"></i>' %>
 		<%== '<i class="' . app->{cfg}->{ldap}->{authorizedService}->{$dn_ico[0]}->{icon} . $mps . ' me-2"></i>' %>
@@ -108,7 +104,7 @@
 		% }
 	      % } else {
 	      % }
-	      <%== h_rewrite_dn($e->dn,'<i class="fa-solid fa-angles-right fa-xs text-secondary mx-2"></i>') %>
+	      <%== h_rewrite_dn($e->dn,'<i class="fa-solid fa-circle fa-2xs text-secondary text-opacity-50 mx-2"></i>') %>
 	    </button>
 	  % end
 	</div>
@@ -119,10 +115,10 @@
 	  % $mn = substr($e->get_value('modifiersName'), 4, index($e->get_value('modifiersName'), ",")-4) if !$e->exists('reqType');
 	  <ul class="list-unstyled fa-ul umi-text-tiny font-monospace float-end m-0 pe-2 pt-1">
 	    <li title="created GMT: <%= $ct %> by <%= $cn %>">
-	      <span class="fa-li"><i class="fa-solid fa-hourglass-start"></i></span><%= $ct %> <b><%= $cn %></b>
+	      <span class="fa-li"><i class="fa-solid fa-hourglass-start fa-sm"></i></span><%= $ct %> <b><%= $cn %></b>
 	    </li>
 	    <li title="modified, GMT: <%= $mt %> by <%= $mn %>">
-	      <span class="fa-li"><i class="fa-solid fa-hourglass-half"></i></span><%= $mt %> <b><%= $mn %></b>
+	      <span class="fa-li"><i class="fa-solid fa-hourglass-half fa-sm"></i></span><%= $mt %> <b><%= $mn %></b>
 	    </li>
 	  </ul>
 	% }

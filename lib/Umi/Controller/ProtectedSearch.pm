@@ -28,11 +28,18 @@ sub search_common  ($self) {
       $sort_order,
      );
 
+  # $self->h_log($self->req->params->pairs);
+  $p = $self->req->params->to_hash;
+  $self->h_log($p);
+
   my $v = $self->validation;
   return $self->render( template => 'protected/search/common',
+			e_info => undef,
 			search_arg => {},
+			search_common_params => $p,
 			searchres => {},
-			entries => [] ) unless $v->has_data;
+			entries => [] )
+    unless (exists $p->{search_filter} && $p->{search_filter} ne '') || exists $p->{no_layout} || exists $p->{ldap_subtree} ;
 
   if ($self->session('debug')) {
     $self->stash( debug => $self->session('debug') );
@@ -40,9 +47,6 @@ sub search_common  ($self) {
     delete $self->session->{debug};
   }
 
-  # $self->h_log($self->req->params->pairs);
-  $p = $self->req->params->to_hash;
-  $self->h_log($p);
   $p->{params_orig} = $self->req->params->to_hash;
   $sort_order = 'reverse';
   $filter_armor = '';

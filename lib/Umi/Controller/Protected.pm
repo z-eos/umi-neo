@@ -655,22 +655,30 @@ sub modify ($self) {
 	      jpegPhoto => 1,
 	      cACertificate => 1,
 	      certificateRevocationList => 1,
-	      userCertificate => 1,
+	      umiUserCertificateSubject => 1,
+	      umiUserCertificateNotBefore => 1,
+	      umiUserCertificateNotAfter => 1,
+	      umiUserCertificateSn => 1,
+	      umiUserCertificateIssuer => 1,
+	      'userCertificate;binary' => 1,
 	     );
   my ($e_orig, $e_tmp);
-  foreach ($s->entry->attributes) {
-    next if $_ eq $rdn;
+  foreach my $a ($s->entry->attributes) {
+    next if $a eq $rdn;
     # change only on uploaded field data, not absent field
-    next if $skip{$_} && exists $p->{$_} && $p->{$_} eq '';
-    $e_tmp = $s->entry->get_value($_, asref => 1);
+    next if $skip{$a} && exists $p->{$a} && $p->{$a} eq '';
+    $e_tmp = $s->entry->get_value($a, asref => 1);
     if ( scalar @$e_tmp == 1 ) {
-      $e_orig->{$_} = $e_tmp->[0];
+      $e_orig->{$a} = $e_tmp->[0];
     } else {
-      $e_orig->{$_} = $e_tmp;
+      $e_orig->{$a} = [ @$e_tmp ];
     }
   }
 
-   $self->h_log($p);
+  push @{$p->{objectClass}}, 'umiUser'
+    if !grep { $_ eq 'umiUser' } @{$p->{objectClass}};
+
+  $self->h_log($p);
   # $self->h_log($e_orig);
 
   # `UNUSED ATTRIBUTES` select element
@@ -730,7 +738,7 @@ sub modify ($self) {
     }
 
     if ($changes) {
-      # $self->h_log($changes);
+      $self->h_log($changes);
       my $msg = $ldap->modify($s->entry->dn, $changes);
       push @{$debug{$msg->{status}}}, $msg->{message};
 
@@ -1024,6 +1032,35 @@ sub profile_modify ($self) {
     if ( $changes ) {
       my $msg = $ldap->modify($dn, $changes);
       $self->stash(debug => {$msg->{status} => [ $msg->{message} ]});
+      # need this to get form updated on submit
+      $search_arg = { base => $self->{app}->{cfg}->{ldap}->{base}->{acc_root},
+		      filter => '(uid=' . $uid .')',
+		      scope => 'one',
+		      attrs => [qw(
+				    givenName
+				    jpegPhoto
+				    l
+				    sn
+				    title
+				    umiUserCountryOfResidence
+				    umiUserDateOfBirth
+				    umiUserDateOfEmployment
+				    umiUserDateOfTermination
+				    umiUserGender
+				 )], };
+      $search = $ldap->search( $search_arg );
+      $self->{app}->h_log( $self->{app}->h_ldap_err($search, $search_arg) ) if $search->code;
+      if ($search->count) {
+	%$from_ldap = map {
+	  if ( $_ eq 'mail' || $_ eq 'jpegPhoto' ) {
+	    $_ => $search->entry->get_value($_);
+	  } else {
+	    $_ => utf8::is_utf8($search->entry->get_value($_)) ? $search->entry->get_value($_) : decode_utf8($search->entry->get_value($_));
+	  }
+	} $search->entry->attributes;
+	$dn = $search->entry->dn;
+      }
+      $self->stash(from_ldap => $from_ldap);
     }
   }
   $self->render(template => 'protected/profile/modify'); #, layout => undef);
