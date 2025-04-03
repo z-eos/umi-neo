@@ -1,17 +1,19 @@
 %# -*- mode: web; eval: (follow-mode) -*-
 % my $par = stash('search_common_params');
-<form class="injectable-form container-fluid d-flex"
+<form class="injectable-form d-flex"
       role="form"
       id="searchby"
       method="POST"
-      action="/search/common">
+      action="/search/common"
+>
 
   <div class="input-group flex-grow-1">
     <div class="input-group-prepend">
       <button type="button"
 	      class="btn btn-secondary btn-sm"
 	      title="clear search field"
-	      onclick="$('#search_filter').val('').focus()">
+	      onclick="$('#search_filter').val('').focus()"
+      >
 	<i class="fas fa-eraser"></i>
       </button>
     </div>
@@ -22,7 +24,8 @@
 	   name="search_filter"
 	   placeholder='attributeName=*value*'
 	   accesskey="s"
-	   data-bs-toggle="tooltip">
+	   data-bs-toggle="tooltip"
+    >
 
     <input type="hidden" name="search_base_case" id="search_base_case" >
     
@@ -31,7 +34,8 @@
       <button type="submit" title="Search &laquo;by name&raquo;"
 	      class="btn btn-secondary btn-sm"
 	      onClick="$('#search_base_case').val(this.value);$('#search_filter').focus()"
-              value="search_by_name" tabindex="13" >
+              value="search_by_name" tabindex="13"
+      >
         <i class="fas fa-search"></i>
       </button>
 
@@ -63,7 +67,8 @@
 	    <button type="submit" class="<%= $menu_item %><%= $color %> btn-sm"
 		    onClick="$('#search_base_case').val(this.value);$('#search_filter').focus()"
 		    value="search_by_<%= $k %>"
-		    title="">
+		    title=""
+	    >
 	      <i class="<%= $icon_class %> fa-<%= $b->{$k} %>"></i> by <%= $k %>
 	    </button>
 	  % }
@@ -86,7 +91,8 @@
 	    <button type="submit" class="<%= $menu_item %><%= $color %> btn-sm"
 		    onClick="$('#search_base_case').val(this.value);$('#search_filter').focus()"
 		    name="search_base" value="<%= $b->{$k} %>"
-		    title="base: <%= $b->{$k} %>">
+		    title="base: <%= $b->{$k} %>"
+	    >
 	      <i class="<%= $icon_class %> fa-tag"></i> <%= $k %>
 	    </button>
 	  % }
@@ -100,7 +106,7 @@
     </div>
   </div>
 </form>
-<pre>
-  % my $a = stash;
-  % dumper $a;
-</pre>
+<!-- <pre>
+     %# my $a = stash;
+     %# dumper $a;
+     </pre> -->

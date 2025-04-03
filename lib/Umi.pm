@@ -124,7 +124,7 @@ sub _startup_session ($self) {
   $self->helper(
 		h_log => sub {
 		  my ($self, $data) = @_;
-		  if ($self->app->cfg->{debug} > 0) {
+		  if ($self->app->cfg->{debug}->{level} > 0) {
 		    my ($package, $filename, $line) = caller(1);
 		    p $data, caller_message => "$package $filename:$line";
 		  }

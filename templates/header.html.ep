@@ -1,89 +1,98 @@
 %# -*- mode: web; eval: (follow-mode); -*-
-<nav class="navbar navbar-expand-md bg-body-tertiary sticky-top flex-md-nowrap p-0" id="header">
-  <div class="container-fluid px-0">
+<nav
+  class="toolbar navbar navbar-expand-md bg-body-tertiary sticky-top flex-md-nowrap p-0"
+  id="header"
+>
+  <button class="btn border-0 text-secondary"
+	  type="button"
+	  data-bs-toggle="collapse"
+	  data-bs-target="#sidebar-left"
+	  aria-controls="sidebar-left"
+	  aria-expanded="true"
+	  aria-label="Toggle sidebar navigation">
+    <i class="fa-solid fa-bars"></i>
+  </button>
+  <a class="navbar-brand" href="/">
+    <img src="/assets/images/umi-logo.50x50.png" width="30" height="30" alt="logo">
+  </a>
+  
+  % if ( is_role 'admin,coadmin', {cmp => 'or'} ) {
+    %= include 'header-form-admin'
+  % }
+  % elsif ( is_role 'hr' ) {
+    %= include 'header-form-hr'
+  % }
+  % else {
+    %# = include 'header-form'
+  % }
+  
+  <ul class="navbar-nav">
+    <li class="nav-item dropdown">
+      <a class="nav-link dropdown-toggle"
+	 href="#"
+	 role="button"
+	 data-bs-toggle="dropdown"
+	 aria-expanded="false"
+      >
+	<i class="fa-solid fa-fw fa-user-alt text-info ms-2"></i>
+      </a>
+      <ul class="dropdown-menu dropdown-menu-end">
+	<li class="text-bg-secondary text-info text-center fw-bold">
+	  % if ($c->is_user_authenticated) {
+	    %= $c->session('uid');
+	  % }
+	</li>
+	<li>
+	  <a class="dropdown-item" href="/profile">
+	    <i class="fa-regular fa-id-card"></i>
+	    <span class="ms-2">Profile</span>
+	  </a>
+	</li>
+	<li><hr class="dropdown-divider"></li>
+	<li><span class="dropdown-header">Theme</span></li>
+        <li>
+
+	  <ul class="list-unstyled" aria-labelledby="bd-theme-text" data-bs-popper="static">
+	    <li>
+              <button type="button" class="dropdown-item" data-bs-theme-value="light" aria-pressed="false" accesskey="l">
+		<i class="fa-solid fa-fw fa-sun"></i><span class="ms-2">Light</span>
+              </button>
+	    </li>
+	    <li>
+              <button type="button" class="dropdown-item" data-bs-theme-value="dark" aria-pressed="false" accesskey="d">
+		<i class="fa-solid fa-fw fa-moon"></i><span class="ms-2">Dark</span>
+              </button>
+	    </li>
+	    <li>
+              <button type="button" class="dropdown-item" data-bs-theme-value="auto" aria-pressed="true">
+		<i class="fa-solid fa-fw fa-circle-half-stroke"></i><span class="ms-2">Auto</span>
+              </button>
+	    </li>
+	  </ul>
+
+	</li>          
+	<li><hr class="dropdown-divider"></li>
+	<li>
+	  <a class="dropdown-item" href="/logout" accesskey="o">
+	    <i class="fa-solid fa-fw fa-sign-out-alt"></i><span class="ms-2">LogOut</span>
+	  </a>
+	</li>
+      </ul>
+    </li>
+  </ul>
+  
+  % if ( is_role 'admin,coadmin', {cmp => 'or'} ) {
     <button class="btn border-0 text-secondary" type="button"
 	    data-bs-toggle="collapse"
-	    data-bs-target="#sidebar-left"
-	    aria-controls="sidebar-left"
+	    data-bs-target="#aside"
+	    aria-controls="aside"
 	    aria-expanded="true"
-	    aria-label="Toggle sidebar navigation">
+	    aria-label="Toggle aside navigation"
+    >
       <i class="fa-solid fa-bars"></i>
     </button>
-    <a class="navbar-brand" href="/">
-      <img src="/assets/images/umi-logo.50x50.png" width="30" height="30" alt="logo">
-    </a>
-    
-    <div class="collapse navbar-collapse" id="navbarSupportedContent">
-      
-      % if ( is_role 'admin,coadmin', {cmp => 'or'} ) {
-      %= include 'header-form-admin'
-      % } elsif ( is_role 'hr' ) {
-      %= include 'header-form-hr'
-      % } else {
-      <div class="w-100"></div>
-      %# = include 'header-form'
-      % }
-      
-      <ul class="navbar-nav me-auto my-2 my-lg-0 navbar-nav-scroll float-end">
-        <li class="nav-item dropdown">
-          <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-	    <i class="fa-solid fa-fw fa-user-alt text-info"></i>
-	    % if ($c->is_user_authenticated) {
-	      %= $c->session('uid');
-	    % }
-          </a>
-          <ul class="dropdown-menu dropdown-menu-end">
-	    <li>
-	      <a class="dropdown-item" href="/profile">
-		<i class="fa-regular fa-id-card"></i>
-		<span class="ms-2">Profile</span>
-	      </a>
-	    </li>
-	    <li><hr class="dropdown-divider"></li>
-	    <li><span class="dropdown-header">Theme</span></li>
-            <li>
-
-	      <ul class="list-unstyled" aria-labelledby="bd-theme-text" data-bs-popper="static">
-		<li>
-                  <button type="button" class="dropdown-item" data-bs-theme-value="light" aria-pressed="false" accesskey="l">
-		    <i class="fa-solid fa-fw fa-sun"></i><span class="ms-2">Light</span>
-                  </button>
-		</li>
-		<li>
-                  <button type="button" class="dropdown-item" data-bs-theme-value="dark" aria-pressed="false" accesskey="d">
-		    <i class="fa-solid fa-fw fa-moon"></i><span class="ms-2">Dark</span>
-                  </button>
-		</li>
-		<li>
-                  <button type="button" class="dropdown-item" data-bs-theme-value="auto" aria-pressed="true">
-		    <i class="fa-solid fa-fw fa-circle-half-stroke"></i><span class="ms-2">Auto</span>
-                  </button>
-		</li>
-	      </ul>
-
-	    </li>          
-	    <li><hr class="dropdown-divider"></li>
-	    <li>
-	      <a class="dropdown-item" href="/logout" accesskey="o">
-		<i class="fa-solid fa-fw fa-sign-out-alt"></i><span class="ms-2">LogOut</span>
-	      </a>
-	    </li>
-          </ul>
-        </li>
-      </ul>
-      
-      % if ( is_role 'admin,coadmin', {cmp => 'or'} ) {
-      <button class="btn border-0 text-secondary" type="button"
-	      data-bs-toggle="collapse"
-	      data-bs-target="#aside"
-	      aria-controls="aside"
-	      aria-expanded="true"
-	      aria-label="Toggle aside navigation">
-	<i class="fa-solid fa-bars"></i>
-      </button>
-      % }
-      
-    </div>
+  % }
+  
 </nav>
 
 <style>

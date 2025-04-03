@@ -199,6 +199,8 @@ html,body {
 
 #searchby {
     position: relative;
+    display: flex;
+    flex: 1;
 }
 
 
@@ -489,6 +491,23 @@ form.new-user:not(.show-simplified) .show-on-simplified {
 .umi-text-gray	    {            color: var(--bs-gray)      !important; }
 .umi-text-gray-dark {            color: var(--bs-gray-dark) !important; }
 
+.toolbar {
+    padding: 0 0 0 8px;
+}
+
+.username {   
+}
+
+@media (max-width: 972px) {
+    .username {
+        display: none;
+    }
+}
+
+.navbar .dropdown-menu {
+    position:absolute;
+}
+
 /* -------------------------------
 
    KLUDGE patches to multi-select
@@ -683,4 +702,5 @@ details[open] summary::before {
 .btn-add, .btn-delete {
   z-index: 0 !important;
 }
+
 

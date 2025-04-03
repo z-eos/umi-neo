@@ -740,7 +740,7 @@ sub modify ($self) {
     }
 
     if ($changes) {
-      $self->h_log($changes);
+      # $self->h_log($changes);
       my $msg = $ldap->modify($s->entry->dn, $changes);
       push @{$debug{$msg->{status}}}, $msg->{message};
 

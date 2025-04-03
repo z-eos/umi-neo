@@ -7,10 +7,10 @@
 
 %= form_for '/profile/modify' => (class => "form-horizontal", method => 'POST', enctype => 'multipart/form-data') => begin
 
-%= hidden_field uid_to_modify => 'uid_to_modify', id => 'uid_to_modify', value => exists stash->{from_form}->{uid_to_modify} ? stash->{from_form}->{uid_to_modify} : ''
+  %= hidden_field uid_to_modify => 'uid_to_modify', id => 'uid_to_modify', value => exists stash->{from_form}->{uid_to_modify} ? stash->{from_form}->{uid_to_modify} : ''
 
   <div class="g-0 mb-3">
-    <div class="d-flex flex-row-reverse">
+    <div class="">
       <picture>
 	% my $img;
 	% if (exists $from_form->{jpegPhoto}) {
@@ -20,7 +20,7 @@
 	  % $img = $from_ldap->{jpegPhoto};
 	% }
 	% if ( defined $img ) {
-	  %= image 'data:image/jpg;base64,' . Mojo::Util::b64_encode($img), class => 'img-thumbnail', alt => stash->{from_form}->{uid_to_modify}
+	  %= image 'data:image/jpg;base64,' . Mojo::Util::b64_encode($img), class => 'img-thumbnail mx-auto d-block', alt => stash->{from_form}->{uid_to_modify}
 	% }
       </picture>
     </div>
@@ -67,7 +67,7 @@
       % if ( ! exists stash->{from_ldap}->{umiUserCountryOfResidence} ) {
 	<option value="" disabled selected>--- CHOOSE COUNTRY ---</option>
       % }
-      % foreach (sort(keys(%{constant('COUNTRIES')}))) {
+      % foreach (sort keys %{constant('COUNTRIES')}) {
 	<option value="<%= constant('COUNTRIES')->{$_}->{two} %>"<%= ' selected' if exists stash->{from_ldap}->{umiUserCountryOfResidence} && stash->{from_ldap}->{umiUserCountryOfResidence} eq constant('COUNTRIES')->{$_}->{two} %>><%= $_ %></option>
       % }
     </select>
@@ -84,7 +84,7 @@
     <label class="input-group-text" for="gender">Gender</label>
     <select name="umiUserGender" class="form-select" id="gender">
       % $sel = '';
-      % foreach (sort(keys(%{constant('GENDER')}))) {
+      % foreach (sort keys %{constant('GENDER')}) {
 	<option value="<%= $_ %>"<%= ' selected' if exists stash->{from_ldap}->{umiUserGender} && stash->{from_ldap}->{umiUserGender} == $_ %>><%= constant('GENDER')->{$_} %></option>
       % }
     </select>
