@@ -17,7 +17,7 @@ use IPC::Run qw(run);
 use List::Util qw(tail);
 use MIME::Base64 qw(decode_base64 encode_base64);
 use Net::CIDR::Set;
-use Net::LDAP::Util qw(ldap_explode_dn);
+use Net::LDAP::Util qw(ldap_explode_dn time_to_generalizedTime);
 use POSIX qw(strftime :sys_wait_h);
 use Text::Unidecode;
 use Time::Piece;
@@ -1113,6 +1113,20 @@ verify that an array reference is equal to `[ [] ]`
 		    && scalar(@$arr) == 1
 		    && ref($arr->[0]) eq 'ARRAY'
 		    && scalar(@{ $arr->[0] }) == 0;
+		});
+
+=head2 h_ts_to_generalizedTime
+
+convert timestamp like YYYY-mm-dd to YYYYmmdd000000Z
+
+=cut
+
+  $app->helper( h_ts_to_generalizedTime => sub {
+		  my ($self, $date, $format) = @_;
+		  $format = '%Y-%m-%d' if ! defined $format;
+		  my $t = Time::Piece->strptime($date, $format);
+		  my $res = time_to_generalizedTime($t->epoch) if defined $t;
+		  return $res;
 		});
 
   # =head2 h_domains_to_hash

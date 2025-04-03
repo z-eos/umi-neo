@@ -48,13 +48,13 @@
   
   <div class="input-group mb-3">
     <span class="input-group-text">Employment Date:</span>
-    %= text_field 'umiUserDateOfEmployment', class => 'form-control', id => 'employment', title => 'Employment date', placeholder => 'yyyyMMddHHMMss', value => exists stash->{from_ldap}->{umiUserDateOfEmployment} ? stash->{from_ldap}->{umiUserDateOfEmployment} : ''
+    %= text_field 'umiUserDateOfEmployment', class => 'form-control', id => 'employment', title => 'Employment date', placeholder => 'yyyy-MM-dd', value => exists stash->{from_ldap}->{umiUserDateOfEmployment} ? stash->{from_ldap}->{umiUserDateOfEmployment} : ''
     <span class="input-group-text"><i class="fa-regular fa-calendar"></i></span>
   </div>
 
   <div class="input-group mb-3">
     <span class="input-group-text">Termination Date:</span>
-    %= text_field 'umiUserDateOfTermination', class => 'form-control', id => 'termination', title => 'Termination date', placeholder => 'yyyyMMddHHMMss', value => exists stash->{from_ldap}->{umiUserDateOfTermination} ? stash->{from_ldap}->{umiUserDateOfTermination} : ''
+    %= text_field 'umiUserDateOfTermination', class => 'form-control', id => 'termination', title => 'Termination date', placeholder => 'yyyy-MM-dd', value => exists stash->{from_ldap}->{umiUserDateOfTermination} ? stash->{from_ldap}->{umiUserDateOfTermination} : ''
     <span class="input-group-text"><i class="fa-regular fa-calendar"></i></span>
   </div>
 
@@ -76,7 +76,7 @@
 
   <div class="input-group mb-3">
     <span class="input-group-text">Birth:</span>
-    %= text_field 'umiUserDateOfBirth', class => 'form-control', id => 'birth', title => 'Employee birth date', placeholder => 'yyyyMMddHHMMss', value => exists stash->{from_ldap}->{umiUserDateOfBirth} ? stash->{from_ldap}->{umiUserDateOfBirth} : ''
+    %= text_field 'umiUserDateOfBirth', class => 'form-control', id => 'birth', title => 'Employee birth date', placeholder => 'yyyy-MM-dd', value => exists stash->{from_ldap}->{umiUserDateOfBirth} ? stash->{from_ldap}->{umiUserDateOfBirth} : ''
     <span class="input-group-text"><i class="fa-regular fa-calendar"></i></span>
   </div>
 
@@ -134,7 +134,7 @@
        }
      },
      localization: {
-       format: 'yyyyMMdd000000'
+       format: 'yyyy-MM-dd'
      }
    };
 

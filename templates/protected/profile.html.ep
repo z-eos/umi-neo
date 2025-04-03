@@ -18,7 +18,7 @@
   % }
   <div class="card <%= $card_col ne '' ? 'border-' . $card_col : 'border-0' %> my-3">
     <div class="row g-0 mt-3">
-      <div class="col-md-3 p-3">
+      <div class="col-xs-6 col-md-5 p-3">
 	% if ( defined $v->{jpegphoto}->[0] ) {
 	  <img src="data:image/jpg;base64,<%= Mojo::Util::b64_encode $v->{jpegphoto}->[0] %>"
 	       class="img-thumbnail mx-auto d-block<%= ' border-' . $card_col if $card_col ne '' %>" style="max-width: <%= app->{cfg}->{ldap}->{defaults}->{attr}->{jpegPhoto}->{max_side} %>px;"
@@ -27,7 +27,7 @@
 	  <i class="fa-solid fa-person-circle-question fa-10x float-end text-warning"></i>
 	% }
       </div>
-      <div class="col-md-9">
+      <div class="col-xs-6 col-md-7">
 	<div class="card-body">
 	  % my $fullname = $v->{givenname}->[0] . ' ' . $v->{sn}->[0];
           <h4 class="card-title fw-bold bg-secondary px-5 py-1<%= ' text-' . $card_col if $card_col ne '' %>"><%=  utf8::is_utf8($fullname) ? $fullname : decode_utf8($fullname) %>
@@ -80,7 +80,7 @@
 	      <dd class="col-11 user-select-all"><%== exists $v->{umiuserdateofbirth} ? strftime( "%F", localtime(generalizedTime_to_time($v->{umiuserdateofbirth}->[0]))) : $na %></dd>
 
 	      <dt class="col-1 text-md-end" title="Hire Date"><i class="fa-lg fa-solid fa-calendar-plus"></i></dt>
-	      <dd class="col-11 user-select-all"><%= strftime( "%F", localtime(generalizedTime_to_time($v->{createtimestamp}->[0]))) %></dd>
+	      <dd class="col-11 user-select-all"><%== exists $v->{umiuserdateofemployment} ? strftime( "%F", localtime(generalizedTime_to_time($v->{umiuserdateofemployment}->[0]))) : $na %></dd>
 
 	      %# GPG
 	      % if ( defined $pgp ) {

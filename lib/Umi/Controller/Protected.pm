@@ -139,171 +139,6 @@ sub fire ($self) {
 
 }
 
-sub profile ($self) {
-  my $par = $self->req->params->to_hash;
-  my $reqpath = $self->req->url->to_abs->path;
-  my $uid;
-  if ( $reqpath =~ /^\/audit\/.*$/ ) {
-    $uid = 'all';
-  } else {
-    $uid = $par->{uid} // $self->stash->{uid} // '';
-  }
-
-  my $ldap = Umi::Ldap->new( $self->{app}, $self->session('uid'), $self->session('pwd') );
-
-  ### USER:
-  my $filter;
-  if ($uid eq 'all') {
-    $filter = '(uid=*)';
-  } elsif ($uid eq 'disabled') {
-    $filter = sprintf("(&(uid=*)(gidNumber=%s))",
-		      $self->{app}->{cfg}->{ldap}->{defaults}->{group_blocked_gidnumber});
-  } elsif ($uid eq 'active') {
-    $filter = sprintf("(&(uid=*)(!(gidNumber=%s)))",
-		      $self->{app}->{cfg}->{ldap}->{defaults}->{group_blocked_gidnumber});
-  } elsif ($uid ne '') {
-    $filter = sprintf("(|(uid=%s)(givenName=%s)(sn=%s))", $uid, $uid, $uid);
-  } else {
-    $filter = sprintf("(uid=%s)", $self->session('uid'));
-  }
-  my $search_arg = { base => $self->{app}->{cfg}->{ldap}->{base}->{acc_root},
-		     filter => $filter,
-		     scope => 'one' };
-  $search_arg->{attrs} = [qw( gidNumber givenName mail sn uid modifiersName )] if $reqpath =~ /^\/audit\/.*$/;
-  # $self->{app}->h_log( $search_arg);
-  my $search = $ldap->search( $search_arg );
-  $self->{app}->h_log( $self->{app}->h_ldap_err($search, $search_arg) ) if $search->code;
-  my $profiled_user = $search->as_struct;
-  # $self->h_log($profiled_user);
-
-  my ( $cf_svc, $groups, $k, $kk, $modifiersname, $p, $pgp, $pgp_e, $projects, $server_names, $server_alive, $servers_alive_list, $servers, $service, $svc, $svc_details, $svc_msg, $v, $vv, );
-  while (($k, $v) = each %$profiled_user) {
-    ### name of the last who modified this user root object
-    $search_arg = { base => $v->{modifiersname}->[0], scope => 'base', attrs => ['gecos', 'uid'] };
-    $search = $ldap->search( $search_arg );
-    $modifiersname->{$k} = $search->as_struct->{$v->{modifiersname}->[0]};
-
-    ### only admins and coadmins need this info
-    if ( $self->is_role('admin,coadmin,hr', {cmp => 'or'}) || $reqpath eq '/audit/users') {
-      ### GROUPS: list of all groups user is a member of
-      $search_arg = { base => $self->{app}->{cfg}->{ldap}->{base}->{group},
-		      filter => '(memberUid=' . $v->{uid}->[0] . ')',
-		      attrs => ['cn'] };
-      $search = $ldap->search( $search_arg );
-      my $g = $search->as_struct;
-      push @{$groups->{$k}}, $vv->{cn}->[0] while (($kk, $vv) = each %$g);
-
-      ### SERVERS: list of all servers available for the user
-      $search_arg = { base => 'ou=access,' . $self->{app}->{cfg}->{ldap}->{base}->{netgroup},
-		      filter => '(nisNetgroupTriple=*,' . $v->{uid}->[0] . ',*)',
-		      attrs => ['nisNetgroupTriple'] };
-      $search = $ldap->search( $search_arg );
-      $self->{app}->h_log( $self->{app}->h_ldap_err($search, $search_arg) ) if $search->code;
-      my $netgroups = $search->as_struct;
-      my $tuple;
-      while (my ($kk, $vv) = each %$netgroups) {
-	foreach (@{$vv->{nisnetgrouptriple}}) {
-	  @$tuple = split(/,/, substr($_, 1, -1));
-	  push @{$server_names->{$k}}, sprintf("%s.%s", $tuple->[0], $tuple->[2]);
-	}
-      }
-      @{$servers->{$k}} = do {
-	my %seen;
-	sort grep { !$seen{$_}++ } @{$server_names->{$k}};
-      };
-      foreach (@{$servers->{$k}}) {
-	$search_arg = { base => 'cn=' . $_ . ',' . $self->{app}->{cfg}->{ldap}->{base}->{machines},
-			attrs => ['cn'] };
-	$search = $ldap->search( $search_arg );
-	$self->h_log( $self->{app}->h_ldap_err($search, $search_arg) ) if $search->code && $search->code != 32;
-	$server_alive->{$k}->{$_} = $search->count;
-	$servers_alive_list->{$_} = $search->count;
-      }
-      # $self->h_log($servers);
-    }
-
-    ### SERVICES
-    $search_arg = { base => $k,
-		    scope => 'one',
-		    sizelimit => 0,
-		    filter => 'authorizedService=*',
-		    attrs => [ 'authorizedService'],};
-    $search = $ldap->search( $search_arg );
-    $self->h_log( $self->{app}->h_ldap_err($search, $search_arg) ) if $search->code && $search->code != 32;
-
-    foreach $svc (@{[$search->sorted( 'authorizedService' )]}) {
-      $svc_msg = $ldap->search( { base => $svc->dn, scope => 'children', });
-      $self->h_log( $self->{app}->h_ldap_err($search, $search_arg) ) if $search->code && $search->code != 32;
-      next if ! $svc_msg->count;
-
-      $cf_svc = $self->{app}->{cfg}->{ldap}->{authorizedService}->{(split('@', $svc->get_value('authorizedService')))[0]};
-
-      $svc_details = {
-		      branch_dn => $svc->dn,
-		      # authorizedService => $svc->get_value('authorizedService'),
-		      auth => $cf_svc->{auth},
-		      icon => $cf_svc->{icon},
-		      descr => $cf_svc->{descr},
-		     };
-
-      foreach my $e (@{[$svc_msg->sorted( 'authorizedService' )]}) {
-	# !!! WARNING may there be something except `cn` and `uid`?
-	# $svc_details->{leaf}->{$e->dn} = $e->get_value('uid') // $e->get_value('cn');
-	%{$svc_details->{obj}->{$e->dn}} =
-	  map { $_ => $e->get_value($_, asref => 1) } $e->attributes;
-      }
-      $service->{$k}->{$svc->get_value('authorizedService')} = $svc_details;
-      undef $svc_details;
-    }
-    # $self->h_log($service);
-
-    ### GPG
-    $filter = '(|';
-    $filter .= sprintf("(pgpUserID=*%s*)", $v->{sn}->[0]);
-    $filter .= sprintf("(pgpUserID=*%s*)", $v->{mail}->[0]) if exists $v->{mail};
-    $filter .= ')';
-    $search_arg = { base => $self->{app}->{cfg}->{ldap}->{base}->{pgp}, filter => $filter };
-    $search = $ldap->search( $search_arg );
-    $self->h_log( $self->{app}->h_ldap_err($search, $search_arg) ) if $search->code && $search->code != 32;
-    $pgp_e = $search->as_struct;
-    foreach (keys %$pgp_e) {
-      $pgp->{$k}->{$pgp_e->{$_}->{pgpuserid}->[0]} =
-	{
-	 keyid => $pgp_e->{$_}->{pgpkeyid}->[0],
-	 key   => $pgp_e->{$_}->{pgpkey}->[0],
-	};
-    }
-    #$self->h_log($pgp);
-
-    ### PROJECTS: list of all projects user is a member of
-    $search_arg = { base => 'ou=group,' . $self->{app}->{cfg}->{ldap}->{base}->{project},
-		    filter => '(memberUid=' . $v->{uid}->[0] . ')',
-		    attrs => ['cn'] };
-    $search = $ldap->search( $search_arg );
-    $self->h_log( $self->{app}->h_ldap_err($search, $search_arg) ) if $search->code;
-    $p = $search->as_struct;
-    @{$projects->{$k}} = sort map { $p->{$_}->{cn}->[0] =~ s/_/:/r } keys(%$p);
-  }
-
-  $self->stash(
-	       profiled_user => $profiled_user,
-	       groups => $groups,
-	       group_blocked_gidnumber => $self->{app}->{cfg}->{ldap}->{defaults}->{group_blocked_gidnumber},
-	       pgp => $pgp,
-	       servers => $servers,
-	       services => $service,
-	       server_alive => $server_alive,
-	       servers_alive_list => $servers_alive_list,
-	       search_base_case => $self->{app}->{cfg}->{ldap}->{base}->{machines},
-	       projects => $projects,
-	       modifiersname => $modifiersname,
-	      );
-
-  my $template = $reqpath =~ /^\/audit\/.*/ ? 'protected/audit/users' : 'protected/profile';
-  # $self->h_log($template);
-  $self->render(template => $template); #layout => undef);
-}
-
 sub ldif_import ($self) {
   my $par = $self->req->params->to_hash;
   # $self->h_log($par);
@@ -591,9 +426,12 @@ sub modify ($self) {
   my $p = $self->req->params->to_hash;
   my $uploads = $self->req->uploads;
   my ($crt, %debug, $service);
+  # $self->h_log($p);
   # $self->h_log($uploads);
   if ( @$uploads ) {
-    ($service) = $p->{authorizedService} =~ /([^@]+)/;
+    if ( exists $p->{authorizedService} ) {
+      ($service) = $p->{authorizedService} =~ /([^@]+)/;
+    }
 
     foreach ( @$uploads ) {
       # $self->h_log($_);
@@ -614,7 +452,7 @@ sub modify ($self) {
 	# and not necesseraly should be equal to certificate CN
 	# need to check, wheather userPassword was provided to not overwrite it
 	$p->{userPassword} = $crt->{CN} if exists $p->{userPassword};
-      } elsif ( $n eq 'jpegPhoto' ) {
+      } elsif ( $n eq 'jpegPhoto' && $p->{$n} ne '' ) {
 	$p->{$n} = $self->h_img_resize( $p->{$n}, $_->size );
       }
     }
@@ -677,8 +515,8 @@ sub modify ($self) {
     }
   }
 
-  push @{$p->{objectClass}}, 'umiUser'
-    if !grep { $_ eq 'umiUser' } @{$p->{objectClass}};
+  # push @{$p->{objectClass}}, 'umiUser'
+  #   if !grep { $_ eq 'umiUser' } @{$p->{objectClass}};
 
   # $self->h_log($p);
   # $self->h_log($e_orig);
@@ -790,10 +628,175 @@ sub modify ($self) {
   return $self->render(template => 'protected/tool/modify'); #, layout => undef);
 }
 
-sub profile_new ($self) {
+sub profile ($self) {
   my $par = $self->req->params->to_hash;
-  $self->h_log($par);
-  $self->stash(profile_new_params => $par);
+  my $reqpath = $self->req->url->to_abs->path;
+  my $uid;
+  if ( $reqpath =~ /^\/audit\/.*$/ ) {
+    $uid = 'all';
+  } else {
+    $uid = $par->{uid} // $self->stash->{uid} // '';
+  }
+
+  my $ldap = Umi::Ldap->new( $self->{app}, $self->session('uid'), $self->session('pwd') );
+
+  ### USER:
+  my $filter;
+  if ($uid eq 'all') {
+    $filter = '(uid=*)';
+  } elsif ($uid eq 'disabled') {
+    $filter = sprintf("(&(uid=*)(gidNumber=%s))",
+		      $self->{app}->{cfg}->{ldap}->{defaults}->{group_blocked_gidnumber});
+  } elsif ($uid eq 'active') {
+    $filter = sprintf("(&(uid=*)(!(gidNumber=%s)))",
+		      $self->{app}->{cfg}->{ldap}->{defaults}->{group_blocked_gidnumber});
+  } elsif ($uid ne '') {
+    $filter = sprintf("(|(uid=%s)(givenName=%s)(sn=%s))", $uid, $uid, $uid);
+  } else {
+    $filter = sprintf("(uid=%s)", $self->session('uid'));
+  }
+  my $search_arg = { base => $self->{app}->{cfg}->{ldap}->{base}->{acc_root},
+		     filter => $filter,
+		     scope => 'one' };
+  $search_arg->{attrs} = [qw( gidNumber givenName mail sn uid modifiersName )] if $reqpath =~ /^\/audit\/.*$/;
+  # $self->{app}->h_log( $search_arg);
+  my $search = $ldap->search( $search_arg );
+  $self->{app}->h_log( $self->{app}->h_ldap_err($search, $search_arg) ) if $search->code;
+  my $profiled_user = $search->as_struct;
+  # $self->h_log($profiled_user);
+
+  my ( $cf_svc, $groups, $k, $kk, $modifiersname, $p, $pgp, $pgp_e, $projects, $server_names, $server_alive, $servers_alive_list, $servers, $service, $svc, $svc_details, $svc_msg, $v, $vv, );
+  while (($k, $v) = each %$profiled_user) {
+    ### name of the last who modified this user root object
+    $search_arg = { base => $v->{modifiersname}->[0], scope => 'base', attrs => ['gecos', 'uid'] };
+    $search = $ldap->search( $search_arg );
+    $modifiersname->{$k} = $search->as_struct->{$v->{modifiersname}->[0]};
+
+    ### only admins and coadmins need this info
+    if ( $self->is_role('admin,coadmin,hr', {cmp => 'or'}) || $reqpath eq '/audit/users') {
+      ### GROUPS: list of all groups user is a member of
+      $search_arg = { base => $self->{app}->{cfg}->{ldap}->{base}->{group},
+		      filter => '(memberUid=' . $v->{uid}->[0] . ')',
+		      attrs => ['cn'] };
+      $search = $ldap->search( $search_arg );
+      my $g = $search->as_struct;
+      push @{$groups->{$k}}, $vv->{cn}->[0] while (($kk, $vv) = each %$g);
+
+      ### SERVERS: list of all servers available for the user
+      $search_arg = { base => 'ou=access,' . $self->{app}->{cfg}->{ldap}->{base}->{netgroup},
+		      filter => '(nisNetgroupTriple=*,' . $v->{uid}->[0] . ',*)',
+		      attrs => ['nisNetgroupTriple'] };
+      $search = $ldap->search( $search_arg );
+      $self->{app}->h_log( $self->{app}->h_ldap_err($search, $search_arg) ) if $search->code;
+      my $netgroups = $search->as_struct;
+      my $tuple;
+      while (my ($kk, $vv) = each %$netgroups) {
+	foreach (@{$vv->{nisnetgrouptriple}}) {
+	  @$tuple = split(/,/, substr($_, 1, -1));
+	  push @{$server_names->{$k}}, sprintf("%s.%s", $tuple->[0], $tuple->[2]);
+	}
+      }
+      @{$servers->{$k}} = do {
+	my %seen;
+	sort grep { !$seen{$_}++ } @{$server_names->{$k}};
+      };
+      foreach (@{$servers->{$k}}) {
+	$search_arg = { base => 'cn=' . $_ . ',' . $self->{app}->{cfg}->{ldap}->{base}->{machines},
+			attrs => ['cn'] };
+	$search = $ldap->search( $search_arg );
+	$self->h_log( $self->{app}->h_ldap_err($search, $search_arg) ) if $search->code && $search->code != 32;
+	$server_alive->{$k}->{$_} = $search->count;
+	$servers_alive_list->{$_} = $search->count;
+      }
+      # $self->h_log($servers);
+    }
+
+    ### SERVICES
+    $search_arg = { base => $k,
+		    scope => 'one',
+		    sizelimit => 0,
+		    filter => 'authorizedService=*',
+		    attrs => [ 'authorizedService'],};
+    $search = $ldap->search( $search_arg );
+    $self->h_log( $self->{app}->h_ldap_err($search, $search_arg) ) if $search->code && $search->code != 32;
+
+    foreach $svc (@{[$search->sorted( 'authorizedService' )]}) {
+      $svc_msg = $ldap->search( { base => $svc->dn, scope => 'children', });
+      $self->h_log( $self->{app}->h_ldap_err($search, $search_arg) ) if $search->code && $search->code != 32;
+      next if ! $svc_msg->count;
+
+      $cf_svc = $self->{app}->{cfg}->{ldap}->{authorizedService}->{(split('@', $svc->get_value('authorizedService')))[0]};
+
+      $svc_details = {
+		      branch_dn => $svc->dn,
+		      # authorizedService => $svc->get_value('authorizedService'),
+		      auth => $cf_svc->{auth},
+		      icon => $cf_svc->{icon},
+		      descr => $cf_svc->{descr},
+		     };
+
+      foreach my $e (@{[$svc_msg->sorted( 'authorizedService' )]}) {
+	# !!! WARNING may there be something except `cn` and `uid`?
+	# $svc_details->{leaf}->{$e->dn} = $e->get_value('uid') // $e->get_value('cn');
+	%{$svc_details->{obj}->{$e->dn}} =
+	  map { $_ => $e->get_value($_, asref => 1) } $e->attributes;
+      }
+      $service->{$k}->{$svc->get_value('authorizedService')} = $svc_details;
+      undef $svc_details;
+    }
+    # $self->h_log($service);
+
+    ### GPG
+    $filter = '(|';
+    $filter .= sprintf("(pgpUserID=*%s*)", $v->{sn}->[0]);
+    $filter .= sprintf("(pgpUserID=*%s*)", $v->{mail}->[0]) if exists $v->{mail};
+    $filter .= ')';
+    $search_arg = { base => $self->{app}->{cfg}->{ldap}->{base}->{pgp}, filter => $filter };
+    $search = $ldap->search( $search_arg );
+    $self->h_log( $self->{app}->h_ldap_err($search, $search_arg) ) if $search->code && $search->code != 32;
+    $pgp_e = $search->as_struct;
+    foreach (keys %$pgp_e) {
+      $pgp->{$k}->{$pgp_e->{$_}->{pgpuserid}->[0]} =
+	{
+	 keyid => $pgp_e->{$_}->{pgpkeyid}->[0],
+	 key   => $pgp_e->{$_}->{pgpkey}->[0],
+	};
+    }
+    #$self->h_log($pgp);
+
+    ### PROJECTS: list of all projects user is a member of
+    $search_arg = { base => 'ou=group,' . $self->{app}->{cfg}->{ldap}->{base}->{project},
+		    filter => '(memberUid=' . $v->{uid}->[0] . ')',
+		    attrs => ['cn'] };
+    $search = $ldap->search( $search_arg );
+    $self->h_log( $self->{app}->h_ldap_err($search, $search_arg) ) if $search->code;
+    $p = $search->as_struct;
+    @{$projects->{$k}} = sort map { $p->{$_}->{cn}->[0] =~ s/_/:/r } keys(%$p);
+  }
+
+  $self->stash(
+	       profiled_user => $profiled_user,
+	       groups => $groups,
+	       group_blocked_gidnumber => $self->{app}->{cfg}->{ldap}->{defaults}->{group_blocked_gidnumber},
+	       pgp => $pgp,
+	       servers => $servers,
+	       services => $service,
+	       server_alive => $server_alive,
+	       servers_alive_list => $servers_alive_list,
+	       search_base_case => $self->{app}->{cfg}->{ldap}->{base}->{machines},
+	       projects => $projects,
+	       modifiersname => $modifiersname,
+	      );
+
+  my $template = $reqpath =~ /^\/audit\/.*/ ? 'protected/audit/users' : 'protected/profile';
+  # $self->h_log($template);
+  $self->render(template => $template); #layout => undef);
+}
+
+sub profile_new ($self) {
+  my $p = $self->req->params->to_hash;
+  $self->h_log($p);
+  $self->stash(profile_new_params => $p);
   my $upload;
   my $uploads = $self->req->uploads;
   # $self->h_log($uploads);
@@ -805,7 +808,7 @@ sub profile_new ($self) {
   return $self->render(template => 'protected/profile/new') unless $v->has_data;
 
   my $re_name = qr/^\p{Lu}\p{L}*([-']\p{L}+)*[0-9]*$/;
-  my $re_date = qr/^(\d{4})(0[1-9]|1[0-2])(0[1-9]|[12]\d|3[01])000000$/;
+  my $re_date = qr/^(\d{4})-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/;
   $v->required('user_first_name')->like($re_name);
   $v->required('user_last_name')->like($re_name);
   $v->required('title');
@@ -818,14 +821,14 @@ sub profile_new ($self) {
   $v->error(user_first_name => ['Required, can contain alfanumeric characters and dash']) if $v->error('user_first_name');
   $v->error(user_last_name => ['Required, can contain alfanumeric characters and dash']) if $v->error('user_last_name');
 
-  my $nf = $self->h_translit(lc $par->{user_first_name});
-  my $nl = $self->h_translit(lc $par->{user_last_name});
-  my $nn = sprintf("%s %s", $self->h_translit($par->{user_first_name}), $self->h_translit($par->{user_last_name}));
+  my $nf = $self->h_translit(lc $p->{user_first_name});
+  my $nl = $self->h_translit(lc $p->{user_last_name});
+  my $nn = sprintf("%s %s", $self->h_translit($p->{user_first_name}), $self->h_translit($p->{user_last_name}));
   my $ldap = Umi::Ldap->new( $self->{app}, $self->session('uid'), $self->session('pwd') );
   my $search_arg = { base => $self->{app}->{cfg}->{ldap}->{base}->{acc_root},
 		     filter => sprintf("(|(&(givenName=%s)(sn=%s))(uid=%s.%s))",
-				       $par->{user_first_name},
-				       $par->{user_last_name},
+				       $p->{user_first_name},
+				       $p->{user_last_name},
 				       $nf,
 				       $nl),
 		     scope => "one" };
@@ -858,20 +861,20 @@ sub profile_new ($self) {
 
   if ( ! $v->has_error ) {
     my $attrs = {
-		 cn => $nn,
-		 gecos => $nn,
+		 cn        => $nn,
+		 gecos     => $nn,
 		 gidNumber => $self->{app}->{cfg}->{ldap}->{defaults}->{attr}->{gidNumber}->{onboarding},
-		 givenName => $par->{user_first_name},
+		 givenName => $p->{user_first_name},
+		 l         => $p->{city},
 		 homeDirectory => sprintf("/usr/local/home/%s.%s", $nf, $nl),
-		 l => $par->{city},
-		 objectClass => $self->{app}->{cfg}->{ldap}->{objectClass}->{acc_root},
-		 umiUserCountryOfResidence => $par->{umiUserCountryOfResidence},
-		 umiUserDateOfEmployment => $par->{umiUserDateOfEmployment} . 'Z',
-		 umiUserDateOfBirth => $par->{umiUserDateOfBirth} . 'Z',
-		 umiUserGender => $par->{umiUserGender},
-		 sn => $par->{user_last_name},
-		 title => $par->{title},
-		 uid => sprintf("%s.%s", $nf, $nl),
+		 objectClass   => $self->{app}->{cfg}->{ldap}->{objectClass}->{acc_root},
+		 umiUserGender => $p->{umiUserGender},
+		 sn            => $p->{user_last_name},
+		 title         => $p->{title},
+		 uid           => sprintf("%s.%s", $nf, $nl),
+		 umiUserCountryOfResidence => $p->{umiUserCountryOfResidence},
+		 umiUserDateOfEmployment   => $self->h_ts_to_generalizedTime($p->{umiUserDateOfEmployment}),
+		 umiUserDateOfBirth        => $self->h_ts_to_generalizedTime($p->{umiUserDateOfBirth}),
 		};
 
     # $attrs->{jpegPhoto} = $upload->{jpegPhoto}->slurp if $upload->{jpegPhoto}->size > 0;
@@ -948,7 +951,7 @@ sub profile_modify ($self) {
   return $self->render(template => 'protected/profile/modify') unless $v->has_data;
 
   my $re_name = qr/^\p{Lu}\p{L}*([-']\p{L}+)*[0-9]*$/;
-  my $re_date = qr/^(\d{4})(0[1-9]|1[0-2])(0[1-9]|[12]\d|3[01])000000$/;
+  my $re_date = qr/^(\d{4})-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/;
   $v->required('givenName')->like($re_name);
   $v->required('sn')->like($re_name);
   $v->required('title');
@@ -1003,9 +1006,16 @@ sub profile_modify ($self) {
     my %f = %$from_form;
     delete $f{jpegPhoto} if exists $f{jpegPhoto};
     delete $f{uid_to_modify};
-    $f{umiUserDateOfBirth} .= 'Z' if exists $f{umiUserDateOfBirth} && $f{umiUserDateOfBirth} !~ /^.*Z$/;
-    $f{umiUserDateOfEmployment} .= 'Z' if exists $f{umiUserDateOfEmployment} && $f{umiUserDateOfEmployment} !~ /^.*Z$/;
-    $f{umiUserDateOfTermination} .= 'Z' if exists $f{umiUserDateOfTermination} && $f{umiUserDateOfTermination} !~ /^.*Z$/;
+    # $f{umiUserDateOfBirth} .= 'Z' if exists $f{umiUserDateOfBirth} && $f{umiUserDateOfBirth} !~ /^.*Z$/;
+    # $f{umiUserDateOfEmployment} .= 'Z' if exists $f{umiUserDateOfEmployment} && $f{umiUserDateOfEmployment} !~ /^.*Z$/;
+    # $f{umiUserDateOfTermination} .= 'Z' if exists $f{umiUserDateOfTermination} && $f{umiUserDateOfTermination} !~ /^.*Z$/;
+
+    $f{umiUserDateOfBirth} = $self->h_ts_to_generalizedTime($f{umiUserDateOfBirth})
+      if exists $f{umiUserDateOfBirth} && $f{umiUserDateOfBirth} ne '';
+    $f{umiUserDateOfEmployment} = $self->h_ts_to_generalizedTime($f{umiUserDateOfEmployment})
+      if exists $f{umiUserDateOfEmployment} && $f{umiUserDateOfEmployment} ne '';
+    $f{umiUserDateOfTermination} = $self->h_ts_to_generalizedTime($f{umiUserDateOfTermination})
+      if exists $f{umiUserDateOfTermination} && $f{umiUserDateOfTermination} ne '';
 
     my $diff = $self->h_hash_diff( \%l, \%f);
     $self->h_log($diff);
