@@ -104,21 +104,21 @@
 		% }
 	      % } else {
 	      % }
-	      <%== h_rewrite_dn($e->dn,'<i class="fa-solid fa-circle fa-2xs text-secondary text-opacity-50 mx-2"></i>') %>
+	      <%== h_rewrite_dn($e->dn,'<i class="fa-solid fa-square fa-2xs text-secondary text-opacity-50 mx-2"></i>') %>
 	    </button>
 	  % end
 	</div>
 	% if ( ! $e->exists('reqType') ) {
-	  % $ct = substr($e->get_value('createTimestamp'), 0, -1);
-	  % $cn = substr($e->get_value('creatorsName'), 4, index($e->get_value('creatorsName'), ",")-4) if !$e->exists('reqType');
-	  % $mt = substr($e->get_value('modifyTimestamp'), 0, -1);
-	  % $mn = substr($e->get_value('modifiersName'), 4, index($e->get_value('modifiersName'), ",")-4) if !$e->exists('reqType');
+	  % $ct = substr($e->get_value('createTimestamp'), 0, -7);
+	  % $cn = substr(h_get_root_uid_val($e->get_value('creatorsName')) // $e->get_value('creatorsName'), 0, 7);
+	  % $mt = substr($e->get_value('modifyTimestamp'), 0, -7);
+	  % $mn = h_get_root_uid_val($e->get_value('modifiersName')) // substr($e->get_value('modifiersName'), 0, 7);
 	  <ul class="list-unstyled fa-ul umi-text-tiny font-monospace float-end m-0 pe-2 pt-1">
 	    <li title="created GMT: <%= $ct %> by <%= $cn %>">
-	      <span class="fa-li"><i class="fa-solid fa-hourglass-start fa-sm"></i></span><%= $ct %> <b><%= $cn %></b>
+	      <span class="fa-li"><i class="fa-solid fa-hourglass-start fa-sm"></i></span><%= $ct %> <%== length($cn) >= 7 ? substr($cn, 0, 7) . '&mldr;' : $cn %>
 	    </li>
 	    <li title="modified, GMT: <%= $mt %> by <%= $mn %>">
-	      <span class="fa-li"><i class="fa-solid fa-hourglass-half fa-sm"></i></span><%= $mt %> <b><%= $mn %></b>
+	      <span class="fa-li"><i class="fa-solid fa-hourglass-half fa-sm"></i></span><%= $mt %> <%== length($mn) >= 7 ? substr($mn, 0, 7) . '&mldr;' : $mn %>
 	    </li>
 	  </ul>
 	% }

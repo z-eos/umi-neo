@@ -34,7 +34,7 @@
 	 data-bs-toggle="dropdown"
 	 aria-expanded="false"
       >
-	<i class="fa-solid fa-fw fa-user-alt text-info ms-2"></i>
+	<i class="fa-solid fa-fw fa-user-alt ms-1"></i>
       </a>
       <ul class="dropdown-menu dropdown-menu-end">
 	<li class="text-bg-secondary text-info text-center fw-bold">

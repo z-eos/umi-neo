@@ -62,12 +62,14 @@ steps to do on employee firing
 =cut
 
 sub fire ($self) {
-  my $par = $self->req->params->to_hash;
-  $self->h_log($par);
+  my $p = $self->req->params->to_hash;
+  $self->h_log($p);
+
+  return $self->render(template => 'protected/home') unless $p->{fire_dn};
 
   my $ldap = Umi::Ldap->new( $self->{app}, $self->session('uid'), $self->session('pwd') );
 
-  my $search_arg = { base => $par->{fire_dn},
+  my $search_arg = { base => $p->{fire_dn},
 		     scope => 'sub',
 		     attrs => [] };
   # $self->h_log($search_arg);
@@ -76,7 +78,7 @@ sub fire ($self) {
 
   my ($ldif, $root_e);
   foreach ($search->entries) {
-    $root_e = $_ if $_->dn eq $par->{fire_dn};
+    $root_e = $_ if $_->dn eq $p->{fire_dn};
     $ldif .= $_->ldif;
   }
 
@@ -84,7 +86,7 @@ sub fire ($self) {
 		  $self->session('user_obj')->{givenname},
 		  $self->session('user_obj')->{sn},
 		  strftime("%F %T", localtime),
-		  length($par->{description}) ? $par->{description} : '',
+		  length($p->{description}) ? $p->{description} : '',
 		  $ldif);
 
   # $self->h_log($ldif);
@@ -120,20 +122,20 @@ sub fire ($self) {
   push @$changes, replace => $replace;
 
   # $self->h_log($changes);
-  my $msg = $ldap->modify($par->{fire_dn}, $changes);
+  my $msg = $ldap->modify($p->{fire_dn}, $changes);
   $self->h_log($msg);
   if ( $msg->{status} eq 'ok' ) {
     $self->session(debug => {$msg->{status} => [ $msg->{message} ]});
 
-    $msg = $ldap->delete($par->{fire_dn}, 1, 'children');
+    $msg = $ldap->delete($p->{fire_dn}, 1, 'children');
     $self->session( debug => $msg );
 
     ### alas, this redirect by nature performs a GET request
     return $self
       ->redirect_to($self->url_for('search_common')
-		    ->query( search_base_case => $par->{search_base_case},
-			     search_filter => $par->{search_filter},
-			     ldap_subtree => $par->{ldap_subtree} )
+		    ->query( search_base_case => $p->{search_base_case},
+			     search_filter => $p->{search_filter},
+			     ldap_subtree => $p->{ldap_subtree} )
 		   );
   }
 
@@ -818,8 +820,8 @@ sub profile_new ($self) {
   $v->required('umiUserGender');
   $v->required('umiUserCountryOfResidence');
 
-  $v->error(user_first_name => ['Required, can contain alfanumeric characters and dash']) if $v->error('user_first_name');
-  $v->error(user_last_name => ['Required, can contain alfanumeric characters and dash']) if $v->error('user_last_name');
+  $v->error(user_first_name => ['Required, can contain alfanumeric characters and dash, first letter capital']) if $v->error('user_first_name');
+  $v->error(user_last_name => ['Required, can contain alfanumeric characters and dash, first letter capital']) if $v->error('user_last_name');
 
   my $nf = $self->h_translit(lc $p->{user_first_name});
   my $nl = $self->h_translit(lc $p->{user_last_name});

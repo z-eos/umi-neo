@@ -5,40 +5,38 @@
 
 %# data for menu is provided in menu template
 % my $menu = stash->{menu};
+% my $button_close = '<button type="button" class="btn btn-sm btn-secondary me-1" data-bs-dismiss="modal">Close</button>';
 
 % my $it = "fire";
 <div class="modal border-1" id="modal_<%= $it %><%= $i %>" tabindex="-1"
      aria-labelledby="modal_<%= $it %><%= $i %>_label" aria-hidden="true">
   <div class="modal-dialog modal-lg">
-    <div class="modal-content border border-<%= $menu->{$it}->{col} %> border-1">
-      <div class="modal-header bg-<%= $menu->{$it}->{col} %> row m-0">
+    <div class="modal-content border border-<%= h_get_col($menu->{$it}->{col}) %> border-1">
+      <div class="modal-header <%= h_col_to_bg($menu->{$it}->{col}) %> row m-0">
 	<h4 class="modal-title mb-3" id="modal_<%= $it %><%= $i %>_label">
-	  <i class="fa <%= $menu->{$it}->{ico} %> me-3"></i> Root object hierarchy archive and delete.
+	  <i class="fa <%= $menu->{$it}->{ico} %> fa-xl me-3"></i> Root object hierarchy archive and delete.
 	</h4>
 	<b class=""><%= $dn %></b>
       </div>
       <div class="modal-body">
 	%= form_for '/' . $it => (class => "", method => 'POST') => begin
-	% my $po = $search_common_params->{params_orig};
-	%= hidden_field search_base_case => $po->{search_base_case}
-	%= hidden_field search_filter => $po->{search_filter}
-	%= hidden_field ldap_subtree => $po->{ldap_subtree}
-	
-	<div class="">
-	  <label class="form-label" for="modal_<%= $it %>_descr<%= $i %>">
-	    Description
-	  </label>
-	  %= text_area 'description', id => 'modal_' . $it . '_descr' . $i, class => "form-control", rows => 5, cols => 40
-	</div>
-	<div class="modal-error mx-5"></div>
-	<div class="btn-group float-end mt-3">
-	  <button type="button" class="btn btn-sm btn-secondary me-1"
-		  data-bs-dismiss="modal">Close</button>
-	  <button type="submit" class="btn btn-sm btn-block btn-<%= $menu->{$it}->{col} %>"
-		  name="<%= $it %>_dn" value="<%= $dn_orig %>" data-bs-action="<%= $it %>">
-	    Archive and delete entire subtree
-	  </button>
-	</div>
+	  % my $po = $search_common_params->{params_orig};
+	  %= hidden_field search_base_case => $po->{search_base_case}
+	  %= hidden_field search_filter => $po->{search_filter}
+	  %= hidden_field ldap_subtree => $po->{ldap_subtree}
+	  
+	  <div class="">
+	    %= label_for 'modal_' . $it . '_descr' . $i => 'Description', class => 'form-label'
+	    %= text_area 'description', id => 'modal_' . $it . '_descr' . $i, class => "form-cnotrol", rows => 5, cols => 40
+	  </div>
+	  <div class="modal-error mx-5"></div>
+	  <div class="btn-group float-end mt-3">
+	    
+	    <button type="submit" class="btn btn-sm btn-block <%= h_col_to_bg($menu->{$it}->{col}) %>"
+	      name="<%= $it %>_dn" value="<%= $dn_orig %>" data-bs-action="<%= $it %>">
+	      Archive and delete entire subtree
+	    </button>
+	  </div>
 	% end
       </div>
     </div>
@@ -49,10 +47,10 @@
 <div class="modal border-1" id="modal_<%= $it %><%= $i %>" tabindex="-1"
      aria-labelledby="modal_<%= $it %><%= $i %>_label" aria-hidden="true">
   <div class="modal-dialog modal-lg">
-    <div class="modal-content border border-<%= $menu->{$it}->{col} %> border-1">
-      <div class="modal-header bg-<%= $menu->{$it}->{col} %> row m-0">
+    <div class="modal-content border border-<%= h_get_col($menu->{$it}->{col}) %> border-1">
+      <div class="modal-header <%= h_col_to_bg($menu->{$it}->{col}) %> row m-0">
 	<h4 class="modal-title mb-3" id="modal_<%= $it %><%= $i %>_label">
-	  <i class="fa <%= $menu->{$it}->{ico} %> me-3"></i> Object / hierarchy deletion
+	  <i class="fa <%= $menu->{$it}->{ico} %> fa-xl me-3"></i> Object / hierarchy deletion
 	</h4>
 	<b class=""><%= $dn %></b>
       </div>
@@ -73,9 +71,8 @@
 	  </div>
 	  <div class="modal-error mx-5"></div>
 	  <div class="btn-group float-end">
-	    <button type="button" class="btn btn-sm btn-secondary me-1"
-		    data-bs-dismiss="modal">Close</button>
-	    <button type="submit" class="btn btn-sm btn-block btn-<%= $menu->{$it}->{col} %>"
+	    %== $button_close
+	    <button type="submit" class="btn btn-sm btn-block <%= h_col_to_bg($menu->{$it}->{col}) %>"
 		    name="<%= $it %>_dn" value="<%= $dn_orig %>" data-bs-action="<%= $it %>">
 	      Yes, DELETE
 	    </button>
@@ -90,21 +87,21 @@
 <div class="modal border-1" id="modal_<%= $it %><%= $i %>" tabindex="-1"
      aria-labelledby="modal_block<%= $i %>_label" aria-hidden="true">
   <div class="modal-dialog modal-lg">
-      <div class="modal-content border border-<%= $menu->{$it}->{col} %> border-1">
-	  <div class="modal-header bg-<%= $menu->{$it}->{col} %> row m-0">
+      <div class="modal-content border border-<%= h_get_col($menu->{$it}->{col}) %> border-1">
+	  <div class="modal-header <%= h_col_to_bg($menu->{$it}->{col}) %> row m-0">
 	      <h4 class="modal-title mb-3" id="modal_<%= $it %><%= $i %>_label">
-		  <i class="fa <%= $menu->{$it}->{ico} %> me-3"></i>
+		  <i class="fa <%= $menu->{$it}->{ico} %> fa-xl me-3"></i>
 		  Block DN: <b><%= $dn %></b>
 	      </h4>
 	  </div>
 	  <form role="form" method="POST" class="formajaxer" action="/searchby/block">
 	      <div class="modal-footer">
 		  <div class="btn-group float-end">
-		      <button type="button" class="btn btn-sm btn-block btn-secondary umi-btn-event" data-bs-dismiss="modal">Close</button>
-		      <button type="submit" class="btn btn-sm btn-block btn-<%= $menu->{$it}->{col} %> umi-btn-event umi-btn-ajax"
-			      name="user_block" value="<%= $dn %>" data-bs-action="<%= $it %>">
-			  Yes, BLOCK
-		      </button>
+		    %== $button_close
+		    <button type="submit" class="btn btn-sm btn-block <%= h_col_to_bg($menu->{$it}->{col}) %> umi-btn-event umi-btn-ajax"
+			    name="user_block" value="<%= $dn %>" data-bs-action="<%= $it %>">
+		      Yes, BLOCK
+		    </button>
 		  </div>
 	      </div>
 	      <div class="modal-error mx-5"></div>
@@ -117,10 +114,10 @@
 <div class="modal border-1" id="modal_<%= $it %><%= $i %>" tabindex="-1"
      aria-labelledby="modal_<%= $it %><%= $i %>_label" aria-hidden="true">
   <div class="modal-dialog modal-lg">
-    <div class="modal-content border border-<%= $menu->{$it}->{col} %> border-1">
-      <div class="modal-header bg-<%= $menu->{$it}->{col} %> row m-0">
+    <div class="modal-content border border-<%= h_get_col($menu->{$it}->{col}) %> border-1">
+      <div class="modal-header <%= h_col_to_bg($menu->{$it}->{col}) %> row m-0">
 	<h4 class="modal-title mb-3" id="modal_<%= $it %><%= $i %>_label">
-	  <i class="fa-solid <%= app->{cfg}->{ui}->{menu}->{$it}->{ico} . ' ' .  app->{cfg}->{ui}->{menu}->{$it}->{col} %> me-3"></i>
+	  <i class="fa-solid <%= app->{cfg}->{ui}->{menu}->{$it}->{ico} %> fa-xl me-3"></i>
 	  Modify DN:<br><b><%= $dn %></b>
 	</h4>
       </div>
@@ -145,10 +142,10 @@
       </div>
       <div class="modal-footer">
 	<div>
-	  <button type="button" class="btn btn-secondary umi-btn-event" data-bs-dismiss="modal">Close</button>
-	  <button type="submit" class="btn bg-danger text-white umi-btn-event umi-btn-ajax"
-	    name="src_dn"
-	    value="<%= $dn_orig %>" data-bs-action="refresh" >
+	  %== $button_close
+	  <button type="submit" class="btn text-white umi-btn-event umi-btn-ajax <%= h_col_to_bg($menu->{$it}->{col}) %>"
+		  name="src_dn"
+		  value="<%= $dn_orig %>" data-bs-action="refresh" >
 	    Yes, modify DN
 	  </button>
 	</div>
@@ -163,10 +160,10 @@
 <div class="modal border-1" id="modal_<%= $it %><%= $i %>" tabindex="-1"
      aria-labelledby="modal_<%= $it %><%= $i %>_label" aria-hidden="true">
     <div class="modal-dialog modal-lg">
-	<div class="modal-content border border-<%= $menu->{$it}->{col} %> border-1">
-	    <div class="modal-header bg-<%= $menu->{$it}->{col} %> row m-0">
+	<div class="modal-content border border-<%= h_get_col($menu->{$it}->{col}) %> border-1">
+	    <div class="modal-header <%= h_col_to_bg($menu->{$it}->{col}) %> row m-0">
 		<h4 class="modal-title mb-3" id="modal_<%= $it %><%= $i %>_label">
-		    <i class="fa <%= $menu->{$it}->{ico} %> me-3"></i>
+		    <i class="fa <%= $menu->{$it}->{ico} %> fa-xl me-3"></i>
 		    LDIF of DN: <b><%= $dn %></b>
 		</h4>
 	    </div>
@@ -196,12 +193,12 @@
 			</div>
 		    </div>
 		    <div class="btn-group float-end pr-3">
-			<button type="button" class="btn btn-secondary umi-btn-event" data-bs-dismiss="modal">Close</button>
-			<button type="submit" name="dn" value="<%= $dn %>"
-				onClick="$(modal_<%= $it %><%= $i %>).modal('hide')"
-				class="btn bg-<%= $menu->{$it}->{col} %> umi-btn-event umi-btn-logic">
-			    Get LDIF
-			</button>
+		      %== $button_close
+		      <button type="submit" name="dn" value="<%= $dn %>"
+				    onClick="$(modal_<%= $it %><%= $i %>).modal('hide')"
+				    class="btn <%= h_col_to_bg($menu->{$it}->{col}) %> umi-btn-event umi-btn-logic">
+			Get LDIF
+		      </button>
 		    </div>
 		</form>
 	    </div>
@@ -252,7 +249,7 @@
 	  </div>
 	</div>
 	<div class="modal-footer">
-	  <button type="button" class="btn btn-secondary umi-btn-event" data-bs-dismiss="modal">Close</button>
+	  %== $button_close
 	  <button type="submit"
 		  onClick="$(modal_vcard<%= $i %>).modal('hide')"
 		  class="btn bg-info text-white umi-btn-event umi-btn-logic"

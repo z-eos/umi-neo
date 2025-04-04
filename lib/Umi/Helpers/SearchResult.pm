@@ -62,6 +62,38 @@ returns fa- class color to be used for the entr
 		 }
 	       });
 
+=head1 h_col_to_bg
+
+converts color class to bg color class
+
+    text-info -> text-bg-info
+
+    umi-text-orange -> umi-text-bg-orange
+
+=cut
+
+  $app->helper( h_col_to_bg => sub {
+		  my ($c, $col) = @_;
+		  my $bg = $col =~ s/-(?!.*-)/-bg-/r;
+		  return $bg;
+	       });
+
+=head1 h_get_col
+
+gets color part after the last dash
+
+    text-info -> info
+
+    umi-text-orange -> orange
+
+=cut
+
+  $app->helper( h_get_col => sub {
+		  my ($c, $col) = @_;
+		  $col =~ /-([^-]+)$/;
+		  return $1;
+	       });
+
 =head1 h_get_root_dn
 
 returns root object dn (root account dn) from current object dn if it

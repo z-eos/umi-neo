@@ -30,14 +30,6 @@
 	</a>
       </li>
       
-      <!-- Settings Tab Button -->
-      <li class="nav-item">
-	<a href="#settings" id="settings-tab" class="nav-link" data-bs-toggle="tab" role="tab"
-	   data-bs-toggle="tab" data-bs-target="#settings"
-	   aria-controls="settings" aria-selected="true">
-	  <i class="fa-solid fa-cogs text-secondary"></i>
-	</a>
-      </li>
     </ul>
 
     <!-- === *** TAB PANES CONTENT *** === -->
@@ -325,109 +317,6 @@
 	</div>
       </div>
       <!-- === IPAM TAB SECTION CONTENT END ===  -->
-
-
-      <!-- === SETTINGS TAB SECTION === -->
-      <div class="tab-pane p-3 text-light" id="settings" role="tabpanel">
-	<div class="callout m-0 py-2 text-center text-uppercase">
-	  <b>Settings</b>
-	</div>
-	
-	<!-- Settings form that posts to /settings_save endpoint -->
-	<form role="form" id="settings-save" class="settings-save" method="POST" action="/settings_save">
-	  <div class="aside-options">
-	    <!-- Sidebar visibility setting -->
-	    <div class="custom-control custom-switch">
-	      <input type="checkbox" class="custom-control-input" id="checkboxSidebar"
-		     name="sidebar" [% c.session.settings.ui.sidebar ? ' checked=""' : '' %]>
-	      <label class="custom-control-label" for="checkboxSidebar">Sidebar On Start</label>
-	    </div>
-	    
-	    <!-- Aside panel visibility setting -->
-	    <div class="custom-control custom-switch">
-	      <input type="checkbox" class="custom-control-input" id="checkboxAside"
-		     name="aside" [% c.session.settings.ui.aside ? ' checked=""' : '' %]>
-	      <label class="custom-control-label" for="checkboxAside">Aside On Start</label>
-	    </div>
-	    
-	    <!-- Object blocked state checking setting -->
-	    <div class="custom-control custom-switch">
-	      <input type="checkbox" class="custom-control-input" id="checkboxIsObjBlocked"
-		     name="isblock" [% c.session.settings.ui.isblock ? ' checked=""' : '' %]>
-	      <label class="custom-control-label" for="checkboxIsObjBlocked"
-		     title="whether provide info regarding a blocked state of the object">
-		Is Blocked Check
-	      </label>
-	    </div>
-	    
-	    <!-- Raw data storage setting -->
-	    <div class="custom-control custom-switch">
-	      <input type="checkbox" class="custom-control-input" id="checkboxStoreData"
-		     name="storedata" [% c.session.settings.ui.storedata ? ' checked=""' : '' %]>
-	      <label class="custom-control-label" for="checkboxStoreData"
-		     title="whether store raw perl data of the form query">
-		Store Data
-	      </label>
-	    </div>
-	    
-	    <!-- IPAM DNS debug output setting -->
-	    <div class="custom-control custom-switch">
-	      <input type="checkbox" class="custom-control-input" id="checkboxIpamDns"
-		     name="ipamdns" [% c.session.settings.ui.ipamdns ? ' checked=""' : '' %]>
-	      <label class="custom-control-label" for="checkboxIpamDns"
-		     title="show DNS resolve debug in CAT output">
-		DNS resolve debug
-	      </label>
-	    </div>
-	    
-	    <!-- RFC4515 setting (always enabled, cannot be changed) -->
-	    <div class="custom-control custom-switch">
-	      <input type="checkbox" class="custom-control-input" disabled id="rfc4515"
-		     name="rfc4515" checked="" aria-describedby="rfc4515help">
-	      <label class="custom-control-label" for="rfc4515">RFC4515</label>
-              <small class="text-muted" id="rfc4515help">Extended Search Filter Syntax.</small>
-	    </div>
-	  </div>
-	  
-	  <!-- Debug level slider control -->
-	  <div class="aside-options">
-            <div class="clearfix mt-4">
-              <small><b>Debug: <span id="debug_level" class="text-primary"></span></b></small>
-	      <input type="range" id="debug" name="debug" class="custom-range" min="0" max="2"
-		     [% IF c.session.settings.ui.exists('debug') %]
-		     value="[% c.session.settings.ui.debug %]"
-		     [% ELSE %]
-		     value="0"
-		     [% END %]>
-	    </div>
-	  </div>
-	  
-	  <!-- JavaScript to update debug level display when slider moves -->
-	  <script>
-	   $(function () {
-	     var slider = document.getElementById("debug");
-	     var output = document.getElementById("debug_level");
-	     output.innerHTML = slider.value;
-	     
-	     slider.oninput = function() {
-	       output.innerHTML = this.value;
-	     }
-	   });
-	  </script>
-	  
-	  <hr>
-	  
-	  <!-- Submit button - Note: This appears to be cut off in the original file -->
-	  <div>
-	    <button type="submit" class="btn btn-success col-12">
-              <i class="fa-solid fa-save fa-lg"></i>
-              Save
-            </button>
-
-	  </div>
-	</form>
-            </div>
-      <!-- === SETTINGS TAB SECTION END === -->
       
     </div>
     <!-- === END TAB CONTENT === -->

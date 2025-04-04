@@ -463,19 +463,19 @@ form.new-user:not(.show-simplified) .show-on-simplified {
 
    ------------------------------- */
 
-.umi-bg-blue        { background-color: var(--bs-blue)      !important; }
-.umi-bg-indigo      { background-color: var(--bs-indigo)    !important; }
-.umi-bg-purple      { background-color: var(--bs-purple)    !important; }
-.umi-bg-pink        { background-color: var(--bs-pink)      !important; }
-.umi-bg-red	    { background-color: var(--bs-red)       !important; }
-.umi-bg-orange      { background-color: var(--bs-orange)    !important; }
-.umi-bg-yellow      { background-color: var(--bs-yellow)    !important; }
-.umi-bg-green       { background-color: var(--bs-green)     !important; }
-.umi-bg-teal        { background-color: var(--bs-teal)      !important; }
-.umi-bg-cyan        { background-color: var(--bs-cyan)      !important; }
-.umi-bg-white       { background-color: var(--bs-white)     !important; }
-.umi-bg-gray        { background-color: var(--bs-gray)      !important; }
-.umi-bg-gray-dark   { background-color: var(--bs-gray-dark) !important; }
+.umi-text-bg-blue        { background-color: var(--bs-blue)      !important; }
+.umi-text-bg-indigo      { background-color: var(--bs-indigo)    !important; }
+.umi-text-bg-purple      { background-color: var(--bs-purple)    !important; }
+.umi-text-bg-pink        { background-color: var(--bs-pink)      !important; }
+.umi-text-bg-red	    { background-color: var(--bs-red)       !important; }
+.umi-text-bg-orange      { background-color: var(--bs-orange)    !important; }
+.umi-text-bg-yellow      { background-color: var(--bs-yellow)    !important; }
+.umi-text-bg-green       { background-color: var(--bs-green)     !important; }
+.umi-text-bg-teal        { background-color: var(--bs-teal)      !important; }
+.umi-text-bg-cyan        { background-color: var(--bs-cyan)      !important; }
+.umi-text-bg-white       { background-color: var(--bs-white)     !important; }
+.umi-text-bg-gray        { background-color: var(--bs-gray)      !important; }
+.umi-text-bg-gray-dark   { background-color: var(--bs-gray-dark) !important; }
 
 .umi-text-blue	    {            color: var(--bs-blue)      !important; }
 .umi-text-indigo    {            color: var(--bs-indigo)    !important; }
