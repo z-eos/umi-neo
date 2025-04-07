@@ -34,12 +34,16 @@ sub search_common  ($self) {
 
   my $v = $self->validation;
   return $self->render( template => 'protected/search/common',
-			e_info => undef,
+			entries => [],
 			search_arg => {},
 			search_common_params => $p,
 			searchres => {},
-			entries => [] )
-    unless (exists $p->{search_filter} && $p->{search_filter} ne '') || exists $p->{no_layout} || exists $p->{ldap_subtree} ;
+			e_info => undef )
+    unless (exists $p->{search_filter} &&
+	    $p->{search_filter} ne '')  ||
+	      exists $p->{no_layout}    ||
+	      exists $p->{ldap_subtree} ||
+	      exists $p->{dn_to_history} ;
 
   if ($self->session('debug')) {
     $self->stash( debug => $self->session('debug') );
@@ -100,7 +104,6 @@ sub search_common  ($self) {
 		      $self->macnorm({ mac => $filter_meta }),
 		      $self->macnorm({ mac => $filter_meta }),
 		      $self->macnorm({ mac => $filter_meta }) );
-
     $base   = $self->{app}->{cfg}->{ldap}->{base}->{dc};
     $p->{search_base_case} = $base;
   } elsif ( defined $p->{search_base_case} && $p->{search_base_case} eq 'search_by_name' ) {
@@ -130,6 +133,8 @@ sub search_common  ($self) {
     $filter     = 'reqDN=' . $p->{'dn_to_history'};
     $sort_order = 'straight';
     $base       = $self->{app}->{cfg}->{ldap}->{accesslog};
+    # $self->h_log($filter);
+    # $self->h_log($base);
   } elsif ( defined $p->{search_base_case} && $p->{search_base_case} ne '' &&
 	    $p->{'search_filter'} ne '' ) {
     $filter = $p->{'search_filter'};
@@ -138,8 +143,8 @@ sub search_common  ($self) {
     $filter = 'objectClass=*';
     $base   = $p->{search_base_case};
   }
-  $self->{app}->h_log(sprintf("base: %s; filter_meta: %s; filter: %s",
-			      $base, $filter_meta || 'NA (ldap_subtree called)', $filter));
+  $self->h_log(sprintf("base: %s; filter_meta: %s; filter: %s",
+		       $base, $filter_meta || 'NA (ldap_subtree called)', $filter));
 
   $scope = $p->{search_scope} // 'sub';
 
@@ -149,7 +154,7 @@ sub search_common  ($self) {
 
   $p->{'filter'} = '(' . $filter . ')';
 
-  $self->{app}->h_log('SEARCH RESULT');
+  $self->h_log('SEARCH RESULT');
   $ldap = Umi::Ldap->new( $self->{app},
 			  $self->session('uid'),
 			  $self->session('pwd') );
@@ -158,9 +163,9 @@ sub search_common  ($self) {
 		  filter => $filter4search,
 		  scope => 'sub' };
   $search = $ldap->search( $search_arg );
-  $self->{app}->h_log( $self->{app}->h_ldap_err($search, $search_arg) ) if $search->code;
+  $self->h_log( $self->{app}->h_ldap_err($search, $search_arg) ) if $search->code;
   # my @dn_s = map { $_->dn } $search->sorted;
-  # $self->{app}->h_log(\@dn_s);
+  # $self->h_log(\@dn_s);
 
   # hash to keep aux data like disabled state of the root object for branch/leaf
   my $e_info;
@@ -211,9 +216,6 @@ sub search_projects  ($self) {
 
   my $ldap = Umi::Ldap->new( $self->{app}, $self->session('uid'), $self->session('pwd') );
 
-  my $proj = $p->{proj} // $self->stash->{proj};
-  $proj = '*' if $proj eq 'all';
-
   # $self->h_log($proj);
   my $search_arg = { base => $self->{app}->{cfg}->{ldap}->{base}->{project},
 		     filter => $filter,
@@ -232,7 +234,7 @@ sub search_projects  ($self) {
 				    $self->{app}->{cfg}->{ldap}->{base}->{project}) };
     # $self->h_log($search_arg);
     $search = $ldap->search( $search_arg );
-    $self->{app}->h_log( $self->{app}->h_ldap_err($search, $search_arg) ) if $search->code;
+    $self->h_log( $self->{app}->h_ldap_err($search, $search_arg) ) if $search->code;
     $entries->{$p} = $search->as_struct;
 
     ### GROUPS
@@ -241,7 +243,7 @@ sub search_projects  ($self) {
 		    attrs => ['*'], };
     # $self->h_log($search_arg);
     $search = $ldap->search( $search_arg );
-    $self->{app}->h_log( $self->{app}->h_ldap_err($search, $search_arg) ) if $search->code;
+    $self->h_log( $self->{app}->h_ldap_err($search, $search_arg) ) if $search->code;
     $entries->{$p}->{group} = $search->as_struct;
     # $self->h_log($entries->{$p}->{group});
 
@@ -258,7 +260,7 @@ sub search_projects  ($self) {
 		      };
 
 	$search = $ldap->search( $search_arg );
-	$self->{app}->h_log( $self->{app}->h_ldap_err($search, $search_arg) ) if $search->code;
+	$self->h_log( $self->{app}->h_ldap_err($search, $search_arg) ) if $search->code;
 
 	# $self->h_log($search->as_struct);
 	%{$entries->{$p}->{team}} = (%{$entries->{$p}->{team}}, %{$search->as_struct});
@@ -283,7 +285,7 @@ sub search_projects  ($self) {
 			  attrs => ['*'], };
 	  # $self->h_log($search_arg);
 	  $search = $ldap->search( $search_arg );
-	  $self->{app}->h_log( $self->{app}->h_ldap_err($search, $search_arg) ) if $search->code;
+	  $self->h_log( $self->{app}->h_ldap_err($search, $search_arg) ) if $search->code;
 	  %{$entries->{$p}->{machines}} = (%{$entries->{$p}->{machines}}, %{$search->as_struct});
 	}
       } else {
