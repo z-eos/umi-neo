@@ -29,8 +29,8 @@
       </div>
       <div class="col-xs-6 col-md-7">
 	<div class="card-body">
-	  % my $fullname = $v->{givenname}->[0] . ' ' . $v->{sn}->[0];
-          <h4 class="card-title fw-bold bg-secondary px-5 py-1<%= ' text-' . $card_col if $card_col ne '' %>"><%=  utf8::is_utf8($fullname) ? $fullname : decode_utf8($fullname) %>
+	  % my $fullname = sprintf("%s %s", $v->{givenname}->[0] // '&mldr;', $v->{sn}->[0] // '&mldr;');
+          <h4 class="card-title fw-bold bg-secondary px-5 py-1<%= ' text-' . $card_col if $card_col ne '' %>"><%==  utf8::is_utf8($fullname) ? $fullname : decode_utf8($fullname) %>
 	    <a href="/profile/modify/<%= $v->{uid}->[0] %>" class="btn btn-sm btn-secondary">
 	      <i class="fa-solid fa-gears"></i>
 	    </a>

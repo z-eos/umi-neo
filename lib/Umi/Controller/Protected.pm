@@ -142,23 +142,23 @@ sub fire ($self) {
 }
 
 sub ldif_import ($self) {
-  my $par = $self->req->params->to_hash;
-  # $self->h_log($par);
+  my $p = $self->req->params->to_hash;
+  # $self->h_log($p);
   my $uploads = $self->req->uploads;
   # $self->h_log($uploads);
-  $par->{file} = $uploads->[0]->slurp if @$uploads;
+  $p->{file} = $uploads->[0]->slurp if @$uploads;
 
   my $v = $self->validation;
   return $self->render(template => 'protected/tool/ldif-import') unless $v->has_data;
 
   my ( $ldif, $err );
-  $ldif->{ldif} = $par->{ldif} if defined $par->{ldif} && $par->{ldif} ne '';
-  $ldif->{file} = $par->{file} if defined $par->{file};
+  $ldif->{ldif} = $p->{ldif} if defined $p->{ldif} && $p->{ldif} ne '';
+  $ldif->{file} = $p->{file} if defined $p->{file};
   # $self->h_log($ldif);
 
   my $ldap = Umi::Ldap->new( $self->{app}, $self->session('uid'), $self->session('pwd') );
 
-  my $res = $ldap->ldif_read(defined $par->{file} && $par->{file} ne '' ? $par->{file} : $par->{ldif} );
+  my $res = $ldap->ldif_read(defined $p->{file} && $p->{file} ne '' ? $p->{file} : $p->{ldif} );
 
   $self->stash(debug => $res->{debug});
 
@@ -168,29 +168,26 @@ sub ldif_import ($self) {
 		      );
 }
 
-sub ldif_export    ($self) {
+sub ldif_export ($self) {
   my $v = $self->validation;
   return $self->render(template => 'protected/tool/ldif-export') unless $v->has_data;
 
   my $ldap = Umi::Ldap->new( $self->{app}, $self->session('uid'), $self->session('pwd') );
 
-  my $par = $self->req->params->to_hash;
-  # $self->h_log($par);
-  $par->{dn} =~ s/ //g;
-  my $search_arg = { base => $par->{dn},
-		     scope => $par->{scope} };
-  $search_arg->{attrs} = [] if !exists $par->{sysinfo};
+  my $p = $self->req->params->to_hash;
+  # $self->h_log($p);
+  $p->{dn} =~ s/ //g;
+  my $search_arg = { base => $p->{dn}, scope => $p->{scope} };
+  $search_arg->{attrs} = [] if !exists $p->{sysinfo};
   # $self->h_log($search_arg);
   my $search = $ldap->search( $search_arg );
   $self->h_log( $self->h_ldap_err($search, $search_arg) ) if $search->code;
 
   my $ldif;
-  foreach ($search->entries) {
-    $ldif .= $_->ldif;
-  }
+  $ldif .= $_->ldif foreach ($search->entries);
 
   # $self->h_log($ldif);
-  $self->stash(ldif_export_params => $par, ldif => $ldif);
+  $self->stash(ldif_export_params => $p, ldif => $ldif);
   return $self->render(template => 'protected/tool/ldif-export'); #, layout => undef);
 }
 
@@ -204,10 +201,7 @@ sub ldif_clone ($self) {
     my $search_arg = { base => $p->{dn_to_clone}, scope => 'base', attrs => [] };
     my $search = $ldap->search( $search_arg );
     $self->h_log( $self->h_ldap_err($search, $search_arg) ) if $search->code;
-
-    foreach ($search->entry) {
-      $ldif .= $_->ldif;
-    }
+    $ldif .= $_->ldif foreach ($search->entry);
   } else {
     my $res = $ldap->ldif_read( $p->{ldif} );
     $self->stash(debug => $res->{debug});
@@ -218,11 +212,8 @@ sub ldif_clone ($self) {
   return $self->render( template => 'protected/tool/ldif-clone', );
 }
 
-sub sysinfo    ($self) {
-  my $ldap = Umi::Ldap->new( $self->{app},
-			     $self->session('uid'),
-			     $self->session('pwd') );
-
+sub sysinfo ($self) {
+  my $ldap = Umi::Ldap->new( $self->{app}, $self->session('uid'), $self->session('pwd') );
   my $schema = $ldap->schema;
   my %oc = map { $_->{name} => $_ } $schema->all_objectclasses;
   my %aa = map { $_->{name} => $_ } $schema->all_attributes;
@@ -1380,6 +1371,9 @@ sub moddn ($self) {
 sub groups ($self) {
   my $p = $self->req->params->to_hash;
   $self->h_log($p);
+
+  return $self->render(template => 'protected/home') unless exists $p->{dn_to_group};
+
   if ( exists $p->{group} ) {
     $p->{group} = ref($p->{group}) eq 'ARRAY' ? $p->{group} : [ $p->{group} ];
   }

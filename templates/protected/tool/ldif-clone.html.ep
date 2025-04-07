@@ -2,7 +2,7 @@
 
 <h2 class="<%= app->{cfg}->{ui}->{page}->{header}->{css} %>">
   <i class="fa-solid <%= app->{cfg}->{ui}->{menu}->{clone}->{ico} . ' ' .  app->{cfg}->{ui}->{menu}->{clone}->{col} %> me-3"></i>
-  LDIF to import <small><em class="text-muted font-monospace umi-text-tiny">( clone of <%= $dn_to_clone %> )</em></small>
+  LDIF to clone <small><em class="text-muted font-monospace umi-text-tiny">( clone of dn <%= $dn_to_clone %> )</em></small>
 </h2>
 <hr>
 
@@ -10,7 +10,7 @@
   <div class="row mb-3" id="text">
     <label class="col-1 col-form-label text-end fw-bold" for="keyText">LDIF</label>
     <div class="input-sm col-11">
-      %= text_area 'ldif' => ( id => 'keyText', cols => 10, rows => 20, class => 'font-monospace form-control umi-text-xs' ) => begin
+      %= text_area 'ldif' => ( id => 'keyText', cols => 10, rows => 30, class => 'font-monospace form-control umi-text-xs', spellcheck => 'false' ) => begin
 	<%= $ldif if defined $ldif =%>
       % end
     </div>

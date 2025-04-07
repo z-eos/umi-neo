@@ -22,38 +22,113 @@
 	    </div>
 	  </a>
 	  <ul class="nav flex-column collapse show" id="submenuAnalyze" style="--bs-nav-link-padding-y: .2rem;">
-	    % if ( app->{cfg}->{ui}->{sidebar}->{'user-driven-rows'} == 1 ) {
-	      <li class="nav-item">
-		<a class="nav-link btn btn-link text-secondary text-start" href="/audit/users/user-driven-rows"
-		   tabindex="2"
-		   title="Users Driven Rows List of Accounts">
-		  <i class="fa-solid fa-person-circle-question me-2"></i>
-		  by
-		  <i class="fa-solid fa-user fa-xs ms-2" title="long (up to 2 minutes) request"></i>
-		</a>
-	      </li>
-	    % }
-	    % if ( app->{cfg}->{ui}->{sidebar}->{'server-driven-rows'} == 1 ) {
-	      <li class="nav-item">
-		<a class="nav-link btn btn-link text-secondary text-start" href="/audit/users/server-driven-rows"
-		   tabindex="2"
-		   title="Servers Driven Rows List of Accounts">
-		  <i class="fa-solid fa-person-circle-question invisible me-2"></i>
-		  by
-		  <i class="fa-solid fa-server fa-xs ms-2" title="long (up to 2 minutes) request"></i>
-		</a>
-	      </li>
-	    % }
-	    % if ( app->{cfg}->{ui}->{sidebar}->{'users-by-server'} == 1 ) {
-	      <li class="nav-item">
-		<a class="nav-link btn btn-link text-secondary text-start" href="/audit/users/users-by-server"
-		   tabindex="2"
-		   title="Users By Servers">
-		  <i class="fa-solid fa-server me-2"></i>
-		  by servers
-		</a>
-	      </li>
-	    % }
+%#	    % if ( app->{cfg}->{ui}->{sidebar}->{'user-driven-rows'} == 1 ) {
+%#	      <li class="nav-item">
+%#		<a class="nav-link btn btn-link text-secondary text-start" href="/audit/users/user-driven-rows"
+%#		   tabindex="2"
+%#		   title="Users Driven Rows List of Accounts">
+%#		  <i class="fa-solid fa-person-circle-question me-2"></i>
+%#		  by
+%#		  <i class="fa-solid fa-user fa-xs ms-2" title="long (up to 2 minutes) request"></i>
+%#		</a>
+%#	      </li>
+%#	    % }
+%#	    % if ( app->{cfg}->{ui}->{sidebar}->{'server-driven-rows'} == 1 ) {
+%#	      <li class="nav-item">
+%#		<a class="nav-link btn btn-link text-secondary text-start" href="/audit/users/server-driven-rows"
+%#		   tabindex="2"
+%#		   title="Servers Driven Rows List of Accounts">
+%#		  <i class="fa-solid fa-person-circle-question invisible me-2"></i>
+%#		  by
+%#		  <i class="fa-solid fa-server fa-xs ms-2" title="long (up to 2 minutes) request"></i>
+%#		</a>
+%#	      </li>
+%#	    % }
+%#	    % if ( app->{cfg}->{ui}->{sidebar}->{'users-by-server'} == 1 ) {
+%#	      <li class="nav-item">
+%#		<a class="nav-link btn btn-link text-secondary text-start" href="/audit/users/users-by-server"
+%#		   tabindex="2"
+%#		   title="Users By Servers">
+%#		  <i class="fa-solid fa-server me-2"></i>
+%#		  by servers
+%#		</a>
+%#	      </li>
+%#	    % }
+
+	    <li class="nav-item dropend">
+	      <a class="nav-link dropdown-toggle text-secondary text-start"
+		 data-bs-toggle="dropdown"
+		 href="#"
+		 role="button"
+		 aria-expanded="false"
+	      >
+		<i class="fa-solid fa-table me-2"></i>
+		Associations
+	      </a>
+
+	      <ul class="dropdown-menu">
+		% if ( app->{cfg}->{ui}->{sidebar}->{'user-driven-rows'} == 1 ) {
+		  <li>
+		    <a class="dropdown-item" href="/audit/users/user-driven-rows">
+		      <i class="fa-solid fa-users-between-lines fa-fw"></i>
+		      Users Driven Rows List of Accounts
+		    </a>
+		  </li>
+		% }
+		% if ( app->{cfg}->{ui}->{sidebar}->{'server-driven-rows'} == 1 ) {
+		  <li>
+		    <a class="dropdown-item" href="/audit/users/server-driven-rows">
+		      <i class="fa-solid fa-network-wired fa-fw"></i>
+		      Servers Driven Rows List of Accounts
+		    </a>
+		  </li>
+		% }
+		<li><hr class="dropdown-divider"></li>
+		% if ( app->{cfg}->{ui}->{sidebar}->{'users-by-server'} == 1 ) {
+		  <li>
+		    <a class="dropdown-item" href="/audit/users/users-by-server">
+		      <i class="fa-solid fa-server fa-fw"></i>
+		      Users by Servers
+		    </a>
+		  </li>
+		% }
+	      </ul>
+	    </li>
+	    
+	    <li class="nav-item dropend">
+	      <a class="nav-link dropdown-toggle text-secondary text-start"
+		 data-bs-toggle="dropdown"
+		 href="#"
+		 role="button"
+		 aria-expanded="false"
+	      >
+		<i class="fa-solid fa-id-card me-2"></i>
+		Profiles
+	      </a>
+
+	      <ul class="dropdown-menu">
+		<li>
+		  <a class="dropdown-item" href="/profile/active">
+		    <i class="fa-solid fa-user fa-fw"></i>
+		    Active
+		  </a>
+		</li>
+		<li>
+		  <a class="dropdown-item" href="/profile/disabled">
+		    <i class="fa-solid fa-user-slash fa-fw"></i>
+		    Disabled
+		  </a>
+		</li>
+		<li><hr class="dropdown-divider"></li>
+		<li>
+		  <a class="dropdown-item" href="/profile/all">
+		    <i class="fa-solid fa-users-viewfinder fa-fw"></i>
+		    All
+		  </a>
+		</li>
+	      </ul>
+	    </li>
+	    
 	    <!-- <li class="nav-item">
 		 <a class="nav-link btn btn-link text-secondary text-start" href="/servermta"
 		 tabindex="2"

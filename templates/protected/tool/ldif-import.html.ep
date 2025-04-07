@@ -19,7 +19,7 @@
   <div class="row mb-3" id="text">
     <label class="col-1 col-form-label text-end fw-bold" for="keyText">LDIF</label>
     <div class="input-sm col-11">
-      %= text_area 'ldif', id => 'keyText', cols => 10, rows => 20, class => 'font-monospace form-control'
+      %= text_area 'ldif', id => 'keyText', cols => 10, rows => 20, class => 'font-monospace form-control', spellcheck => 'false'
     </div>
   </div>
 

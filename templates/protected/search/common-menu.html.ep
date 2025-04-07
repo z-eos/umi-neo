@@ -49,8 +49,8 @@
       %# -*- for not Netgroup objects, skip item 'modify_netgr'
       %     ( exists $menu->{$item}->{re} && $e->dn !~ /$menu->{$item}->{re}/ ) ||
       %#
-      %# -*- for base `people` or `project`, not root objects, skip item 'demo'
-      %     ( $item eq 'demo' && $is_root_ppl == 0 && $is_root_prj == 0 ) ||
+      %# -*- for base `people` or `project`, not root objects, skip item 'profile'
+      %     ( $item eq 'profile' && $is_root_ppl == 0 && $is_root_prj == 0 ) ||
       %#
       %# -*- for not base `people` objects, skip item 'password'
       %     ( $item eq 'password' && ( $is_ppl == 0 || $e->dn =~ /^authorizedService=.+/ ) ) ||
@@ -76,10 +76,10 @@
 	  </button>
 	% } else {
 	  % my $action;
-	  % if ( $item eq 'demo' && $is_root_ppl == 1 ) {
+	  % if ( $item eq 'profile' && $is_root_ppl == 1 ) {
 	    % $action = '/profile/' . $e->get_value('uid');
 	  % }
-	  % elsif ( $item eq 'demo' && $is_root_prj == 1) {
+	  % elsif ( $item eq 'profile' && $is_root_prj == 1) {
 	    % $action = '/project/' . $e->get_value('cn');
 	  % } else {
 	    % $action = $menu->{$item}->{act};
