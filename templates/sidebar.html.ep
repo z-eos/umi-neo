@@ -129,6 +129,30 @@
 	      </ul>
 	    </li>
 	    
+	    % if ( app->{cfg}->{ui}->{sidebar}->{management} == 1 && is_role 'admin,coadmin,hr', {cmp => 'or'} ) {
+	      <li class="nav-item dropend">
+		<a class="nav-link dropdown-toggle text-secondary text-start"
+		   data-bs-toggle="dropdown"
+		   href="#"
+		   role="button"
+		   aria-expanded="false"
+		>
+		  <i class="fa-solid fa-folder-tree me-2"></i>
+		  Projects
+		</a>
+
+		<ul class="dropdown-menu">
+		  <li><hr class="dropdown-divider"></li>
+		  <li>
+		    <a class="dropdown-item" href="/project">
+		      <i class="fa-solid fa-list-ol fa-fw"></i>
+		      All
+		    </a>
+		  </li>
+		</ul>
+	      </li>
+	    % }
+	    
 	    <!-- <li class="nav-item">
 		 <a class="nav-link btn btn-link text-secondary text-start" href="/servermta"
 		 tabindex="2"
@@ -157,27 +181,27 @@
 	</li>
       % }
 
-      % if ( app->{cfg}->{ui}->{sidebar}->{management} == 1 && is_role 'admin,coadmin,hr', {cmp => 'or'} ) {
-	<li class="nav-item">
-	  <a href="#submenuManage"
-	     data-bs-toggle="collapse"
-	     aria-expanded="true"
-	     class="nav-link btn btn-link text-secondary text-start">
-	    <i class="fa-solid fa-fw fa-compass-drafting"></i>
-	    <div class="sidebar-left-item d-inline-flex">
-	      <b class="text-uppercase">Management</b>
-	    </div>
-	  </a>
-	  <ul class="nav flex-column collapse show ms-3 p-0" id="submenuManage" style="--bs-nav-link-padding-y: .2rem;">
-	    <li class="nav-item">
-	      <a class="nav-link text-secondary" href="/project">
-		<i class="fa-solid fa-fw fa-folder-tree"></i>
-		Projects
-	      </a>
-	    </li>
-	  </ul>
-	</li>
-      % }
+%#      % if ( app->{cfg}->{ui}->{sidebar}->{management} == 1 && is_role 'admin,coadmin,hr', {cmp => 'or'} ) {
+%#	<li class="nav-item">
+%#	  <a href="#submenuManage"
+%#	     data-bs-toggle="collapse"
+%#	     aria-expanded="true"
+%#	     class="nav-link btn btn-link text-secondary text-start">
+%#	    <i class="fa-solid fa-fw fa-compass-drafting"></i>
+%#	    <div class="sidebar-left-item d-inline-flex">
+%#	      <b class="text-uppercase">Management</b>
+%#	    </div>
+%#	  </a>
+%#	  <ul class="nav flex-column collapse show ms-3 p-0" id="submenuManage" style="--bs-nav-link-padding-y: .2rem;">
+%#	    <li class="nav-item">
+%#	      <a class="nav-link text-secondary" href="/project">
+%#		<i class="fa-solid fa-fw fa-folder-tree"></i>
+%#		Projects
+%#	      </a>
+%#	    </li>
+%#	  </ul>
+%#	</li>
+%#      % }
 
       % if ( is_role 'admin,coadmin,hr', {cmp => 'or'} ) {
 	<li class="nav-item">

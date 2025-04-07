@@ -190,18 +190,33 @@ sub search_common  ($self) {
 }
 
 sub search_projects  ($self) {
-  my $par = $self->req->params->to_hash;
+  my $p = $self->req->params->to_hash;
 
-  my $ldap = Umi::Ldap->new( $self->{app},
-			     $self->session('uid'),
-			     $self->session('pwd') );
+  my $proj = $p->{proj} // $self->stash->{proj} // '';
 
-  my $proj = $par->{proj} // $self->stash->{proj};
+  my $filter;
+  if ($proj eq 'all') {
+    $filter = '(cn=*)';
+  } elsif ($proj eq 'disabled') {
+    $filter = sprintf("(&(uid=*)(gidNumber=%s))",
+		      $self->{app}->{cfg}->{ldap}->{defaults}->{group_blocked_gidnumber});
+  } elsif ($proj eq 'active') {
+    $filter = sprintf("(&(uid=*)(!(gidNumber=%s)))",
+		      $self->{app}->{cfg}->{ldap}->{defaults}->{group_blocked_gidnumber});
+  } elsif ($proj ne '') {
+    $filter = sprintf("(cn=%s)", $proj);
+  } else {
+    $filter = sprintf("(cn=%s)", $self->session('proj'));
+  }
+
+  my $ldap = Umi::Ldap->new( $self->{app}, $self->session('uid'), $self->session('pwd') );
+
+  my $proj = $p->{proj} // $self->stash->{proj};
   $proj = '*' if $proj eq 'all';
 
   # $self->h_log($proj);
   my $search_arg = { base => $self->{app}->{cfg}->{ldap}->{base}->{project},
-		     filter => sprintf("(cn=%s)", $proj),
+		     filter => $filter,
 		     scope => 'one',
 		     attrs => [qw(cn createTimestamp creatorsName modifiersName modifyTimestamp)] };
   my $search = $ldap->search( $search_arg );
