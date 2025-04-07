@@ -55,7 +55,7 @@
 %#	      </li>
 %#	    % }
 
-	    <li class="nav-item dropend">
+	    <li class="nav-item dropdown">
 	      <a class="nav-link dropdown-toggle text-secondary text-start"
 		 data-bs-toggle="dropdown"
 		 href="#"
@@ -67,7 +67,7 @@
 	      </a>
 
 	      <ul class="dropdown-menu">
-		% if ( app->{cfg}->{ui}->{sidebar}->{'user-driven-rows'} == 1 ) {
+		% if ( app->{cfg}->{ui}->{sidebar}->{audit}->{'user-driven-rows'} == 1 ) {
 		  <li>
 		    <a class="dropdown-item" href="/audit/users/user-driven-rows">
 		      <i class="fa-solid fa-users-between-lines fa-fw"></i>
@@ -75,7 +75,7 @@
 		    </a>
 		  </li>
 		% }
-		% if ( app->{cfg}->{ui}->{sidebar}->{'server-driven-rows'} == 1 ) {
+		% if ( app->{cfg}->{ui}->{sidebar}->{audit}->{'server-driven-rows'} == 1 ) {
 		  <li>
 		    <a class="dropdown-item" href="/audit/users/server-driven-rows">
 		      <i class="fa-solid fa-network-wired fa-fw"></i>
@@ -84,7 +84,7 @@
 		  </li>
 		% }
 		<li><hr class="dropdown-divider"></li>
-		% if ( app->{cfg}->{ui}->{sidebar}->{'users-by-server'} == 1 ) {
+		% if ( app->{cfg}->{ui}->{sidebar}->{audit}->{'users-by-server'} == 1 ) {
 		  <li>
 		    <a class="dropdown-item" href="/audit/users/users-by-server">
 		      <i class="fa-solid fa-server fa-fw"></i>
@@ -95,7 +95,7 @@
 	      </ul>
 	    </li>
 	    
-	    <li class="nav-item dropend">
+	    <li class="nav-item dropdown">
 	      <a class="nav-link dropdown-toggle text-secondary text-start"
 		 data-bs-toggle="dropdown"
 		 href="#"
@@ -129,8 +129,8 @@
 	      </ul>
 	    </li>
 	    
-	    % if ( app->{cfg}->{ui}->{sidebar}->{management} == 1 && is_role 'admin,coadmin,hr', {cmp => 'or'} ) {
-	      <li class="nav-item dropend">
+	    % if ( app->{cfg}->{ui}->{sidebar}->{audit}->{projects} == 1 && is_role 'admin,coadmin,hr', {cmp => 'or'} ) {
+	      <li class="nav-item dropdown">
 		<a class="nav-link dropdown-toggle text-secondary text-start"
 		   data-bs-toggle="dropdown"
 		   href="#"
@@ -221,14 +221,16 @@
 		User
 	      </a>
 	    </li>
-	    <li class="nav-item">
-	      <a class="nav-link btn btn-link text-secondary text-start" href="/project/new" tabindex="2">
-		<i class="fa-solid fa-fw fa-folder-plus"></i>
-		Project
-	      </a>
-	    </li>
+	    % if ( app->{cfg}->{ui}->{sidebar}->{new}->{project} == 1 ) {
+	      <li class="nav-item">
+		<a class="nav-link btn btn-link text-secondary text-start" href="/project/new" tabindex="2">
+		  <i class="fa-solid fa-fw fa-folder-plus"></i>
+		  Project
+		</a>
+	      </li>
+	    % }
 	    % if ( is_role 'admin,coadmin', {cmp => 'or'} ) {
-	      % if ( app->{cfg}->{ui}->{sidebar}->{dhcp} == 1 ) {
+	      % if ( app->{cfg}->{ui}->{sidebar}->{new}->{dhcp} == 1 ) {
 		<li class="nav-item disabled">
 		  <a class="nav-link btn btn-link text-secondary text-start disabled" href="/dhcp" tabindex="7">
 		    <i class="fa-solid fa-fw fa-network-wired"></i>
@@ -236,7 +238,7 @@
 		  </a>
 		</li>
 	      % }
-	      % if ( app->{cfg}->{ui}->{sidebar}->{sudo} == 1 ) {
+	      % if ( app->{cfg}->{ui}->{sidebar}->{new}->{sudo} == 1 ) {
 		<li class="nav-item">
 		  <a class="nav-link btn btn-link text-secondary text-start" href="/sudo/new" tabindex="5">
 		    <i class="fa-solid fa-fw fa-user-shield"></i>
@@ -244,7 +246,7 @@
 		  </a>
 		</li>
 	      % }
-	      % if ( app->{cfg}->{ui}->{sidebar}->{group} == 1 ) {
+	      % if ( app->{cfg}->{ui}->{sidebar}->{new}->{group} == 1 ) {
 		<li class="nav-item">
 		  <a class="nav-link btn btn-link text-secondary text-start" href="/group/new" tabindex="3">
 		    <i class="fa-solid fa-fw fa-users"> </i>
@@ -252,7 +254,7 @@
 		  </a>
 		</li>
 	      % }
-	      % if ( app->{cfg}->{ui}->{sidebar}->{netgroup} == 1 ) {
+	      % if ( app->{cfg}->{ui}->{sidebar}->{new}->{netgroup} == 1 ) {
 		<li class="nav-item">
 		  <a class="nav-link btn btn-link text-secondary text-start" href="/netgroup/new" tabindex="3">
 		    <i class="fa-solid fa-fw fa-users-line"> </i>
@@ -260,7 +262,7 @@
 		  </a>
 		</li>
 	      % }
-	      % if ( app->{cfg}->{ui}->{sidebar}->{sargon} == 1 ) {
+	      % if ( app->{cfg}->{ui}->{sidebar}->{new}->{sargon} == 1 ) {
 		<li class="nav-item">
 		  <a class="nav-link btn btn-link text-secondary text-start" href="/sargon/new" tabindex="3">
 		    <i class="fa-solid fa-fw fa-shield-cat"> </i>
@@ -268,7 +270,7 @@
 		  </a>
 		</li>
 	      % }
-	      % if ( app->{cfg}->{ui}->{sidebar}->{org} == 1 ) {
+	      % if ( app->{cfg}->{ui}->{sidebar}->{new}->{org} == 1 ) {
 		<li class="nav-item">
 		  <a class="nav-link btn btn-link text-secondary text-start disabled" href="/org" tabindex="4">
 		    <i class="fa-solid fa-fw fa-building"></i>
@@ -292,7 +294,7 @@
 	  </div>
 	</a>
 	<ul class="nav flex-column collapse show ms-3 p-0" id="submenuTools" style="--bs-nav-link-padding-y: .2rem;">
-	  % if ( app->{cfg}->{ui}->{sidebar}->{onboarding} == 1 ) {
+	  % if ( app->{cfg}->{ui}->{sidebar}->{tools}->{onboarding} == 1 ) {
 	    <li class="nav-item">
 	      <a class="nav-link btn btn-link text-secondary text-start" href="/onboarding">
 		<i class="fa-solid fa-fw fa-baby"></i>
@@ -337,12 +339,6 @@
 	       </a>
 	       </li> -->
 	  % if ( is_role 'admin,coadmin', {cmp => 'or'} ) {
-	    <li class="nav-item">
-	      <a class="nav-link btn btn-link text-secondary text-start" href="/tool/sysinfo">
-		<i class="fa-solid fa-fw fa-info-circle"></i>
-		System Info
-	      </a>
-	    </li>
 	    <!-- <li class="nav-item">
 		 <a class="nav-link btn btn-link text-secondary text-start disabled" href="test"><i class="fa-solid fa-fw fa-code">&nbsp;</i>Test Code</a>
 		 </li> -->
@@ -357,8 +353,6 @@
       </li>
       
       % if ( is_role 'admin,coadmin', {cmp => 'or'} ) {
-	<li class="nav-item divider"></li>
-	
 	<li class="nav-item">
 	  <a href="#submenuInfo"
 	     data-bs-toggle="collapse"
@@ -370,6 +364,12 @@
 	    </div>
 	  </a>
 	  <ul class="nav flex-column collapse ms-3 p-0" id="submenuInfo" style="--bs-nav-link-padding-y: .2rem;">
+	    <li class="nav-item">
+	      <a class="nav-link btn btn-link text-secondary text-start" href="/tool/sysinfo">
+		<i class="fa-solid fa-fw fa-info-circle"></i>
+		System Info
+	      </a>
+	    </li>
 	    <li class="nav-item">
 	      <a class="nav-link btn btn-link text-secondary text-start disabled" href="/about"><i class="fa-solid fa-question-circle"></i> help</a>
 	    </li>
