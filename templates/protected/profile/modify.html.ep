@@ -50,6 +50,12 @@
   </div>
   
   <div class="input-group mb-3">
+    <span class="input-group-text">Birth:</span>
+    %= text_field 'umiUserDateOfBirth', class => 'form-control', id => 'birth', title => 'Employee birth date', placeholder => 'yyyy-MM-dd', value => exists stash->{from_ldap}->{umiUserDateOfBirth} ? strftime( "%F", localtime(generalizedTime_to_time(stash->{from_ldap}->{umiUserDateOfBirth}))) : ''
+    <span class="input-group-text"><i class="fa-regular fa-calendar"></i></span>
+  </div>
+
+  <div class="input-group mb-3">
     <span class="input-group-text">Employment Date:</span>
     %= text_field 'umiUserDateOfEmployment', class => 'form-control', id => 'employment', title => 'Employment date', placeholder => 'yyyy-MM-dd', value => exists stash->{from_ldap}->{umiUserDateOfEmployment} ? strftime( "%F", localtime(generalizedTime_to_time(stash->{from_ldap}->{umiUserDateOfEmployment}))) : ''
     <span class="input-group-text"><i class="fa-regular fa-calendar"></i></span>
@@ -75,12 +81,6 @@
       % }
     </select>
 
-  </div>
-
-  <div class="input-group mb-3">
-    <span class="input-group-text">Birth:</span>
-    %= text_field 'umiUserDateOfBirth', class => 'form-control', id => 'birth', title => 'Employee birth date', placeholder => 'yyyy-MM-dd', value => exists stash->{from_ldap}->{umiUserDateOfBirth} ? strftime( "%F", localtime(generalizedTime_to_time(stash->{from_ldap}->{umiUserDateOfBirth}))) : ''
-    <span class="input-group-text"><i class="fa-regular fa-calendar"></i></span>
   </div>
 
   <div class="input-group mb-3">
