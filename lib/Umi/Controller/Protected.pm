@@ -651,7 +651,7 @@ sub profile ($self) {
   my $search_arg = { base => $self->{app}->{cfg}->{ldap}->{base}->{acc_root},
 		     filter => $filter,
 		     scope => 'one' };
-  $search_arg->{attrs} = [qw( gidNumber givenName mail sn uid modifiersName )] if $reqpath =~ /^\/audit\/.*$/;
+  $search_arg->{attrs} = [qw( gidNumber givenName mail sn uid modifiersName umiUserDateOfBirth umiUserDateOfEmployment umiUserDateOfTermination )] if $reqpath =~ /^\/audit\/.*$/;
   # $self->{app}->h_log( $search_arg);
   my $search = $ldap->search( $search_arg );
   $self->{app}->h_log( $self->{app}->h_ldap_err($search, $search_arg) ) if $search->code;

@@ -1,1 +1,148 @@
+%# -*- mode: web; eval: (follow-mode t) -*-
+
 <h1 class="p-3">Home (authenticated)</h1>
+
+<div class="card mb-3">
+  <div id="keys" class="card-header"><h3><b>Access Keys Combinations</b></h3>
+    <small>
+      <table class="table table-sm table-hover table-striped">
+	<thead>
+	  <tr class="h3" id="table2">
+	    <th scope="col"></th>
+	    <th scope="col"><i class="fa-brands fa-freebsd"><i class="fa-brands fa-linux"></i></th>
+	    <th scope="col"><i class="fa-brands fa-apple"></i></th>
+	    <th scope="col"><i class="fa-brands fa-windows"></i></th>
+	  </tr>
+	</thead>
+	<tbody>
+	  % if ( $c->req->headers->header('User-Agent') =~ /irefox|ozilla/ ) {
+	  <tr>
+	    <td class="h3" scope="row"><i class="fa-brands fa-firefox-browser"></i></td>
+	    <td class="align-middle">Alt + Shift + <kbd><em>key</em></kbd></td>
+	    <td class="align-middle">Ctrl + Alt + <kbd><em>key</em></kbd></td>
+	    <td class="align-middle">Alt + Shift + <kbd><em>key</em></kbd></td>
+	  </tr>
+	  % } elsif ( $c->req->headers->header('User-Agent') =~ /hrom/ ) {
+	  <tr>
+	    <td class="h3" scope="row"><i class="fa-brands fa-chrome"></i></td>
+	    <td class="align-middle">Alt + <kbd><em>key</em></kbd></td>
+	    <td class="align-middle">Ctrl + Alt + <kbd><em>key</em></kbd></td>
+	    <td class="align-middle">Alt + <kbd><em>key</em></kbd></td>
+	  </tr>
+	  % } elsif ( $c->req->headers->header('User-Agent') =~ /afar/ ) {
+	  <tr>
+	    <td class="h3" scope="row"><i class="fa-brands fa-safari"></i></td>
+	    <td class="align-middle">N/A</td>
+	    <td class="align-middle">Ctrl + Alt + <kbd><em>key</em></kbd></td>
+	    <td class="align-middle">Alt + <kbd><em>key</em></kbd></td>
+	  </tr>
+	  % } elsif ( $c->req->headers->header('User-Agent') =~ /pera/ ) {
+	  <tr>
+	    <td class="h3" scope="row"><i class="fa-brands fa-opera"></i></td>
+	    <td class="align-middle" colspan="3">v &ge;15: [Alt] + <kbd><em>key</em></kbd>; v &le;12.1: [Shift] [Esc] + <kbd><em>key</em></kbd>
+	    </td>
+	  </tr>
+	  % }
+	</tbody>
+      </table>
+    </small>
+  </div>
+  <div id="keys-body" class="card-body">
+
+    <table class="table table-striped table-hover" id="table2">
+      <thead>
+	<tr>
+	  <th scope="col"><kbd><em>key</em></kbd></th>
+	  <th scope="col">Location</th>
+	  <th scope="col">Action</th>
+	</tr>
+      </thead>
+      <tbody>
+	<tr>
+	  <td class="fw-bold" scope="row"><kbd>s</kbd></td>
+	  <td>global</td>
+	  <td>focus header Search Field</td>
+	</tr>
+	<tr>
+	  <td class="fw-bold" scope="row"><kbd>d</kbd></td>
+	  <td>global</td>
+	  <td>toggle dark theme</td>
+	</tr>
+	<tr>
+	  <td class="fw-bold" scope="row"><kbd>l</kbd></td>
+	  <td>global</td>
+	  <td>toggle light theme</td>
+	</tr>
+	<tr>
+	  <td class="fw-bold" scope="row"><kbd>r</kbd></td>
+	  <td>global</td>
+	  <td>un/collapse right panel</td>
+	</tr>
+	<tr>
+	  <td class="fw-bold" scope="row"><kbd>h</kbd></td>
+	  <td>global</td>
+	  <td>go to the root of the site</td>
+	</tr>
+
+	<!-- <tr>
+	     <td class="fw-bold" scope="row"><kbd>f</kbd></td>
+	     <td>search results</td>
+	     <td>un/collapse all search result records</td>
+	     </tr>
+	     <tr>
+	     <td class="fw-bold" scope="row"><kbd>0</kbd></td>
+	     <td>search results</td>
+	     <td>focus each next root object button ( Enter key to un/collapse )</td>
+	     </tr>
+	     <tr>
+	     <td class="fw-bold" scope="row"><kbd>1</kbd></td>
+	     <td>search results</td>
+	     <td>focus each next root object menu ( Enter key to un/collapse )</td>
+	     </tr>
+	     <tr>
+	     <td class="fw-bold" scope="row"><kbd>2</kbd></td>
+	     <td>search results</td>
+	     <td>focus each next branch object menu ( Enter key to un/collapse )</td>
+	     </tr>
+	     <tr>
+	     <td class="fw-bold" scope="row"><kbd>3</kbd></td>
+	     <td>search results</td>
+	     <td>focus each next leaf object menu ( Enter key to un/collapse )</td>
+	     </tr> -->
+	
+      </tbody>
+    </table>
+    
+  </div>
+</div>
+
+%#<script>
+%#  
+%#  var colors = [
+%#      "umi-text-bg-blue",
+%#      "umi-text-bg-indigo",
+%#      "umi-text-bg-purple",
+%#      "umi-text-bg-pink",
+%#      "umi-text-bg-red",
+%#      "umi-text-bg-orange",
+%#      "umi-text-bg-yellow",
+%#      "umi-text-bg-green",
+%#      "umi-text-bg-teal",
+%#      "umi-text-bg-cyan",
+%#      "umi-text-bg-info",
+%#      "text-bg-danger",
+%#      "text-bg-warning",
+%#      "text-bg-success",
+%#      "text-bg-primary"
+%#  ];
+%#
+%#  var color = colors[Math.floor(Math.random()*(colors.length)+1)];
+%#  $("#table2").addClass(color);
+%#
+%#  color = colors[Math.floor(Math.random()*colors.length)];
+%#  $("#motto").addClass(color);
+%#
+%#  color = colors[Math.floor(Math.random()*colors.length)];
+%#  $("#tips").addClass(color);
+%#  
+%#</script>
