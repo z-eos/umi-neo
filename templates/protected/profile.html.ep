@@ -13,7 +13,7 @@
   % $v = $profiled_user->{$dn};
   %# <pre><%= dumper $v %></pre>
   % my $card_col = '';
-  % if ($group_blocked_gidnumber eq $v->{gidnumber}->[0]) {
+  % if (app->{cfg}->{ldap}->{defaults}->{group_blocked_gidnumber} eq $v->{gidnumber}->[0]) {
     % $card_col = 'danger';
   % }
   <div class="card <%= $card_col ne '' ? 'border-' . $card_col : 'border-0' %> my-3">
@@ -77,10 +77,25 @@
 	      <dd class="col-11 user-select-all"><%== exists $v->{l} ? $v->{l}->[0] : $na %>, <%== exists $v->{umiusercountryofresidence} ? $v->{umiusercountryofresidence}->[0] : $na %></dd>
 
 	      <dt class="col-1 text-md-end" title="Birth Date"><i class="fa-lg fa-solid fa-cake-candles"></i></dt>
-	      <dd class="col-11 user-select-all"><%== exists $v->{umiuserdateofbirth} ? strftime( "%F", localtime(generalizedTime_to_time($v->{umiuserdateofbirth}->[0]))) : $na %></dd>
+	      <dd class="col-11 user-select-all">
+		<%== exists $v->{umiuserdateofbirth}
+		? strftime( "%F", localtime(generalizedTime_to_time($v->{umiuserdateofbirth}->[0])))
+		: $na %>
+	      </dd>
 
 	      <dt class="col-1 text-md-end" title="Hire Date"><i class="fa-lg fa-solid fa-calendar-plus"></i></dt>
-	      <dd class="col-11 user-select-all"><%== exists $v->{umiuserdateofemployment} ? strftime( "%F", localtime(generalizedTime_to_time($v->{umiuserdateofemployment}->[0]))) : $na %></dd>
+	      <dd class="col-11 user-select-all">
+		<%== exists $v->{umiuserdateofemployment}
+		? strftime( "%F", localtime(generalizedTime_to_time($v->{umiuserdateofemployment}->[0])))
+		: $na %>
+	      </dd>
+
+	      <dt class="col-1 text-md-end" title="Termination Date"><i class="fa-lg fa-solid fa-calendar-xmark"></i></dt>
+	      <dd class="col-11 user-select-all">
+		<%== exists $v->{umiuserdateoftermination}
+		? strftime( "%F", localtime(generalizedTime_to_time($v->{umiuserdateoftermination}->[0])))
+		: $na %>
+	      </dd>
 
 	      %# GPG
 	      % if ( defined $pgp ) {

@@ -770,7 +770,6 @@ sub profile ($self) {
   $self->stash(
 	       profiled_user => $profiled_user,
 	       groups => $groups,
-	       group_blocked_gidnumber => $self->{app}->{cfg}->{ldap}->{defaults}->{group_blocked_gidnumber},
 	       pgp => $pgp,
 	       servers => $servers,
 	       services => $service,

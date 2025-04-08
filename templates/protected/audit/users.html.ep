@@ -28,7 +28,7 @@
 <pre><%# = dumper $servers_alive_list %></pre>
 <div class="table-responsive">
   <table id="dataTableToDraw" class="table table-sm table-hover">
-    % my @fields = exists stash->{type} && stash->{type} eq 'users-by-server' ? qw(№ Server UIDs) : qw( № LName FName block Project Servers Services Email uid birth employ terminate);
+    % my @fields = exists stash->{type} && stash->{type} eq 'users-by-server' ? qw(№ Server UIDs) : qw( № LName FName Status Project Servers Services Email uid birth employ terminate);
     <thead class="bg-dark text-white">
       <tr class="text-uppercase">
 	% foreach (@fields) {
@@ -82,17 +82,23 @@
 	% foreach $dn (sort keys %$profiled_user) {
 	  % $v = $profiled_user->{$dn};
 	  % my $card_col = '';
-	  % if ($group_blocked_gidnumber eq $v->{gidnumber}->[0]) {
+	  % my $status = '';
+	  % if (app->{cfg}->{ldap}->{defaults}->{group_blocked_gidnumber} eq $v->{gidnumber}->[0]) {
 	    % $card_col = 'danger';
+	    % $status = app->{cfg}->{ldap}->{defaults}->{group_blocked_cn};
+	  % } elsif (app->{cfg}->{ldap}->{defaults}->{group_guest_gidnumber} eq $v->{gidnumber}->[0])
+	  % {
+	    % $card_col = 'info';
+	    % $status = app->{cfg}->{ldap}->{defaults}->{group_guest_cn};
 	  % }
 
 	  % if (exists stash->{type} && stash->{type} eq 'user-driven-rows') {
 	    
-	    <tr class="umi-text-xs <%= 'table-danger' if $card_col eq 'danger' %>">
+	    <tr class="umi-text-xs <%= 'table-' . $card_col if $card_col ne '' %>">
 	      <td></td>
 	      <td><%= utf8::is_utf8($v->{sn}->[0]) ? $v->{sn}->[0] : decode_utf8($v->{sn}->[0]) %></td>
 	      <td><%= utf8::is_utf8($v->{givenname}->[0]) ? $v->{givenname}->[0] : decode_utf8($v->{givenname}->[0]) %></td>
-	      <td class="mono"><%= $card_col eq 'danger' ? 'yes' : 'no' %></td>
+	      <td class="mono"><%= $status %></td>
 	      <td>
 		% if ( exists $projects->{$dn} ) {
 		  % foreach (sort @{$projects->{$dn}}) {

@@ -1,5 +1,8 @@
 %# -*- mode: web; eval: (follow-mode) -*-
 
+% use Net::LDAP::Util q(generalizedTime_to_time);
+% use POSIX qw(strftime);
+
 <h3 class="fw-bold p-4">
   <i class="fas fa-user-pen fa-lg me-3 text-muted"></i>
   Modify User <small><em class="text-muted font-monospace"></em></small>
@@ -48,13 +51,13 @@
   
   <div class="input-group mb-3">
     <span class="input-group-text">Employment Date:</span>
-    %= text_field 'umiUserDateOfEmployment', class => 'form-control', id => 'employment', title => 'Employment date', placeholder => 'yyyy-MM-dd', value => exists stash->{from_ldap}->{umiUserDateOfEmployment} ? stash->{from_ldap}->{umiUserDateOfEmployment} : ''
+    %= text_field 'umiUserDateOfEmployment', class => 'form-control', id => 'employment', title => 'Employment date', placeholder => 'yyyy-MM-dd', value => exists stash->{from_ldap}->{umiUserDateOfEmployment} ? strftime( "%F", localtime(generalizedTime_to_time(stash->{from_ldap}->{umiUserDateOfEmployment}))) : ''
     <span class="input-group-text"><i class="fa-regular fa-calendar"></i></span>
   </div>
 
   <div class="input-group mb-3">
     <span class="input-group-text">Termination Date:</span>
-    %= text_field 'umiUserDateOfTermination', class => 'form-control', id => 'termination', title => 'Termination date', placeholder => 'yyyy-MM-dd', value => exists stash->{from_ldap}->{umiUserDateOfTermination} ? stash->{from_ldap}->{umiUserDateOfTermination} : ''
+    %= text_field 'umiUserDateOfTermination', class => 'form-control', id => 'termination', title => 'Termination date', placeholder => 'yyyy-MM-dd', value => exists stash->{from_ldap}->{umiUserDateOfTermination} ? strftime( "%F", localtime(generalizedTime_to_time(stash->{from_ldap}->{umiUserDateOfTermination}))) : ''
     <span class="input-group-text"><i class="fa-regular fa-calendar"></i></span>
   </div>
 
@@ -76,7 +79,7 @@
 
   <div class="input-group mb-3">
     <span class="input-group-text">Birth:</span>
-    %= text_field 'umiUserDateOfBirth', class => 'form-control', id => 'birth', title => 'Employee birth date', placeholder => 'yyyy-MM-dd', value => exists stash->{from_ldap}->{umiUserDateOfBirth} ? stash->{from_ldap}->{umiUserDateOfBirth} : ''
+    %= text_field 'umiUserDateOfBirth', class => 'form-control', id => 'birth', title => 'Employee birth date', placeholder => 'yyyy-MM-dd', value => exists stash->{from_ldap}->{umiUserDateOfBirth} ? strftime( "%F", localtime(generalizedTime_to_time(stash->{from_ldap}->{umiUserDateOfBirth}))) : ''
     <span class="input-group-text"><i class="fa-regular fa-calendar"></i></span>
   </div>
 
