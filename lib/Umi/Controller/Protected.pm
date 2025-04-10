@@ -636,8 +636,8 @@ sub profile ($self) {
   ### USER:
   my $filter;
   if ($uid eq 'all') {
-    ### $filter = '(uid=*)';
-    $filter = '(uid=al*)';
+    $filter = '(uid=*)';
+    ### $filter = '(uid=al*)';
   } elsif ($uid eq 'disabled') {
     $filter = sprintf("(&(uid=*)(gidNumber=%s))",
 		      $self->{app}->{cfg}->{ldap}->{defaults}->{group}->{blocked}->{gidnumber});
