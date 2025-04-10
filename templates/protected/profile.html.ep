@@ -13,7 +13,7 @@
   % $v = $profiled_user->{$dn};
   %# <pre><%= dumper $v %></pre>
   % my $card_col = '';
-  % if (app->{cfg}->{ldap}->{defaults}->{group_blocked_gidnumber} eq $v->{gidnumber}->[0]) {
+  % if (app->{cfg}->{ldap}->{defaults}->{group}->{blocked}->{gidnumber} eq $v->{gidnumber}->[0]) {
     % $card_col = 'danger';
   % }
   <div class="card <%= $card_col ne '' ? 'border-' . $card_col : 'border-0' %> my-3">

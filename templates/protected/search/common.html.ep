@@ -26,7 +26,25 @@
 </div>
 
 %# vh-100 is important, without it dropwown are not shown for collapsed rows
-<div class="container-fluid vh-100">
+<div id="searchresult" class="container-fluid vh-100">
+
+  <div class="btn-group mb-2" role="group">
+    <button id="toggleAllBtn"
+	    accesskey="t"
+	    class="btn btn-sm btn-secondary"
+	    title="toggle state (collapsed/expanded) state of each row"
+    >
+      <i id="toggleAllIcon" class="fa-solid fa-expand"></i>
+    </button>
+    <button id="invertAllBtn"
+	    accesskey="i"
+	    class="btn btn-sm btn-secondary"
+	    title="inverse state (collapsed/expanded) state of each row"
+    >
+      <i id="invertAllIcon" class="fa-solid fa-right-left"></i>
+    </button>
+  </div>
+
   % my ($col, $cn, $ct, $mn, $mt);
   % my $mps = '';
   % my $acclog = app->{cfg}->{ldap}->{accesslog};
@@ -151,8 +169,8 @@
 		    % } elsif ( $attr eq 'gidNumber' )
 		    % {
 		      <a href="/search/common?search_filter=gidNumber=<%= $attr_val %>&search_base_case=ou=group,dc=nxc,dc=no"
-			 class="btn btn-link btn-sm px-0<%= ' text-danger fw-bold' if $attr_val eq app->{cfg}->{ldap}->{defaults}->{group_blocked_gidnumber} %>">
-			<%= $attr_val %><%= $attr_val eq app->{cfg}->{ldap}->{defaults}->{group_blocked_gidnumber} ? ' / ' . app->{cfg}->{ldap}->{defaults}->{group_blocked_cn} : '' %>
+			 class="btn btn-link btn-sm px-0<%= ' text-danger fw-bold' if $attr_val eq app->{cfg}->{ldap}->{defaults}->{group}->{blocked}->{gidnumber} %>">
+			<%= $attr_val %><%= $attr_val eq app->{cfg}->{ldap}->{defaults}->{group}->{blocked}->{gidnumber} ? ' / ' . app->{cfg}->{ldap}->{defaults}->{group}->{blocked}->{cn} : '' %>
 		      </a>
 		    % } elsif ( $attr eq 'userPassword' )
 		    % {
@@ -216,3 +234,84 @@
     % $mps = '';
   % }
 </div>
+
+<script>
+%# $(document).ready(function() {
+%#   $('#invertAllBtn').click(function() {
+%#     const $allCollapses = $('#searchresult .collapse');
+%#     const total = $allCollapses.length;
+%#     const openCount = $allCollapses.filter('.show').length;
+%#     const $icon = $('#invertAllIcon');
+%#     
+%#     if (openCount < total) {
+%#       // Expand all collapse panels
+%#       $allCollapses.collapse('show');
+%#     } else {
+%#       // Collapse all collapse panels
+%#       $allCollapses.collapse('hide');
+%#     }
+%#   });
+%# });
+%#
+%# $(document).ready(function() {
+%#   let allExpanded = false; // Track the forced state
+%#
+%#   $('#toggleAllBtn').click(function() {
+%#     const $allCollapses = $('#searchresult .collapse');
+%#     const $icon = $('#toggleAllIcon');
+%#
+%#     if (allExpanded) {
+%#       // Force collapse all cards
+%#       $allCollapses.collapse('hide');
+%#       $icon.removeClass('fa-compress').addClass('fa-expand');
+%#       allExpanded = false;
+%#     } else {
+%#       // Force expand all cards
+%#       $allCollapses.collapse('show');
+%#       $icon.removeClass('fa-expand').addClass('fa-compress');
+%#       allExpanded = true;
+%#     }
+%#   });
+%# });
+ %#
+ 
+ $(document).ready(function() {
+   let allExpanded = false; // For toggleAllBtn
+
+   // Toggle all: Force expand or collapse all cards
+   $('#toggleAllBtn').click(function() {
+     const $allCollapses = $('#searchresult .collapse');
+     const $toggleIcon = $('#toggleAllIcon');
+     if (allExpanded) {
+       $allCollapses.collapse('hide');
+       $toggleIcon.removeClass('fa-compress').addClass('fa-expand');
+       allExpanded = false;
+     } else {
+       $allCollapses.collapse('show');
+       $toggleIcon.removeClass('fa-expand').addClass('fa-compress');
+       allExpanded = true;
+     }
+   });
+
+   // Invert all: Toggle each card individually
+   $('#invertAllBtn').click(function() {
+     // For each collapsible panel, toggle its current state
+     $('#searchresult .collapse').each(function() {
+       const $this = $(this);
+       if ($this.hasClass('show')) {
+         $this.collapse('hide');
+       } else {
+         $this.collapse('show');
+       }
+     });
+     
+%#     // Optionally, update the state of the toggleAllBtn icon and flag:
+%#     // If you want to reset the overall state flag (optional):
+%#     allExpanded = $('#searchresult .collapse.show').length === $('#searchresult .collapse').length;
+%#     // Update the toggleAllBtn icon accordingly:
+%#     $('#toggleAllIcon').toggleClass('fa-expand fa-compress');
+   });
+ });
+
+
+</script>

@@ -28,7 +28,9 @@
 <pre><%# = dumper $servers_alive_list %></pre>
 <div class="table-responsive">
   <table id="dataTableToDraw" class="table table-sm table-hover">
-    % my @fields = exists stash->{type} && stash->{type} eq 'users-by-server' ? qw(№ Server UIDs) : qw( № LName FName Status Project Servers Services Email uid birth employ terminate);
+    % my @fields = exists stash->{type} && stash->{type} eq 'users-by-server'
+    % ? qw(№ Server UIDs)
+    % : qw( № LName FName Status Project Servers Services @ uid birth employ terminate);
     <thead class="bg-dark text-white">
       <tr class="text-uppercase">
 	% foreach (@fields) {
@@ -78,18 +80,30 @@
 	
       % } else
       %{
-
+	% my ($card_col, $ico, $title);
 	% foreach $dn (sort keys %$profiled_user) {
 	  % $v = $profiled_user->{$dn};
-	  % my $card_col = '';
-	  % my $status = '';
-	  % if (app->{cfg}->{ldap}->{defaults}->{group_blocked_gidnumber} eq $v->{gidnumber}->[0]) {
-	    % $card_col = 'danger';
-	    % $status = app->{cfg}->{ldap}->{defaults}->{group_blocked_cn};
-	  % } elsif (app->{cfg}->{ldap}->{defaults}->{group_guest_gidnumber} eq $v->{gidnumber}->[0])
+	  
+	  % $card_col = $ico = $title = '';
+	  % if (app->{cfg}->{ldap}->{defaults}->{group}->{blocked}->{gidnumber} eq $v->{gidnumber}->[0]) {
+	    % $card_col = app->{cfg}->{ldap}->{defaults}->{group}->{blocked}->{col};
+	    % $ico = app->{cfg}->{ldap}->{defaults}->{group}->{blocked}->{ico};
+	    % $title =  app->{cfg}->{ldap}->{defaults}->{group}->{blocked}->{cn};
+	  % } elsif (app->{cfg}->{ldap}->{defaults}->{group}->{occasional}->{gidnumber} eq $v->{gidnumber}->[0])
 	  % {
-	    % $card_col = 'info';
-	    % $status = app->{cfg}->{ldap}->{defaults}->{group_guest_cn};
+	    % $card_col = app->{cfg}->{ldap}->{defaults}->{group}->{occasional}->{col};
+	    % $ico = app->{cfg}->{ldap}->{defaults}->{group}->{occasional}->{ico};
+	    % $title =  app->{cfg}->{ldap}->{defaults}->{group}->{occasional}->{cn};
+	  % } elsif (app->{cfg}->{ldap}->{defaults}->{group}->{onboardee}->{gidnumber} eq $v->{gidnumber}->[0])
+	  % {
+	    % $card_col = app->{cfg}->{ldap}->{defaults}->{group}->{onboardee}->{col};
+	    % $ico = app->{cfg}->{ldap}->{defaults}->{group}->{onboardee}->{ico};
+	    % $title = app->{cfg}->{ldap}->{defaults}->{group}->{onboardee}->{cn};
+	  % } else
+	  % {
+	    % $card_col = 'success';
+	    % $ico = 'fa-user';
+	    % $title = 'employee';
 	  % }
 
 	  % if (exists stash->{type} && stash->{type} eq 'user-driven-rows') {
@@ -98,11 +112,12 @@
 	      <td></td>
 	      <td><%= utf8::is_utf8($v->{sn}->[0]) ? $v->{sn}->[0] : decode_utf8($v->{sn}->[0]) %></td>
 	      <td><%= utf8::is_utf8($v->{givenname}->[0]) ? $v->{givenname}->[0] : decode_utf8($v->{givenname}->[0]) %></td>
-	      <td class="mono"><%= $status %></td>
+	      <td class="mono"><i class="fa-solid <%= $ico %> fa-fw text-secondary" title="<%= $title %>"></i></td>
 	      <td>
 		% if ( exists $projects->{$dn} ) {
 		  % foreach (sort @{$projects->{$dn}}) {
-	            <span class="badge text-bg-secondary fw-bold"><a <%== $a_class %> href="/project/<%= substr($_, 0, index($_, ':')) %>"><%= $_ %></a></span>
+		    % $_ =~ s/:/::/g;
+	            <span class="badge text-bg-secondary fw-bold"><a <%== $a_class %> href="/project/<%= substr($_, 0, index($_, ':')) %>"><%= $_ %></a></span> \
 		  % }
 		% }
 	      </td>
@@ -126,11 +141,9 @@
 		% if ( defined $services && exists $services->{$dn} ) {
 		  % foreach my $k (sort keys %{$services->{$dn}}) {
 		    % my $svc = $services->{$dn}->{$k}->{obj};
-	            <span class="badge text-bg-secondary fw-bold">
-		      <b><%= $k %></b> <i class="fa-solid fa-ellipsis-vertical"></i>
+	            <span class="badge text-bg-secondary fw-bold"><%== $k . '&colon;' =%>
 		      % foreach my $s (sort keys %$svc) {
-			<i class="fa-solid fa-ellipsis-vertical"></i>
-			<%= exists $svc->{$s}->{uid} ? $svc->{$s}->{uid}->[0] : $svc->{$s}->{cn}->[0] %>
+			<%== '&colon;' =%><%= exists $svc->{$s}->{uid} ? $svc->{$s}->{uid}->[0] : $svc->{$s}->{cn}->[0] =%>
 		      % }
 		    </span>
 		  % }
@@ -179,6 +192,9 @@
 		<td></td>
 		<td><%== exists $v->{mail} ? sprintf('<a %s href="mailto:%s">%s</a>', $a_class, $v->{mail}->[0], $v->{mail}->[0]) : 'unavailable' %></td>
 		<td><%== sprintf('<a %s href="/profile/%s">%s</a>', $a_class, $v->{uid}->[0], $v->{uid}->[0]) %></td>
+		<td><%== exists $v->{umiuserdateofbirth} ? strftime( "%F", localtime(generalizedTime_to_time($v->{umiuserdateofbirth}->[0]))) : 'unavailable' %></td>
+		<td><%== exists $v->{umiuserdateofemployment} ? strftime( "%F", localtime(generalizedTime_to_time($v->{umiuserdateofemployment}->[0]))) : 'unavailable' %></td>
+		<td><%== exists $v->{umiuserdateoftermination} ? strftime( "%F", localtime(generalizedTime_to_time($v->{umiuserdateoftermination}->[0]))) : 'unavailable' %></td>
 	      </tr>
 	    % }
 	    

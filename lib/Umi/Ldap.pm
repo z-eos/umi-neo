@@ -437,14 +437,14 @@ sub all_users {
 	   root => {
 		    base   => $self->{app}->{cfg}->{ldap}->{base}->{acc_root},
 		    filter => sprintf("(&(uid=*)(!(gidNumber=%s))(!(objectClass=authorizedServiceObject)))",
-				      $self->{app}->{cfg}->{ldap}->{defaults}->{group_blocked_gidnumber}),
+				      $self->{app}->{cfg}->{ldap}->{defaults}->{group}->{blocked}->{gidnumber}),
 		    scope  => 'sub',
 		    attrs  => [qw(givenName sn uid)]
 		   },
 	   root_and_ssh => {
 			    base   => $self->{app}->{cfg}->{ldap}->{base}->{acc_root},
 			    filter => sprintf("(|(&(uid=*)(!(gidNumber=%s))(!(objectClass=authorizedServiceObject)))(&(objectClass=posixAccount)(authorizedService=ssh-acc@*)))",
-					      $self->{app}->{cfg}->{ldap}->{defaults}->{group_blocked_gidnumber}),
+					      $self->{app}->{cfg}->{ldap}->{defaults}->{group}->{blocked}->{gidnumber}),
 			    scope  => 'sub',
 			    attrs  => [qw(givenName sn uid)]
 			},

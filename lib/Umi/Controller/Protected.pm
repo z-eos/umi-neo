@@ -116,7 +116,7 @@ sub fire ($self) {
       push @$changes, add => $add;
   }
 
-  push @$replace, gidNumber => $self->{app}->{cfg}->{ldap}->{defaults}->{group_blocked_gidnumber};
+  push @$replace, gidNumber => $self->{app}->{cfg}->{ldap}->{defaults}->{group}->{blocked}->{gidnumber};
   push @$replace, userPassword => '!' . $root_e->get_value('userPassword') if $root_e->exists('userPassword');
 
   push @$changes, replace => $replace;
@@ -636,13 +636,14 @@ sub profile ($self) {
   ### USER:
   my $filter;
   if ($uid eq 'all') {
-    $filter = '(uid=*)';
+    ### $filter = '(uid=*)';
+    $filter = '(uid=al*)';
   } elsif ($uid eq 'disabled') {
     $filter = sprintf("(&(uid=*)(gidNumber=%s))",
-		      $self->{app}->{cfg}->{ldap}->{defaults}->{group_blocked_gidnumber});
+		      $self->{app}->{cfg}->{ldap}->{defaults}->{group}->{blocked}->{gidnumber});
   } elsif ($uid eq 'active') {
     $filter = sprintf("(&(uid=*)(!(gidNumber=%s)))",
-		      $self->{app}->{cfg}->{ldap}->{defaults}->{group_blocked_gidnumber});
+		      $self->{app}->{cfg}->{ldap}->{defaults}->{group}->{blocked}->{gidnumber});
   } elsif ($uid ne '') {
     $filter = sprintf("(|(uid=%s)(givenName=%s)(sn=%s))", $uid, $uid, $uid);
   } else {
@@ -805,7 +806,7 @@ sub profile_new ($self) {
   $v->required('user_last_name')->like($re_name);
   $v->required('title');
   $v->required('umiUserDateOfEmployment')->like($re_date);
-  $v->required('umiUserDateOfBirth')->like($re_date);
+  ### $v->required('umiUserDateOfBirth')->like($re_date);
   $v->required('city');
   $v->required('umiUserGender');
   $v->required('umiUserCountryOfResidence');
@@ -948,7 +949,7 @@ sub profile_modify ($self) {
   $v->required('sn')->like($re_name);
   $v->required('title');
   $v->required('umiUserDateOfEmployment')->like($re_date);
-  $v->required('umiUserDateOfBirth')->like($re_date);
+  ### $v->required('umiUserDateOfBirth')->like($re_date);
   $v->required('umiUserGender');
   $v->required('l');
   $v->required('umiUserCountryOfResidence');
@@ -1198,7 +1199,7 @@ sub project_modify ($self) {
   $search_arg =
     { base => $self->{app}->{cfg}->{ldap}->{base}->{acc_root},
       filter => sprintf("(&(uid=*)(!(gidNumber=%s)))",
-			$self->{app}->{cfg}->{ldap}->{defaults}->{group_blocked_gidnumber}),
+			$self->{app}->{cfg}->{ldap}->{defaults}->{group}->{blocked}->{gidnumber}),
       scope => "one",
       attrs => [qw(uid givenName sn)] };
   $search = $ldap->search( $search_arg );

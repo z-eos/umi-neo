@@ -41,7 +41,7 @@ returns fa- class color to be used for the entr
 		 my $time = time;
 
 		 if ( $e->exists('gidNumber') &&
-		      $e->get_value('gidNumber') eq $app->{cfg}->{ldap}->{defaults}->{group_blocked_gidnumber} ) {
+		      $e->get_value('gidNumber') eq $app->{cfg}->{ldap}->{defaults}->{group}->{blocked}->{gidnumber} ) {
 		   return 'danger';
 		 } elsif ( $e->dn =~ /^cn=.*,authorizedService=ovpn@.*/ && $e->exists('umiUserCertificateNotAfter') &&
 			   $time > generalizedTime_to_time($e->get_value('umiUserCertificateNotAfter') . 'Z') ) {

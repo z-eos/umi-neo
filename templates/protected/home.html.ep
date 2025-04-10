@@ -84,12 +84,18 @@
 	  <td>go to the root of the site</td>
 	</tr>
 
+	<tr>
+	  <td class="fw-bold" scope="row"><kbd>t</kbd></td>
+	  <td>search results</td>
+	  <td>un/collapse all search result records</td>
+	</tr>
+	<tr>
+	  <td class="fw-bold" scope="row"><kbd>i</kbd></td>
+	  <td>search results</td>
+	  <td>inverse un/collapse state of each search result record</td>
+	</tr>
+
 	<!-- <tr>
-	     <td class="fw-bold" scope="row"><kbd>f</kbd></td>
-	     <td>search results</td>
-	     <td>un/collapse all search result records</td>
-	     </tr>
-	     <tr>
 	     <td class="fw-bold" scope="row"><kbd>0</kbd></td>
 	     <td>search results</td>
 	     <td>focus each next root object button ( Enter key to un/collapse )</td>
