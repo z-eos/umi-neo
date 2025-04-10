@@ -333,7 +333,7 @@ sub get_role {
       if ( $msg->count && $msg->count == 1 ) {
 	$res = $msg->entry->get_value( 'cn' );
       } else {
-	$err = sprintf("root account uid: %s belongs to multiple roles");
+	$err = sprintf("root account uid: %s belongs to multiple roles", $uid);
       }
     }
   }

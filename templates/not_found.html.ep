@@ -15,7 +15,7 @@
           <h3 class="h2 mb-2">Oops, <%= $c->session->{user_obj}->{givenname} // 'dear' %>! You're lost.</h3>
           <p class="mb-2">The page you are looking for was not found.</p>
           <p class="text-secondary mb-2 umi-text-tiny font-monospace user-select-all">
-	    <%= sprintf("%s %s://%s:%s%s", $c->req->method, $c->req->url->base->scheme, $c->req->url->base->host, $c->req->url->base->port, $c->req->url->path) %><br />
+	    <%= sprintf("%s %s://%s:%s%s", $c->req->method // '', $c->req->url->base->scheme // '', $c->req->url->base->host // '', $c->req->url->base->port // '', $c->req->url->path // '') %><br />
 	    <%= 'query pairs: ' . dumper($c->req->url->query->pairs) if @{$c->req->url->query->pairs} %>
 	  </p>
         </div>

@@ -464,7 +464,7 @@ sub modify ($self) {
   $attr_to_ignore->{$rdn} = 1;
 
   my $auth = $self->h_is_authorized($p->{dn_to_modify});
-  $self->h_log($auth);
+  # $self->h_log($auth);
   return $self->render(template => 'not_allowed',
 		       debug => { warn => ['attempt to modify dn: ' . $p->{dn_to_modify}]})
     unless $auth;
@@ -487,29 +487,7 @@ sub modify ($self) {
     # $self->h_log( $s->as_struct );
   }
 
-  my %skip = (
-	      jpegPhoto => 1,
-	      cACertificate => 1,
-	      certificateRevocationList => 1,
-	      umiUserCertificateSubject => 1,
-	      umiUserCertificateNotBefore => 1,
-	      umiUserCertificateNotAfter => 1,
-	      umiUserCertificateSn => 1,
-	      umiUserCertificateIssuer => 1,
-	      'userCertificate;binary' => 1,
-	     );
-  my ($e_orig, $e_tmp);
-  foreach my $a ($s->entry->attributes) {
-    next if $a eq $rdn;
-    # change only on uploaded field data, not absent field
-    next if $skip{$a} && exists $p->{$a} && $p->{$a} eq '';
-    $e_tmp = $s->entry->get_value($a, asref => 1);
-    if ( scalar @$e_tmp == 1 ) {
-      $e_orig->{$a} = $e_tmp->[0];
-    } else {
-      $e_orig->{$a} = [ @$e_tmp ];
-    }
-  }
+  my $e_orig = $self->h_modify_get_e_orig($s, $rdn, $p);
 
   # push @{$p->{objectClass}}, 'umiUser'
   #   if !grep { $_ eq 'umiUser' } @{$p->{objectClass}};
@@ -535,7 +513,8 @@ sub modify ($self) {
     # here we've just clicked, search result  menu `modify` button
     $self->h_log('~~~~~-> MODIFY [' . $self->req->method . ']: FIRST RUN (search result menu choosen)');
     delete $self->session->{e_orig};
-    $self->session->{e_orig} = $e_orig;
+    $self->set_user_session({e_orig => $e_orig});
+    ###$self->session->{e_orig} = $e_orig;
   } elsif (exists $p->{add_objectClass}) {
     # new objectClass addition is chosen
     $self->h_log('~~~~~-> MODIFY [' . $self->req->method . ']: ADD OBJECTCLASS');
@@ -599,15 +578,11 @@ sub modify ($self) {
   #$self->h_log( $search_arg );
   $s = $ldap->search( $search_arg );
   #$self->h_log( $s->as_struct );
-  foreach ($s->entry->attributes) {
-    $e_tmp = $s->entry->get_value($_, asref => 1);
-    if ( scalar @$e_tmp == 1 ) {
-      $e_orig->{$_} = $e_tmp->[0];
-    } else {
-      $e_orig->{$_} = $e_tmp;
-    }
-  }
-  $self->session->{e_orig} = $e_orig;
+  delete $self->session->{e_orig};
+  $e_orig = $self->h_modify_get_e_orig($s, $rdn, $p);
+
+  $self->set_user_session({e_orig => $e_orig});
+  ###$self->session->{e_orig} = $e_orig;
   $self->{app}->h_log( $self->{app}->h_ldap_err($s, $search_arg) ) if $s->code;
   @attr_unused = $self->h_attr_unused($s->entry, \%oc) if ! defined $attr_to_add;
 

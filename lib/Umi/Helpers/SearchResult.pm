@@ -120,7 +120,7 @@ returns undef if it doesn't
 =cut
 
   $app->helper( h_get_root_uid_val => sub {
-		 my ($c, $dn) = @_;
+		 my ($self, $dn) = @_;
 		 my $val;
 		 my $re = qr/^.*uid=([^,]+),$app->{cfg}->{ldap}->{base}->{acc_root}$/i;
 		 $val = $1 if $dn =~ /$re/;
@@ -151,6 +151,44 @@ relation of roles defined with constant UMIAUTH in lib/Umi/Constants.pm
 
 		 return $auth;
 	       });
+
+=head2 h_modify_get_e_orig
+
+strip original Net::LDAP::Entry object from binary attributes
+
+used in I<modify> to avoid comparison of those attributes
+
+=cut
+
+  $app->helper( h_modify_get_e_orig => sub {
+		  my ($self, $e, $rdn, $p) = @_;
+
+		  my %skip = (
+			      jpegPhoto => 1,
+			      cACertificate => 1,
+			      certificateRevocationList => 1,
+			      umiUserCertificateSubject => 1,
+			      umiUserCertificateNotBefore => 1,
+			      umiUserCertificateNotAfter => 1,
+			      umiUserCertificateSn => 1,
+			      umiUserCertificateIssuer => 1,
+			      'userCertificate;binary' => 1,
+			     );
+
+		  my ($e_orig, $e_tmp);
+		  foreach my $a ($e->entry->attributes) {
+		    next if $a eq $rdn;
+		    # change only on non empty field
+		    next if $skip{$a} && exists $p->{$a} && $p->{$a} eq '';
+		    $e_tmp = $e->entry->get_value($a, asref => 1);
+		    if ( scalar @$e_tmp == 1 ) {
+		      $e_orig->{$a} = $e_tmp->[0];
+		    } else {
+		      $e_orig->{$a} = [ @$e_tmp ];
+		    }
+		  }
+		  return $e_orig;
+		});
 
 =head1 h_attr_unused
 

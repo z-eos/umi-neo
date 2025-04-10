@@ -22,7 +22,7 @@
     <link href="/assets/css/tempus-dominus/tempus-dominus.min.css" rel="stylesheet" />
     
     <link href="/assets/css/umi.css" rel="stylesheet" type="text/css">
-    <link href="/assets/css/nprogress.css" rel="stylesheet" type="text/css">
+    <!-- <link href="/assets/css/nprogress.css" rel="stylesheet" type="text/css"> -->
 
   </head>
   <body>
