@@ -3,19 +3,42 @@ const timestamp = new Date().toISOString().replace(/[-T:Z]/g, '').slice(0, 14);
 const pathStrip = reqPath.replace(/^\/|\/$/g, '').replace(/\//g, '-');
 const fileName = `${pathStrip}-${timestamp}`;
 
+// function customBodyFormatter(data, row, column, node) {
+//     let text = data;
+//     if (node instanceof HTMLElement) {
+// 	const icon = node.querySelector('i');
+// 	if (icon && icon.getAttribute('title')) {
+// 	    text = icon.getAttribute('title');
+// 	} else {
+// 	    // text = $(node).text();
+// 	    // Otherwise, get the text content of the cell (this works for <th> and <td> in thead, tbody, and tfoot)
+// 	    text = node.textContent;
+// 	}
+//     }
+//     // Remove newlines and collapse multiple whitespace characters into one
+//     return text.replace(/[\r\n]+/g, ' ').replace(/\s+/g, ' ').trim();
+// }
+
 function customBodyFormatter(data, row, column, node) {
-  let text = data;
-  if (node instanceof HTMLElement) {
-    const icon = node.querySelector('i');
-    if (icon && icon.getAttribute('title')) {
-      text = icon.getAttribute('title');
-    } else {
-      text = $(node).text();
+    let text = data;
+    if (node instanceof HTMLElement) {
+	// First try to find an <i> element with a title attribute.
+	const icon = node.querySelector('i');
+	if (icon && icon.getAttribute('title')) {
+	    text = icon.getAttribute('title');
+	} else if (!node.textContent.trim() && node.getAttribute('title')) {
+	    // If the node's text is empty (e.g. in a header cell) but the node itself has a title attribute,
+	    // use that as a fallback.
+	    text = node.getAttribute('title');
+	} else {
+	    // Otherwise, use the cell's visible text.
+	    text = node.textContent;
+	}
     }
-  }
-  // Remove newlines and collapse multiple whitespace characters into one
-  return text.replace(/[\r\n]+/g, ' ').replace(/\s+/g, ' ').trim();
+    // Remove newlines and collapse multiple spaces into a single space, then trim.
+    return text.replace(/[\r\n]+/g, ' ').replace(/\s+/g, ' ').trim();
 }
+
 
 var table = $('#dataTableToDraw').DataTable({
     dom: "<'h6 col-12'i><'row'<'col m-0 p-0 btn-group'B><'col align-self-end'f>>" +
