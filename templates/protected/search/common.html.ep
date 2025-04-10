@@ -32,14 +32,14 @@
     <button id="toggleAllBtn"
 	    accesskey="t"
 	    class="btn btn-sm btn-secondary"
-	    title="toggle state (collapsed/expanded) state of each row"
+	    title="toggle state (collapsed/expanded) of each row: Alt-Shift-t"
     >
       <i id="toggleAllIcon" class="fa-solid fa-expand"></i>
     </button>
     <button id="invertAllBtn"
 	    accesskey="i"
 	    class="btn btn-sm btn-secondary"
-	    title="inverse state (collapsed/expanded) state of each row"
+	    title="inverse state (collapsed/expanded) of each row: Alt-Shift-i"
     >
       <i id="invertAllIcon" class="fa-solid fa-right-left"></i>
     </button>

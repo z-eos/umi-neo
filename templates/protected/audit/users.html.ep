@@ -86,7 +86,7 @@
 	    <td>
 	      <form role="form" id="searchMachine" method="POST" action="/search/common">
 		<input type="hidden" name="search_base_case" class="search_base_case" value="">
-	        <span title="<%== $servers_alive_list->{$s} > 0 ? '' : 'absent in machines (probably old stuff)' %>">
+	        <span title="<%== $servers_alive_list->{$s} > 0 ? '' : 'absent in ou=machines (probably old stuff)' %>">
 	          <button type="submit"
 	    		  class="btn btn-<%= $servers_alive_list->{$s} > 0 ? 'secondary' : 'danger disabled' %> btn-sm mb-1"
 	    		  style="--bs-btn-font-size: .75rem;"
@@ -157,7 +157,7 @@
 		  % foreach (sort(@{$servers->{$dn}})) {
 	            <span title="<%== $server_alive->{$dn}->{$_} ? '' : 'absent in machines (most likely outdated stuff)' %>">
 	              <button type="submit"
-	    		      class="btn btn-<%= $server_alive->{$dn}->{$_} ? 'secondary' : 'danger disabled' %> btn-sm mb-1"
+	    		      class="btn btn-<%= $server_alive->{$dn}->{$_} ? 'secondary' : 'danger disabled' %> btn-sm mb-1 py-0"
 	    		      style="--bs-btn-font-size: .75rem;"
 	    		      data-filter="<%= 'cn=' . $_ . ',' . $search_base_case %>"
 	    		      onClick="$('.search_base_case').val($(this).data('filter')); $('#searchMachine').submit();">
@@ -207,9 +207,9 @@
 		  % if ($s ne 'none') {
 		    <form role="form" id="searchMachine" method="POST" action="/search/common">
 		      <input type="hidden" name="search_base_case" class="search_base_case" value="">
-	              <span title="<%== $server_alive->{$dn}->{$s} ? '' : 'absent in machines (probably old stuff)' %>">
+	              <span title="<%== $server_alive->{$dn}->{$s} ? '' : 'absent in ou=machines (probably old stuff)' %>">
 			<button type="submit"
-	    			class="btn btn-<%= $server_alive->{$dn}->{$s} ? 'secondary' : 'danger disabled' %> btn-sm mb-1"
+	    			class="btn btn-<%= $server_alive->{$dn}->{$s} ? 'secondary' : 'danger disabled' %> btn-sm mb-1 py-0"
 	    			style="--bs-btn-font-size: .75rem;"
 	    			data-filter="<%= 'cn=' . $s . ',' . $search_base_case %>"
 	    			onClick="$('.search_base_case').val($(this).data('filter')); $('#searchMachine').submit();">

@@ -31,26 +31,26 @@
 		<i class="fa-solid fa-table me-2"></i> Associations
 	      </a>
 
-	      <ul class="dropdown-menu">
+	      <ul class="dropdown-menu px-2">
 		% if ( app->{cfg}->{ui}->{sidebar}->{audit}->{'user-driven-rows'} == 1 ) {
 		  <li>
-		    <a class="dropdown-item" href="/audit/users/user-driven-rows">
-		      <i class="fa-solid fa-users-between-lines fa-fw"></i> Users Driven Rows List of Accounts
+		    <a class="dropdown-item text-lowercase px-0" href="/audit/users/user-driven-rows">
+		      <i class="fa-solid fa-users-between-lines fa-fw me-2"></i> <b>Users</b> Driven Rows List of Accounts
 		    </a>
 		  </li>
 		% }
 		% if ( app->{cfg}->{ui}->{sidebar}->{audit}->{'server-driven-rows'} == 1 ) {
 		  <li>
-		    <a class="dropdown-item" href="/audit/users/server-driven-rows">
-		      <i class="fa-solid fa-network-wired fa-fw"></i> Servers Driven Rows List of Accounts
+		    <a class="dropdown-item text-lowercase px-0" href="/audit/users/server-driven-rows">
+		      <i class="fa-solid fa-network-wired fa-fw me-2"></i> Servers Driven Rows List of Accounts
 		    </a>
 		  </li>
 		% }
 		<li><hr class="dropdown-divider"></li>
 		% if ( app->{cfg}->{ui}->{sidebar}->{audit}->{'users-by-server'} == 1 ) {
 		  <li>
-		    <a class="dropdown-item" href="/audit/users/users-by-server">
-		      <i class="fa-solid fa-server fa-fw"></i> Users by Servers
+		    <a class="dropdown-item text-lowercase px-0" href="/audit/users/users-by-server">
+		      <i class="fa-solid fa-server fa-fw me-2"></i> Users by Servers
 		    </a>
 		  </li>
 		% }
@@ -67,21 +67,21 @@
 		<i class="fa-solid fa-id-card me-2"></i> Profiles
 	      </a>
 
-	      <ul class="dropdown-menu">
+	      <ul class="dropdown-menu px-2">
 		<li>
-		  <a class="dropdown-item" href="/profile/active">
-		    <i class="fa-solid fa-user fa-fw"></i> Active
+		  <a class="dropdown-item text-lowercase px-0" href="/profile/active">
+		    <i class="fa-solid fa-user fa-fw me-2"></i> Active
 		  </a>
 		</li>
 		<li>
-		  <a class="dropdown-item" href="/profile/disabled">
-		    <i class="fa-solid fa-user-slash fa-fw"></i> Disabled
+		  <a class="dropdown-item text-lowercase px-0" href="/profile/disabled">
+		    <i class="fa-solid fa-user-slash fa-fw me-2"></i> Disabled
 		  </a>
 		</li>
 		<li><hr class="dropdown-divider"></li>
 		<li>
-		  <a class="dropdown-item" href="/profile/all">
-		    <i class="fa-solid fa-users-viewfinder fa-fw"></i> All
+		  <a class="dropdown-item text-lowercase px-0" href="/profile/all">
+		    <i class="fa-solid fa-users-viewfinder fa-fw me-2"></i> All
 		  </a>
 		</li>
 	      </ul>
@@ -98,11 +98,11 @@
 		  <i class="fa-solid fa-folder-tree me-2"></i> Projects
 		</a>
 
-		<ul class="dropdown-menu">
+		<ul class="dropdown-menu px-2">
 		  <li><hr class="dropdown-divider"></li>
 		  <li>
-		    <a class="dropdown-item" href="/project">
-		      <i class="fa-solid fa-list-ol fa-fw"></i> All
+		    <a class="dropdown-item text-lowercase px-0" href="/project">
+		      <i class="fa-solid fa-list-ol fa-fw me-2"></i> All
 		    </a>
 		  </li>
 		</ul>
