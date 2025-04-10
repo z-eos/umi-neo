@@ -417,6 +417,9 @@ attr_to_modify exists)
 
 sub modify ($self) {
   my $p = $self->req->params->to_hash;
+
+  return $self->render(template => 'protected/home') unless exists $p->{dn_to_modify};
+
   my $uploads = $self->req->uploads;
   my ($crt, %debug, $service);
   # $self->h_log($p);
