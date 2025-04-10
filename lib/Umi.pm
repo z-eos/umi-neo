@@ -8,8 +8,6 @@ use Umi::Constants qw(COUNTRIES);
 
 use Mojo::Base qw( Mojolicious -signatures );
 use Mojo::Util qw( dumper );
-use Mojolicious::Plugin::Authentication;
-use Mojolicious::Plugin::Authorization;
 
 # ?? # use Mojolicious::Plugin::Syslog;
 use Data::Printer {
@@ -44,72 +42,76 @@ sub startup ($self) {
   ###################################################################
   # NB: authentication is performed in lib/Umi/Controller/Public.pm #
   ###################################################################
-  $self->plugin('Authentication' =>
-		{
-		 load_user     => sub ($app, $uid) { $authn->load_user($uid) },
-		 validate_user => sub ($c, @A) { $authn->validate_user(@A)   },
-		});
+  $self->plugin( Authentication =>
+		 # Mojolicious::Plugin::Authentication
+		 {
+		  load_user     => sub ($app, $uid) { $authn->load_user($uid) },
+		  validate_user => sub ($c, @A) { $authn->validate_user(@A)   },
+		 });
 
-  $self->plugin('Authorization' =>
-		{
-		 has_priv => sub {
-		   my ($self, $priv, $extradata) = @_;
-		   return 0 unless ($self->session('role'));
-		   my $privileges = $self->session('privileges');
-		   my @privs = split(/,/, $priv);
-		   # p $priv; p $extradata; p $privileges; p @privs;
-		   if ( scalar(@privs) == 1 ) {
-		     return 1 if exists $privileges->{$priv};
-		   } elsif ( $extradata->{cmp} eq 'or' ) {
-		     foreach (@privs) {
-		       return 1 if exists $privileges->{$_};
-		     }
-		   } elsif ( $extradata->{cmp} eq 'and' ) {
-		     my $i;
-		     foreach (@privs) {
-		       $i++ if exists $privileges->{$_};
-		     }
-		     return 1 if $i == scalar(@privs);
-		   }
-		   #my $err = 'Privivege is not authorized';
-		   #p $err;
-		   return 0;
-		 },
-		 is_role => sub {
-		   my ($self, $role, $extradata) = @_;
-		   return 0 unless ($self->session('role'));
-		   my $r = $self->session('role');
-		   my @roles = split(/,/, $role);
-		   # p $priv; p $extradata; p $roles; p @privs;
-		   if ( scalar(@roles) == 1 ) {
-		     return 1 if $roles[0] eq $r;
-		   } elsif ( $extradata->{cmp} eq 'or' ) {
-		     foreach (@roles) {
-		       return 1 if $_ eq $r;
-		     }
-		   } elsif ( $extradata->{cmp} eq 'and' ) {
-		     my $i;
-		     foreach (@roles) {
-		       $i++ if $_ eq $r;
-		     }
-		     return 1 if $i == scalar(@roles);
-		   }
-		   #my $err = 'Role is not authorized';
-		   #p $err;
-		   return 0;
-		 },
-		 user_privs => sub {
-		   my ($self, $extradata) = @_;
-		   return [] unless ($self->session('role'));
-		   return keys(%{$self->session('privileges')});
-		 },
-		 user_role => sub {
-		   my ($self, $extradata) = @_;
-		   return $self->session('role');
-		 },
-		 ### doesn't work # 'fail_render' => { status => 401, text => 'not authorized' },
-		 #'fail_render' => { status => 401, template => 'not_found' },
-		});
+  $self->plugin( Authorization =>
+		 # Mojolicious::Plugin::Authorization
+		 {
+		  has_priv => sub {
+		    my ($self, $priv, $extradata) = @_;
+		    return 0 unless ($self->session('role'));
+		    my $privileges = $self->session('privileges');
+		    my @privs = split(/,/, $priv);
+		    # p $priv; p $extradata; p $privileges; p @privs;
+		    if ( scalar(@privs) == 1 ) {
+		      return 1 if exists $privileges->{$priv};
+		    } elsif ( $extradata->{cmp} eq 'or' ) {
+		      foreach (@privs) {
+			return 1 if exists $privileges->{$_};
+		      }
+		    } elsif ( $extradata->{cmp} eq 'and' ) {
+		      my $i;
+		      foreach (@privs) {
+			$i++ if exists $privileges->{$_};
+		      }
+		      return 1 if $i == scalar(@privs);
+		    }
+		    #my $err = 'Privivege is not authorized';
+		    #p $err;
+		    return 0;
+		  },
+		  is_role => sub {
+		    my ($self, $role, $extradata) = @_;
+		    return 0 unless ($self->session('role'));
+		    my $r = $self->session('role');
+		    my @roles = split(/,/, $role);
+		    # p $priv; p $extradata; p $roles; p @privs;
+		    if ( scalar(@roles) == 1 ) {
+		      return 1 if $roles[0] eq $r;
+		    } elsif ( $extradata->{cmp} eq 'or' ) {
+		      foreach (@roles) {
+			return 1 if $_ eq $r;
+		      }
+		    } elsif ( $extradata->{cmp} eq 'and' ) {
+		      my $i;
+		      foreach (@roles) {
+			$i++ if $_ eq $r;
+		      }
+		      return 1 if $i == scalar(@roles);
+		    }
+		    #my $err = 'Role is not authorized';
+		    #p $err;
+		    return 0;
+		  },
+		  user_privs => sub {
+		    my ($self, $extradata) = @_;
+		    return [] unless ($self->session('role'));
+		    return keys(%{$self->session('privileges')});
+		  },
+		  user_role => sub {
+		    my ($self, $extradata) = @_;
+		    return $self->session('role');
+		  },
+		  ### doesn't work # 'fail_render' => { status => 401, text => 'not authorized' },
+		  #'fail_render' => { status => 401, template => 'not_found' },
+		 });
+
+  # $self->plugin( CHI => { fs => { driver => 'FastMmap', root_dir => '/tmp/umi-sessions' } });
 
   $self->_startup_routes;
 
@@ -133,9 +135,6 @@ sub _startup_session ($self) {
   # Helper to set user session after successful authentication
   $self->helper(
 		set_user_session => sub {
-		  # my ($self, $username, $password) = @_;
-		  # $self->session(uid => $username);
-		  # $self->session(pwd => $password);
 		  my ($self, $data_to_session) = @_;
 		  my ($k, $v);
 		  $self->session($k => $v) while (($k, $v) = each %$data_to_session);

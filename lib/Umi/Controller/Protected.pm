@@ -463,11 +463,14 @@ sub modify ($self) {
     @{[qw(dn_to_modify attr_to_add attr_unused modifyTimestamp modifiersName creatorsName createTimestamp)]};
   $attr_to_ignore->{$rdn} = 1;
 
+  ##############################################
+  # check for permissions to modify the object #
+  ##############################################
   my $auth = $self->h_is_authorized($p->{dn_to_modify});
   # $self->h_log($auth);
   return $self->render(template => 'not_allowed',
-		       debug => { warn => ['attempt to modify dn: ' . $p->{dn_to_modify}]})
-    unless $auth;
+		       debug => { warn => ['attempt to modify dn: ' . $p->{dn_to_modify}]}) unless $auth;
+
   my $v = $self->validation;
   return $self->render(template => 'protected/tool/modify') unless $v->has_data;
   # return $self->render(template => 'protected/tool/modify') unless %$p;
@@ -512,9 +515,6 @@ sub modify ($self) {
   if ( keys %$p < 3 && !exists $p->{add_objectClass} ) {
     # here we've just clicked, search result  menu `modify` button
     $self->h_log('~~~~~-> MODIFY [' . $self->req->method . ']: FIRST RUN (search result menu choosen)');
-    delete $self->session->{e_orig};
-    $self->set_user_session({e_orig => $e_orig});
-    ###$self->session->{e_orig} = $e_orig;
   } elsif (exists $p->{add_objectClass}) {
     # new objectClass addition is chosen
     $self->h_log('~~~~~-> MODIFY [' . $self->req->method . ']: ADD OBJECTCLASS');
@@ -575,14 +575,7 @@ sub modify ($self) {
   }
 
   $search_arg->{base} = $dn_to_modify;
-  #$self->h_log( $search_arg );
   $s = $ldap->search( $search_arg );
-  #$self->h_log( $s->as_struct );
-  delete $self->session->{e_orig};
-  $e_orig = $self->h_modify_get_e_orig($s, $rdn, $p);
-
-  $self->set_user_session({e_orig => $e_orig});
-  ###$self->session->{e_orig} = $e_orig;
   $self->{app}->h_log( $self->{app}->h_ldap_err($s, $search_arg) ) if $s->code;
   @attr_unused = $self->h_attr_unused($s->entry, \%oc) if ! defined $attr_to_add;
 
