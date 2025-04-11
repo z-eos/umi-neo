@@ -3,22 +3,6 @@ const timestamp = new Date().toISOString().replace(/[-T:Z]/g, '').slice(0, 14);
 const pathStrip = reqPath.replace(/^\/|\/$/g, '').replace(/\//g, '-');
 const fileName = `${pathStrip}-${timestamp}`;
 
-// function customBodyFormatter(data, row, column, node) {
-//     let text = data;
-//     if (node instanceof HTMLElement) {
-// 	const icon = node.querySelector('i');
-// 	if (icon && icon.getAttribute('title')) {
-// 	    text = icon.getAttribute('title');
-// 	} else {
-// 	    // text = $(node).text();
-// 	    // Otherwise, get the text content of the cell (this works for <th> and <td> in thead, tbody, and tfoot)
-// 	    text = node.textContent;
-// 	}
-//     }
-//     // Remove newlines and collapse multiple whitespace characters into one
-//     return text.replace(/[\r\n]+/g, ' ').replace(/\s+/g, ' ').trim();
-// }
-
 function customBodyFormatter(data, row, column, node) {
     let text = data;
     if (node instanceof HTMLElement) {
@@ -70,8 +54,17 @@ if (type === "users-by-server") {
 }
 
 var table = $('#dataTableToDraw').DataTable({
-    dom: "<'h6 col-12'i><'row'<'col m-0 p-0 btn-group'B><'col align-self-end'f>>" +
-	"rt" + "<'row'<'col m-0 p-0'l><'col d-flex justify-content-end m-0 p-0'p>>",
+    ///////////////////////////////////////////////////////////////
+    // DOM Keyword	Meaning					 //
+    // 		l	Length changing input (page size)	 //
+    // 		f	Filtering input (search box)		 //
+    // 		t	Table body (<tbody>)			 //
+    // 		i	Table information summary		 //
+    // 		p	Pagination control			 //
+    // 		B	Buttons (when using Buttons extension)	 //
+    ///////////////////////////////////////////////////////////////
+    dom: "<'h6 col-12'i><'row mb-2'<'col m-0 p-0 btn-group'B><'col align-self-end p-0 text-uppercase'f>>" +
+	"rt" + "<'row mt-2'<'col m-0 p-0'l><'col d-flex justify-content-end m-0 p-0'p>>",
     buttons: [
 	{
 	    extend: 'copyHtml5',
