@@ -20,6 +20,7 @@ RUN cpan -T -i \
     Mojolicious::Plugin::Authentication \
     Mojolicious::Plugin::Authorization \
     Mojolicious::Plugin::StaticCache \
+    Mojolicious::Plugin::CHI \
     Crypt::HSXKPasswd \
     Crypt::X509 \
     Crypt::X509::CRL \
