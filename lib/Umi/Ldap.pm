@@ -237,6 +237,36 @@ sub schema ($self) {
   return $self->ldap->schema();
 }
 
+=head2 get_contextCSN
+
+get current contextCSN of top most object $self->{app}->{cfg}->{ldap}->{base}->{dc}
+
+returns the number of seconds since the Epoch, UTC
+
+=cut
+
+sub get_contextCSN ($self) {
+  my ($res, $err);
+  my $search_arg = { base   => $self->{app}->{cfg}->{ldap}->{base}->{dc},
+		     scope  => 'base',
+		     attrs  => [ 'contextCSN' ], };
+  my $mesg = $self->search( $search_arg );
+  my $contextCSN = $mesg->entry->get_value( 'contextCSN' );
+  # $self->{app}->h_log( $contextCSN );
+  if ( $mesg->code ) {
+    #$err = $self->{app}->h_ldap_err($mesg, $search_arg);
+    $self->{app}->h_log( $err );
+  } else {
+    $contextCSN =~ /^(\d{14}(?:\.\d+)?Z)/ or die "Invalid CSN format";
+    my $ccsn = $1;
+    my $gt = generalizedTime_to_time($ccsn);
+    # $self->{app}->h_log( $gt );
+    $res = POSIX::strftime( "%s", localtime($gt));
+    # $self->{app}->h_log( $res );
+  }
+  return $res; #, $err ];
+}
+
 =head2 get_all_superior_classes
 
 Recursive routine to retrieve all superior object classes

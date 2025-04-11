@@ -13,6 +13,7 @@ requires 'Mojolicious';
 requires 'Mojolicious::Plugin::Authentication';
 requires 'Mojolicious::Plugin::Authorization';
 requires 'Mojolicious::Plugin::StaticCache';
+requires 'Mojolicious::Plugin::CHI';
 requires 'Crypt::HSXKPasswd';
 requires 'Crypt::X509';
 requires 'Crypt::X509::CRL';

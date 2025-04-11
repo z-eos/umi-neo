@@ -596,13 +596,42 @@ sub profile ($self) {
   my $par = $self->req->params->to_hash;
   my $reqpath = $self->req->url->to_abs->path;
   my $uid;
+
+  my $ldap = Umi::Ldap->new( $self->{app}, $self->session('uid'), $self->session('pwd') );
+
+  my $contextCSN = $ldap->get_contextCSN;
+  my $chi;
   if ( $reqpath =~ /^\/audit\/.*$/ ) {
+
+    $chi = $self->chi('fs')->get('profile_audit');
+    if ( $chi ) {
+      if ($chi->{contextCSN} ge $contextCSN) {
+	$self->h_log($chi->{contextCSN});
+	$self->h_log($contextCSN);
+	$self->stash(
+		     profiled_user => $chi->{profiled_user},
+		     groups => $chi->{groups},
+		     pgp => $chi->{pgp},
+		     servers => $chi->{servers},
+		     services => $chi->{services},
+		     server_alive => $chi->{server_alive},
+		     servers_alive_list => $chi->{servers_alive_list},
+		     search_base_case => $chi->{search_base_case},
+		     projects => $chi->{projects},
+		     modifiersname => $chi->{modifiersname},
+		    );
+	return $self->render(template => 'protected/audit/users');
+      } else {
+	$self->h_log($chi->{contextCSN});
+	$self->h_log($contextCSN);
+	$self->chi('fs')->remove('profile_audit');
+      }
+    }
+
     $uid = 'all';
   } else {
     $uid = $par->{uid} // $self->stash->{uid} // '';
   }
-
-  my $ldap = Umi::Ldap->new( $self->{app}, $self->session('uid'), $self->session('pwd') );
 
   ### USER:
   my $filter;
@@ -739,6 +768,19 @@ sub profile ($self) {
     @{$projects->{$k}} = sort map { $p->{$_}->{cn}->[0] =~ s/_/:/r } keys(%$p);
   }
 
+  $self->chi('fs')->set( profile_audit => {
+					   contextCSN => $contextCSN,
+					   profiled_user => $profiled_user,
+					   groups => $groups,
+					   pgp => $pgp,
+					   servers => $servers,
+					   services => $service,
+					   server_alive => $server_alive,
+					   servers_alive_list => $servers_alive_list,
+					   search_base_case => $self->{app}->{cfg}->{ldap}->{base}->{machines},
+					   projects => $projects,
+					   modifiersname => $modifiersname,
+					  });
   $self->stash(
 	       profiled_user => $profiled_user,
 	       groups => $groups,

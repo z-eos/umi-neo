@@ -111,7 +111,15 @@ sub startup ($self) {
 		  #'fail_render' => { status => 401, template => 'not_found' },
 		 });
 
-  # $self->plugin( CHI => { fs => { driver => 'FastMmap', root_dir => '/tmp/umi-sessions' } });
+  $self->plugin( CHI =>
+		 {
+		  fs =>
+		  {
+		   driver => 'File',
+		   root_dir => '/tmp/umi-sessions',
+		   expires_in => '7 days',
+		  },
+		 });
 
   $self->_startup_routes;
 

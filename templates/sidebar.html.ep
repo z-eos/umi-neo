@@ -42,7 +42,7 @@
 		% if ( app->{cfg}->{ui}->{sidebar}->{audit}->{'server-driven-rows'} == 1 ) {
 		  <li>
 		    <a class="dropdown-item text-lowercase px-0" href="/audit/users/server-driven-rows">
-		      <i class="fa-solid fa-network-wired fa-fw me-2"></i> Servers Driven Rows List of Accounts
+		      <i class="fa-solid fa-network-wired fa-fw me-2"></i> <b>Servers</b> Driven Rows List of Accounts
 		    </a>
 		  </li>
 		% }
