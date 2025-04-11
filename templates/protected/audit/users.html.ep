@@ -88,7 +88,7 @@
 		<input type="hidden" name="search_base_case" class="search_base_case" value="">
 	        <span title="<%== $servers_alive_list->{$s} > 0 ? '' : 'absent in ou=machines (probably old stuff)' %>">
 	          <button type="submit"
-	    		  class="btn btn-<%= $servers_alive_list->{$s} > 0 ? 'secondary' : 'danger disabled' %> btn-sm mb-1"
+	    		  class="btn btn-<%= $servers_alive_list->{$s} > 0 ? 'secondary' : 'danger disabled' %> btn-sm mb-1 py-0"
 	    		  style="--bs-btn-font-size: .75rem;"
 	    		  data-filter="<%= 'cn=' . $s . ',' . $search_base_case %>"
 	    		  onClick="$('.search_base_case').val($(this).data('filter')); $('#searchMachine').submit();">

@@ -39,6 +39,35 @@ function customBodyFormatter(data, row, column, node) {
     return text.replace(/[\r\n]+/g, ' ').replace(/\s+/g, ' ').trim();
 }
 
+const type = "<%= stash->{type} // '' %>";
+
+const columnDefs = [
+    {
+	targets: 0,
+	orderable: false,
+	searchable: false,
+	data: null,
+	defaultContent: ""
+    }
+];
+
+if (type === "users-by-server") {
+    columnDefs.push({
+	targets: 3,
+	render: function (data, type, row, meta) {
+            if (type === 'sort' || type === 'filter') {
+		const div = document.createElement('div');
+		div.innerHTML = data;
+		const icon = div.querySelector('i');
+		if (icon && icon.getAttribute('title')) {
+		    return icon.getAttribute('title');
+		}
+		return $(div).text();
+            }
+            return data;
+	}
+    });
+}
 
 var table = $('#dataTableToDraw').DataTable({
     dom: "<'h6 col-12'i><'row'<'col m-0 p-0 btn-group'B><'col align-self-end'f>>" +
@@ -165,34 +194,7 @@ var table = $('#dataTableToDraw').DataTable({
 	    $(row).addClass('danger');
 	}
     },
-    columnDefs: [
-	{
-	    targets: 3, // Adjust this to the column index with icons
-	    render: function (data, type, row, meta) {
-		// For sorting and filtering, extract the icon's title attribute
-		if (type === 'sort' || type === 'filter') {
-		    // Create a temporary container
-		    const div = document.createElement('div');
-		    div.innerHTML = data;
-		    const icon = div.querySelector('i');
-		    if (icon && icon.getAttribute('title')) {
-			return icon.getAttribute('title');
-		    }
-		    // If no icon title exists, fall back to plain text
-		    return $(div).text();
-		}
-		// For display, return the full HTML
-		return data;
-	    }
-	},
-	{
-            "targets": 0, // Target the first column
-            "orderable": false, // Disable sorting on this column
-            "searchable": false, // Disable searching on this column
-            "data": null,
-            "defaultContent": ""
-	}
-    ],
+    columnDefs: columnDefs,
     rowCallback: function(row, data, index) {
 	$('td:eq(0)', row).html(index + 1); // Add row number to the first column
     },
