@@ -60,15 +60,14 @@
     %#       '<i class="fa-lg fa-solid fa-cake-candles"></i>',
     %#       '<i class="fa-lg fa-solid fa-calendar-plus"></i>',
     %#       '<i class="fa-lg fa-solid fa-calendar-xmark"></i>');
-    <thead class="table-secondary">
-%#      <tr class="text-uppercase">
+    <thead class="table-bordered border-secondary">
       <tr class="text-uppercase">
-	  % foreach (@fields) {
-	    <th class="text-center"><%== $_ =%></th>
+	% foreach (@fields) {
+	  <th class="text-center"><%== $_ =%></th>
 	% }
       </tr>
     </thead>
-    <tfoot class="table-secondary">
+    <tfoot class="table-bordered border-secondary">
       <tr class="text-uppercase">
 	% foreach (@fields) {
 	  <th class="text-center"><%== $_ =%></th>
@@ -147,7 +146,7 @@
 		% if ( exists $projects->{$dn} ) {
 		  % foreach (sort @{$projects->{$dn}}) {
 		    % $_ =~ s/:/::/g;
-	            <span class="badge text-bg-secondary fw-bold"><a <%== $a_class %> href="/project/<%= substr($_, 0, index($_, ':')) %>"><%= $_ %></a></span> \
+	            <span class="badge text-bg-secondary fw-normal"><a <%== $a_class %> href="/project/<%= substr($_, 0, index($_, ':')) %>"><%= $_ %></a></span> \
 		  % }
 		% }
 	      </td>
@@ -171,7 +170,7 @@
 		% if ( defined $services && exists $services->{$dn} ) {
 		  % foreach my $k (sort keys %{$services->{$dn}}) {
 		    % my $svc = $services->{$dn}->{$k}->{obj};
-	            <span class="badge text-bg-secondary fw-bold"><%== $k . '&colon;' =%>
+	            <span class="badge text-bg-secondary fw-normal"><%== $k . '&colon;' =%>
 		      % foreach my $s (sort keys %$svc) {
 			<%== '&colon;' =%><%= exists $svc->{$s}->{uid} ? $svc->{$s}->{uid}->[0] : $svc->{$s}->{cn}->[0] =%>
 		      % }
@@ -237,4 +236,9 @@
 </div>
 
 <script src="/assets/js/datatables/datatables.min.js"></script>
+<script>
+ window.appContext = {
+   type: "<%= stash->{type} // '' %>"
+ };
+</script>
 <script src="/assets/js/umi-datatables.js"></script>

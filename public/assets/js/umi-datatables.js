@@ -23,7 +23,7 @@ function customBodyFormatter(data, row, column, node) {
     return text.replace(/[\r\n]+/g, ' ').replace(/\s+/g, ' ').trim();
 }
 
-const type = "<%= stash->{type} // '' %>";
+const type = window.appContext?.type || '';
 
 const columnDefs = [
     {
@@ -35,7 +35,7 @@ const columnDefs = [
     }
 ];
 
-if (type === "users-by-server") {
+if (type != "users-by-server") {
     columnDefs.push({
 	targets: 3,
 	render: function (data, type, row, meta) {
@@ -55,16 +55,21 @@ if (type === "users-by-server") {
 
 var table = $('#dataTableToDraw').DataTable({
     ///////////////////////////////////////////////////////////////
-    // DOM Keyword	Meaning					 //
+    // DOM KEYWORD	MEANING					 //
     // 		l	Length changing input (page size)	 //
     // 		f	Filtering input (search box)		 //
     // 		t	Table body (<tbody>)			 //
-    // 		i	Table information summary		 //
+    // 		i	table Information summary		 //
     // 		p	Pagination control			 //
     // 		B	Buttons (when using Buttons extension)	 //
+    //          r	pRocessing display element               //
     ///////////////////////////////////////////////////////////////
-    dom: "<'h6 col-12'i><'row mb-2'<'col m-0 p-0 btn-group'B><'col align-self-end p-0 text-uppercase'f>>" +
-	"rt" + "<'row mt-2'<'col m-0 p-0'l><'col d-flex justify-content-end m-0 p-0'p>>",
+    // dom: "<'text-secondary fs-6 col-12'i><'row mb-2'<'col m-0 p-0 btn-group'B><'col align-self-end p-0 text-uppercase'f>>" +
+    // 	"rt" + "<'row mt-2'<'col m-0 p-0'l><'col d-flex justify-content-end m-0 p-0'p>>",
+    dom: "<'row mb-2'<'col m-0 p-0 btn-group'B><'col align-self-end p-0 text-uppercase'f>>" +
+	"<'row mt-2'<'fs-6 col-12 pb-1 px-0'i><'col m-0 p-0'l><'col d-flex justify-content-end pb-1'p>>" +
+	"rt" +
+	"<'row mt-2'<'fs-6 col-12 pb-1 px-0'i><'col m-0 p-0'l><'col d-flex justify-content-end pb-1'p>>",
     buttons: [
 	{
 	    extend: 'copyHtml5',
