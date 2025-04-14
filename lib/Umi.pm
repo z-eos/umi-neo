@@ -523,6 +523,12 @@ sub _startup_routes ($self) {
     ->requires(is_role => ['admin,coadmin,hr', {cmp => 'or'}])
     ->to('protected#sysinfo');
 
+  $protected_root
+    ->get( '/chi')
+    ->requires(is_role => ['admin,coadmin,hr', {cmp => 'or'}])
+    ->to('protected#manage_chi', command => '', key => '');
+
+
   #######################################################################
   # Default to 404 for anything that has not been handled explicitly.   #
   # This is probably reinventing a wheel already present in Mojolicious #

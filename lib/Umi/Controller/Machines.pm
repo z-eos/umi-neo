@@ -148,6 +148,7 @@ sub create_or_update ($self) {
     $host_data->{cn} = $data->{hostname};
     $host_data->{uid} = $data->{hostname};
     $msg = $ldap->add($dn, $host_data);
+    $self->h_log( $msg );
 
   }
 

@@ -197,6 +197,27 @@ sub search_common  ($self) {
 sub search_projects  ($self) {
   my $p = $self->req->params->to_hash;
 
+  my $ldap = Umi::Ldap->new( $self->{app}, $self->session('uid'), $self->session('pwd') );
+
+  my $contextCSN = $ldap->get_contextCSN;
+  my $chi = $self->chi('fs')->get('projects');
+  if ( $chi ) {
+    if ($chi->{contextCSN} ge $contextCSN) {
+      $self->h_log($chi->{contextCSN});
+      $self->h_log($contextCSN);
+      $self->stash(
+		   entries => $chi->{entries},
+		   base_proj => $chi->{base_proj},
+		   base_acc => $chi->{base_acc}
+		  );
+      return $self->render( template => 'protected/search/projects' );
+    } else {
+      $self->h_log($chi->{contextCSN});
+      $self->h_log($contextCSN);
+      $self->chi('fs')->remove('projects');
+    }
+  }
+
   my $proj = $p->{proj} // $self->stash->{proj} // '';
 
   my $filter;
@@ -213,8 +234,6 @@ sub search_projects  ($self) {
   } else {
     $filter = sprintf("(cn=%s)", $self->session('proj'));
   }
-
-  my $ldap = Umi::Ldap->new( $self->{app}, $self->session('uid'), $self->session('pwd') );
 
   # $self->h_log($proj);
   my $search_arg = { base => $self->{app}->{cfg}->{ldap}->{base}->{project},
@@ -296,6 +315,12 @@ sub search_projects  ($self) {
 
   # $self->h_log($entries);
 
+  $self->chi('fs')->set( projects => {
+				      contextCSN => $contextCSN,
+				      entries => $entries,
+				      base_proj => $self->{app}->{cfg}->{ldap}->{base}->{project},
+				      base_acc => $self->{app}->{cfg}->{ldap}->{base}->{acc_root}
+				     });
   $self->stash( entries => $entries,
 		base_proj => $self->{app}->{cfg}->{ldap}->{base}->{project},
 		base_acc => $self->{app}->{cfg}->{ldap}->{base}->{acc_root} );

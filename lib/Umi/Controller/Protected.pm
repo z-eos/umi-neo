@@ -31,6 +31,19 @@ sub homepage ($self) {
 
 sub other ($self) { $self->render(template => 'protected/other'); }
 
+sub manage_chi ($self) {
+  my $p = $self->req->params->to_hash;
+  $self->h_log($p);
+
+  my $command = $p->{command} // 'remove';
+
+   if ( $command eq 'remove' ) {
+     $self->chi('fs')->clear;
+   }
+
+  return $self->render(template => 'protected/home');
+}
+
 sub delete ($self) {
   my $p = $self->req->params->to_hash;
   $self->h_log($p);
@@ -222,8 +235,14 @@ sub sysinfo ($self) {
   $s{all_objectclasses} = \%oc;
   $s{all_attributes} = \%aa;
   $s{all_syntaxes} = \%as;
+
+  my $chi;
+  @{$chi->{keys}} = $self->chi('fs')->get_keys;
+  @{$chi->{namespaces}} = $self->chi('fs')->get_namespaces;
+
   return $self->render( template => 'protected/tool/sysinfo',
 		        schema => encode_json(\%s),
+			chi => $chi,
 			); # layout => undef);
 }
 
@@ -595,53 +614,31 @@ sub modify ($self) {
 sub profile ($self) {
   my $par = $self->req->params->to_hash;
   my $reqpath = $self->req->url->to_abs->path;
-  my $uid;
+  my ($uid, $filter, $chi, $chi_key, $chi_template, $to_chi);
 
   my $ldap = Umi::Ldap->new( $self->{app}, $self->session('uid'), $self->session('pwd') );
 
   my $contextCSN = $ldap->get_contextCSN;
-  my $chi;
   if ( $reqpath =~ /^\/audit\/.*$/ ) {
-
-    $chi = $self->chi('fs')->get('profile_audit');
-    if ( $chi ) {
-      if ($chi->{contextCSN} ge $contextCSN) {
-	$self->h_log($chi->{contextCSN});
-	$self->h_log($contextCSN);
-	$self->stash(
-		     profiled_user => $chi->{profiled_user},
-		     groups => $chi->{groups},
-		     pgp => $chi->{pgp},
-		     servers => $chi->{servers},
-		     services => $chi->{services},
-		     server_alive => $chi->{server_alive},
-		     servers_alive_list => $chi->{servers_alive_list},
-		     search_base_case => $chi->{search_base_case},
-		     projects => $chi->{projects},
-		     modifiersname => $chi->{modifiersname},
-		    );
-	return $self->render(template => 'protected/audit/users');
-      } else {
-	$self->h_log($chi->{contextCSN});
-	$self->h_log($contextCSN);
-	$self->chi('fs')->remove('profile_audit');
-      }
-    }
-
+    $chi_key = 'profile_audit';
+    $chi_template = 'protected/audit/users';
     $uid = 'all';
   } else {
     $uid = $par->{uid} // $self->stash->{uid} // '';
+    $chi_template = 'protected/profile';
   }
 
-  ### USER:
-  my $filter;
+  ### PROFILE TO GET:
   if ($uid eq 'all') {
+    $chi_key = 'profile_all' if ! defined $chi_key;
     $filter = '(uid=*)';
     ### $filter = '(uid=al*)';
   } elsif ($uid eq 'disabled') {
+    $chi_key = 'profile_disabled';
     $filter = sprintf("(&(uid=*)(gidNumber=%s))",
 		      $self->{app}->{cfg}->{ldap}->{defaults}->{group}->{blocked}->{gidnumber});
   } elsif ($uid eq 'active') {
+    $chi_key = 'profile_active';
     $filter = sprintf("(&(uid=*)(!(gidNumber=%s)))",
 		      $self->{app}->{cfg}->{ldap}->{defaults}->{group}->{blocked}->{gidnumber});
   } elsif ($uid ne '') {
@@ -649,10 +646,48 @@ sub profile ($self) {
   } else {
     $filter = sprintf("(uid=%s)", $self->session('uid'));
   }
+
+  $chi = $self->chi('fs')->get($chi_key);
+  if ( $chi ) {
+    if ($chi->{contextCSN} ge $contextCSN) {
+      $self->h_log($chi->{contextCSN});
+      $self->h_log($contextCSN);
+      $self->stash(
+		   profiled_user => $chi->{profiled_user},
+		   groups => $chi->{groups},
+		   modifiersname => $chi->{modifiersname},
+		   pgp => $chi->{pgp},
+		   projects => $chi->{projects},
+		   search_base_case => $chi->{search_base_case},
+		   server_alive => $chi->{server_alive},
+		   servers => $chi->{servers},
+		   servers_alive_list => $chi->{servers_alive_list},
+		   services => $chi->{services},
+		  );
+      return $self->render(template => $chi_template);
+    } else {
+      $self->h_log($chi->{contextCSN});
+      $self->h_log($contextCSN);
+      $self->chi('fs')->remove($chi_key);
+    }
+  }
+
   my $search_arg = { base => $self->{app}->{cfg}->{ldap}->{base}->{acc_root},
 		     filter => $filter,
 		     scope => 'one' };
-  $search_arg->{attrs} = [qw( gidNumber givenName mail sn uid modifiersName umiUserDateOfBirth umiUserDateOfEmployment umiUserDateOfTermination )] if $reqpath =~ /^\/audit\/.*$/;
+  $search_arg->{attrs} = [qw(
+			      gidNumber
+			      givenName
+			      mail
+			      modifiersName
+			      sn
+			      uid
+			      umiUserDateOfBirth
+			      umiUserDateOfEmployment
+			      umiUserDateOfTermination
+			   )]
+    if $reqpath =~ /^\/audit\/.*$/;
+
   # $self->{app}->h_log( $search_arg);
   my $search = $ldap->search( $search_arg );
   $self->{app}->h_log( $self->{app}->h_ldap_err($search, $search_arg) ) if $search->code;
@@ -768,19 +803,24 @@ sub profile ($self) {
     @{$projects->{$k}} = sort map { $p->{$_}->{cn}->[0] =~ s/_/:/r } keys(%$p);
   }
 
-  $self->chi('fs')->set( profile_audit => {
-					   contextCSN => $contextCSN,
-					   profiled_user => $profiled_user,
-					   groups => $groups,
-					   pgp => $pgp,
-					   servers => $servers,
-					   services => $service,
-					   server_alive => $server_alive,
-					   servers_alive_list => $servers_alive_list,
-					   search_base_case => $self->{app}->{cfg}->{ldap}->{base}->{machines},
-					   projects => $projects,
-					   modifiersname => $modifiersname,
-					  });
+  $to_chi = {
+	     contextCSN => $contextCSN,
+	     profiled_user => $profiled_user,
+	     groups => $groups,
+	     pgp => $pgp,
+	     servers => $servers,
+	     services => $service,
+	     server_alive => $server_alive,
+	     servers_alive_list => $servers_alive_list,
+	     search_base_case => $self->{app}->{cfg}->{ldap}->{base}->{machines},
+	     projects => $projects,
+	     modifiersname => $modifiersname,
+	    };
+
+  #$self->chi('fs')->set( profile_audit => $to_chi if $reqpath =~ /^\/audit\/.*$/;
+  #$self->chi('fs')->set( profile_all => $to_chi if $uid eq 'all';
+  $self->chi('fs')->set( $chi_key => $to_chi);
+			 
   $self->stash(
 	       profiled_user => $profiled_user,
 	       groups => $groups,

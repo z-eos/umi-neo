@@ -37,7 +37,7 @@
 	<i class="fa-solid fa-fw fa-user-alt ms-1"></i>
       </a>
       <ul class="dropdown-menu dropdown-menu-end">
-	<li class="text-bg-secondary text-info text-center fw-bold">
+	<li class="text-bg-secondary text-center fw-bold">
 	  % if ($c->is_user_authenticated) {
 	    %= $c->session('uid');
 	  % }
@@ -70,7 +70,13 @@
 	    </li>
 	  </ul>
 
-	</li>          
+	</li>
+	<li><hr class="dropdown-divider"></li>
+	<li>
+	  <a class="dropdown-item" href="/chi?command=remove">
+	    <i class="fa-solid fa-fw fa-square-xmark"></i><span class="ms-2">Purge Cash</span>
+	  </a>
+	</li>
 	<li><hr class="dropdown-divider"></li>
 	<li>
 	  <a class="dropdown-item" href="/logout" accesskey="o">
