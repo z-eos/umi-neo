@@ -1,7 +1,7 @@
 %# -*- mode: web; eval: (follow-mode) -*-
 
 <h2 class="<%= app->{cfg}->{ui}->{page}->{header}->{css} %>">
-  User profile <%== h_cache_ts %>
+  User profile <%== h_is_contextCSN %>
 </h2>
 
 % use Net::LDAP::Util qw(generalizedTime_to_time);
