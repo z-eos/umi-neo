@@ -1046,15 +1046,16 @@ on input expects:
 =cut
 
   $app->helper( h_element_cp_download_btns => sub {
-		  my ($c, $target_id, $file_name, $button_class) = @_;
+		  my ($c, $target_id, $file_name, $button_class, $wrapper_class) = @_;
 
 		  # Set default values if parameters are not provided
-		  $target_id    ||= 'targetId';
-		  $file_name    ||= 'element-' . $target_id . '-value.txt';
-		  $button_class ||= 'btn btn-secondary btn-sm';
+		  $target_id     ||= 'targetId';
+		  $file_name     ||= 'element-' . $target_id . '-value.txt';
+		  $button_class  ||= 'btn btn-secondary btn-sm';
+		  $wrapper_class ||= '';
 
 		  my $html = qq{
-<div class="btn-group mb-2" id="h_element_cp_download_btns">
+<div class="btn-group $wrapper_class" id="h_element_cp_download_btns">
     <button type="button" class="$button_class" title="Copy to clipboard"
             onclick="copyToClipboard('#$target_id')">
         <i class="fas fa-copy"></i>

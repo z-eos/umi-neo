@@ -25,6 +25,7 @@ sub startup ($self) {
 
   $self->_startup_config;
   $self->secrets($self->cfg->{secrets});
+  $self->log->level($self->cfg->{debug}->{log_level});
 
   $self->plugin('Umi::Helpers');
   $self->plugin('Umi::Helpers::Common');

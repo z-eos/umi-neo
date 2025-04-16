@@ -612,7 +612,7 @@ sub modify ($self) {
 }
 
 sub profile ($self) {
-  my $par = $self->req->params->to_hash;
+  my $p = $self->req->params->to_hash;
   my $reqpath = $self->req->url->to_abs->path;
   my ($uid, $filter, $chi, $chi_key, $chi_template, $to_chi);
 
@@ -624,7 +624,7 @@ sub profile ($self) {
     $chi_template = 'protected/audit/users';
     $uid = 'all';
   } else {
-    $uid = $par->{uid} // $self->stash->{uid} // '';
+    $uid = $p->{uid} // $self->stash->{uid} // '';
     $chi_template = 'protected/profile';
   }
 
@@ -667,7 +667,11 @@ sub profile ($self) {
 		   servers_alive_list => $chi->{servers_alive_list},
 		   services => $chi->{services},
 		  );
-      return $self->render(template => $chi_template);
+      if ( exists $p->{as_json} && $p->{as_json} eq 'yes' ) {
+	return $self->render(json => $chi);
+      } else {
+	return $self->render(template => $chi_template);
+      }
     } else {
       $self->h_log($chi->{contextCSN});
       $self->h_log($contextCSN);
@@ -697,7 +701,7 @@ sub profile ($self) {
   my $profiled_user = $search->as_struct;
   # $self->h_log($profiled_user);
 
-  my ( $cf_svc, $groups, $k, $kk, $modifiersname, $p, $pgp, $pgp_e, $projects, $server_names, $server_alive, $servers_alive_list, $servers, $service, $svc, $svc_details, $svc_msg, $v, $vv, );
+  my ( $cf_svc, $groups, $k, $kk, $modifiersname, $pr, $pgp, $pgp_e, $projects, $server_names, $server_alive, $servers_alive_list, $servers, $service, $svc, $svc_details, $svc_msg, $v, $vv, );
   while (($k, $v) = each %$profiled_user) {
     ### name of the last who modified this user root object
     $search_arg = { base => $v->{modifiersname}->[0], scope => 'base', attrs => ['gecos', 'uid'] };
@@ -802,8 +806,8 @@ sub profile ($self) {
 		    attrs => ['cn'] };
     $search = $ldap->search( $search_arg );
     $self->h_log( $self->{app}->h_ldap_err($search, $search_arg) ) if $search->code;
-    $p = $search->as_struct;
-    @{$projects->{$k}} = sort map { $p->{$_}->{cn}->[0] =~ s/_/:/r } keys(%$p);
+    $pr = $search->as_struct;
+    @{$projects->{$k}} = sort map { $pr->{$_}->{cn}->[0] =~ s/_/:/r } keys(%$pr);
   }
 
   $to_chi = {
@@ -823,7 +827,7 @@ sub profile ($self) {
   #$self->chi('fs')->set( profile_audit => $to_chi if $reqpath =~ /^\/audit\/.*$/;
   #$self->chi('fs')->set( profile_all => $to_chi if $uid eq 'all';
   $self->chi('fs')->set( $chi_key => $to_chi);
-			 
+
   $self->stash(
 	       profiled_user => $profiled_user,
 	       groups => $groups,
@@ -837,9 +841,13 @@ sub profile ($self) {
 	       modifiersname => $modifiersname,
 	      );
 
-  my $template = $reqpath =~ /^\/audit\/.*/ ? 'protected/audit/users' : 'protected/profile';
-  # $self->h_log($template);
-  $self->render(template => $template); #layout => undef);
+  if ( exists $p->{as_json} && $p->{as_json} eq 'yes' ) {
+    return $self->render(json => $to_chi);
+  } else {
+    my $template = $reqpath =~ /^\/audit\/.*/ ? 'protected/audit/users' : 'protected/profile';
+    # $self->h_log($template);
+    return $self->render(template => $template); #layout => undef);
+  }
 }
 
 sub profile_new ($self) {

@@ -186,7 +186,7 @@
 		      % } else {
 			% $text_pre = ' text-wrap';
 		      % }
-		      %== h_element_cp_download_btns( $attr, $attr . '.txt' );
+		      %== h_element_cp_download_btns( $attr, $attr . '.txt', undef, 'mb-2' );
 		      % my $attr_val_processed = $attr_val;
 		      % if ( $attr eq 'umiUserBackup' ) {
 			% use IO::Uncompress::Gunzip qw(gunzip $GunzipError) ;
