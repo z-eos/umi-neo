@@ -74,7 +74,7 @@
 	<li><hr class="dropdown-divider"></li>
 	<li>
 	  <a class="dropdown-item" href="/chi?command=remove">
-	    <i class="fa-solid fa-fw fa-square-xmark"></i><span class="ms-2">Purge Cash</span>
+	    <i class="fa-solid fa-fw fa-square-xmark"></i><span class="ms-2">Purge Cashe</span>
 	  </a>
 	</li>
 	<li><hr class="dropdown-divider"></li>
