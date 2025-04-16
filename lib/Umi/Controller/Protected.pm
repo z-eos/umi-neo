@@ -642,8 +642,10 @@ sub profile ($self) {
     $filter = sprintf("(&(uid=*)(!(gidNumber=%s)))",
 		      $self->{app}->{cfg}->{ldap}->{defaults}->{group}->{blocked}->{gidnumber});
   } elsif ($uid ne '') {
+    $chi_key = 'nokey';
     $filter = sprintf("(|(uid=%s)(givenName=%s)(sn=%s))", $uid, $uid, $uid);
   } else {
+    $chi_key = 'nokey';
     $filter = sprintf("(uid=%s)", $self->session('uid'));
   }
 
