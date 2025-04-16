@@ -653,6 +653,7 @@ sub profile ($self) {
       $self->h_log($chi->{contextCSN});
       $self->h_log($contextCSN);
       $self->stash(
+		   contextCSN => $contextCSN,
 		   profiled_user => $chi->{profiled_user},
 		   groups => $chi->{groups},
 		   modifiersname => $chi->{modifiersname},

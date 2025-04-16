@@ -1,20 +1,27 @@
 %# -*- mode: web; eval: (follow-mode) -*-
 % use Encode qw(decode_utf8);
+% use Net::LDAP::Util qw(generalizedTime_to_time);
+% use POSIX qw(strftime);
 
 <link href="/assets/js/datatables/datatables.min.css" rel="stylesheet" type="text/css">
 
+% my $contextCSN = strftime("%F %T", gmtime(stash->{contextCSN}));
+% if (defined $contextCSN) {
+  % $contextCSN = '<sup class="umi-text-xxs ms-3 text-secondary align-top"><i>cache on ' . $contextCSN . '</i></sup>';
+% }
+
 % my $title;
 % if (exists stash->{type} && stash->{type} eq 'user-driven-rows') {
-  % $title = 'Details of each user';
+  % $title = 'Details of each user' . h_is_contextCSN;
 % } elsif (exists stash->{type} && stash->{type} eq 'server-driven-rows') {  
-% $title = 'Details of each user (user-to-server)';
+% $title = 'Details of each user (user-to-server)' . $contextCSN;
 % } elsif (exists stash->{type} && stash->{type} eq 'users-by-server') {  
-% $title = 'All users of each server';
+% $title = 'All users of each server' . $contextCSN;
 % }
-%= t 'h1', class => 'mt-3 mb-4', $title
 
-% use Net::LDAP::Util qw(generalizedTime_to_time);
-% use POSIX qw(strftime);
+<h1 class="mt-3 mb-4">
+  <%== $title %>
+</h1>
 
 % my $root_uid = session('user_obj')->{dn};
 % my ($dn, $v);
@@ -47,7 +54,7 @@
     %# };
 
     % my @fields = exists stash->{type} && stash->{type} eq 'users-by-server'
-    % ? qw(№ Server UIDs) : qw( № LName FName ST Projects Servers Services Email UID BD HD TD);
+    % ? qw(№ ST Server UIDs) : qw( № LName FName ST Projects Servers Services Email UID BD HD TD);
     %# : (   '№',
     %#       'LName',
     %#       'FName',
@@ -82,6 +89,13 @@
 	% foreach my $s (sort keys %$u_by_s) {
 	  <tr class="umi-text-xs">
 	    <td></td>
+	    <td>
+	      % if ($servers_alive_list->{$s} > 0) {
+		<i class="fa-solid fa-plus text-success" title="alive"></i>
+	      % } else {
+		<i class="fa-solid fa-xmark text-danger" title="noresolve"></i>
+	      % }
+	    </td>
 	    <td>
 	      <form role="form" id="searchMachine" method="POST" action="/search/common">
 		<input type="hidden" name="search_base_case" class="search_base_case" value="">

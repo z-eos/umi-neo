@@ -1,18 +1,23 @@
 %# -*- mode: web; eval: (follow-mode) -*-
 % use Encode qw(decode_utf8);
+% use POSIX qw(strftime);
 
 % my $i =
 % my $j = 0;
 % my $attr_val_class = "";
 
+% my $contextCSN = stash->{contextCSN};
+% if (defined $contextCSN) {
+  % $contextCSN = '<sup class="umi-text-xxs ms-3 text-secondary align-top"><i>cache on ' . strftime("%F %T", gmtime($contextCSN)) . '</i></sup>';
+% }
+
 <div class="row w-100 <%= app->{cfg}->{ui}->{page}->{header}->{css} %> mb-3">
-  <div class="col-xs-6 col-sm-6 col-md-3 col-lg-3">
-    <h3 class="">
-      <i class="fa-solid fa-folder-tree fa-2xl text-muted px-3"></i>
-      Projects
-    </h3>
+  <div class="col-xs-6 col-sm-6 col-md-3 col-lg-3 w-100">
+    <h2>
+    <i class="fa-solid fa-folder-tree fa-xl text-muted px-3"></i>
+    Projects <%== $contextCSN %>
+    </h2>
   </div>
-</div>
 
 % if ( is_role 'admin,coadmin,hr', {cmp => 'or'} ) {
   %= link_to '/project/new' => (class => "btn", title => "Add new project") => begin
@@ -47,9 +52,9 @@
 	    %# = t 'button' , type => 'submit', class => 'btn fw-bold', $en
 	  %# end
 	</div>
-	% $ct = substr($v->{sprintf("cn=%s,%s",$en,$base_proj)}->{createtimestamp}->[0], 0, -1);
+	% $ct = substr($v->{sprintf("cn=%s,%s",$en,$base_proj)}->{createtimestamp}->[0], 0, -7);
 	% $cn = substr($v->{sprintf("cn=%s,%s",$en,$base_proj)}->{creatorsname}->[0], 4, index($v->{sprintf("cn=%s,%s",$en,$base_proj)}->{creatorsname}->[0], ",")-4);
-	% $mt = substr($v->{sprintf("cn=%s,%s",$en,$base_proj)}->{modifytimestamp}->[0], 0, -1);
+	% $mt = substr($v->{sprintf("cn=%s,%s",$en,$base_proj)}->{modifytimestamp}->[0], 0, -7);
 	% $mn = substr($v->{sprintf("cn=%s,%s",$en,$base_proj)}->{modifiersname}->[0], 4, index($v->{sprintf("cn=%s,%s",$en,$base_proj)}->{modifiersname}->[0], ",")-4);
 	<ul class="list-unstyled fa-ul umi-text-tiny font-monospace float-end m-0 pe-2 pt-1">
 	  <li title="created GMT: <%= $ct %> by <%= $cn %>">

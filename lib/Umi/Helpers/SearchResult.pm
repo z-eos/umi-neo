@@ -9,6 +9,8 @@ use Umi::Constants qw(UMIAUTH);
 use Net::DNS;
 use Net::LDAP::Util qw(generalizedTime_to_time);
 
+use POSIX qw(strftime);
+
 sub register {
   my ($self, $app) = @_;
 
@@ -339,6 +341,24 @@ on input:
 		 # p $a->{fqdn}; p $r;
 		 # $self->h_log( $return );
 		 return $return;
+	       });
+
+=head1 h_is_contextCSN
+
+is there contextCSN variable in stash
+
+=cut
+
+  $app->helper( h_is_contextCSN => sub {
+		  my  ($self) = @_;
+		  my $res;
+		  my $contextCSN = $self->stash->{contextCSN};
+		  if (defined $contextCSN) {
+		    $res = sprintf('<sup class="umi-text-xxs ms-3 text-secondary align-top"><i>cache on %s</i></sup>',
+				   strftime("%F %T", gmtime($contextCSN)));
+		  }
+		  # $self->h_log( $res );
+		  return $res;
 	       });
 
 }

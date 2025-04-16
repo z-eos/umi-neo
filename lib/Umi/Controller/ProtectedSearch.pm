@@ -206,6 +206,7 @@ sub search_projects  ($self) {
       $self->h_log($chi->{contextCSN});
       $self->h_log($contextCSN);
       $self->stash(
+		   contextCSN => $contextCSN,
 		   entries => $chi->{entries},
 		   base_proj => $chi->{base_proj},
 		   base_acc => $chi->{base_acc}

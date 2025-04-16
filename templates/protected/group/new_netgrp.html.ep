@@ -18,7 +18,12 @@
   <div class="row mb-3">
     %= label_for cn => 'CN', class => 'col-sm-2 col-form-label text-end fw-bold text-uppercase'
     <div class="col-sm-10">
-      %= text_field 'cn', class => 'form-control', id => 'cn', placeholder => 'Group name'
+      % if ( defined $dn_to_modify_netgr )
+      % {
+	%= text_field 'cn', class => 'form-control', id => 'cn', placeholder => 'Group name', disabled => 'disabled'
+      % } else {
+	%= text_field 'cn', class => 'form-control', id => 'cn', placeholder => 'Group name'
+      % }
     </div>
   </div>
 

@@ -1,6 +1,8 @@
 %# -*- mode: web; eval: (follow-mode) -*-
 
-%= t 'h2', class => app->{cfg}->{ui}->{page}->{header}->{css}, 'User profile'
+<h2 class="<%= app->{cfg}->{ui}->{page}->{header}->{css} %>">
+  User profile <%== h_cache_ts %>
+</h2>
 
 % use Net::LDAP::Util qw(generalizedTime_to_time);
 % use POSIX qw(strftime);

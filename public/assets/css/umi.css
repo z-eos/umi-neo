@@ -147,11 +147,11 @@ html,body {
 }
 
 .umi-text-smaller {
-    font-size: 70%;
+    font-size: .7em;
 }
 
 .umi-text-tiny {
-    font-size: 60%;
+    font-size: .6em;
 }
 
 .umi-text-lg {
@@ -164,6 +164,10 @@ html,body {
 
 .umi-text-xs {
     font-size: .75em;
+}
+
+.umi-text-xxs {
+    font-size: .3em;
 }
 
 .umi-opacity05 {

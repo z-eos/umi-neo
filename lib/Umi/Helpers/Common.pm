@@ -1054,7 +1054,7 @@ on input expects:
 		  $button_class ||= 'btn btn-secondary btn-sm';
 
 		  my $html = qq{
-<div class="btn-group" id="h_element_cp_download_btns">
+<div class="btn-group mb-2" id="h_element_cp_download_btns">
     <button type="button" class="$button_class" title="Copy to clipboard"
             onclick="copyToClipboard('#$target_id')">
         <i class="fas fa-copy"></i>
