@@ -51,6 +51,22 @@ if (type != "users-by-server") {
             return data;
 	}
     });
+} else {
+    columnDefs.push({
+	targets: 1,
+	render: function (data, type, row, meta) {
+            if (type === 'sort' || type === 'filter') {
+		const div = document.createElement('div');
+		div.innerHTML = data;
+		const icon = div.querySelector('i');
+		if (icon && icon.getAttribute('title')) {
+		    return icon.getAttribute('title');
+		}
+		return $(div).text();
+            }
+            return data;
+	}
+    });
 }
 
 var table = $('#dataTableToDraw').DataTable({
