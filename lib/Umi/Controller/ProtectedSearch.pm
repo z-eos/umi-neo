@@ -68,34 +68,34 @@ sub search_common  ($self) {
     $base = $p->{search_base_case};
   }
 
-  $filter_meta = defined $p->{search_filter} && $p->{search_filter} eq '' ?
-    '*' : $p->{search_filter};
+  $filter_meta = exists $p->{search_filter} && $p->{search_filter} eq ''
+    ? '*' : $p->{search_filter};
 
-  if ( defined $p->{search_base_case} && $p->{search_base_case} eq 'search_global' ) {
+  if ( exists $p->{search_base_case} && $p->{search_base_case} eq 'search_global' ) {
     $base = $self->{app}->{cfg}->{ldap}->{base}->{dc};
     $filter = $filter_meta;
-  } elsif ( defined $p->{search_base_case} && $p->{search_base_case} eq 'search_by_email' ) {
+  } elsif ( exists $p->{search_base_case} && $p->{search_base_case} eq 'search_by_email' ) {
     $filter = sprintf("|(mail=%s)(&(uid=%s)(authorizedService=mail@*))",
 		      $filter_meta, $filter_meta );
     $base   = $self->{app}->{cfg}->{ldap}->{base}->{acc_root};
     $p->{search_base_case} = $base;
-  } elsif ( defined $p->{search_base_case} && $p->{search_base_case} eq 'search_by_jid' ) {
+  } elsif ( exists $p->{search_base_case} && $p->{search_base_case} eq 'search_by_jid' ) {
     $filter = sprintf("&(authorizedService=xmpp@*)(uid=*%s*)", $filter_meta);
     $base   = $self->{app}->{cfg}->{ldap}->{base}->{acc_root};
     $p->{search_base_case} = $base;
-  } elsif ( defined $p->{search_base_case} && $p->{search_base_case} eq 'search_by_ip' ) {
+  } elsif ( exists $p->{search_base_case} && $p->{search_base_case} eq 'search_by_ip' ) {
     my @narr = split(/\./, $filter_meta);
     pop @narr if scalar @narr == 4;
     $filter = sprintf("|(dhcpStatements=fixed-address %s)(umiOvpnCfgIfconfigPush=%s*)(umiOvpnCfgIroute=%s.*)(ipHostNumber=%s*)",
 		      $filter_meta, $filter_meta, join('.', @narr), $filter_meta);
     $base   = $self->{app}->{cfg}->{ldap}->{base}->{dc};
     $p->{search_base_case} = $base;
-  } elsif ( defined $p->{search_base_case} && $p->{search_base_case} eq 'search_by_pgp' ) {
+  } elsif ( exists $p->{search_base_case} && $p->{search_base_case} eq 'search_by_pgp' ) {
     $filter = sprintf("|(pgpCertID=%s)(pgpKeyID=%s)(pgpUserID=%s)",
 		      $filter_meta, $filter_meta, $filter_meta);
     $base   = $self->{app}->{cfg}->{ldap}->{base}->{pgp};
     $p->{search_base_case} = $base;
-  } elsif ( defined $p->{search_base_case} && $p->{search_base_case} eq 'search_by_mac' ) {
+  } elsif ( exists $p->{search_base_case} && $p->{search_base_case} eq 'search_by_mac' ) {
     my $mac = $self->macnorm({ mac => $filter_meta });
     push @{$return->{error}}, 'incorrect MAC address'
       if ! $mac;
@@ -106,37 +106,37 @@ sub search_common  ($self) {
 		      $self->macnorm({ mac => $filter_meta }) );
     $base   = $self->{app}->{cfg}->{ldap}->{base}->{dc};
     $p->{search_base_case} = $base;
-  } elsif ( defined $p->{search_base_case} && $p->{search_base_case} eq 'search_by_name' ) {
+  } elsif ( exists $p->{search_base_case} && $p->{search_base_case} eq 'search_by_name' ) {
     $p->{search_base_case} = $base = $self->{app}->{cfg}->{ldap}->{base}->{acc_root};
     $filter = sprintf("|(givenName=%s)(sn=%s)(uid=%s)(cn=%s)",
 		      $filter_meta, $filter_meta, $filter_meta, $filter_meta);
-  } elsif ( defined $p->{search_base_case} && $p->{search_base_case} eq 'search_by_telephone' ) {
+  } elsif ( exists $p->{search_base_case} && $p->{search_base_case} eq 'search_by_telephone' ) {
     $p->{search_base_case} = $base = $self->{app}->{cfg}->{ldap}->{base}->{acc_root};
     $filter = sprintf("|(telephoneNumber=%s)(mobile=%s)(homePhone=%s)",
 		      $filter_meta, $filter_meta, $filter_meta);
-  } elsif ( defined $p->{search_base_case} && $p->{search_base_case} eq 'search_base' &&
+  } elsif ( exists $p->{search_base_case} && $p->{search_base_case} eq 'search_base' &&
 	    $p->{search_base_case} eq $self->{app}->{cfg}->{ldap}->{base}->{org} ) {
     # SPECIAL CASE: we wanna each user (except admins) be able to see only org/s he belongs to
     $filter = $p->{'search_filter'} ne '' ? $p->{'search_filter'} : 'objectClass=*';
     $base   = $p->{search_base_case};
     ##$filter_armor = join('', @{[ map { '(associatedDomain=' . $_ . ')' } @{$c_user_d->{success}} ]} ) if ! $ldap_crud->role_admin;
-  } elsif ( defined $p->{search_base_case} && $p->{search_base_case} eq '' &&
-	    $p->{'search_filter'} ne '' ) {
+  } elsif ( exists $p->{search_base_case} && $p->{search_base_case} eq '' &&
+	    exists $p->{'search_filter'} && $p->{'search_filter'} ne '' ) {
     $filter = $p->{'search_filter'};
     $base   = $p->{search_base_case};
-  } elsif ( defined $p->{'ldap_subtree'} &&
+  } elsif ( exists $p->{'ldap_subtree'} &&
 	    $p->{'ldap_subtree'} ne '' ) {
     $filter = 'objectClass=*';
     $base   = $p->{'ldap_subtree'};
-  } elsif ( defined $p->{'dn_to_history'} &&
+  } elsif ( exists $p->{'dn_to_history'} &&
 	    $p->{'dn_to_history'} ne '' ) {
     $filter     = 'reqDN=' . $p->{'dn_to_history'};
     $sort_order = 'straight';
     $base       = $self->{app}->{cfg}->{ldap}->{accesslog};
     # $self->h_log($filter);
     # $self->h_log($base);
-  } elsif ( defined $p->{search_base_case} && $p->{search_base_case} ne '' &&
-	    $p->{'search_filter'} ne '' ) {
+  } elsif ( exists $p->{search_base_case} && $p->{search_base_case} ne '' &&
+	    exists $p->{'search_filter'} && $p->{'search_filter'} ne '' ) {
     $filter = $p->{'search_filter'};
     $base   = $p->{search_base_case};
   } else {

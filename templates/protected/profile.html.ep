@@ -9,22 +9,25 @@
 % use Encode qw(decode_utf8);
 
 % my $root_uid = session('user_obj')->{dn};
-% my ($dn, $v);
+% my ($dn, $v, %dg);
 % my $na = '<i class="text-muted text-opacity-50">unavailable</i>';
 % foreach $dn (sort keys %$profiled_user) {
   % $v = $profiled_user->{$dn};
   %# <pre><%= dumper $v %></pre>
-  % my $card_col = '';
-  % if (app->{cfg}->{ldap}->{defaults}->{group}->{blocked}->{gidnumber} eq $v->{gidnumber}->[0]) {
-    % $card_col = 'danger';
+
+  % foreach my $g (keys %{app->{cfg}->{ldap}->{defaults}->{group}}) {
+    % $dg{app->{cfg}->{ldap}->{defaults}->{group}->{$g}->{gidnumber}} = app->{cfg}->{ldap}->{defaults}->{group}->{$g};
   % }
-  <div class="card <%= $card_col ne '' ? 'border-' . $card_col : 'border-0' %> my-3">
+  
+  <div class="card <%= exists $dg{$v->{gidnumber}->[0]} ? 'border-' . $dg{$v->{gidnumber}->[0]}->{col} : 'border-0' %> my-3">
     <div class="row g-0 mt-3">
       <div class="col-xs-6 col-md-5 p-3">
 	% if ( defined $v->{jpegphoto}->[0] ) {
 	  <img src="data:image/jpg;base64,<%= Mojo::Util::b64_encode $v->{jpegphoto}->[0] %>"
-	       class="img-thumbnail mx-auto d-block<%= ' border-' . $card_col if $card_col ne '' %>" style="max-width: <%= app->{cfg}->{ldap}->{defaults}->{attr}->{jpegPhoto}->{max_side} %>px;"
+	       class="img-thumbnail mx-auto d-block float-end<%= ' border-' . $dg{$v->{gidnumber}->[0]}->{col} if exists $dg{$v->{gidnumber}->[0]} %>"
+	       style="max-width: <%= app->{cfg}->{ldap}->{defaults}->{attr}->{jpegPhoto}->{max_side} %>px;"
 	       alt="<%= $dn %>">
+	  
 	% } else {
 	  <i class="fa-solid fa-person-circle-question fa-10x float-end text-warning"></i>
 	% }
@@ -32,7 +35,7 @@
       <div class="col-xs-6 col-md-7">
 	<div class="card-body">
 	  % my $fullname = sprintf("%s %s", $v->{givenname}->[0] // '&mldr;', $v->{sn}->[0] // '&mldr;');
-          <h4 class="card-title fw-bold bg-secondary px-5 py-1<%= ' text-' . $card_col if $card_col ne '' %>"><%==  utf8::is_utf8($fullname) ? $fullname : decode_utf8($fullname) %>
+          <h4 class="card-title fw-bold bg-secondary px-5 py-1<%= ' text-' . $dg{$v->{gidnumber}->[0]}->{col} if exists $dg{$v->{gidnumber}->[0]} %>"><%==  utf8::is_utf8($fullname) ? $fullname : decode_utf8($fullname) %>
 	    <a href="/profile/modify/<%= $v->{uid}->[0] %>" class="btn btn-sm btn-secondary">
 	      <i class="fa-solid fa-gears"></i>
 	    </a>
@@ -40,9 +43,13 @@
 
 	  <dl class="row card-text">
 
-	    % if ($card_col eq 'danger') {
-	      <dt class="col-1 text-md-end text-danger py-2" title="status"><i class="fa-solid fa-handshake-slash fa-fw fa-2x"></i></dt>
-	      <dd class="col-11 user-select-all text-danger py-2 text-uppercase">disabled</dd>
+	    % if ( exists $dg{$v->{gidnumber}->[0]} ) {
+	      <dt class="col-1 text-md-end text-<%= $dg{$v->{gidnumber}->[0]}->{col} %> py-2" title="status">
+		<i class="fa-solid <%= $dg{$v->{gidnumber}->[0]}->{ico} %> fa-fw fa-lg"></i>
+	      </dt>
+	      <dd class="col-11 user-select-all text-<%= $dg{$v->{gidnumber}->[0]}->{col} %> py-2 text-uppercase fw-bold">
+		<%= $dg{$v->{gidnumber}->[0]}->{cn} %>
+	      </dd>
 	    % }
 
 	    <dt class="col-1 text-md-end" title="title"><i class="fa-lg fa-regular fa-address-card"></i></dt>

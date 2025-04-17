@@ -20,13 +20,30 @@
   </div>
 
 % if ( is_role 'admin,coadmin,hr', {cmp => 'or'} ) {
-  %= link_to '/project/new' => (class => "btn", title => "Add new project") => begin
+  %= link_to '/project/new' => (class => "btn text-start", title => "Add new project") => begin
     <i class="fa-solid fa-folder-plus"></i>
   % end
 % }
 
+<div class="btn-group mb-2 w-auto" role="group">
+  <button id="toggleAllBtn"
+	  accesskey="t"
+	  class="btn btn-sm btn-secondary"
+	  title="toggle state (collapsed/expanded) of each row: Alt-Shift-t"
+  >
+    <i id="toggleAllIcon" class="fa-solid fa-expand"></i>
+  </button>
+  <button id="invertAllBtn"
+	  accesskey="i"
+	  class="btn btn-sm btn-secondary"
+	  title="inverse state (collapsed/expanded) of each row: Alt-Shift-i"
+  >
+    <i id="invertAllIcon" class="fa-solid fa-right-left"></i>
+  </button>
+</div>
+
 %# vh-100 is important, without it dropwown are not shown for collapsed rows
-<div class="container-fluid vh-100">
+<div id="searchresult" class="container-fluid vh-100">
   % my ($col, $cn, $ct, $mn, $mt, $v);
   % for my $en (sort(keys(%$entries))) {
     % $v = $entries->{$en};
@@ -228,7 +245,7 @@
 		    <i class="<%= $brand %>"></i></a>
 		% }
 	      % } else {
-	      <span class="font-monospace">unknown</span>
+		<span class="font-monospace">unknown</span>
 	      % }
 	    </div>
 	    
@@ -242,3 +259,38 @@
     % $i++
   % }
 </div>
+
+<script>
+ $(document).ready(function() {
+   let allExpanded = false; // For toggleAllBtn
+
+   // Toggle all: Force expand or collapse all cards
+   $('#toggleAllBtn').click(function() {
+     const $allCollapses = $('#searchresult .collapse');
+     const $toggleIcon = $('#toggleAllIcon');
+     if (allExpanded) {
+       $allCollapses.collapse('hide');
+       $toggleIcon.removeClass('fa-compress').addClass('fa-expand');
+       allExpanded = false;
+     } else {
+       $allCollapses.collapse('show');
+       $toggleIcon.removeClass('fa-expand').addClass('fa-compress');
+       allExpanded = true;
+     }
+   });
+
+   // Invert all: Toggle each card individually
+   $('#invertAllBtn').click(function() {
+     // For each collapsible panel, toggle its current state
+     $('#searchresult .collapse').each(function() {
+       const $this = $(this);
+       if ($this.hasClass('show')) {
+         $this.collapse('hide');
+       } else {
+         $this.collapse('show');
+       }
+     });
+   });
+ });
+
+</script>

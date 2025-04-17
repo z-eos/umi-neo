@@ -88,8 +88,8 @@
 	
 	% foreach my $s (sort keys %$u_by_s) {
 	  <tr class="umi-text-xs">
-	    <td></td>
-	    <td>
+	    <td class="text-end"></td>
+	    <td class="text-center">
 	      % if ($servers_alive_list->{$s} > 0) {
 		<i class="fa-solid fa-plus text-success" title="alive"></i>
 	      % } else {
@@ -152,10 +152,10 @@
 	  % if (exists stash->{type} && stash->{type} eq 'user-driven-rows') {
 	    
 	    <tr class="umi-text-xs <%= 'table-' . $card_col if $card_col ne '' %>">
-	      <td></td>
+	      <td class="text-end"></td>
 	      <td><%= utf8::is_utf8($v->{sn}->[0]) ? $v->{sn}->[0] : decode_utf8($v->{sn}->[0]) %></td>
 	      <td><%= utf8::is_utf8($v->{givenname}->[0]) ? $v->{givenname}->[0] : decode_utf8($v->{givenname}->[0]) %></td>
-	      <td class="mono"><i class="fa-solid <%= $ico %> fa-fw text-secondary" title="<%= $title %>"></i></td>
+	      <td class="text-center"><i class="fa-solid <%= $ico %> fa-fw text-secondary" title="<%= $title %>"></i></td>
 	      <td>
 		% if ( exists $projects->{$dn} ) {
 		  % foreach (sort @{$projects->{$dn}}) {

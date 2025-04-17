@@ -236,45 +236,6 @@
 </div>
 
 <script>
-%# $(document).ready(function() {
-%#   $('#invertAllBtn').click(function() {
-%#     const $allCollapses = $('#searchresult .collapse');
-%#     const total = $allCollapses.length;
-%#     const openCount = $allCollapses.filter('.show').length;
-%#     const $icon = $('#invertAllIcon');
-%#     
-%#     if (openCount < total) {
-%#       // Expand all collapse panels
-%#       $allCollapses.collapse('show');
-%#     } else {
-%#       // Collapse all collapse panels
-%#       $allCollapses.collapse('hide');
-%#     }
-%#   });
-%# });
-%#
-%# $(document).ready(function() {
-%#   let allExpanded = false; // Track the forced state
-%#
-%#   $('#toggleAllBtn').click(function() {
-%#     const $allCollapses = $('#searchresult .collapse');
-%#     const $icon = $('#toggleAllIcon');
-%#
-%#     if (allExpanded) {
-%#       // Force collapse all cards
-%#       $allCollapses.collapse('hide');
-%#       $icon.removeClass('fa-compress').addClass('fa-expand');
-%#       allExpanded = false;
-%#     } else {
-%#       // Force expand all cards
-%#       $allCollapses.collapse('show');
-%#       $icon.removeClass('fa-expand').addClass('fa-compress');
-%#       allExpanded = true;
-%#     }
-%#   });
-%# });
- %#
- 
  $(document).ready(function() {
    let allExpanded = false; // For toggleAllBtn
 
