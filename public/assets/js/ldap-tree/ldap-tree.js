@@ -81,8 +81,10 @@ export const LdapTreeItem = defineComponent({
           return response.text();
         })
         .then(html => {
-          document.getElementById('workingfield').innerHTML = html;
-          
+          // scripts are ignored // document.getElementById('workingfield').innerHTML = html;
+	  // jQuery must be used  
+	  $('#workingfield').html(html)
+	    
           // Smooth scroll to top of page
           window.scrollTo({
             top: 0,

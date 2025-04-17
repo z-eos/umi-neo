@@ -1,6 +1,6 @@
 %# -*- mode: web; eval: (follow-mode t) -*-
 
-<h1 class="p-3">Home<sup title="authenticated"><i class="fa-solid fa-shield-halved fa-xs"></i></sup></h1>
+<h1 class="p-3">Home<sup title="authenticated"><i class="fa-solid fa-shield-halved fa-xs text-success"></i></sup></h1>
 
 <div class="card mb-3">
   <div id="keys" class="card-header"><h3><b>Access Keys Combinations</b></h3>
