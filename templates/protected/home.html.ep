@@ -15,28 +15,28 @@
 	  </tr>
 	</thead>
 	<tbody>
-	  % if ( $c->req->headers->header('User-Agent') =~ /irefox|ozilla/ ) {
+	  % if ( $c->req->headers->user_agent =~ /irefox|ozilla/ ) {
 	  <tr>
 	    <td class="h3" scope="row"><i class="fa-brands fa-firefox-browser"></i></td>
 	    <td class="align-middle">Alt + Shift + <kbd><em>key</em></kbd></td>
 	    <td class="align-middle">Ctrl + Alt + <kbd><em>key</em></kbd></td>
 	    <td class="align-middle">Alt + Shift + <kbd><em>key</em></kbd></td>
 	  </tr>
-	  % } elsif ( $c->req->headers->header('User-Agent') =~ /hrom/ ) {
+	  % } elsif ( $c->req->headers->user_agent =~ /hrom/ ) {
 	  <tr>
 	    <td class="h3" scope="row"><i class="fa-brands fa-chrome"></i></td>
 	    <td class="align-middle">Alt + <kbd><em>key</em></kbd></td>
 	    <td class="align-middle">Ctrl + Alt + <kbd><em>key</em></kbd></td>
 	    <td class="align-middle">Alt + <kbd><em>key</em></kbd></td>
 	  </tr>
-	  % } elsif ( $c->req->headers->header('User-Agent') =~ /afar/ ) {
+	  % } elsif ( $c->req->headers->user_agent =~ /afar/ ) {
 	  <tr>
 	    <td class="h3" scope="row"><i class="fa-brands fa-safari"></i></td>
 	    <td class="align-middle">N/A</td>
 	    <td class="align-middle">Ctrl + Alt + <kbd><em>key</em></kbd></td>
 	    <td class="align-middle">Alt + <kbd><em>key</em></kbd></td>
 	  </tr>
-	  % } elsif ( $c->req->headers->header('User-Agent') =~ /pera/ ) {
+	  % } elsif ( $c->req->headers->user_agent =~ /pera/ ) {
 	  <tr>
 	    <td class="h3" scope="row"><i class="fa-brands fa-opera"></i></td>
 	    <td class="align-middle" colspan="3">v &ge;15: [Alt] + <kbd><em>key</em></kbd>; v &le;12.1: [Shift] [Esc] + <kbd><em>key</em></kbd>

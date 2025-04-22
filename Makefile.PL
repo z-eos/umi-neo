@@ -30,9 +30,8 @@ requires 'Net::DNS';
 requires 'Net::LDAP';
 requires 'Try::Tiny';
 
-#--- umi related stuff ------------------------------------------------
-
 test_requires 'Test::More';
+test_requires 'Test::Mojo';
 
 install_script glob('script/*.pl');
 auto_install;

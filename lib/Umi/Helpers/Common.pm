@@ -181,7 +181,7 @@ stolen from http://ddiguru.com/blog/25-ip-address-conversions-in-perl
 
 =head2 h_get_rdn
 
-get RDN (outmost left attribute) of the given DN
+get RDN (name of the outmost left attribute) of the given DN
 
 =cut
 
@@ -236,14 +236,14 @@ digits, separated by this I<delimiter>
 		  my $re1 = $re->{mac}->{mac48};
 		  my $re2 = $re->{mac}->{cisco};
 
-		  $self->h_log($args);
+		  # $self->h_log($args);
 		  if ( $mac =~ /^$re1$/ || $mac =~ /^$re2$/ ) {
 		    my $normalized = lc($mac);
-		    $normalized =~ s/[-:]//g;
+		    $normalized =~ s/[-:\.]//g;
 		    if ($dlm ne '') {
 		      $normalized = join($dlm, $normalized =~ /(..)/g);
 		    }
-		    $self->h_log($normalized);
+		    # $self->h_log($normalized);
 		    return $normalized;
 		  } else {
 		    return 0;
@@ -296,7 +296,7 @@ QR CODE generator
 		    $arg->{ret}->{qr} = b64_encode $arg->{gd}->png;
 		  }
 		  catch { $arg->{ret}->{error} = $_ . ' (in general max size is about 1660 characters of Latin1 codepage)'; };
-
+		  # $self->h_log($arg->{ret});
 		  return $arg->{ret};
 		});
 
@@ -415,9 +415,8 @@ wrapper for ssh-keygen(1)
 
 				  $self->session->{user_obj}->{gecos}
 				  // sprintf("%s %s",
-					     $self->session->{user_obj}->{givenname},
-					     $self->session->{user_obj}->{sn})
-				  // 'noname',
+					     $self->session->{user_obj}->{givenname} // 'noname',
+					     $self->session->{user_obj}->{sn} // 'noname'),
 
 				  $arg->{name}->{email}
 				  // $self->session->{user_obj}->{mail}
@@ -749,11 +748,11 @@ END_INPUT
 		    $p->{xk}->{separator_character} = $par->{xk_separator_character_char};
 		  } elsif ($p->{xk}->{separator_character} eq 'RANDOM' && length($par->{xk_separator_character_random}) == 1) {
 		    # !!! WARNING need to verify
-		    $par->{xk_separator_character_random} .= $par->{xk_separator_character_random};
+		    # $par->{xk_separator_character_random} .= $par->{xk_separator_character_random};
+		    # my @arr = split(//, $par->{xk_separator_character_random});
+		    # $p->{xk}->{separator_alphabet} = \@arr;
+		    $p->{xk}->{separator_alphabet} = [ $par->{xk_separator_character_random}, $par->{xk_separator_character_random} ];
 		  }
-
-		  my @arr = split(//, $par->{xk_separator_character_random});
-		  $p->{xk}->{separator_alphabet} = \@arr;
 
 		  #p $p;
 		  if (! defined $p->{pwd} || $p->{pwd} eq '') {

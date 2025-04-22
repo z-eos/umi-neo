@@ -11,3 +11,10 @@ Mojo reincarnation of [umi](https://github.com/z-eos/umi)
 ### Config
 
 config file is expected to reside in `conf/`
+
+### Tests
+
+```
+#> cd /path/to/root/of/proj
+#> prove -lrv t
+```
