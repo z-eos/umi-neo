@@ -1209,12 +1209,11 @@ sub project_new ($self) {
     push @{$debug->{$msg->{status}}}, $msg->{message};
     my @groups = keys %{$self->{app}->{cfg}->{ui}->{project}->{team}->{roles}};
     foreach my $g (@groups) {
-      next if ! exists $par->{'team_' . $g};
       ### FIX proj_name must comply regex ^[A-Za-z0-9.-_]+$
       $attrs = {
 		objectClass => $self->{app}->{cfg}->{ldap}->{objectClass}->{project_groups},
 		cn => sprintf("%s_%s", lc $par->{proj_name}, $g),
-		memberUid => $par->{'team_' . $g}
+		memberUid => $par->{$g}
 	       };
       my $gn = $ldap->last_num($self->{app}->{cfg}->{ldap}->{base}->{project_groups}, '(cn=*)', 'gidNumber');
       if ( $gn->[1] ) {
