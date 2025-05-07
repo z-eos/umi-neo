@@ -1,5 +1,4 @@
 # -*- mode: cperl; eval: (follow-mode 1); -*-
-#
 
 package Umi::Helpers::Common;
 
@@ -45,11 +44,13 @@ ERROR: %s
 code: %s; text: %s
 base: %s
 filter: %s
-attrs: %s\n", $message->error_name, $message->code // 'NO_MESSAGE_CODE',
+attrs: %s\n",
+				 $message->error_name,
+				 $message->code // 'NO_MESSAGE_CODE',
 				 $message->error_text // 'NO_MESSAGE_ERROR_TEXT',
 				 $search_arg->{base} // 'NO_BASE',
 				 $search_arg->{filter} // '(objectClass=*)',
-				 exists $search_arg->{attrs} ? join(" ", @{$search_arg->{attrs}}) : 'NONE',
+				 exists $search_arg->{attrs} ? join(' ', @{$search_arg->{attrs}}) : 'NONE',
 				);
 		});
 
@@ -95,6 +96,39 @@ simple transliteration to ASCII with normalization to [:alnum:]
 		  my $ou = unidecode($in);
 		  $ou =~ s/[^[:alnum:]\.-_]//g;s/[^[:alnum:]\s]//g;
 		  return $ou;
+		});
+
+=head2 h_lrtrim
+
+remove white space/s from both ends of each string
+
+if string is "delim" delimited, then white space/s could be removed
+before and after the delimiter (in most cases str is DN or RDN)
+
+=head3 EXAMPLE
+
+    in: `  uid=abc ,  ou=ABC  ,dc=DDD '
+    ou: `uid=abc,ou=ABC,dc=DDD'
+
+    in: `  abcABCDDD '
+    ou: `abcABCDDD'
+
+=cut
+
+  $app->helper( h_lrtrim => sub {
+		  my ($self, $args) = @_;
+		  my $arg = { str => $args->{str},
+			      delim => $args->{delim} || ',',
+			      tosplit => $args->{tosplit} || 0, };
+		  if ( $arg->{tosplit} ) {
+		    my @ar = split(/$arg->{delim}/, $arg->{str});
+		    $_ =~ s/^\s+|\s+$//g foreach @ar;
+		    $arg->{res} = join( $arg->{delim}, @ar);
+		  } else {
+		    $arg->{str} =~ s/^\s+|\s+$//g;
+		    $arg->{res} = $arg->{str};
+		  }
+		  return $arg->{res};
 		});
 
 =head2 h_compact
@@ -716,75 +750,113 @@ END_INPUT
   # PWDGEN
   $app->helper( h_pwdgen => sub {
 		  my ( $self, $par ) = @_;
-		  # return {} if ! %$par;
+		  # $self->h_log($par);
+		  my ($xk, $error);
 		  my $cf = $app->{cfg}->{tool}->{pwdgen} // undef;
+		  my $p;
+		  # as pwd_alg value, form returns preset name as class name defined in templates/protected/tool/pwdgen-create.html.ep
+		  $p->{palg} = exists $par->{pwd_alg} ? uc substr($par->{pwd_alg}, 4) : $cf->{xk}->{preset_default};
+		  $p->{pnum} = exists $par->{pwd_num} ? $par->{pwd_num} : $cf->{pnum};
+		  $p->{pwd}->{clear} = $par->{pwd_vrf}  // undef;
+		  # $self->h_log($p);
 
-		  if ( ! defined $par || ref($par) ne 'HASH' ) {
-		    $par->{xk_separator_character} = 'CHAR';
-		    $par->{xk_separator_character_char} = $cf->{xk}->{separator_character};
-		    # $self->h_log($cf->{separator_character});
-		  }
-		  my $p =
-		    {
-		     pwd => $par->{pwd_vrf} // undef,
-		     xk => {
-			    case_transform            => $par->{xk_case_transform} // 'RANDOM',
-			    num_words                 => $par->{xk_num_words} // 5,
-			    padding_characters_after  => $par->{xk_padding_characters_after} // 0,
-			    padding_characters_before => $par->{xk_padding_characters_before} // 0,
-			    padding_digits_after      => $par->{xk_padding_digits_after} // 0,
-			    padding_digits_before     => $par->{xk_padding_digits_before} // 0,
-			    padding_type              => $par->{xk_padding_type} // 'NONE',
-			    separator_character       => $par->{xk_separator_character} // 'RANDOM',
-			    separator_alphabet        => $par->{xk_separator_alphabet},
-			    word_length_max           => $par->{xk_word_length_max} // 8,
-			    word_length_min           => $par->{xk_word_length_min} // 4
-			   },
-		     pnum => $par->{pwd_num} // $cf->{pnum} || 1,
-		     palg => $par->{pwd_alg} // $cf->{palg} // $cf->{xk}->{preset_default} || 'XKCD',
-		    };
+		  if (! defined $p->{pwd}->{clear} || $p->{pwd}->{clear} eq '') {
+		    ##########################################
+		    # PASSWORD GENERATION (not verification) #
+		    ##########################################
 
-		  if ($p->{xk}->{separator_character} eq 'CHAR') {
-		    $p->{xk}->{separator_character} = $par->{xk_separator_character_char};
-		  } elsif ($p->{xk}->{separator_character} eq 'RANDOM' && length($par->{xk_separator_character_random}) == 1) {
-		    # !!! WARNING need to verify
-		    # $par->{xk_separator_character_random} .= $par->{xk_separator_character_random};
-		    # my @arr = split(//, $par->{xk_separator_character_random});
-		    # $p->{xk}->{separator_alphabet} = \@arr;
-		    $p->{xk}->{separator_alphabet} = [ $par->{xk_separator_character_random}, $par->{xk_separator_character_random} ];
-		  }
+		    Crypt::HSXKPasswd->module_config('DEBUG', $cf->{xk}->{cfg}->{DEBUG});
+		    Crypt::HSXKPasswd->module_config('ENTROPY_WARNINGS', $cf->{xk}->{cfg}->{ENTROPY_WARNINGS});
+		    Crypt::HSXKPasswd->module_config('LOG_ERRORS', $cf->{xk}->{cfg}->{LOG_ERRORS});
+		    my $xk_cf = Crypt::HSXKPasswd->preset_config( $p->{palg} );
+		    # $self->h_log($xk_cf);
 
-		  #p $p;
-		  if (! defined $p->{pwd} || $p->{pwd} eq '') {
-		    ### password generation (not verification)
-		    if ( defined $p->{palg} ) {
+		    if ( defined $par && ref($par) eq 'HASH' && exists $par->{xk_num_words} ) {
+		      ###########################################################################################
+		      # Crypt::HSXKPasswd(3) -> CONFIGURATION                                                   #
+		      # sep-*, pad-* pch-* are defined in templates/protected/tool/pwdgen-create.html.ep        #
+		      ###########################################################################################
 
-		      Crypt::HSXKPasswd->module_config('LOG_ERRORS', 1);
-		      Crypt::HSXKPasswd->module_config('DEBUG', 0);
-		      ## ??? my $default_config = Crypt::HSXKPasswd->default_config();
-		      ## all alg use same config structure, so here we fetch default
-		      ## config for pwd_alg and overwrite options with form input
-		      my $xk_cf = Crypt::HSXKPasswd->preset_config( $p->{palg} );
-		      # p $xk_cf;
-		      foreach (keys %{$xk_cf}) {
-			$xk_cf->{$_} = $p->{xk}->{$_} if exists $p->{xk}->{$_};
-			#$xk_cf->{$_} = $par->{'xk_'.$_} if exists $par->{'xk_'.$_};
+		      if ( exists $par->{xk_separator_character} && $par->{xk_separator_character} eq 'sep-none' ) {
+			$par->{xk_separator_character} = 'NONE';
+			delete $par->{xk_separator_character_char};
+			delete $par->{xk_separator_alphabet};
+		      } elsif ( exists $par->{xk_separator_character} && $par->{xk_separator_character} eq 'sep-char' ) {
+			$par->{xk_separator_character} = $par->{xk_separator_character_char};
+			delete $par->{xk_separator_character_char};
+			delete $par->{xk_separator_alphabet};
+		      } elsif ( exists $par->{xk_separator_character} && $par->{xk_separator_character} eq 'sep-random' ) {
+			$par->{xk_separator_character} = 'RANDOM';
+			$par->{xk_separator_alphabet} = [ split //, $self->h_lrtrim({str => $par->{'xk_separator_alphabet'}}) ];
+			delete $par->{xk_separator_character_char};
 		      }
-		      $xk_cf->{separator_alphabet} = $p->{xk}->{separator_alphabet}
-			if $p->{xk}->{separator_character} eq 'RANDOM';
-		      #p $xk_cf;
-		      my $xk = Crypt::HSXKPasswd->new( config => $xk_cf );
-		      $p->{pwd}->{clear}    = $xk->password( $p->{pnum} );
-		      %{$p->{pwd}->{stats}} = $xk->stats();
-		      $p->{pwd}->{status}   = $xk->status();
 
+		      if ( exists $par->{xk_padding_type} && $par->{xk_padding_type} eq 'pad-none' ) {
+			$par->{xk_padding_type} = 'NONE';
+			delete $par->{xk_pad_to_length};
+			delete $par->{xk_padding_character};
+			delete $par->{xk_padding_character_random};
+			delete $par->{xk_padding_character_after};
+			delete $par->{xk_padding_character_before};
+			delete $par->{xk_padding_character_separator};
+		      } elsif ( exists $par->{xk_padding_type} && $par->{xk_padding_type} eq 'pad-fixed' ) {
+			$par->{xk_padding_type} = 'FIXED';
+		      } elsif ( exists $par->{xk_padding_type} && $par->{xk_padding_type} eq 'pad-adaptive' ) {
+			$par->{xk_padding_type} = 'ADAPTIVE';
+		      }
+
+		      if ( exists $par->{xk_padding_character} && $par->{xk_padding_character} eq 'pch-separator' ) {
+			$par->{xk_padding_character} = 'SEPARATOR';
+			delete $par->{xk_padding_alphabet};
+		      } elsif ( exists $par->{xk_padding_character} && $par->{xk_padding_character} eq 'pch-random' ) {
+			$par->{xk_padding_character} = 'RANDOM';
+			$par->{xk_padding_alphabet} = [ split //, $self->h_lrtrim({str => $par->{'xk_padding_alphabet'}}) ];
+		      } elsif ( exists $par->{xk_padding_character} && $par->{xk_padding_character} eq 'pch-character' ) {
+			$par->{xk_padding_character} = $par->{xk_padding_character_char};
+			delete $par->{xk_padding_character_char};
+			delete $par->{xk_padding_alphabet};
+		      }
+
+		      # $self->h_log($par);
+
+		      if (keys %{$par}) {
+			my $j;
+			foreach my $i (keys %{$par}) {
+			  next if $i !~ /^xk_/;
+			  $j = substr $i, 3;
+
+			  if ( ! defined $par->{$i} ||
+			       $par->{$i} eq '' ||
+			       (exists $par->{$i} && exists $xk_cf->{$j} && $xk_cf->{$j} eq $par->{$i}) ) {
+			    next;
+			  } else {
+			    $xk_cf->{$j} = $par->{$i};
+			  }
+
+			}
+		      }
+		      # $self->h_log($xk_cf);
+
+		      try {
+			$xk = Crypt::HSXKPasswd->new( config => $xk_cf );
+		      }
+		      catch { $error = $_; };
+		      if ( ! defined $error ) {
+			$p->{pwd}->{clear}    = $xk->password( $p->{pnum} );
+			%{$p->{pwd}->{stats}} = $xk->stats();
+			$p->{pwd}->{status}   = $xk->status();
+		      } else {
+			$self->h_log($error);
+		      }
 		    }
-		  } elsif ( ref($p->{pwd}) ne 'HASH' ) {
-		    ### password verification
-		    $p->{tmp} = $p->{pwd};
-		    delete $p->{pwd};
-		    $p->{pwd}->{clear} = $p->{tmp};
 		  }
+		  # elsif ( ref($p->{pwd}) ne 'HASH' ) {
+		  #   #########################
+		  #   # PASSWORD VERIFICATION #
+		  #   #########################
+		  #   $p->{return}->{clear} = $p->{pwd};
+		  # }
+
 		  # http://www.openldap.org/faq/data/cache/347.html
 		  #
 		  # RFC 2307 passwords (http://www.openldap.org/faq/data/cache/346.html)
@@ -803,8 +875,11 @@ END_INPUT
 		     ssha  => '{SSHA}' . $self->h_pad_base64(encode_base64( $sha->digest . $cf->{sha}->{salt}, ''))
 		    };
 
-		  $p->{return}->{stats}  = $p->{pwd}->{stats}  if $p->{pwd}->{stats};
-		  $p->{return}->{status} = $p->{pwd}->{status} if $p->{pwd}->{status};
+		  $p->{return}->{error}  = $error  if $error;
+		  $p->{return}->{stats}  = $p->{pwd}->{stats}  if exists $p->{pwd} && exists $p->{pwd}->{stats};
+		  $p->{return}->{status} = $p->{pwd}->{status} if exists $p->{pwd} && exists $p->{pwd}->{status};
+
+		  # $self->h_log($p);
 
 		  return $p->{return};
 		});
@@ -826,11 +901,11 @@ END_INPUT
     added, changed, and unchanged keys and their values.
 
     [
-        [0] "add",
-        [1] [
-                [0] "roomNumber",
-                [1] 2
-            ]
+	[0] "add",
+	[1] [
+		[0] "roomNumber",
+		[1] 2
+	    ]
     ]
 
 =cut
@@ -1056,15 +1131,15 @@ on input expects:
 		  my $html = qq{
 <div class="btn-group $wrapper_class" id="h_element_cp_download_btns">
     <button type="button" class="$button_class" title="Copy to clipboard"
-            onclick="copyToClipboard('#$target_id')">
-        <i class="fas fa-copy"></i>
+	    onclick="copyToClipboard('#$target_id')">
+	<i class="fas fa-copy"></i>
     </button>
     <button type="button" class="$button_class"  title="Download as text/plain"
-            onclick="downloadString(document.querySelector('#$target_id').innerText, 'text/plain', '$file_name')">
-        <i class="fas fa-download"></i>
+	    onclick="downloadString(document.querySelector('#$target_id').innerText, 'text/plain', '$file_name')">
+	<i class="fas fa-download"></i>
     </button>
 </div>
-        };
+	};
 
 		  return $html;
 		});
@@ -1138,26 +1213,26 @@ convert timestamp like YYYY-mm-dd to YYYYmmdd000000Z
   # =cut
 
   #     $app->helper( h_domains_to_hash => sub {
-  # 		   my ($self, $domains) = @_;
-  # 		   #$self->h_log($domains);
-  # 		   # Hash to group domains by their SLD
-  # 		   my %grouped_domains;
-  # 		   foreach my $domain (@$domains) {
-  # 		     if ($domain =~ /^(?:.*\.)?([^.]+)\.([^.]+)$/) {
-  # 		       my ($tld, $sld) = ($1, $2);
-  # 		       push @{ $grouped_domains{$sld} }, $tld;
-  # 		     }
-  # 		   }
-  # 		   $self->h_log(%grouped_domains);
+  #		   my ($self, $domains) = @_;
+  #		   #$self->h_log($domains);
+  #		   # Hash to group domains by their SLD
+  #		   my %grouped_domains;
+  #		   foreach my $domain (@$domains) {
+  #		     if ($domain =~ /^(?:.*\.)?([^.]+)\.([^.]+)$/) {
+  #		       my ($tld, $sld) = ($1, $2);
+  #		       push @{ $grouped_domains{$sld} }, $tld;
+  #		     }
+  #		   }
+  #		   $self->h_log(%grouped_domains);
 
-  # 		   # Sort TLDs within each SLD group
-  # 		   foreach my $sld (keys %grouped_domains) {
-  # 		     my @sorted_tlds = sort @{ $grouped_domains{$sld} };
-  # 		     $grouped_domains{$sld} = \@sorted_tlds;
-  # 		   }
+  #		   # Sort TLDs within each SLD group
+  #		   foreach my $sld (keys %grouped_domains) {
+  #		     my @sorted_tlds = sort @{ $grouped_domains{$sld} };
+  #		     $grouped_domains{$sld} = \@sorted_tlds;
+  #		   }
 
-  # 		   return \%grouped_domains;
-  # 		 });
+  #		   return \%grouped_domains;
+  #		 });
 
 
 =head2 h_branch_add_if_not_exists

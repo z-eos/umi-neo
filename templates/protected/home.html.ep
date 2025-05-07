@@ -1,6 +1,6 @@
 %# -*- mode: web; eval: (follow-mode t) -*-
 
-<h1 class="p-3">Home<sup title="authenticated"><i class="fa-solid fa-shield-halved fa-xs text-success"></i></sup></h1>
+<h1 class="p-3">Home<sup title="authenticated as <%= session->{uid} %>"><i class="fa-solid fa-shield-halved fa-xs text-success"></i></sup></h1>
 
 <div class="card mb-3">
   <div id="keys" class="card-header"><h3><b>Access Keys Combinations</b></h3>
@@ -115,15 +115,15 @@
 	     <td>search results</td>
 	     <td>focus each next leaf object menu ( Enter key to un/collapse )</td>
 	     </tr> -->
-	
+
       </tbody>
     </table>
-    
+
   </div>
 </div>
 
 %#<script>
-%#  
+%#
 %#  var colors = [
 %#      "umi-text-bg-blue",
 %#      "umi-text-bg-indigo",
@@ -150,5 +150,5 @@
 %#
 %#  color = colors[Math.floor(Math.random()*colors.length)];
 %#  $("#tips").addClass(color);
-%#  
+%#
 %#</script>

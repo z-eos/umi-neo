@@ -17,16 +17,34 @@
 %# expected debug message format: status => [ 'message', ... ]
 % if ( defined $debug ) {
   % foreach my $k (sort(keys(%$debug))) {
-    <div id="message" class="alert alert-<%= app->{cfg}->{ui}->{page}->{debug}->{status}->{$k} %> mt-4 ">
-      <div class="">
-	<i class="fa-solid fa-<%= app->{cfg}->{ui}->{page}->{debug}->{ico}->{$k} %>"></i>
-	<ul class="fload-start">
-	  % foreach (@{$debug->{$k}}) {
-	    %# <li class="user-select-all"><%== $_ %></li>
-	    <li><%== $_ %></li>
-	  % }
-	</ul>
-      </div>
+    <div id="message" class="alert alert-dismissible alert-<%= app->{cfg}->{ui}->{page}->{debug}->{status}->{$k} %> mt-4 ">
+	<i class="fa-solid fa-<%= app->{cfg}->{ui}->{page}->{debug}->{ico}->{$k} %> me-3"></i>
+	%== h_element_cp_download_btns( 'debug-' . $k, 'debug-' . $k . '.txt', 'btn btn-' . app->{cfg}->{ui}->{page}->{debug}->{status}->{$k} . ' btn-sm' );
+	<br>
+
+      % if ( $k eq 'error' ) {
+	<h4 class="mt-2 alert-heading">Hey, <%= session('user_obj')->{givenname} %>!</h4>
+	<i>Do not panic! Just report it to admins.</i>
+	<hr class="">
+	<pre class="mt-0 umi-text-tiny">
+      % }
+      <ul id="debug-<%= $k %>" class="ms-0 mt-2">
+	% foreach my $i (@{$debug->{$k}}) {
+	  <li>
+	    <%== $i %>
+	  </li>
+	% }
+      </ul>
+      % if ( $k eq 'error' ) {
+	</pre>
+      % }
+      <button type="button" class="umi-btn-close" data-bs-dismiss="alert" aria-label="Close">
+	<i class="fa-solid fa-xmark text-danger"></i>
+      </button>
     </div>
   % }
+
+  % delete session->{debug};
+  % delete stash->{debug};
+
 % }

@@ -241,91 +241,105 @@ sub sysinfo ($self) {
   @{$chi->{namespaces}} = $self->chi('fs')->get_namespaces;
 
   return $self->render( template => 'protected/tool/sysinfo',
-		        schema => encode_json(\%s),
+			schema => encode_json(\%s),
 			chi => $chi,
 			); # layout => undef);
 }
 
 sub pwdgen ($self) {
+  my $cf = $self->{app}->{cfg}->{tool}->{pwdgen}->{xk};
   my $par = $self->req->params->to_hash;
-  # $self->h_log($par);
+  $self->h_log($par);
 
-  ### call from another place (first run)
-  if (exists $par->{pwd_vrf} && $par->{pwd_vrf} ne '' && ! exists $self->session->{pw}->{vrf}) {
-    $self->stash({ pwd_vrf => $par->{pwd_vrf} });
-    $self->session({ pw => { vrf => $par->{pwd_vrf} } });
-    # delete $par->{pwd_vrf};
+  $par->{pwd_chg_rdn} = $self->h_get_rdn_val($par->{pwd_chg_dn}) if ! exists $par->{pwd_chg_rdn};
+  if ( ! exists $par->{pwd_chg_svc} && $par->{pwd_chg_dn} =~ /authorizedService=/ ) {
+    my $re = qr/^.*,authorizedService=([^,]+),uid=.*,$self->{app}->{cfg}->{ldap}->{base}->{acc_root}$/i;
+    $par->{pwd_chg_svc} = $1 if $par->{pwd_chg_dn} =~ /$re/;
   }
-  if (exists $par->{pwd_chg_dn} && $par->{pwd_chg_dn} ne '' && ! exists $self->session->{pw}->{chg}) {
-    $self->stash({ pwd_chg_dn  => $par->{pwd_chg_dn},
-		   pwd_chg_rdn => $par->{pwd_chg_rdn},
-		   pwd_chg_svc => $par->{pwd_chg_svc} });
-    $self->session({ pw => { chg => { dn  => $par->{pwd_chg_dn},
-				      svc => $par->{pwd_chg_svc},
-				      rdn => $par->{pwd_chg_rdn} } } });
-    $self->req->params->remove;
-    delete $par->{pwd_chg_dn};
-    delete $par->{pwd_chg_rdn};
-    delete $par->{pwd_chg_svc};
-  }
-  # $self->h_log($self->session->{pwd_chg});
-  # $self->h_log($par);
 
-  return $self->render( template => 'protected/tool/pwdgen' ) unless exists $par->{pwd_alg} || exists $par->{pwd_vrf};
+  $self->stash({ pwdgen_params => $par }) if exists $par->{pwd_chg_dn};
 
-  #   # $v->has_data;
+  return $self->render( template => 'protected/tool/pwdgen' ) unless exists $par->{pwd_vrf} || exists $par->{pwd_alg};
+
   my $v = $self->validation;
-  $v->required('pwd_alg');
-  # # $self->h_log($v->error('proj_name'));
-  # # $v->error(team_pm => ['Select at least one person.']) if ! exists $par->{team_pm};
 
-  # if (exists $par->{pwd_chg_dn} && $par->{pwd_chg_dn} eq '' && exists $self->session->{pwd_chg}) {
-  if ( exists $self->session->{pw}->{vrf} ) {
-    $self->stash({ pwd_vrf => $self->session->{pw}->{vrf} });
-    $par->{pwd_vrf} = $self->session->{pw}->{vrf};
-    delete $self->session->{pw}->{vrf};
+  if ( ! exists $par->{pwd_vrf} ) {
+    $v->error( xk_num_words => ['can not be empty']) if ! exists $par->{xk_num_words} || ( exists $par->{xk_num_words} && length($par->{xk_num_words}) < 1 );
+
+    $v->error( xk_separator_character_char => ['can not be empty'] )
+      if exists $par->{xk_separator_character} && $par->{xk_separator_character} eq 'sep-char'
+      && exists $par->{xk_separator_character_char} && $par->{xk_separator_character_char} eq '';
+
+    $v->error( xk_separator_alphabet => ['can not be empty'])
+      if exists $par->{xk_separator_character} && $par->{xk_separator_character} eq 'sep-random'
+      && exists $par->{xk_separator_alphabet} && length($par->{xk_separator_alphabet}) < 1;
+
+    $v->error( xk_padding_digits_before => ['can not be empty']) if exists $par->{xk_padding_digits_before} && length($par->{xk_padding_digits_before}) < 1;
+    $v->error( xk_padding_digits_after => ['can not be empty']) if exists $par->{xk_padding_digits_after} && length($par->{xk_padding_digits_after}) < 1;
+
+    $v->error( xk_padding_characters_before => ['can not be empty'])
+      if exists $par->{xk_padding_type} && $par->{xk_padding_type} eq 'pad-fixed'
+      && exists $par->{xk_padding_characters_before} && length($par->{xk_padding_characters_before}) < 1;
+    $v->error( xk_padding_characters_after => ['can not be empty'])
+      if exists $par->{xk_padding_type} && $par->{xk_padding_type} eq 'pad-fixed'
+      && exists $par->{xk_padding_characters_after} && length($par->{xk_padding_characters_after}) < 1;
+
+    $v->error( xk_padding_character_char => ['can not be empty'])
+      if exists $par->{xk_padding_character} && $par->{xk_padding_character} eq 'pch-character'
+      && exists $par->{xk_padding_character_char} && length($par->{xk_padding_character_char}) < 1;
+    $v->error( xk_padding_alphabet => ['can not be empty'])
+      if exists $par->{xk_padding_character} && $par->{xk_padding_character} eq 'pch-random'
+      && exists $par->{xk_padding_alphabet} && length($par->{xk_padding_alphabet}) < 1;
+
+    $v->error( xk_pad_to_length => ['can not be empty'])
+      if exists $par->{xk_padding_type} && $par->{xk_padding_type} eq 'pad-adaptive'
+      && exists $par->{xk_pad_to_length} && length($par->{xk_pad_to_length}) < 1;
   }
-  if ( exists $self->session->{pw}->{chg} ) {
-    $self->h_log($self->session->{pw}->{chg});
-    $self->stash({ pwd_chg_dn  => $self->session->{pw}->{chg}->{dn},
-		   pwd_chg_rdn => $self->session->{pw}->{chg}->{rdn},
-		   pwd_chg_svc => $self->session->{pw}->{chg}->{svc} });
-    delete $self->session->{pw}->{chg};
-  }
 
-  my $pwdgen = $self->h_pwdgen($par);
-  # $self->h_log($pwdgen);
+  my $pwdgen;
+  if ( ! $v->has_error ) {
 
-  my ($ldap, $search, $search_arg, $pwd_from_ldap, $match, $mesg);
-  if (exists $self->stash->{pwd_chg_dn}) {
-    $ldap = Umi::Ldap->new( $self->{app}, $self->session('uid'), $self->session('pwd') );
-    if (exists $self->stash->{pwd_vrf}) {
-      ### password verification against LDAP
-      $search_arg = { base => $self->stash->{pwd_chg_dn}, attrs => ['userPassword'] };
-      $search = $ldap->search( $search_arg );
-      $pwd_from_ldap = $search->entry->get_value('userPassword');
-      $self->h_log($pwd_from_ldap);
-      $match = $pwd_from_ldap eq $pwdgen->{ssha} ? 1 : 0;
-      $self->stash({debug => { $match ? 'ok' : 'warn' => [ 'password: ' . $pwdgen->{clear}, $match ? 'match' : 'does not match' ]}});
+    # $self->h_log($par);
+    $pwdgen = $self->h_pwdgen($par);
+    # $self->h_log($pwdgen);
+    if ( exists $pwdgen->{error} ) {
+      $self->stash({debug => { error => [ $pwdgen->{error} ]}});
     } else {
-      ### userPassword attribute modification
-      $mesg = $ldap->modify( $self->stash->{pwd_chg_dn}, [ replace => [ 'userPassword' => $pwdgen->{ssha}, ], ] );
-      $self->h_log($mesg );
-      # $self->h_log( $self->{app}->h_ldap_err($mesg, undef) ) if $mesg->code;
-      $self->stash({debug => { $mesg->{status} => [ $mesg->{message},
-						    'new password: <span class="badge text-bg-secondary user-select-all">' .
-						    $pwdgen->{clear} .
-						    '</span>' ]
-			     }});
+      my ($ldap, $search, $search_arg, $pwd_from_ldap, $match, $mesg);
+      if (exists $par->{pwd_chg_dn}) {
+	$ldap = Umi::Ldap->new( $self->{app}, $self->session('uid'), $self->session('pwd') );
+	if (exists $par->{pwd_vrf}) {
+	  ### password verification against LDAP
+	  $search_arg = { base => $par->{pwd_chg_dn}, attrs => ['userPassword'] };
+	  $search = $ldap->search( $search_arg );
+	  $self->h_log( $self->h_ldap_err($search, $search_arg) ) if $search->code;
+	  $pwd_from_ldap = $search->entry->get_value('userPassword');
+	  $self->h_log($pwd_from_ldap);
+	  $match = $pwd_from_ldap eq $pwdgen->{ssha} ? 1 : 0;
+	  $self->stash({debug => { $match ? 'ok' : 'warn' => [ sprintf('provided password: %s %s',
+								       $pwdgen->{clear},
+								       $match ? 'match' : 'does not match') ]
+				 }});
+	} else {
+	  ### userPassword attribute modification
+	  $mesg = $ldap->modify( $par->{pwd_chg_dn}, [ replace => [ 'userPassword' => $pwdgen->{ssha}, ], ] );
+	  $self->h_log($mesg );
+	  # $self->h_log( $self->{app}->h_ldap_err($mesg, undef) ) if $mesg->code;
+	  $self->stash({debug =>
+			{ $mesg->{status} => [ $mesg->{message},
+					       sprintf('new password: <span class="badge text-bg-secondary user-select-all">%s</span>',
+						       $pwdgen->{clear}) ]
+			}});
+	}
+      } else {
+	$self->stash({debug =>
+		      { $pwdgen->{stats}->{passwords_generated} > 0
+			? 'ok' : 'warn' => [ sprintf('new password: <span class="badge text-bg-secondary user-select-all">%s</span>',
+						     $pwdgen->{clear}) ]
+		      }});
+      }
     }
-  } else {
-    $self->stash({debug => { $pwdgen->{stats}->{passwords_generated} > 0
-			     ? 'ok' : 'warn' => [ 'new password: <span class="badge text-bg-secondary user-select-all">' .
-						  $pwdgen->{clear} .
-						  '</span>' ]
-			   }});
   }
-
   return $self->render(template => 'protected/tool/pwdgen',
 		       pwdgen_params => $par,
 		       pwdgen => $pwdgen,
@@ -456,7 +470,7 @@ sub modify ($self) {
 
       if ( $n eq 'userCertificate;binary' ) {
 	$crt = $self->h_cert_info({ cert => $p->{$n}, ts => "%Y%m%d%H%M%S", });
-        $p->{umiUserCertificateSn}        = '' . $crt->{'S/N'},
+	$p->{umiUserCertificateSn}        = '' . $crt->{'S/N'},
 	$p->{umiUserCertificateNotBefore} = '' . $crt->{'Not Before'},
 	$p->{umiUserCertificateNotAfter}  = '' . $crt->{'Not After'},
 	$p->{umiUserCertificateSubject}   = '' . $crt->{Subject},
@@ -899,19 +913,19 @@ sub profile_new ($self) {
   #   my $sides = $self->h_img_info($upload->{jpegPhoto}->slurp);
   #   if ( $sides->{width} > $self->{app}->{cfg}->{ldap}->{defaults}->{attr}->{jpegPhoto}->{max_side} ) {
   #     $jpegPhoto_error .= sprintf('File %s width is %s what is bigger than %s px; ',
-  # 				  $upload->{jpegPhoto}->filename,
-  # 				  $sides->{width},
-  # 				  $self->{app}->{cfg}->{ldap}->{defaults}->{attr}->{jpegPhoto}->{max_side});
+  #				  $upload->{jpegPhoto}->filename,
+  #				  $sides->{width},
+  #				  $self->{app}->{cfg}->{ldap}->{defaults}->{attr}->{jpegPhoto}->{max_side});
   #   } elsif ( $sides->{height} > $self->{app}->{cfg}->{ldap}->{defaults}->{attr}->{jpegPhoto}->{max_side} ) {
   #     $jpegPhoto_error .= sprintf('File %s height is %s what is bigger than %s px; ',
-  # 				  $upload->{jpegPhoto}->filename,
-  # 				  $sides->{height},
-  # 				  $self->{app}->{cfg}->{ldap}->{defaults}->{attr}->{jpegPhoto}->{max_side});
+  #				  $upload->{jpegPhoto}->filename,
+  #				  $sides->{height},
+  #				  $self->{app}->{cfg}->{ldap}->{defaults}->{attr}->{jpegPhoto}->{max_side});
   #   }
   # }
   # $jpegPhoto_error .= sprintf('File %s is bigget than %s bytes.',
-  # 			      $upload->{jpegPhoto}->filename,
-  # 			      $self->{app}->{cfg}->{ldap}->{defaults}->{attr}->{jpegPhoto}->{max_size})
+  #			      $upload->{jpegPhoto}->filename,
+  #			      $self->{app}->{cfg}->{ldap}->{defaults}->{attr}->{jpegPhoto}->{max_size})
   #   if $upload->{jpegPhoto}->size > $self->{app}->{cfg}->{ldap}->{defaults}->{attr}->{jpegPhoto}->{max_size};
 
   # $v->error( jpegPhoto => [ $jpegPhoto_error ] ) if defined $jpegPhoto_error;
@@ -1026,19 +1040,19 @@ sub profile_modify ($self) {
   #   my $sides = $self->h_img_info($upload->{jpegPhoto}->slurp);
   #   if ( $sides->{width} > $self->{app}->{cfg}->{ldap}->{defaults}->{attr}->{jpegPhoto}->{max_side} ) {
   #     $jpegPhoto_error .= sprintf('File %s width is %s what is bigger than %s px; ',
-  # 				  $upload->{jpegPhoto}->filename,
-  # 				  $sides->{width},
-  # 				  $self->{app}->{cfg}->{ldap}->{defaults}->{attr}->{jpegPhoto}->{max_side});
+  #				  $upload->{jpegPhoto}->filename,
+  #				  $sides->{width},
+  #				  $self->{app}->{cfg}->{ldap}->{defaults}->{attr}->{jpegPhoto}->{max_side});
   #   } elsif ( $sides->{height} > $self->{app}->{cfg}->{ldap}->{defaults}->{attr}->{jpegPhoto}->{max_side} ) {
   #     $jpegPhoto_error .= sprintf('File %s height is %s what is bigger than %s px; ',
-  # 				  $upload->{jpegPhoto}->filename,
-  # 				  $sides->{height},
-  # 				  $self->{app}->{cfg}->{ldap}->{defaults}->{attr}->{jpegPhoto}->{max_side});
+  #				  $upload->{jpegPhoto}->filename,
+  #				  $sides->{height},
+  #				  $self->{app}->{cfg}->{ldap}->{defaults}->{attr}->{jpegPhoto}->{max_side});
   #   }
   # }
   # $jpegPhoto_error .= sprintf('File %s is bigget than %s bytes.',
-  # 			      $upload->{jpegPhoto}->filename,
-  # 			      $self->{app}->{cfg}->{ldap}->{defaults}->{attr}->{jpegPhoto}->{max_size})
+  #			      $upload->{jpegPhoto}->filename,
+  #			      $self->{app}->{cfg}->{ldap}->{defaults}->{attr}->{jpegPhoto}->{max_size})
   #   if $upload->{jpegPhoto}->size > $self->{app}->{cfg}->{ldap}->{defaults}->{attr}->{jpegPhoto}->{max_size};
 
   # $v->error( jpegPhoto => [ $jpegPhoto_error ] ) if defined $jpegPhoto_error;
@@ -1414,8 +1428,8 @@ Rename the entry given by "DN" on the server.
 
 =cut
 
-sub moddn ($self) { 
-  
+sub moddn ($self) {
+
   my $par = $self->req->params->to_hash;
   # $self->h_log($par);
 
@@ -1768,7 +1782,7 @@ sub sudo ($self) {
     $self->h_log($attrs);
 
     # $msg = $ldap->add(sprintf("cn=%s,%s", $attrs->{cn}, $self->{app}->{cfg}->{ldap}->{base}->{sargon}),
-    # 			 $attrs);
+    #			 $attrs);
     $self->stash(attrs => $attrs);
     push @{$debug{$msg->{status}}}, $msg->{message};
   }

@@ -42,9 +42,6 @@ like $k->{public}, qr/^ssh-ed25519 /, '[h_keygen_ssh]: ' . $k->{public};
 $k = $t->app->h_keygen_gpg;
 like $k->{public}, qr/^-----BEGIN PGP PUBLIC KEY BLOCK-----/, '[h_keygen_gpg]: ' . $k->{public};
 
-my $p = $t->app->h_pwdgen;
-like $p->{ssha}, qr/^\{SSHA\}/, '[h_pwdgen]: ' . $p->{ssha};
-
 my $hd = $t->app->h_hash_diff( { a => 'a', b => 'b', d => 'd'}, { b => 'B', c =>'c', d => 'd'});
 is $hd->{added}->{c} eq 'c' && $hd->{changed}->{b}->{new} eq 'B' && $hd->{removed}->{a} eq 'a' && $hd->{unchanged}->{d} eq 'd' ? 1 : 0, 1, '[h_hash_diff]: added `c`, changed `b`, removed `a` and uchanged `d`';
 

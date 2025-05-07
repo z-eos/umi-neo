@@ -20,7 +20,7 @@
     <link href="/assets/css/umi-select2.css" rel="stylesheet" />
 
     <link href="/assets/css/tempus-dominus/tempus-dominus.min.css" rel="stylesheet" />
-    
+
     <link href="/assets/css/umi.css" rel="stylesheet" type="text/css">
     <!-- <link href="/assets/css/nprogress.css" rel="stylesheet" type="text/css"> -->
 
@@ -43,7 +43,7 @@
     <script src="/assets/js/bs-theme-switcher.js"></script>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pace/1.0.2/pace.min.js"></script>
-    
+
     <noscript>
       <div class="alert alert-danger text-center h1 mt-5 mx-5"
 	   role="alert" style="margin-bottom: 1100px;">
@@ -65,7 +65,7 @@
 	  %= include 'sidebar'
 	<% } %>
 	<main class="container-fluid flex-grow-1 mb-3 w-25" id="workingfield">
-	  
+
 	  %= include 'message'
 	  %= content
 
@@ -79,12 +79,12 @@
 
     <!-- UMI SCRIPTS -->
     <script src="/assets/js/umi-common.js"></script>
-    <script src="/assets/js/umi-tool-pwdgen.js"></script>
+    <!-- <script src="/assets/js/umi-tool-pwdgen.js"></script> -->
 
     <script type="module" src="/assets/js/ldap-tree/ldap-tree.js"></script>
     <script type="module" src="/assets/js/ldap-tree/ipam-tree.js"></script>
 
-    <!-- <script src="/assets/js/nprogress.js"></script>   
+    <!-- <script src="/assets/js/nprogress.js"></script>
 	 <script>
 	 // Function to start NProgress
 	 function startProgress() {
@@ -94,28 +94,28 @@
 	 // Start NProgress on form submit
 	 document.addEventListener('submit', function (event) {
 	 if (event.target.tagName.toLowerCase() === 'form') {
-         event.preventDefault(); // Prevent default form submission
-         startProgress(); // Start NProgress
+	 event.preventDefault(); // Prevent default form submission
+	 startProgress(); // Start NProgress
 
-         const form = event.target;
-         const action = form.action;
-         const method = form.method;
+	 const form = event.target;
+	 const action = form.action;
+	 const method = form.method;
 
-         // Construct the query string for GET method
-         if (method.toLowerCase() === 'get') {
-         const formData = new URLSearchParams(new FormData(form)).toString();
-         window.location.href = `${action}?${formData}`; // Navigate to the new URL
-         }
-         // Note: POST handling is not included in this example for simplicity
+	 // Construct the query string for GET method
+	 if (method.toLowerCase() === 'get') {
+	 const formData = new URLSearchParams(new FormData(form)).toString();
+	 window.location.href = `${action}?${formData}`; // Navigate to the new URL
+	 }
+	 // Note: POST handling is not included in this example for simplicity
 	 }
 	 });
 
 	 // Start NProgress on link click
 	 document.addEventListener('click', function (event) {
 	 if (event.target.tagName.toLowerCase() === 'a') {
-         event.preventDefault(); // Prevent default navigation
-         startProgress(); // Start NProgress
-         window.location.href = event.target.href; // Navigate to the link's href
+	 event.preventDefault(); // Prevent default navigation
+	 startProgress(); // Start NProgress
+	 window.location.href = event.target.href; // Navigate to the link's href
 	 }
 	 });
 

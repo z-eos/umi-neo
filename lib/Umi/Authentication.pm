@@ -17,7 +17,7 @@ sub load_user ($self, $uid) {
 }
 
 sub validate_user ($self, $username, $password, $extra) {
-  $self->{app}->h_log("Authentication.pm: validate_user() HAS BEEN CALLED");
+  # $self->{app}->h_log("Authentication.pm: validate_user() HAS BEEN CALLED");
   # $self->{app}->h_log($extra->{ldap});
   if ( defined $extra->{ldap} ) {
     if ( $extra->{ldap}->isa('Net::LDAP') ) {

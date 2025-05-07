@@ -37,7 +37,8 @@ sub do_login ($self) {
 	return $self->redirect_to('public_root');
       }
 
-      my $e = $search->entry;  $self->h_log($search->count);
+      my $e = $search->entry;
+      # $self->h_log($search->count);
       %$user_obj = map { lc($_) => $e->get_value($_) } $e->attributes;
       $user_obj->{dn} = $e->dn;
 
@@ -61,10 +62,11 @@ sub do_login ($self) {
 
       $self->set_user_session({ uid => $username,
 				pwd => $password,
-				debug => { ok => ["Successful login as $username"] },
+				# debug => { ok => ["Successful login as $username"] },
 				user_obj => $user_obj,
 				role => $role,
 				privileges => \%privileges });
+      $self->log->info(sprintf("user `%s` logged in", $username));
       return $self->redirect_to('protected_root');
     }
   }
@@ -74,6 +76,7 @@ sub do_login ($self) {
 }
 
 sub do_logout ($self) {
+  $self->log->info(sprintf("user `%s` logged out", $self->session->{uid}));
   $self->logout;
   $self->session(expires => 1);
   return $self->redirect_to('/');

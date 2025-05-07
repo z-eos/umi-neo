@@ -1,66 +1,87 @@
 %# -*- mode: web; eval: (follow-mode); -*-
+%#
+%# original is here: https://www.xkpasswd.net/
+%#
+
 <style>
- /* --- ALG ----------------------------------------------------- */
- .alg.none        .calg                      { display: none; }
- .alg.appleid     .calg:not(.on-appleid)     { display: none; }
- .alg.default     .calg:not(.on-default)     { display: none; }
- .alg.ntlm        .calg:not(.on-ntlm)        { display: none; }
- .alg.securityq   .calg:not(.on-securityq)   { display: none; }
- .alg.web16       .calg:not(.on-web16)       { display: none; }
- .alg.web32       .calg:not(.on-web32)       { display: none; }
- .alg.wifi        .calg:not(.on-wifi)        { display: none; }
- .alg.xkcd        .calg:not(.on-xkcd)        { display: none; }
- .alg.classic     .calg:not(.on-classic)     { display: none; }
- .alg.userdefined .calg:not(.on-userdefined) { display: none; }
- /* --- PADDING ------------------------------------------------- */
- .pad.none        .cpad                        { display: none; }
- .pad.fixed       .cpad:not(.on-padd-fixed)    { display: none; }
- .pad.adaptive    .cpad:not(.on-padd-adaptive) { display: none; }
- .pad.char        .cpad:not(.on-padd-char)     { display: none; }
- /* --- PADDING CHARACTER --------------------------------------- */
- .pch.none        .cpch                              { display: none; }
- .pch.char        .cpch:not(.on-padd-char-char)      { display: none; }
- .pch.random      .cpch:not(.on-padd-char-random)    { display: none; }
- .pch.separator   .cpch:not(.on-padd-char-separator) { display: none; }
- /* --- SEPARATOR ----------------------------------------------- */
- .sep.none        .csep                     { display: none; }
- .sep.char        .csep:not(.on-sep-char)   { display: none; }
- .sep.random      .csep:not(.on-sep-random) { display: none; }
- /* ---------------------------------------------------
-    conditional un/hiding for elements
-    --------------------------------------------------- */
- .show-none      .conditional-input                    { display: none; }
- .show-appleid   .conditional-input:not(.on-appleid)   { display: none; }
- .show-default   .conditional-input:not(.on-default)   { display: none; }
- .show-ntlm      .conditional-input:not(.on-ntlm)      { display: none; }
- .show-securityq .conditional-input:not(.on-securityq) { display: none; }
- .show-web16     .conditional-input:not(.on-web16)     { display: none; }
- .show-web32     .conditional-input:not(.on-web32)     { display: none; }
- .show-wifi      .conditional-input:not(.on-wifi)      { display: none; }
- .show-xkcd      .conditional-input:not(.on-xkcd)      { display: none; }
- .show-classic   .conditional-input:not(.on-classic)   { display: none; }
- /* ------------------------------------------------------------- */
- .show-none          .cond-input-padd                        { display: none; }
- .show-padd-fixed    .cond-input-padd:not(.on-padd-fixed)    { display: none; }
- .show-padd-adaptive .cond-input-padd:not(.on-padd-adaptive) { display: none; }
- .show-padd-char     .cond-input-padd:not(.on-padd-char)     { display: none; }
- /* ------------------------------------------------------------- */
- .show-none                .cond-input-padd-char                              { display: none; }
- .show-padd-char-char      .cond-input-padd-char:not(.on-padd-char-char)      { display: none; }
- .show-padd-char-random    .cond-input-padd-char:not(.on-padd-char-random)    { display: none; }
- .show-padd-char-separator .cond-input-padd-char:not(.on-padd-char-separator) { display: none; }
- /* ------------------------------------------------------------- */
- .show-none       .cond-input-sep                     { display: none; }
- .show-sep-char   .cond-input-sep:not(.on-sep-char)   { display: none; }
- .show-sep-random .cond-input-sep:not(.on-sep-random) { display: none; }
+
+ /* =========================================================================
+    ALG — Algorithm Selection Display Rules
+    -------------------------------------------------------------------------
+    These rules control the visibility of algorithm-specific UI blocks.
+    - Wrapper class  : .alg-<type>    (applied to the parent/container)
+    - Content class  : .calg          (applied to every algorithm UI block)
+    - Marker class   : .on-<type>     (applied to the .calg block for that type)
+    Logic:
+    1. By default, all .calg blocks are visible.
+    2. When a wrapper .alg-<type> is present, hide every .calg that
+    does *not* have the corresponding .on-<type> marker.
+    3. Special case .alg-none hides all .calg blocks.
+    ========================================================================= */
+ .alg-none        .calg                      { display: none; /* No algorithm selected */ }
+ .alg-appleid     .calg:not(.on-appleid)     { display: none; /* Show only AppleID algorithm UI */ }
+ .alg-default     .calg:not(.on-default)     { display: none; /* Show only Default algorithm UI */ }
+ .alg-ntlm        .calg:not(.on-ntlm)        { display: none; /* Show only NTLM algorithm UI */ }
+ .alg-securityq   .calg:not(.on-securityq)   { display: none; /* Show only Security Question algorithm UI */ }
+ .alg-web16       .calg:not(.on-web16)       { display: none; /* Show only Web16 algorithm UI */ }
+ .alg-web32       .calg:not(.on-web32)       { display: none; /* Show only Web32 algorithm UI */ }
+ .alg-wifi        .calg:not(.on-wifi)        { display: none; /* Show only Wi-Fi algorithm UI */ }
+ .alg-xkcd        .calg:not(.on-xkcd)        { display: none; /* Show only XKCD algorithm UI */ }
+ .alg-classic     .calg:not(.on-classic)     { display: none; /* Show only Classic algorithm UI */ }
+ .alg-userdefined .calg:not(.on-userdefined) { display: none; /* Show only User-Defined algorithm UI */ }
+
+
+ /* =========================================================================
+    SEPARATOR — Separator Mode Display Rules
+    -------------------------------------------------------------------------
+    Controls the visibility of separator configuration blocks.
+    - Wrapper class : .sep-<mode>     (applied to the parent/container)
+    - Content class : .csep           (applied to every separator UI block)
+    - Marker class  : .on-sep-<mode>  (applied to the .csep block for that mode)
+    Logic is identical to the ALG section above.
+    ========================================================================= */
+ .sep-none      .csep                        { display: none; /* No separator: hide all */ }
+ .sep-char      .csep:not(.on-sep-char)      { display: none; /* Show only character separator UI */ }
+ .sep-random    .csep:not(.on-sep-random)    { display: none; /* Show only random separator UI */ }
+
+
+ /* =========================================================================
+    PADDING — Padding Mode Display Rules
+    -------------------------------------------------------------------------
+    Controls padding configuration blocks.
+    - Wrapper class : .pad-<mode>     (applied to the parent/container)
+    - Content class : .cpad           (applied to every padding UI block)
+    - Marker class  : .on-pad-<mode>  (applied to the .cpad block for that mode)
+    ========================================================================= */
+ .pad-none      .cpad                        { display: none; /* No padding: hide all */ }
+ .pad-fixed     .cpad:not(.on-pad-fixed)     { display: none; /* Show only fixed padding UI */ }
+ .pad-adaptive  .cpad:not(.on-pad-adaptive)  { display: none; /* Show only adaptive padding UI */ }
+ .pad-char      .cpad:not(.on-pad-char)      { display: none; /* Show only character padding UI */ }
+
+
+ /* =========================================================================
+    PADDING CHARACTER — Padding Character Display Rules
+    -------------------------------------------------------------------------
+    Controls display of specific padding-character options.
+    - Wrapper class : .pch-<mode>     (applied to the parent/container)
+    - Content class : .cpch           (applied to every padding-character UI block)
+    - Marker class  : .on-pch-<mode>  (applied to the .cpch block for that mode)
+    ========================================================================= */
+ .pch-none      .cpch                        { display: none; /* No padding char: hide all */ }
+ .pch-character .cpch:not(.on-pch-character) { display: none; /* Show only single-character padding UI */ }
+ .pch-random    .cpch:not(.on-pch-random)    { display: none; /* Show only random padding UI */ }
+ .pch-separator .cpch:not(.on-pch-separator) { display: none; /* Show only separator padding UI */ }
+
 </style>
+
 
 % my ($en_blind, $en_seen, $ico, $selected);
 % my $par = stash('pwdgen_params');
+%# h_log stash;
 % my $pwd = stash('pwdgen');
 
-% if ( ! defined stash('pwd_chg_dn') ) {
-  <h3 class="fw-bold py-3">
+% if ( ! exists $par->{pwd_chg_dn} ) {
+  <h3 class="fw-bold py-5">
     <i class="fa <%= app->{cfg}->{ui}->{menu}->{password}->{ico} %> fa-lg me-2 <%= app->{cfg}->{ui}->{menu}->{password}->{col} %>"></i>
     Password Generator Form
     <small>
@@ -71,17 +92,14 @@
   </h3>
 % }
 
-<!-- <pre><%# = dumper $par %></pre> -->
-<!-- <pre><%# =  dumper stash %></pre> -->
-
-% if (defined $pwd && %$pwd) {
-  % if ( $pwd->{stats}->{password_entropy_blind_min} < 150 ||
-  % $pwd->{stats}->{password_entropy_blind_max} < 250 ) {
+% if (defined $pwd && %$pwd && exists $pwd->{stats}) {
+  % if ( $pwd->{stats}->{password_entropy_blind_min} < app->{cfg}->{tool}->{pwdgen}->{xk}->{cfg}->{password_entropy_blind_min} ||
+  %      $pwd->{stats}->{password_entropy_blind_max} < app->{cfg}->{tool}->{pwdgen}->{xk}->{cfg}->{password_entropy_blind_max} ) {
     % $en_blind = 'danger';
   % } else {
     % $en_blind = 'success';
   % }
-  % if ( $pwd->{stats}->{password_entropy_seen} > 52 ) {
+  % if ( $pwd->{stats}->{password_entropy_seen} > app->{cfg}->{tool}->{pwdgen}->{xk}->{cfg}->{password_entropy_seen} ) {
     % $en_seen = 'success';
   % } else {
     % $en_seen = 'danger';
@@ -91,9 +109,6 @@
   % } else {
     % $ico = 'danger';
   % }
-  <!-- <div id="result" class="alert alert-success" role="alert">
-       <i class="fa-solid fa-triangle-exclamation pe-3"></i></i><%# = $pwd->{clear}; %>
-       </div> -->
   <div class="form-text text-end mb-3">
     <div class="text-muted text-monospace" aria-label="Statistics" aria-describedby="button-addon2">
       <i class="fas fa-info-circle text-<%= $ico %> me-2"></i>
@@ -101,7 +116,7 @@
 	<%= $pwd->{stats}->{password_entropy_blind} =%>
       </b> bits & seen (given dict and config) <b class="text-<%= $en_seen %>"><%= $pwd->{stats}->{password_entropy_seen} %></b>
       <small>
-	<em class="">(keep blind entropy above 150 & seen above 52 bits)</em>
+	<em class="">(keep blind entropy above <%= app->{cfg}->{tool}->{pwdgen}->{xk}->{cfg}->{password_entropy_blind_min} %> & seen above <%= app->{cfg}->{tool}->{pwdgen}->{xk}->{cfg}->{password_entropy_seen} %> bits)</em>
 	<button type="button" class="btn btn-link" data-bs-toggle="collapse" href="#pwdStatus"
 		role=«button" aria-expanded="false" aria-controls="pwdStatus">
 	  <i class="fa-regular fa-rectangle-list"></i>
@@ -112,210 +127,571 @@
       <div class="card card-body"><small><pre class="text-muted text-monospace"><%= $pwd->{status} %></pre></small></div>
     </div>
   </div>
-% } else {
-  <!-- <div id="result" class="alert alert-info" role="alert">
-       <i class="fa-solid fa-triangle-exclamation pe-3"></i></i>FIRST RUN
-       </div>     -->
 % }
 
 <form id="formPwdgen" class="form-horizonal pwdgen" method="post" enctype="multipart/form-data" action="/tool/pwdgen">
-  <div id="pwd_operations" class="row target-container calg">
-    <!-- PRESET -->
-    <div class="row input-group m-0" aria-describedby="pwd_algHelpBlock">
-      <span class="input-group-text fw-bold text-uppercase col-2" for="pwd_alg">Preset</span>
-      <select name="pwd_alg" id="pwd_alg" aria-describedby="pwd_algHelpBlock" class="custom-select form-control" title="Password algorythm">
-	% my $m = 0;
-	% my $alg = { APPLEID   => "APPLEID (example: @74,animal,forget,angry,55@)",
-	%             DEFAULT   => "DEFAULT (example: ++78-COUNTRY-once-SATURN-48++)",
-	%             NTLM      => "NTLM (example: 4-sIGHT-hORSE@)",
-	%             SECURITYQ => "SECURITYQ (example: state basket Texas spend rhythm warm?)",
-	%             WEB16     => "WEB16 (example: swim^word^YEAR^05)",
-	%             WEB32     => "WEB32 (example: |70~world~KISS~dried~MARK~15|)",
-	%             WIFI      => "WIFI (example: 8241_GREAT_FRACTION_fell_feel_quick_REAL_7834~~~~~~~~~~~~~~~~~~)",
-	%             XKCD      => "XKCD (example: ALLOW-CLOTH-LANGUAGE-UNCLE-BROKEN)" };
-	% foreach my $k (sort(keys(%$alg))) {
-	  <option value="<%= $k %>" id="pwd_alg.<%= $m %>"
-	    <%= (! $par->{pwd_alg} && $k eq 'XKCD') || ($par->{pwd_alg} && $par->{pwd_alg} eq $k) ? 'selected="selected"' : '' %>
-	    ><%= $alg->{$k} %></option>
-	  % $m++;
-	% }
-      </select>
-    </div>
-  </div>
-  <small id="pwd_algHelpBlock" class="form-text text-muted"></small>
 
-  <div class="row calg on-appleid on-default on-ntlm on-securityq on-web16 on-web32 on-wifi on-xkcd my-3">
-    <!-- NUMBER OF WORDS -->
-    <div class="input-group">
-      <span class="input-group-text fw-bold text-uppercase col-2" for="xk_num_words">Number Of Words</span>
-      <select name="xk_num_words" id="xk_num_words" class="custom-select form-control" title="Number Of Words In Password">
-	% for my $i (3 .. 10) {
-	  % if ($par->{xk_num_words} && $par->{xk_num_words} == $i ) {
-	    % $selected="selected=\"selected\""
-	  % } else {
-	    % $selected=""
-	  % }
-	  <option value="<%= $i %>" id="xk_num_words.<%= $i - 3 %>" <%= $selected %>><%= $i %></option>
-	% }
-      </select>
-      <!-- </div>
-	   <div class="input-group"> -->
-      <!-- LEN MIN / MAX -->
-      <span class="input-group-text fw-bold text-uppercase col-2" for="xk_word_length_min">Len min/max</span>
-      <select name="xk_word_length_min" id="xk_word_length_min" class="custom-select form-control" title="Word Length Min">
-	% for my $i (4 .. 13) {
-	  <option value="<%= $i %>" id="xk_word_length_min.<%= $i - 4 %>"
-	    <%= exists $par->{xk_word_length_min} && $par->{xk_word_length_min} == $i ? 'selected="selected"' : '' %>
-	    ><%= $i %></option>
-	% }
-      </select>
-      <select name="xk_word_length_max" id="xk_word_length_max" class="custom-select form-control" title="Word Length Max">
-	% for my $i (4 .. 13) {
-	  % $selected = "";
-	  % if ($par->{xk_word_length_max} && $par->{xk_word_length_max} == $i ) {
-	    % $selected="selected=\"selected\""
-	  % } else {
-	    % $selected=""
-	  % }
-	  <option value="<%= $i %>" id="xk_word_length_max.<%= $i - 4 %>" <%= $selected %>><%= $i %></option>
-	% }
-      </select>
-    </div>
-    <!-- CASE TRANSFORMATION -->
-    <div class="input-group my-3">
-      <span class="input-group-text fw-bold text-uppercase col-2" for="xk_case_transform">Case Transformation</span>
-      <select name="xk_case_transform" id="xk_case_transform" class="custom-select form-control" title="Case Transformation">
-	% $m = 0;
-	% my $case_tr = { ALTERNATE  => "ALTERNATE (example: alternating WORD case)",
-	%                 CAPITALISE => "CAPITALISE (example: Capitalise First Letter)",
-	%                 INVERT     => "INVERT (example: cAPITALISE eVERY lETTER eXCEPT tHe fIRST)",
-	%                 LOWER      => "LOWER (example: lower case)",
-	%                 NONE       => "NONE (example: -none-)",
-	%                 RANDOM     => "RANDOM (example: EVERY word randomly CAPITALISED or NOT)",
-	%                 UPPER      => "UPPER (example: UPPER CASE)" };
-	% foreach my $k (sort(keys(%$case_tr))) {
-	  <option value="<%= $k %>" id="xk_case_transform<%= $m %>"
-	    <%= $par->{xk_case_transform} && $par->{xk_case_transform} eq $k ? 'selected="selected"' : '' %>><%= $case_tr->{$k} %></option>
-	  % $m++
-	% }
-      </select>
-    </div>
-    <!-- SEPARATOR -->
-    <div id="sep" class="row form-group target-container csep my-3">
-      <div class="input-group">
-	<!-- SEPARATOR SELECTOR -->
-	<span class="input-group-text fw-bold text-uppercase col-2" for="xk_separator_character">Separator</span>
-	<select name="xk_separator_character" id="xk_separator_character" class="custom-select form-control" title="Separator">
-	  % $m = 0;
-	  % my $sc = ['NONE', 'CHAR', 'RANDOM'];
-	  % foreach (@$sc) {
-	    <option value="<%= $_ %>" id="xk_separator_character.<%= $m %>"
-	      <%= exists $par->{xk_separator_character} && $par->{xk_separator_character} eq $_ ? 'selected="selected"' : '' %>
-	      ><%= $_ %></option>
-	    % $m++
-	  % }
-	  <!-- <option value="NONE" id="xk_separator_character.0">NONE</option>
-	       <option value="CHARACTER" id="xk_separator_character.1">CHARACTER</option>
-	       <option value="RANDOM" id="xk_separator_character.2">RANDOM</option> -->
-	</select>
-	<!-- SEPARATOR CHARACTER -->
-        <input type="text" name="xk_separator_character_char" id="xk_separator_character_char"
-	       value="" class="text-center text-monospace form-control"
-	       aria-describedby="sepCharHelpBlock"
-	       title="Separator Character one of: !&quot;#$%&amp;'()*+,-./:;<=>?@[\]^_{|}~">
-	<small id="sepCharHelpBlock" class="form-text text-muted"></small>
-	<!-- SEPARATOR ALPHABETH -->
-        <input type="text" name="xk_separator_character_random" id="xk_separator_character_random"
-	       value="" class="text-center text-monospace form-control"
-	       title="Separator Character Alphabet: !&quot;#$%&amp;'()*+,-./:;<=>?@[\]^_{|}~">
+  <div id ="pwd_operations" class ="target-container calg">
+
+    <div class="row input-group mb-2">
+      <span class="input-group-text fw-bold text-uppercase col-3" for="xk_num_words"><span class="w-100 text-end">Preset</span></span>
+
+      % my $m = 0;
+      % my $presets = app->{cfg}->{tool}->{pwdgen}->{xk}->{preset};
+      % my @alg = map {
+	% $_ eq 'XKCD' ? [ $_ . ': ' . $presets->{$_} => lc 'alg-' . $_, selected => 'selected' ] : [ $_ . ': ' . $presets->{$_} => lc 'alg-' . $_ ]
+      % } sort keys %$presets;
+      <div class='col-9'>
+	%= select_field pwd_alg => \@alg, id => 'pwd_alg', class => 'ps-2 custom-select form-control text-center'
       </div>
     </div>
-    <!-- PADDING DIGITS -->
-    <div class="row form-group my-3">
-      <div class="input-group">
-	<span class="input-group-text fw-bold text-uppercase col-2" for="xk_padding_digits_before">Padding Digits</span>
-	<select name="xk_padding_digits_before" id="xk_padding_digits_before" class="custom-select form-control"
-		      title="Padding Digits From the Left">
-          % for my $i (0 .. 5) {
-	    <option value="<%= $i %>" id="xk_padding_digits_before.<%= $i %>"><%= $i %></option>
-          % }
-	</select>
-	<select name="xk_padding_digits_after" id="xk_padding_digits_after" class="custom-select form-control"
-		      title="Padding Digits From the Right">
-          % for my $i (0 .. 5) {
-	    <option value="<%= $i %>" id="xk_padding_digits_after.<%= $i %>"><%= $i %></option>
-          % }
-	</select>
-      </div>
+    <div class="row input-group mb-2">
+      <div id='pwd_algHelpBlock' class='offset-3 col-9 form-text text-muted text-end umi-text-tiny mt-0'></div>
     </div>
-    
-    <div id="padd" class="target-container cpad my-3">
-      <div class="row form-group">
-	<!-- PADDING TYPE -->
-	<div class="input-group">
-          <span class="input-group-text fw-bold text-uppercase col-2" for="xk_padding_type">Padding Type</span>
-          <select name="xk_padding_type" id="xk_padding_type" class="custom-select form-control" title="Padding Type">
-	    <option value="NONE" id="xk_padding_type.0">NONE</option>
-	    <option value="FIXED" id="xk_padding_type.1">FIXED</option>
-	    <option value="ADAPTIVE" id="xk_padding_type.2">ADAPTIVE</option>
-	  </select>
+
+    % if ( defined $par->{pwd_chg_dn} ) {
+      %= hidden_field pwd_chg_dn => $par->{pwd_chg_dn}
+    % }
+    %= hidden_field 'pronounceable'
+    %= hidden_field 'pwd_len'
+    %= hidden_field 'pwd_cap'
+    %= hidden_field 'pwd_num'
+
+    <div class="calg on-appleid on-default on-ntlm on-securityq on-web16 on-web32 on-wifi on-xkcd">
+
+      %# ---------------------------------------------------------------
+      %#  NUMBER OF WORDS
+      %#
+      <div class="row input-group mb-2">
+	<span class ='input-group-text fw-bold col-3' for ='xk_num_words'><span class="w-100 text-end">WORDS: num, len min / max</span></span>
+
+	% my @num_words = map {
+	  %   [ $_ => $_, ($par->{xk_num_words} && $par->{xk_num_words} == $_ ? (selected => 'selected') : ()) ]
+	% } app->{cfg}->{tool}->{pwdgen}->{xk}->{num_words}->{min} .. app->{cfg}->{tool}->{pwdgen}->{xk}->{num_words}->{max};
+	<div class='col-1'>
+	  %= select_field xk_num_words => \@num_words, id => 'xk_num_words', maxlength => 2, class => 'custom-select form-control text-center'
 	</div>
-	<div class="row form-group">
-	  <div class="row form-group cpad on-padd-fixed">
-	    <!-- SYMBOLS LEFT / RIGHT -->
-	    <div class="input-group cpad on-padd-fixed">
-	      <span class="input-group-text fw-bold text-uppercase"
-		    for="xk_padding_characters_before">Symbols left/right</span>
-	      <select name="xk_padding_characters_before" id="xk_padding_characters_before"
-		      class="custom-select form-control"
-		      title="Padding Symbols From the Left">
-		% for my $i (0 .. 5) {
-		  <option value="<%= $i %>" id="xk_padding_characters_before.<%= $i %>"><%= $i %></option>
-		% }
-	      </select>
-	      <select name="xk_padding_characters_after" id="xk_padding_characters_after"
-		      class="custom-select form-control" title="Padding Symbols From the Right">
-		% for my $i (0 .. 5) {
-		  <option value="<%= $i %>" id="xk_padding_characters_after.<%= $i %>"><%= $i %></option>
-		% }
-	      </select>
-	    </div>
+
+	% my @word_length_min = map {
+	  %   [ $_ => $_, ($par->{xk_word_length_min} && $par->{xk_word_length_min} == $_ ? (selected => 'selected') : ()) ]
+	% } app->{cfg}->{tool}->{pwdgen}->{xk}->{word_length_min} .. app->{cfg}->{tool}->{pwdgen}->{xk}->{word_length_max};
+	<div class='col-1 ps-0'>
+	  %= select_field xk_word_length_min => \@word_length_min, id => 'xk_word_length_min', maxlength => 2, class => 'custom-select form-control text-center'
+	</div>
+
+	% my @word_length_max = map {
+	  %   [ $_ => $_, ($par->{xk_word_length_max} && $par->{xk_word_length_max} == $_ ? (selected => 'selected') : ()) ]
+	% } app->{cfg}->{tool}->{pwdgen}->{xk}->{word_length_min} .. app->{cfg}->{tool}->{pwdgen}->{xk}->{word_length_max};
+	<div class='col-1 ps-0'>
+	  %= select_field xk_word_length_max => \@word_length_max, id => 'xk_word_length_max', maxlength => 2, class => 'custom-select form-control text-center'
+	</div>
+      </div>
+
+
+      %# ---------------------------------------------------------------
+      %#  CASE TRANSFORMATION
+      %#
+      <div class="row input-group mb-2">
+	<span class='input-group-text fw-bold text-uppercase col-3' for='xk_case_transform'><span class="w-100 text-end">Case Transformation</span></span>
+
+	% my $ct = app->{cfg}->{tool}->{pwdgen}->{xk}->{case_transforms};
+	% my @case_transform = map {
+	  %   [ $_ . ': ' . $ct->{$_} => $_, ($par->{xk_case_transform} && $par->{xk_case_transform} eq $_ ? (selected => 'selected') : ()) ]
+	% } sort keys %$ct;
+	<div class='col'>
+	  %= select_field xk_case_transform => \@case_transform, id => 'xk_case_transform', class => 'custom-select form-control text-center'
+	</div>
+      </div>
+
+
+      % my $symbol_alphabet = join(' ', @{app->{cfg}->{tool}->{pwdgen}->{xk}->{symbol_alphabet}});
+
+
+      %# ---------------------------------------------------------------
+      %#  SEPARATOR
+      %#
+      <div id="sep" class="row input-group mb-2">
+	<span class='input-group-text fw-bold text-uppercase col-3' for='xk_separator_character'><span class="w-100 text-end">Separator</span></span>
+
+	% my @separator_character = map {
+	  % [ $_ => lc 'sep-' . $_, ($par->{xk_separator_character} && $par->{xk_separator_character} eq $_ ? (selected => 'selected') : ()) ]
+	% } ( 'NONE',
+	%     'CHAR',
+	%     'RANDOM' );
+	<div class='col-2'>
+	  %= select_field xk_separator_character => \@separator_character, id => 'xk_separator_character', class => 'custom-select form-control text-center'
+	</div>
+
+	<div class='col-1 csep on-sep-char ps-0'>
+	  %= text_field 'xk_separator_character_char', id => 'xk_separator_character_char', size => 1, maxlength => 1, class => 'form-control text-center', 'data-bs-toggle' => 'tooltip', 'data-bs-title' => 'CHARACTER'
+	</div>
+
+	<div class='col-3 csep on-sep-random'>
+	  %== text_field 'xk_separator_alphabet', id => 'xk_separator_alphabet', class => 'custom-select form-control text-center', title => 'Padding character will be randomly chosen from this alphabet, symbols allowed: ' . $symbol_alphabet, placeholder => $symbol_alphabet, 'data-bs-toggle' => 'tooltip', 'data-bs-title' => $symbol_alphabet
+	</div>
+      </div>
+      <div id='sepCharHelpBlock' class ='form-control border-0 text-secondary'></div>
+
+      %# ---------------------------------------------------------------
+      %#  PADDING DIGITS
+      %#
+      <div id='padding_digits' class='row input-group mb-2'>
+	<span class ='input-group-text fw-bold text-uppercase col-3' for ='xk_padding_digits_before'><span class="w-100 text-end">Padding Digits</span></span>
+
+	<div class='col-1'>
+	  %= text_field 'xk_padding_digits_before', id => 'xk_padding_digits_before', maxlength => 2, class => 'col custom-select form-control text-center'
+	</div>
+
+	<div class='col-1 ps-0'>
+	  %= text_field 'xk_padding_digits_after' , id => 'xk_padding_digits_after', maxlength => 2,  class => 'col custom-select form-control text-center'
+	</div>
+      </div>
+
+
+      %# ---------------------------------------------------------------
+      %#  PADDING TYPE start
+      %#
+      <div id='padd' class='target-container cpad'>
+	<div class='row input-group mb-2'>
+	  <span class='input-group-text fw-bold text-uppercase col-3' for ='xk_padding_type'><span class="w-100 text-end">Padding Type</span></span>
+
+	  <div class='col-2'>
+	    % my @padding_type = map {
+	      %   [ $_ => lc 'pad-' . $_, ($par->{xk_padding_type} && $par->{xk_padding_type} eq $_ ? (selected => 'selected') : ()) ]
+	    % } ( 'NONE',
+	    %     'FIXED',
+	    %     'ADAPTIVE' );
+
+	    %= select_field xk_padding_type => \@padding_type, id => 'xk_padding_type', class => 'custom-select form-control'
 	  </div>
-	  <!-- TO LENGTH -->
-	  <div class="input-group cpad on-padd-adaptive">
-	    <span class="input-group-text text-right fw-bold" for="xk_pad_to_length">To Length</span>
-	    <input type="text" name="xk_pad_to_length" id="xk_pad_to_length" size="3" maxlength="3" value=""
-		   class="text-center text-monospace fw-bold form-control" max="999" min="8"
-		   title="Padding To Length">
-	  </div>
-	  <div class="row form-group cpad on-padd-fixed on-padd-adaptive">
-	    <div id="padd-char" class="target-container cpch">
-	      <!-- PADDING CHARACTER -->
-	      <div class="input-group">
-		<span class="input-group-text text-right fw-bold" for="xk_padding_character">Padding Character</span>
-		<select name="xk_padding_character" id="xk_padding_character" class="custom-select form-control" title="Separator">
-		  <option value="SEPARATOR" id="xk_padding_character.0" selected="selected">Separator Character</option>
-		  <option vlue="CHAR" id="xk_padding_character.1">Specified Character</option>
-		  <option value="RANDOM" id="xk_padding_character.2">Random Alphabet</option>
-		</select>
-		<input type="text" name="xk_padding_character_separator" id="xk_padding_character_separator"
-		       maxlength="1" value="" class="text-center text-monospace fw-bold form-control"
-		       title="Padding Character">
-		<input type="text" name="xk_padding_character_random" id="xk_padding_character_random"
-		       value="" class="text-center text-monospace fw-bold input-sm form-control"
-		       title="Padding Character Alphabet: !&quot;#$%&amp;'()*+,-./:;<=>?@[\]^_{|}~">
+
+	  <div id='' class='col'>
+
+	    %# -- padding type: fixed
+	    <div class='input-group cpad on-pad-fixed'>
+
+	      <span class='input-group-text fw-bold text-uppercase col-4 me-2' for='xk_padding_character_before'><span class="w-100 text-end">char before / after</span></span>
+	      <div class='col-1 me-2'>
+		%= text_field 'xk_padding_characters_before', id => 'xk_padding_characters_before', maxlength => 2, class => 'col form-control text-center'
+	      </div>
+	      <div class='col-1'>
+		%= text_field 'xk_padding_characters_after',  id => 'xk_padding_characters_after', maxlength => 2, class => 'col form-control text-center'
 	      </div>
 	    </div>
+
+	    %# -- padding type: adaptive
+	    <div class='col input-group cpad on-pad-adaptive'>
+	      <span class='input-group-text fw-bold text-uppercase col-1 me-2' for='xk_padding_character_before'>to</span>
+	      <div class='col-1'>
+		%= text_field 'xk_pad_to_length', id => 'xk_pad_to_length', class => 'custom-select form-control text-center', title => 'an integer greater than or equal to 12'
+	      </div>
+	    </div>
+
 	  </div>
+
 	</div>
+
+	%# both padding types: fixed and adaptive
+	<div id='pch' class='row input-group cpad on-pad-fixed on-pad-adaptive'>
+	  <div class="col-3"></div>
+	  <div class='col-3'>
+	    % my @padding_character = map {
+	      %   [ $_ => lc 'pch-' . $_, ($par->{xk_padding_character} && $par->{xk_padding_character} eq $_ ? (selected => 'selected') : ()) ]
+	    % } ( 'SEPARATOR',
+	    %     'CHARACTER',
+	    %     'RANDOM' );
+	    %= select_field xk_padding_character => \@padding_character, id => 'xk_padding_character', class => 'custom-select form-control text-center'
+	  </div>
+	  <div class='col-1 ps-0 cpch  on-pch-character'>
+	    %= text_field 'xk_padding_character_char', id => 'xk_padding_character_char', class => 'custom-select form-control text-center'
+	  </div>
+	  <div class='col-3 ps-0 cpch on-pch-random'>
+	    %== text_field 'xk_padding_alphabet', id => 'xk_padding_alphabet', class => 'custom-select form-control text-center', title => 'Padding character will be randomly chosen from this alphabet, symbols allowed: ' . $symbol_alphabet, placeholder => $symbol_alphabet
+	  </div>
+	  <div id='pchCharHelpBlock' class ='form-control border-0 text-secondary'></div>
+	</div>
+
       </div>
+      %#
+      %# PADDING TYPE stop
+      %# ---------------------------------------------------------------
+
     </div>
-    <small id="sepCharHelpBlock" class="form-text text-muted"></small>
   </div>
 
-  <input type="hidden" name="pwd_chg_dn"  value="<%= stash('pwd_chg_dn')  %>">
-  <input type="hidden" name="pwd_chg_rdn" value="<%= stash('pwd_chg_rdn') %>">
-  <input type="hidden" name="pwd_chg_svc" value="<%= stash('pwd_chg_svc') %>">
+  <div class ='row'>
+    %= tag 'button', class => 'col-2 btn btn-success my-3 me-2 fw-bold text-uppercase', type => 'submit', 'ok'
+  </div>
 
-  <input type="submit" name="aux_submit" id="aux_submit" value="Submit" class="btn btn-success my-3 me-2 fw-bold text-uppercase">	
 </form>
+
+<pre class="mt-5 umi-text-tiny text-muted"><%= dumper stash->{'mojo.validation'}->{error} if %{stash->{'mojo.validation'}->{error}} %></pre>
+
+% if ( stash->{'mojo.validation'}->{error} ) {
+  <script>
+   % while (my ($k, $v) = each %{stash->{'mojo.validation'}->{error}}) {
+     $('#<%= $k %>').addClass('is-invalid').after('<div id="<%= $k %>ValidationFeedback" class="invalid-feedback"></div>');
+     % if (scalar(@$v) == 1) {
+     $('#<%= $k %>ValidationFeedback').text('<%= $v->[0] %>');
+     % } else {
+     $('#<%= $k %>ValidationFeedback').text('is not <%= $v->[0] %>: <%= $v->[2] %>');
+     % }
+   % }
+  </script>
+% }
+
+<script>
+
+ /**
+  * ========================================================================
+  * pwdgen-scripts.js
+  * ------------------------------------------------------------------------
+  * JavaScript for managing UI state in the password generator tool.
+  * Relates to CSS display rules (alg-, sep-, pad-, pch- wrappers).
+  * Organized into:
+  *   1. Preset definitions
+  *   2. Utility: updateClassWithPrefix
+  *   3. Preset loader: loadPreset
+  *   4. Event handlers:
+  *      - Algorithm selection
+  *      - Separator configuration
+  *      - Padding type
+  *      - Padding character
+  *   5. Initialization calls
+  * ========================================================================
+  */
+
+ // ------------------------------------------------------------------------
+ // 1. Preset Definitions
+ // ------------------------------------------------------------------------
+ // xkPresets.defined_presets: list of preset keys
+ // xkPresets.preset_descriptions: human-readable descriptions
+ // xkPresets.presets: detailed settings for each preset
+ var xkPresets = {
+   "defined_presets": [
+     "APPLEID", "DEFAULT", "NTLM", "SECURITYQ", "WEB16", "WEB32", "WIFI", "XKCD"
+   ],
+   "preset_descriptions": {
+     "APPLEID":    "A preset respecting the many prerequisites Apple places on Apple ID passwords. ...",
+     "DEFAULT":    "The default preset resulting in a password consisting of 3 random words ...",
+     "NTLM":       "A preset for 14 character Windows NTLMv1 password. WARNING - only use ...",
+     "SECURITYQ":  "A preset for creating fake answers to security questions.",
+     "WEB16":      "A preset for websites that insist passwords not be longer than 16 characters. ...",
+     "WEB32":      "A preset for websites that allow passwords up to 32 characters long.",
+     "WIFI":       "A preset for generating 63 character long WPA2 keys ...",
+     "XKCD":       "A preset for generating passwords similar to the original XKCD cartoon ..."
+   },
+   "presets": {
+     /* Each preset object maps configuration keys to values:
+      *   allow_accents, case_transform, num_words, padding_*, separator_*, word_length_*
+      */
+     "APPLEID": {
+       "allow_accents": 0,
+       "case_transform": "RANDOM",
+       "num_words": 3,
+       "padding_alphabet": [
+	 "-", ":", ".", "!", "?", "@", "&"
+       ],
+       "padding_character": "RANDOM",
+       "padding_characters_after": 1,
+       "padding_characters_before": 1,
+       "padding_digits_after": 2,
+       "padding_digits_before": 2,
+       "padding_type": "FIXED",
+       "separator_alphabet": [
+	 "-", ":", ".", "@", ",", " "
+       ],
+       "separator_character": "RANDOM",
+       "word_length_max": 7,
+       "word_length_min": 4
+     },
+     "DEFAULT": {
+       "allow_accents": 0,
+       "case_transform": "ALTERNATE",
+       "num_words": 3,
+       "padding_character": "RANDOM",
+       "padding_characters_after": 2,
+       "padding_characters_before": 2,
+       "padding_digits_after": 2,
+       "padding_digits_before": 2,
+       "padding_type": "FIXED",
+       "separator_character": "RANDOM",
+       "symbol_alphabet": [
+	 "!", "@", "$", "%", "^", "&", "*", "-", "_", "+", "=", ":", "|", "~", "?", "/", ".", ";"
+       ],
+       "word_length_max": 8,
+       "word_length_min": 4
+     },
+     "NTLM": {
+       "allow_accents": 0,
+       "case_transform": "INVERT",
+       "num_words": 2,
+       "padding_alphabet": [
+	 "!", "@", "$", "%", "^", "&", "*", "+", "=", ":", "|", "~", "?"
+       ],
+       "padding_character": "RANDOM",
+       "padding_characters_after": 1,
+       "padding_characters_before": 0,
+       "padding_digits_after": 0,
+       "padding_digits_before": 1,
+       "padding_type": "FIXED",
+       "separator_alphabet": [
+	 "-", "+", "=", ".", "*", "_", "|", "~", ","
+       ],
+       "separator_character": "RANDOM",
+       "word_length_max": 5,
+       "word_length_min": 5
+     },
+     "SECURITYQ": {
+       "allow_accents": 0,
+       "case_transform": "NONE",
+       "num_words": 6,
+       "padding_alphabet": [ ".", "!", "?" ],
+       "padding_character": "RANDOM",
+       "padding_characters_after": 1,
+       "padding_characters_before": 0,
+       "padding_digits_after": 0,
+       "padding_digits_before": 0,
+       "padding_type": "FIXED",
+       "separator_character": " ",
+       "word_length_max": 8,
+       "word_length_min": 4
+     },
+     "WEB16": {
+       "allow_accents": 0,
+       "case_transform": "RANDOM",
+       "num_words": 3,
+       "padding_digits_after": 2,
+       "padding_digits_before": 0,
+       "padding_type": "NONE",
+       "separator_character": "RANDOM",
+       "symbol_alphabet": [
+	 "!", "@", "$", "%", "^", "&", "*", "-", "_", "+", "=", ":", "|", "~", "?", "/", ".", ";"
+       ],
+       "word_length_max": 4,
+       "word_length_min": 4
+     },
+     "WEB32": {
+       "allow_accents": 0,
+       "case_transform": "ALTERNATE",
+       "num_words": 4,
+       "padding_alphabet": [
+	 "!", "@", "$", "%", "^", "&", "*", "+", "=", ":", "|", "~", "?"
+       ],
+       "padding_character": "RANDOM",
+       "padding_characters_after": 1,
+       "padding_characters_before": 1,
+       "padding_digits_after": 2,
+       "padding_digits_before": 2,
+       "padding_type": "FIXED",
+       "separator_alphabet": [
+	 "-", "+", "=", ".", "*", "_", "|", "~", ","
+       ],
+       "separator_character": "RANDOM",
+       "word_length_max": 5,
+       "word_length_min": 4
+     },
+     "WIFI": {
+       "allow_accents": 0,
+       "case_transform": "RANDOM",
+       "num_words": 6,
+       "pad_to_length": 63,
+       "padding_alphabet": [
+	 "!", "@", "$", "%", "^", "&", "*", "+", "=", ":", "|", "~", "?"
+       ],
+       "padding_character": "RANDOM",
+       "padding_digits_after": 4,
+       "padding_digits_before": 4,
+       "padding_type": "ADAPTIVE",
+       "separator_alphabet": [
+	 "-", "+", "=", ".", "*", "_", "|", "~", ","
+       ],
+       "separator_character": "RANDOM",
+       "word_length_max": 8,
+       "word_length_min": 4
+     },
+     "XKCD": {
+       "allow_accents": 0,
+       "case_transform": "RANDOM",
+       "num_words": 5,
+       "padding_digits_after": 0,
+       "padding_digits_before": 0,
+       "padding_type": "NONE",
+       "separator_character": "-",
+       "word_length_max": 8,
+       "word_length_min": 4
+     }
+   }
+ };
+
+ // Data posted from server to override presets (if any)
+ var onPost = "";
+
+ // ------------------------------------------------------------------------
+ // 2. Utility: updateClassWithPrefix
+ // ------------------------------------------------------------------------
+ /**
+  * Removes any existing classes on $node that start with `prefix`,
+  * then adds `newClass`.
+  *
+  * @param {jQuery} $node    Container element to update
+  * @param {string} prefix   Class-name prefix to strip (e.g. 'alg-')
+  * @param {string} newClass New class to apply (e.g. 'alg-appleid')
+  */
+ function updateClassWithPrefix($node, prefix, newClass) {
+   $node
+     .removeClass(function(_i, classNames) {
+       return classNames
+	 .split(/\s+/)
+	 .filter(function(c) { return c.indexOf(prefix) === 0; })
+	 .join(' ');
+     })
+     .addClass(newClass);
+ }
+
+ // ------------------------------------------------------------------------
+ // 3. Preset Loader: loadPreset
+ // ------------------------------------------------------------------------
+ /**
+  * Loads preset values into form controls and updates helper text.
+  * If onPost is set, uses that data instead of xkPresets.
+  *
+  * @param {Object} presets    xkPresets object
+  * @param {string} presetName Key of the preset (e.g. 'APPLEID')
+  */
+ function loadPreset(presets, presetName) {
+   console.log('onPost: →' + onPost + '←');
+   var preset = onPost === '' ? presets.presets[presetName] : onPost;
+   onPost = '';
+
+   // Update description block
+   var descr = presets.preset_descriptions[presetName];
+   if (descr) $('#pwd_algHelpBlock').html(descr);
+   if (!preset) return;
+
+   // Iterate through each key in the preset
+   Object.keys(preset).forEach(function(key) {
+     var value = preset[key];
+
+     // Separator character logic: single char vs RANDOM vs NONE
+     if (key === 'separator_character') {
+       if (value.length === 1) {
+	 $('#xk_' + key).val('sep-char').change();
+	 $('#xk_' + key + '_char').val(value);
+       } else if (value === 'RANDOM') {
+	 $('#xk_' + key).val('sep-random').change();
+	 if (preset.separator_alphabet) {
+	   $('#xk_separator_alphabet').val(preset.separator_alphabet.join(''));
+	 }
+       } else if (value === 'NONE') {
+	 $('#xk_' + key).val('sep-none').change();
+       }
+
+       // Padding type logic
+     } else if (key === 'padding_type') {
+       $('#xk_' + key).val('pad-' + value.toLowerCase()).change();
+
+       // Padding character logic
+     } else if (key === 'padding_character') {
+       $('#xk_' + key).val('pch-' + value.toLowerCase()).change();
+       var alph = preset.padding_alphabet || presets.presets['DEFAULT'].symbol_alphabet;
+       $('#xk_padding_alphabet').val(alph.join(''));
+
+       // Default: direct value assignment
+     } else {
+       $('#xk_' + key).val(value);
+     }
+   });
+ }
+
+ // ------------------------------------------------------------------------
+ // 4. Event Handlers
+ // ------------------------------------------------------------------------
+
+ // 4.1 Algorithm selection
+ $('#pwd_operations').on('change', 'select[id=pwd_alg]', function() {
+   var $container = $(this).closest('.target-container');
+   var value = $(this).val().toLowerCase().slice(4); // strip 'alg-'
+
+   if (xkPresets) {
+     loadPreset(xkPresets, value.toUpperCase());
+     // Trigger char-separator update
+     $('#xk_separator_character_char').change();
+   }
+
+   updateClassWithPrefix($container, 'alg-', value || 'none');
+ }).change();
+
+
+ // 4.2 Separator selection
+ $('#sep').on('change', '#xk_separator_character', function() {
+   var $container = $(this).closest('.target-container');
+   var value = $(this).val().toLowerCase();
+   updateClassWithPrefix($container, 'sep-', value || 'none');
+ }).change();
+
+ // Relocate help text into its own flex column (matched in CSS .csep rules)
+ (function relocateHelpBlock() {
+   const parentDiv = $('#xk_separator_character_char').parent();
+   const newDiv = $('<div>').attr('class', parentDiv.attr('class')); // clone classes
+   $('#sepCharHelpBlock').appendTo(newDiv);     // move <i> into new flex column
+   newDiv.insertAfter(parentDiv);
+ })();
+
+ // 4.2.1 Separator char input -> update ASCII/char code display
+ function updateSepCharHelp() {
+   var val = $('#xk_separator_character_char').val();
+   if (!val) {
+     $('#sepCharHelpBlock').html('');
+     return;
+   }
+   var code = val.charCodeAt(0);
+   var type = code < 255 ? 'ASCII' : 'char';
+   $('#sepCharHelpBlock').html(type + ': ' + code);
+ }
+
+ $('#xk_separator_character_char').on('input', updateSepCharHelp);
+
+ // 4.2.2 Padding type fixed/adaptive char input -> update ASCII/char code display
+ function updatePchCharHelp() {
+   var val = $('#xk_padding_character_char').val();
+   if (!val) {
+     $('#pchCharHelpBlock').html('');
+     return;
+   }
+   var code = val.charCodeAt(0);
+   var type = code < 255 ? 'ASCII' : 'char';
+   $('#pchCharHelpBlock').html(type + ': ' + code);
+ }
+
+ $('#xk_padding_character_char').on('input', updatePchCharHelp);
+
+ // ------------------------------------------------------------------------
+ // 4.3 Padding type selection
+ // ------------------------------------------------------------------------
+ $('#padd').on('change', '#xk_padding_type', function() {
+   var $container = $(this).closest('.target-container');
+   var value = $(this).val().toLowerCase();
+   updateClassWithPrefix($container, 'pad-', value || 'none');
+ }).change();
+
+ // ------------------------------------------------------------------------
+ // 4.4 Padding character selection
+ // ------------------------------------------------------------------------
+ $('#pch').on('change', '#xk_padding_character', function() {
+   var $container = $(this).closest('.target-container');
+   var value = $(this).val().toLowerCase();
+   updateClassWithPrefix($container, 'pch-', value || 'none');
+ }).change();
+
+ // ------------------------------------------------------------------------
+ // 5. Initialization: trigger default "change" and "input" events to set initial state
+ // ------------------------------------------------------------------------
+ $('#pwd_alg').change();
+ $('#xk_padding_type').change();
+ $('#xk_separator_character').change();
+ $('#xk_padding_character').change();
+ // Also update separator-char help display on page load
+ updateSepCharHelp();
+
+</script>

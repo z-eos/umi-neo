@@ -1,35 +1,39 @@
 %# -*- mode: web; eval: (follow-mode); -*-
 <script src="/assets/js/fontawesome/all.js"></script>
 
-% if ( stash('pwd_chg_dn') ) {
-<ul class="nav nav-tabs mt-3" id="pwdTab" role="tablist">
+% my $p_p = stash('pwdgen_params');
+% my %pp = defined $p_p ? %$p_p : ();
+% h_log dumper \%pp;
+% if ( defined $pp{pwd_chg_dn} ) {
+
+  <ul class="nav nav-tabs mt-3" id="pwdTab" role="tablist">
   <li class="nav-item" role="presentation">
-    <button class="nav-link <%= stash('pwd_vrf') ? '' : 'active' %>"
+    <button class="nav-link <%= exists $pp{pwd_vrf} ? '' : 'active' %>"
 	    id="generate-new-tab"
 	    data-bs-toggle="tab"
 	    data-bs-target="#generate-new-tab-pane"
 	    type="button"
 	    role="tab"
 	    aria-controls="generate-new-tab-pane"
-	    aria-selected="<%= stash('pwd_vrf') ? 'false' : 'true' %>">
-      <span class="fa-layers fa-2x">
+	    aria-selected="<%= exists $pp{pwd_vrf} ? 'false' : 'true' %>">
+      <span class="fa-layers fa-lg">
 	<i class="fa-solid  fa-fingerprint"></i>
-	<span class="fa-layers-text text-danger" data-fa-transform="shrink-7.5 rotate--30" style="font-weight:900">RESET</span>
+	<span class="fa-layers-text text-danger" data-fa-transform="shrink-8.5 down-10" style="font-weight:900">RESET</span>
       </span>
     </button>
   </li>
   <li class="nav-item" role="presentation">
-    <button class="nav-link <%= stash('pwd_vrf') ? 'active' : '' %>"
+    <button class="nav-link <%= exists $pp{pwd_vrf} ? 'active' : '' %>"
 	    id="verify-old-tab"
 	    data-bs-toggle="tab"
 	    data-bs-target="#verify-old-tab-pane"
 	    type="button"
 	    role="tab"
 	    aria-controls="verify-old-tab-pane"
-	    aria-selected="<%= stash('pwd_vrf') ? 'true' : 'false' %>">
-      <span class="fa-layers fa-2x">
+	    aria-selected="<%= $pp{pwd_vrf} ? 'true' : 'false' %>">
+      <span class="fa-layers fa-lg">
 	<i class="fa-solid  fa-fingerprint"></i>
-	<span class="fa-layers-text text-success" data-fa-transform="shrink-8.5 rotate--30" style="font-weight:900">VERIFY</span>
+	<span class="fa-layers-text text-success" data-fa-transform="shrink-8.5 down-10" style="font-weight:900">VERIFY</span>
       </span>
     </button>
   </li>
@@ -37,7 +41,7 @@
 
 <div class="tab-content" id="pwdTabContent">
 
-  <div class="tab-pane fade <%= stash('pwd_vrf') ? '' : 'show active' %>"
+  <div class="tab-pane fade <%= exists $pp{pwd_vrf} ? '' : 'show active' %>"
        id="generate-new-tab-pane"
        role="tabpanel"
        aria-labelledby="generate-new-tab"
@@ -47,21 +51,22 @@
       Reset password for
       <small>
 	<em class="font-monospace text-muted fs-6">
-	  login: <span class="badge text-bg-secondary"><%= stash('pwd_chg_rdn') %></span>
-	  service: <span class="badge text-bg-secondary"><%= stash('pwd_chg_svc') %></span>
+	  login: <span class="badge text-bg-secondary"><%= $pp{pwd_chg_rdn} %></span>
+	  % if ( defined $pp{pwd_chg_svc} ) {
+	    service: <span class="badge text-bg-secondary"><%= $pp{pwd_chg_svc} %></span>
+	  % }
 	</em>
       </small>
     </h3>
 
 % }
 
-%# render bold 'protected/tool/pwdgen-create' for a simply password not related to any account
 %= include 'protected/tool/pwdgen-create', pwdgen_params => stash('pwdgen_params'), pwdgen => stash('pwdgen')
 
-% if ( stash('pwd_chg_dn') ) {
+% if ( defined $pp{pwd_chg_dn} ) {
   </div>
 
-  <div class="tab-pane fade <%= stash('pwd_vrf') ? 'show active' : '' %>"
+  <div class="tab-pane fade <%= exists $pp{pwd_vrf} ? 'show active' : '' %>"
        id="verify-old-tab-pane"
        role="tabpanel"
        aria-labelledby="verify-old-tab"
@@ -71,16 +76,18 @@
       Verify password for
       <small>
 	<em class="font-monospace text-muted fs-6">
-	  login: <span class="badge text-bg-secondary"><%= stash('pwd_chg_rdn') %></span>
-	  service: <span class="badge text-bg-secondary"><%= stash('pwd_chg_svc') %></span>
+	  login: <span class="badge text-bg-secondary"><%=     $pp{pwd_chg_rdn} %></span>
+	  % if ( defined $pp{pwd_chg_svc} ) {
+	    service: <span class="badge text-bg-secondary"><%= $pp{pwd_chg_svc} %></span>
+	  % }
 	</em>
       </small>
     </h3>
 
     %= form_for '/tool/pwdgen' => ( id => 'formPwdVrf', class => 'form-horizonal pwdgen row', method => 'POST') => begin
-      %= hidden_field pwd_chg_dn  => stash('pwd_chg_dn')
-      %= hidden_field pwd_chg_rdn => stash('pwd_chg_rdn')
-      %= hidden_field pwd_chg_svc => stash('pwd_chg_svc')
+      %= hidden_field pwd_chg_dn  => $pp{pwd_chg_dn}
+      %= hidden_field pwd_chg_rdn => $pp{pwd_chg_rdn}
+      %= hidden_field pwd_chg_svc => $pp{pwd_chg_svc}
       <div class="col-auto">
 	%= text_field pwd_vrf => stash('pwd_vrf'), class => 'form-control', placeholder => 'password to verify'
       </div>
@@ -88,7 +95,7 @@
 	%= submit_button 'Submit', class => 'btn btn-success fw-bold text-uppercase text-end'
       </div>
     % end
-    
+
   </div>
 
 </div>
