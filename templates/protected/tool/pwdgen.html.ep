@@ -8,7 +8,7 @@
 
   <ul class="nav nav-tabs mt-3" id="pwdTab" role="tablist">
   <li class="nav-item" role="presentation">
-    <button class="nav-link <%= exists $pp{pwd_vrf} ? '' : 'active' %>"
+    <button class="nav-link text-secondary <%= exists $pp{pwd_vrf} ? '' : 'active' %>"
 	    id="generate-new-tab"
 	    data-bs-toggle="tab"
 	    data-bs-target="#generate-new-tab-pane"
@@ -23,7 +23,7 @@
     </button>
   </li>
   <li class="nav-item" role="presentation">
-    <button class="nav-link <%= exists $pp{pwd_vrf} ? 'active' : '' %>"
+    <button class="nav-link text-secondary <%= exists $pp{pwd_vrf} ? 'active' : '' %>"
 	    id="verify-old-tab"
 	    data-bs-toggle="tab"
 	    data-bs-target="#verify-old-tab-pane"
@@ -84,11 +84,11 @@
       </small>
     </h3>
 
-    %= form_for '/tool/pwdgen' => ( id => 'formPwdVrf', class => 'form-horizonal pwdgen row', method => 'POST') => begin
+    %= form_for '/tool/pwdgen' => ( id => 'formPwdVrf', class => 'form-horizonal pwdgen', method => 'POST') => begin
       %= hidden_field pwd_chg_dn  => $pp{pwd_chg_dn}
       %= hidden_field pwd_chg_rdn => $pp{pwd_chg_rdn}
       %= hidden_field pwd_chg_svc => $pp{pwd_chg_svc}
-      <div class="col-auto">
+      <div class="col-auto mb-3">
 	%= text_field pwd_vrf => stash('pwd_vrf'), class => 'form-control', placeholder => 'password to verify'
       </div>
       <div class="col-auto">

@@ -316,7 +316,7 @@ sub pwdgen ($self) {
 	  $pwd_from_ldap = $search->entry->get_value('userPassword');
 	  $self->h_log($pwd_from_ldap);
 	  $match = $pwd_from_ldap eq $pwdgen->{ssha} ? 1 : 0;
-	  $self->stash({debug => { $match ? 'ok' : 'warn' => [ sprintf('provided password: %s %s',
+	  $self->stash({debug => { $match ? 'ok' : 'warn' => [ sprintf('provided password %s %s',
 								       $pwdgen->{clear},
 								       $match ? 'match' : 'does not match') ]
 				 }});
@@ -1173,10 +1173,11 @@ sub project_new ($self) {
 
   $v->error( proj_name   => ['Must be 2-50 charaters in length and can be only ASCII characters: A-Za-z0-9.-_'] )
     if $v->error('proj_name');
-  $v->error( team_pm     => ['Select at least one member.']) if $v->error('team_pm');
-  $v->error( team_back   => ['Select at least one member.']) if $v->error('team_back');
-  $v->error( team_front  => ['Select at least one member.']) if $v->error('team_front');
-  $v->error( team_devops => ['Select at least one member.']) if $v->error('team_devops');
+  # looks like some projects can be empty
+  # $v->error( team_pm     => ['Select at least one member.']) if $v->error('team_pm');
+  # $v->error( team_back   => ['Select at least one member.']) if $v->error('team_back');
+  # $v->error( team_front  => ['Select at least one member.']) if $v->error('team_front');
+  # $v->error( team_devops => ['Select at least one member.']) if $v->error('team_devops');
   # $v->error( team_qa    => ['Select at least one mamber.'])                 if $v->error('team_qa');
 
   # $self->h_log($v->error);
