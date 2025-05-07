@@ -1165,15 +1165,14 @@ sub project_new ($self) {
   return $self->render(template => 'protected/project/new') unless $v->has_data;
 
   $v->required('proj_name')->check('size', 2, 50)->check('like', qr/^[A-Za-z0-9.-_]+$/);
-  $v->required('team_pm');
-  $v->required('team_back');
-  $v->required('team_front');
-  $v->required('team_devops');
-  # $v->required('team_qa');
-
   $v->error( proj_name   => ['Must be 2-50 charaters in length and can be only ASCII characters: A-Za-z0-9.-_'] )
     if $v->error('proj_name');
   # looks like some projects can be empty
+  # $v->required('team_pm');
+  # $v->required('team_back');
+  # $v->required('team_front');
+  # $v->required('team_devops');
+  # $v->required('team_qa');
   # $v->error( team_pm     => ['Select at least one member.']) if $v->error('team_pm');
   # $v->error( team_back   => ['Select at least one member.']) if $v->error('team_back');
   # $v->error( team_front  => ['Select at least one member.']) if $v->error('team_front');
