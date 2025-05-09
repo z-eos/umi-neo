@@ -331,15 +331,18 @@ sub pwdgen ($self) {
 	  $self->stash({debug =>
 			{ $mesg->{status} => [ $mesg->{message},
 					       sprintf('new password: <span class="badge text-bg-secondary user-select-all">%s</span>',
-						       $pwdgen->{clear}) ]
+						       $pwdgen->{clear}),
+					       sprintf('<div id="pwd-qr" class="mt-3"><img src="data:image/png;base64,%s" class="img-thumbnail bg-light"></div>',
+						       $qr->{qr})
+					     ]
 			}});
 	}
       } else {
 	$self->stash({debug =>
 		      { $pwdgen->{stats}->{passwords_generated} > 0
-			? 'ok' : 'warn' => [ sprintf('<span class="badge text-bg-secondary user-select-all mb-3">%s</span>',
+			? 'ok' : 'warn' => [ sprintf('<span class="badge text-bg-secondary user-select-all">%s</span>',
 						     $pwdgen->{clear}),
-					     sprintf('<div id="pwd-qr" class=""><img src="data:image/png;base64,%s" class="img-thumbnail bg-light"></div>',
+					     sprintf('<div id="pwd-qr" class="mt-3"><img src="data:image/png;base64,%s" class="img-thumbnail bg-light"></div>',
 						     $qr->{qr})
 					   ]
 		      }});
