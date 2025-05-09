@@ -757,7 +757,13 @@ END_INPUT
 		  # as pwd_alg value, form returns preset name as class name defined in templates/protected/tool/pwdgen-create.html.ep
 		  $p->{palg} = exists $par->{pwd_alg} ? uc substr($par->{pwd_alg}, 4) : $cf->{xk}->{preset_default};
 		  $p->{pnum} = exists $par->{pwd_num} ? $par->{pwd_num} : $cf->{pnum};
-		  $p->{pwd}->{clear} = $par->{pwd_vrf}  // undef;
+		  if ( exists $par->{pwd_vrf} && $par->{pwd_vrf} ne '' ) {
+		    $p->{pwd}->{clear} = $par->{pwd_vrf};
+		  } elsif ( $par->{pwd_alg} eq 'alg-userdefined' ) {
+		    $p->{pwd}->{clear} = $par->{pwd_userdefined};
+		  } else {
+		    $p->{pwd}->{clear} = undef;
+		  }
 		  # $self->h_log($p);
 
 		  if (! defined $p->{pwd}->{clear} || $p->{pwd}->{clear} eq '') {

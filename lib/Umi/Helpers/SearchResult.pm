@@ -351,11 +351,13 @@ is there contextCSN variable in stash
 
   $app->helper( h_is_contextCSN => sub {
 		  my  ($self) = @_;
-		  my $res;
-		  my $contextCSN = $self->stash->{contextCSN};
-		  if (defined $contextCSN) {
-		    $res = sprintf('<sup class="umi-text-xxs ms-3 text-secondary align-top"><i>cache on %s</i></sup>',
-				   strftime("%F %T", gmtime($contextCSN)));
+		  my $res = '';
+		  if ( defined $self->stash->{contextCSN} ) {
+		    my $contextCSN = $self->stash->{contextCSN};
+		    if (defined $contextCSN) {
+		      $res = sprintf('<sup class="umi-text-xxs ms-3 text-secondary align-top"><i>cache on %s</i></sup>',
+				     strftime("%F %T", gmtime($contextCSN)));
+		    }
 		  }
 		  # $self->h_log( $res );
 		  return $res;

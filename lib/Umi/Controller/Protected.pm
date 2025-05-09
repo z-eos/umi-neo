@@ -251,10 +251,12 @@ sub pwdgen ($self) {
   my $par = $self->req->params->to_hash;
   $self->h_log($par);
 
-  $par->{pwd_chg_rdn} = $self->h_get_rdn_val($par->{pwd_chg_dn}) if ! exists $par->{pwd_chg_rdn};
-  if ( ! exists $par->{pwd_chg_svc} && $par->{pwd_chg_dn} =~ /authorizedService=/ ) {
-    my $re = qr/^.*,authorizedService=([^,]+),uid=.*,$self->{app}->{cfg}->{ldap}->{base}->{acc_root}$/i;
-    $par->{pwd_chg_svc} = $1 if $par->{pwd_chg_dn} =~ /$re/;
+  if ( exists $par->{pwd_chg_dn} ) {
+    $par->{pwd_chg_rdn} = $self->h_get_rdn_val($par->{pwd_chg_dn}) if ! exists $par->{pwd_chg_rdn};
+    if ( ! exists $par->{pwd_chg_svc} && $par->{pwd_chg_dn} =~ /authorizedService=/ ) {
+      my $re = qr/^.*,authorizedService=([^,]+),uid=.*,$self->{app}->{cfg}->{ldap}->{base}->{acc_root}$/i;
+      $par->{pwd_chg_svc} = $1 if $par->{pwd_chg_dn} =~ /$re/;
+    }
   }
 
   $self->stash({ pwdgen_params => $par }) if exists $par->{pwd_chg_dn};
@@ -316,7 +318,7 @@ sub pwdgen ($self) {
 	  $pwd_from_ldap = $search->entry->get_value('userPassword');
 	  $self->h_log($pwd_from_ldap);
 	  $match = $pwd_from_ldap eq $pwdgen->{ssha} ? 1 : 0;
-	  $self->stash({debug => { $match ? 'ok' : 'warn' => [ sprintf('provided password %s %s',
+	  $self->stash({debug => { $match ? 'ok' : 'warn' => [ sprintf('provided password <span class="badge text-bg-secondary user-select-all">%s</span> %s',
 								       $pwdgen->{clear},
 								       $match ? 'match' : 'does not match') ]
 				 }});
@@ -656,7 +658,7 @@ sub profile ($self) {
     $filter = sprintf("(&(uid=*)(!(gidNumber=%s)))",
 		      $self->{app}->{cfg}->{ldap}->{defaults}->{group}->{blocked}->{gidnumber});
   } elsif ($uid ne '') {
-    $chi_key = 'nokey';
+    $chi_key = $uid;
     $filter = sprintf("(|(uid=%s)(givenName=%s)(sn=%s))", $uid, $uid, $uid);
   } else {
     $chi_key = 'nokey';
@@ -702,10 +704,12 @@ sub profile ($self) {
 			      mail
 			      modifiersName
 			      sn
+			      telephoneNumber
 			      uid
 			      umiUserDateOfBirth
 			      umiUserDateOfEmployment
 			      umiUserDateOfTermination
+			      umiUserIm
 			   )]
     if $reqpath =~ /^\/audit\/.*$/;
 

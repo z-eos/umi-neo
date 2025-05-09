@@ -89,7 +89,7 @@
       %= hidden_field pwd_chg_rdn => $pp{pwd_chg_rdn}
       %= hidden_field pwd_chg_svc => $pp{pwd_chg_svc}
       <div class="col-auto mb-3">
-	%= text_field pwd_vrf => stash('pwd_vrf'), class => 'form-control', placeholder => 'password to verify'
+	%= text_field pwd_vrf => stash('pwd_vrf'), class => 'form-control text-center', placeholder => 'password to verify'
       </div>
       <div class="col-auto">
 	%= submit_button 'Submit', class => 'btn btn-success fw-bold text-uppercase text-end'
