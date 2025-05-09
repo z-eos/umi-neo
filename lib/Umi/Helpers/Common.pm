@@ -301,14 +301,20 @@ get random id of length N passed as input, default is 8
 
 QR CODE generator
 
+    toqr: text to generate QR code against
+    ecc:  Ecc mode. M, L, H or Q (Default = M)
+    mod:  size of modules (barcode unit) (Default = 1).
+    html: 1 to genegate HTML do display QR code image
+
 =cut
 
   $app->helper( h_qrcode => sub {
 		  my ($self, $args) = @_;
 		  my $arg = {
-			     txt => $args->{toqr},
-			     ecc => $args->{ecc} || 'M',
-			     mod => $args->{mod} || 1,
+			     txt =>  $args->{toqr},
+			     ecc =>  $args->{ecc}  || 'M',
+			     mod =>  $args->{mod}  || 1,
+			     html => $args->{html} || 1,
 			    };
 
 		  $arg->{txt} = encode 'UTF-8', $arg->{txt}; # without it non latin in QR is broken
@@ -328,6 +334,9 @@ QR CODE generator
 		    $arg->{gd}->transparent($arg->{white});
 		    $arg->{gd}->interlaced('true');
 		    $arg->{ret}->{qr} = b64_encode $arg->{gd}->png;
+		    $arg->{ret}->{html} = sprintf('<div id="pwd-qr" class="mt-3"><img src="data:image/png;base64,%s" class="img-thumbnail bg-light align-top"></div>',
+						  $arg->{ret}->{qr})
+		      if $arg->{html} == 1;
 		  }
 		  catch { $arg->{ret}->{error} = $_ . ' (in general max size is about 1660 characters of Latin1 codepage)'; };
 		  # $self->h_log($arg->{ret});
