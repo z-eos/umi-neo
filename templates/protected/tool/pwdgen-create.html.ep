@@ -590,8 +590,10 @@
   * @param {Object} presets    xkPresets object
   * @param {string} presetName Key of the preset (e.g. 'APPLEID')
   */
- function loadPreset(presets, presetName) {
+ function loadPreset(presets, presetNameOrig) {
    console.log('onPost: →' + onPost + '←');
+   console.log('presetName: →' + presetName + '←');
+   var presetName = presetNameOrig.slice(4); // remove prefix `ALG-`
    var preset = onPost === '' ? presets.presets[presetName] : onPost;
    onPost = '';
 
@@ -642,18 +644,7 @@
  // 4.1 Algorithm selection
  $('#pwd_operations').on('change', 'select[id=pwd_alg]', function() {
    var $container = $(this).closest('.target-container');
-   var value = $(this).val().toLowerCase(); // .slice(4); // strip 'alg-'
-
-   /* // Show or hide #one and #two based on the selected algorithm
-      if (value === 'userdefined') {
-      // Show #one and hide #two when alg-userdefined is chosen
-      $('#non-xkcd').show();
-      $('#xkcd').hide();
-      } else {
-      // Hide #one and show #two for all other selections
-      $('#non-xkcd').hide();
-      $('#xkcd').show();
-      } */
+   var value = $(this).val().toLowerCase();
 
    if (xkPresets) {
      loadPreset(xkPresets, value.toUpperCase());
@@ -740,7 +731,8 @@
 
 % if ( is_role 'admin,coadmin', {cmp => 'or'} ) {
 
-  <script src="https://cdn.jsdelivr.net/npm/zxcvbn@4.4.2/dist/zxcvbn.js"></script>
+  <!-- <script src="https://cdn.jsdelivr.net/npm/zxcvbn@4.4.2/dist/zxcvbn.js"></script> -->
+  <script src="/assets/js/zxcvbn.js"></script>
   <script>
    $('#pwd_userdefined').on('input', function () {
      const val = $(this).val();

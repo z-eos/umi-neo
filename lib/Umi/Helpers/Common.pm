@@ -800,6 +800,7 @@ END_INPUT
 		      if ( exists $par->{xk_padding_type} && $par->{xk_padding_type} eq 'pad-none' ) {
 			$par->{xk_padding_type} = 'NONE';
 			delete $par->{xk_pad_to_length};
+			delete $par->{xk_padding_alphabet};
 			delete $par->{xk_padding_character};
 			delete $par->{xk_padding_character_random};
 			delete $par->{xk_padding_character_after};

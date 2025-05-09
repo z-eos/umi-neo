@@ -3,7 +3,7 @@
 
 % my $p_p = stash('pwdgen_params');
 % my %pp = defined $p_p ? %$p_p : ();
-% h_log dumper \%pp;
+%# h_log dumper \%pp;
 % if ( defined $pp{pwd_chg_dn} ) {
 
   <ul class="nav nav-tabs mt-3" id="pwdTab" role="tablist">

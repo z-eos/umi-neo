@@ -249,7 +249,7 @@ sub sysinfo ($self) {
 sub pwdgen ($self) {
   my $cf = $self->{app}->{cfg}->{tool}->{pwdgen}->{xk};
   my $par = $self->req->params->to_hash;
-  $self->h_log($par);
+  # $self->h_log($par);
 
   if ( exists $par->{pwd_chg_dn} ) {
     $par->{pwd_chg_rdn} = $self->h_get_rdn_val($par->{pwd_chg_dn}) if ! exists $par->{pwd_chg_rdn};
