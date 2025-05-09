@@ -303,6 +303,7 @@ sub pwdgen ($self) {
 
     # $self->h_log($par);
     $pwdgen = $self->h_pwdgen($par);
+    my $qr = $self->h_qrcode({toqr => $pwdgen->{clear}, mod => 3});
     # $self->h_log($pwdgen);
     if ( exists $pwdgen->{error} ) {
       $self->stash({debug => { error => [ $pwdgen->{error} ]}});
@@ -336,8 +337,11 @@ sub pwdgen ($self) {
       } else {
 	$self->stash({debug =>
 		      { $pwdgen->{stats}->{passwords_generated} > 0
-			? 'ok' : 'warn' => [ sprintf('new password: <span class="badge text-bg-secondary user-select-all">%s</span>',
-						     $pwdgen->{clear}) ]
+			? 'ok' : 'warn' => [ sprintf('<span class="badge text-bg-secondary user-select-all mb-3">%s</span>',
+						     $pwdgen->{clear}),
+					     sprintf('<div id="pwd-qr" class=""><img src="data:image/png;base64,%s" class="img-thumbnail bg-light"></div>',
+						     $qr->{qr})
+					   ]
 		      }});
       }
     }
