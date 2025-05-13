@@ -1,4 +1,4 @@
-/*! 
+/*!
  * common things
  */
 
@@ -32,14 +32,34 @@
 // });
 
 
-// onclick="copyToClipboard('#ssh_private')"
+
+// copyToClipboard('#myElement');
 function copyToClipboard(selector) {
-  var range = document.createRange();
-  range.selectNode(document.querySelector(selector));
-  window.getSelection().removeAllRanges(); // clear current selection
-  window.getSelection().addRange(range);   // to select text
-  document.execCommand("copy");
-  window.getSelection().removeAllRanges(); // to deselect
+  const element = document.querySelector(selector);
+  if (!element) return;
+
+  // Ensure we're copying rendered multiline text
+  const text = element.innerText;
+  console.log('→'+text+'←');
+
+  // Use a temporary <textarea> for clipboard operation
+  const textarea = document.createElement('textarea');
+  textarea.value = text;
+  textarea.setAttribute('readonly', '');
+  textarea.style.position = 'absolute';
+  textarea.style.left = '-9999px';
+
+  document.body.appendChild(textarea);
+  textarea.select();
+
+  try {
+    document.execCommand('copy');
+    console.log('Copied successfully');
+  } catch (err) {
+    console.error('Copy failed', err);
+  }
+
+  document.body.removeChild(textarea);
 }
 
 // onclick="downloadString(document.querySelector('#ssh_private').innerText, 'text/plain', 'ssh-key.pvt')"
@@ -61,26 +81,26 @@ function manageCollapseState(elementId) {
 
     // Function to set the initial state based on local storage
     function setInitialState() {
-        const savedState = localStorage.getItem(elementId + 'State');
-        if (savedState === 'collapsed') {
-            sidebarElement.classList.remove('show');  // Ensure it's collapsed
-        } else {
-            sidebarElement.classList.add('show');  // Ensure it's expanded
-        }
+	const savedState = localStorage.getItem(elementId + 'State');
+	if (savedState === 'collapsed') {
+	    sidebarElement.classList.remove('show');  // Ensure it's collapsed
+	} else {
+	    sidebarElement.classList.add('show');  // Ensure it's expanded
+	}
     }
 
     // Apply the stored state when the document is ready
     document.addEventListener('DOMContentLoaded', function () {
-        setInitialState();
+	setInitialState();
     });
 
     // Listen for the collapse event to save the current state
     sidebarElement.addEventListener('hidden.bs.collapse', function () {
-        localStorage.setItem(elementId + 'State', 'collapsed');
+	localStorage.setItem(elementId + 'State', 'collapsed');
     });
 
     sidebarElement.addEventListener('shown.bs.collapse', function () {
-        localStorage.setItem(elementId + 'State', 'expanded');
+	localStorage.setItem(elementId + 'State', 'expanded');
     });
 }
 

@@ -11,6 +11,7 @@
 % my $root_uid = session('user_obj')->{dn};
 % my ($dn, $v, %dg);
 % my $na = '<i class="text-muted text-opacity-50">unavailable</i>';
+% my $iterator = 0;
 % foreach $dn (sort keys %$profiled_user) {
   % $v = $profiled_user->{$dn};
   %# <pre><%= dumper $v %></pre>
@@ -52,13 +53,13 @@
 	      </dd>
 	    % }
 
-	    <dt class="col-1 text-md-end" title="title"><i class="fa-lg fa-regular fa-address-card"></i></dt>
+	    <dt class="col-1 text-md-end" title="title"><i class="fa-lg fa-solid fa-user-graduate"></i></dt>
 	    <dd class="col-11 user-select-all"><%== exists $v->{title} ? $v->{title}->[0] : $na %></dd>
 
 	    <dt class="col-1 text-md-end" title="description"><i class="fa-lg fa-solid fa-feather-pointed"></i></dt>
 	    <dd class="col-11 user-select-all"><%== exists $v->{description} ? $v->{description}->[0] : $na %></dd>
 
-	    <dt class="col-1 text-md-end" title="uid"><i class="fa-lg fa-solid fa-id-card-clip"></i></dt>
+	    <dt class="col-1 text-md-end" title="uid">ID</dt>
 	    <dd class="col-11 user-select-all"><%== exists $v->{uid} ? $v->{uid}->[0] : $na %></dd>
 
 	    % if ($dn eq $root_uid) {
@@ -89,188 +90,199 @@
 	    <dd class="col-11 user-select-all"><%== exists $v->{umiuserim} && scalar @{$v->{umiuserim}} > 1 ? join '<br>', @{$v->{umiuserim}} : $na %></dd>
 
 	    <dt class="col-1 text-md-end" title="Location: City, Country"><i class="fa-lg fa-solid fa-location-dot"></i></dt>
-	      <dd class="col-11 user-select-all"><%== exists $v->{l} ? $v->{l}->[0] : $na %>, <%== exists $v->{umiusercountryofresidence} ? $v->{umiusercountryofresidence}->[0] : $na %></dd>
+	    <dd class="col-11 user-select-all"><%== exists $v->{l} ? $v->{l}->[0] : $na %>, <%== exists $v->{umiusercountryofresidence} ? $v->{umiusercountryofresidence}->[0] : $na %></dd>
 
-	      <dt class="col-1 text-md-end" title="Birth Date"><i class="fa-lg fa-solid fa-cake-candles"></i></dt>
+	    <dt class="col-1 text-md-end" title="Birth Date"><i class="fa-lg fa-solid fa-cake-candles"></i></dt>
+	    <dd class="col-11 user-select-all">
+	      <%== exists $v->{umiuserdateofbirth}
+	      ? strftime( "%F", localtime(generalizedTime_to_time($v->{umiuserdateofbirth}->[0])))
+	      : $na %>
+	    </dd>
+
+	    <dt class="col-1 text-md-end" title="Hire Date"><i class="fa-lg fa-solid fa-calendar-plus"></i></dt>
+	    <dd class="col-11 user-select-all">
+	      <%== exists $v->{umiuserdateofemployment}
+	      ? strftime( "%F", localtime(generalizedTime_to_time($v->{umiuserdateofemployment}->[0])))
+	      : $na %>
+	    </dd>
+
+	    % if ( exists $v->{umiuserdateoftermination} ) {
+	      <dt class="col-1 text-md-end" title="Termination Date"><i class="fa-lg fa-solid fa-calendar-xmark"></i></dt>
 	      <dd class="col-11 user-select-all">
-		<%== exists $v->{umiuserdateofbirth}
-		? strftime( "%F", localtime(generalizedTime_to_time($v->{umiuserdateofbirth}->[0])))
-		: $na %>
+		<%== strftime( "%F", localtime(generalizedTime_to_time($v->{umiuserdateoftermination}->[0]))) %>
 	      </dd>
+	    % }
 
-	      <dt class="col-1 text-md-end" title="Hire Date"><i class="fa-lg fa-solid fa-calendar-plus"></i></dt>
-	      <dd class="col-11 user-select-all">
-		<%== exists $v->{umiuserdateofemployment}
-		? strftime( "%F", localtime(generalizedTime_to_time($v->{umiuserdateofemployment}->[0])))
-		: $na %>
+	    <dt class="col-1 text-md-end" title="contact data as vCard"><i class="fa-lg fa-solid fa-address-card"></i></dt>
+	    <dd class="col-11">
+	      % my $vcf = h_vcard {$dn => $profiled_user->{$dn}};
+	      <%== h_element_cp_download_btns 'vcard_' . $iterator, $v->{uid}->[0] . '.vcf', undef, undef, 'text/x-vcard', $vcf %>
+	      %# <a href="/tool/qrcode?toqr=<%= url_escape $vcf %>&mod=5" class="btn btn-secondary btn-sm"><i class="fas fa-qrcode"></i></a>
+	      <textarea id="vcard_<%= $iterator %>" class="d-none"><%= $vcf %></textarea>
+	    </dd>
+
+	    <dt class="col-1  mt-2 pt-2 border-top"></dt>
+	    <dd class="col-11 mt-2 pt-2 border-top"></dd>
+
+	    %# GPG
+	    % if ( defined $pgp ) {
+	      <dt class="col-1 text-md-end" title="GPG"><i class="fa-lg fa-solid fa-lock"></i></dt>
+	      <dd class="col-11">
+		<details>
+		  <summary>
+		    GPG keys
+		  </summary>
+		  <table class="table table-sm table-responsive" style="font-size: 0.75rem;">
+		    % foreach (sort keys %{$pgp->{$dn}}) {
+		      % my $id = h_gen_id;
+		      <tr class="table-secondary">
+			<td class="fw-bold umi-text-xs user-select-all p-0 ps-2 border-0"><i class="fa-solid fa-lock me-1"></i>
+			  <span class="font-monospace me-2"><%= $pgp->{$dn}->{$_}->{keyid} %></span>
+			  <span class="me-2"><%= $_ %></span>
+			  %== h_element_cp_download_btns( 'gpgKey' . $id, 'gpg-key-' . $pgp->{$dn}->{$_}->{keyid} . '.pub' );
+			</td>
+		      </tr>
+		      <tr>
+			<td class="font-monospace text-muted user-select-all umi-text-tiny">
+			  <pre id="gpgKey<%= $id %>"><%= $pgp->{$dn}->{$_}->{key} =%></pre>
+			</td>
+		      </tr>
+		    % }
+		  </table>
+		</details>
 	      </dd>
+	    % }
 
-	      % if ( exists $v->{umiuserdateoftermination} ) {
-		<dt class="col-1 text-md-end" title="Termination Date"><i class="fa-lg fa-solid fa-calendar-xmark"></i></dt>
-		<dd class="col-11 user-select-all">
-		  <%== strftime( "%F", localtime(generalizedTime_to_time($v->{umiuserdateoftermination}->[0]))) %>
-		</dd>
-	      % }
-
-	      %# GPG
-	      % if ( defined $pgp ) {
-		<dt class="col-1 text-md-end mt-4" title="GPG"><i class="fa-lg fa-solid fa-lock"></i></dt>
-		<dd class="col-11 mt-4">
-		  <details>
-		    <summary>
-		      GPG keys
-		    </summary>
-		    <table class="table table-sm table-responsive" style="font-size: 0.75rem;">
-		      % foreach (sort keys %{$pgp->{$dn}}) {
-			% my $id = h_gen_id;
-			<tr class="table-secondary">
-			  <td class="fw-bold umi-text-xs user-select-all p-0 ps-2 border-0"><i class="fa-solid fa-lock me-1"></i>
-			    <span class="font-monospace me-2"><%= $pgp->{$dn}->{$_}->{keyid} %></span>
-			    <span class="me-2"><%= $_ %></span>
-			    %== h_element_cp_download_btns( 'gpgKey' . $id, 'gpg-key-' . $pgp->{$dn}->{$_}->{keyid} . '.pub' );
-			  </td>
-			</tr>
+	    %# SERVICES
+	    % if ( defined $services ) {
+	      <dt class="col-1 text-md-end" title="services"><i class="fa-lg fa-solid fa-bell-concierge"></i></dt>
+	      <dd class="col-11">
+		<details>
+		  <summary>services</summary>
+		  <table class="table table-sm table-responsive" style="font-size: 0.75rem;">
+		    % foreach (sort keys %{$services->{$dn}}) {
+		      <tr class="table-secondary">
+			<td class="fw-bold"><i class="<%= $services->{$dn}->{$_}->{icon} %> mx-2"></i><%= $_ %></td>
+			<td class="text-start"><em><small><%= $services->{$dn}->{$_}->{descr} %></small></em></td>
+		      </tr>
+		      % foreach my $l (sort keys %{$services->{$dn}->{$_}->{obj}}) {
 			<tr>
-			  <td class="font-monospace text-muted user-select-all umi-text-tiny">
-			    <pre id="gpgKey<%= $id %>"><%= $pgp->{$dn}->{$_}->{key} =%></pre>
+			  %# <td colspan="2" class="kludge-minus-700px">
+			  <td colspan="2" class="text-break">
+			    % if ($_ =~ /^ssh/) {
+			      <form id="searchMachine" method="POST" action="/tool/modify">
+				<input type="hidden" name="dn_to_modify"  value="<%= $l %>">
+				<input type="hidden" name="attr_to_modify" value="sshPublicKey">
+				<button type="submit" class="btn btn-sm umi-text-xs ms-2">
+				  <i class="fa-solid fa-key text-danger me-1"></i>
+				  <%= $services->{$_}->{obj}->{$l}->{uid}->[0] // $services->{$dn}->{$_}->{obj}->{$l}->{cn}->[0] %>
+				</button>
+			      </form>
+			    % } elsif ( $services->{$dn}->{$_}->{auth} )
+			    % {
+			      % if (is_role('admin,coadmin', {cmp => 'or'}) || $l =~ /.*$root_uid/) {
+				<form id="searchMachine" method="POST" action="/tool/pwdgen">
+				  <input type="hidden" name="pwd_chg_dn"  value="<%= $l %>">
+				  <input type="hidden" name="pwd_chg_svc" value="<%= $_ %>">
+				  <input type="hidden" name="pwd_chg_rdn" value="<%= $services->{$dn}->{$_}->{obj}->{$l}->{uid}->[0] // $services->{$dn}->{$_}->{obj}->{$l}->{cn}->[0] %>">
+			      % }
+			      <button type="submit"
+					    class="btn btn-sm umi-text-xs ms-2"
+					    data-filter="<%= 'cn=' . $_ . ',' . $search_base_case %>">
+				<i class="fa-solid fa-fingerprint text-danger me-1"></i>
+				<%= $services->{$dn}->{$_}->{obj}->{$l}->{uid}->[0] // $services->{$dn}->{$_}->{obj}->{$l}->{cn}->[0] %>
+			      </button>
+			      % if (is_role('admin,coadmin', {cmp => 'or'}) || $l =~ /.*$root_uid/) {
+				</form>
+			      % }
+			    % } else {
+			      <span class="me-3">
+				<%= $services->{$dn}->{$_}->{obj}->{$l}->{uid}->[0] // $services->{$dn}->{$_}->{obj}->{$l}->{cn}->[0] %>
+			      </span>
+			    % }
+
+			    % if ($_ =~ /^ssh/) {
+			      % foreach (@{$services->{$dn}->{$_}->{obj}->{$l}->{sshPublicKey}}) {
+				<p class="mt-1 mb-0 font-monospace text-muted user-select-all umi-text-tiny">
+				  %= $_
+				</p>
+			      % }
+			    % } elsif ( $_ =~ /^ovpn/ )
+			    % {
+			      <span class="ms-5 font-monospace" title="ifconfig-push value">
+				<%= $services->{$dn}->{$_}->{obj}->{$l}->{umiOvpnCfgIfconfigPush}->[0] %>
+			      </span>
+			      <span class="float-end umi-text-xs font-monospace">
+				<span title="Not Before">
+				  <%= $services->{$dn}->{$_}->{obj}->{$l}->{umiUserCertificateNotBefore}->[0] %>
+				</span> - <span title="Not After">
+				  <%= $services->{$dn}->{$_}->{obj}->{$l}->{umiUserCertificateNotAfter}->[0] %>
+				</span>
+			      </span>
+			    % }
 			  </td>
 			</tr>
 		      % }
-		    </table>
-		  </details>
-		</dd>
-	      % }
+		    % }
+		  </table>
+		</details>
+	      </dd>
+	    % }
 
-	      %# SERVICES
-	      % if ( defined $services ) {
-		<dt class="col-1 text-md-end" title="services"><i class="fa-lg fa-solid fa-bell-concierge"></i></dt>
+	    %# GROUPS
+	    % if (is_role 'admin,coadmin', {cmp => 'or'}) {
+	      % if ( defined $groups ) {
+		<dt class="col-1 text-md-end" title="groups"><i class="fa-lg fa-solid fa-users-viewfinder"></i></dt>
 		<dd class="col-11">
 		  <details>
-		    <summary>services</summary>
-		    <table class="table table-sm table-responsive" style="font-size: 0.75rem;">
-		      % foreach (sort keys %{$services->{$dn}}) {
-			<tr class="table-secondary">
-			  <td class="fw-bold"><i class="<%= $services->{$dn}->{$_}->{icon} %> mx-2"></i><%= $_ %></td>
-			  <td class="text-start"><em><small><%= $services->{$dn}->{$_}->{descr} %></small></em></td>
-			</tr>
-			% foreach my $l (sort keys %{$services->{$dn}->{$_}->{obj}}) {
-			  <tr>
-			    %# <td colspan="2" class="kludge-minus-700px">
-			    <td colspan="2" class="text-break">
-			      % if ($_ =~ /^ssh/) {
-				<form id="searchMachine" method="POST" action="/tool/modify">
-				  <input type="hidden" name="dn_to_modify"  value="<%= $l %>">
-				  <input type="hidden" name="attr_to_modify" value="sshPublicKey">
-				  <button type="submit" class="btn btn-sm umi-text-xs ms-2">
-				    <i class="fa-solid fa-key text-danger me-1"></i>
-				    <%= $services->{$_}->{obj}->{$l}->{uid}->[0] // $services->{$dn}->{$_}->{obj}->{$l}->{cn}->[0] %>
-				  </button>
-				</form>
-			      % } elsif ( $services->{$dn}->{$_}->{auth} )
-			      % {
-				% if (is_role('admin,coadmin', {cmp => 'or'}) || $l =~ /.*$root_uid/) {
-				  <form id="searchMachine" method="POST" action="/tool/pwdgen">
-				    <input type="hidden" name="pwd_chg_dn"  value="<%= $l %>">
-				    <input type="hidden" name="pwd_chg_svc" value="<%= $_ %>">
-				    <input type="hidden" name="pwd_chg_rdn" value="<%= $services->{$dn}->{$_}->{obj}->{$l}->{uid}->[0] // $services->{$dn}->{$_}->{obj}->{$l}->{cn}->[0] %>">
-				% }
-				<button type="submit"
-					class="btn btn-sm umi-text-xs ms-2"
-					data-filter="<%= 'cn=' . $_ . ',' . $search_base_case %>">
-				  <i class="fa-solid fa-fingerprint text-danger me-1"></i>
-				  <%= $services->{$dn}->{$_}->{obj}->{$l}->{uid}->[0] // $services->{$dn}->{$_}->{obj}->{$l}->{cn}->[0] %>
-				</button>
-				% if (is_role('admin,coadmin', {cmp => 'or'}) || $l =~ /.*$root_uid/) {
-				  </form>
-				% }
-			      % } else {
-				<span class="me-3">
-				  <%= $services->{$dn}->{$_}->{obj}->{$l}->{uid}->[0] // $services->{$dn}->{$_}->{obj}->{$l}->{cn}->[0] %>
-				</span>
-			      % }
-
-			      % if ($_ =~ /^ssh/) {
-				% foreach (@{$services->{$dn}->{$_}->{obj}->{$l}->{sshPublicKey}}) {
-				  <p class="mt-1 mb-0 font-monospace text-muted user-select-all umi-text-tiny">
-				    %= $_
-				  </p>
-				% }
-			      % } elsif ( $_ =~ /^ovpn/ )
-			      % {
-				<span class="ms-5 font-monospace" title="ifconfig-push value">
-				  <%= $services->{$dn}->{$_}->{obj}->{$l}->{umiOvpnCfgIfconfigPush}->[0] %>
-				</span>
-				<span class="float-end umi-text-xs font-monospace">
-				  <span title="Not Before">
-				    <%= $services->{$dn}->{$_}->{obj}->{$l}->{umiUserCertificateNotBefore}->[0] %>
-				  </span> - <span title="Not After">
-				    <%= $services->{$dn}->{$_}->{obj}->{$l}->{umiUserCertificateNotAfter}->[0] %>
-				  </span>
-				</span>
-			      % }
-			    </td>
-			  </tr>
-			% }
+		    <summary>groups</summary>
+		    % if ( exists $groups->{$dn} ) {
+		      % foreach (sort(@{$groups->{$dn}})) {
+			<span class="badge text-bg-secondary fw-normal"><%= $_ %></span>
 		      % }
-		    </table>
+		    % }
 		  </details>
 		</dd>
 	      % }
 
-	      %# GROUPS
-	      % if (is_role 'admin,coadmin', {cmp => 'or'}) {
-		% if ( defined $groups ) {
-		  <dt class="col-1 text-md-end" title="groups"><i class="fa-lg fa-solid fa-users-viewfinder"></i></dt>
-		  <dd class="col-11">
-		    <details>
-		      <summary>groups</summary>
-		      % if ( exists $groups->{$dn} ) {
-			% foreach (sort(@{$groups->{$dn}})) {
-			  <span class="badge text-bg-secondary fw-normal"><%= $_ %></span>
-			% }
+	      %# SERVERS
+	      % if ( exists $servers->{$dn} && scalar(@{$servers->{$dn}})) {
+		<dt class="col-1 text-md-end" title="servers"><i class="fa-lg fa-solid fa-server"></i></dt>
+		<dd class="col-11">
+		  <details>
+		    <summary>servers</summary>
+		    <form role="form" id="searchMachine" method="POST" action="/search/common">
+		      <input type="hidden" name="search_base_case" class="search_base_case" value="">
+		      % foreach (sort(@{$servers->{$dn}})) {
+			<span title="<%== $server_alive->{$dn}->{$_} ? '' : 'absent in machines (probably old stuff)' %>">
+			  <button type="submit"
+				  class="btn btn-<%= $server_alive->{$dn}->{$_} ? 'secondary' : 'danger disabled' %> btn-sm mb-1"
+				  style="--bs-btn-font-size: .75rem;"
+				  data-filter="<%= 'cn=' . $_ . ',' . $search_base_case %>"
+				  onClick="$('.search_base_case').val($(this).data('filter')); $('#searchMachine').submit();">
+			    <%= $_ %>
+			  </button>
+			</span>
 		      % }
-		    </details>
-		  </dd>
-		% }
+		    </form>
+		  </details>
+		</dd>
+	      % }
+	    % }
 
-		%# SERVERS
-		% if ( exists $servers->{$dn} && scalar(@{$servers->{$dn}})) {
-		  <dt class="col-1 text-md-end" title="servers"><i class="fa-lg fa-solid fa-server"></i></dt>
-		  <dd class="col-11">
-		      <details>
-			<summary>servers</summary>
-			<form role="form" id="searchMachine" method="POST" action="/search/common">
-			  <input type="hidden" name="search_base_case" class="search_base_case" value="">
-			  % foreach (sort(@{$servers->{$dn}})) {
-			    <span title="<%== $server_alive->{$dn}->{$_} ? '' : 'absent in machines (probably old stuff)' %>">
-			      <button type="submit"
-				      class="btn btn-<%= $server_alive->{$dn}->{$_} ? 'secondary' : 'danger disabled' %> btn-sm mb-1"
-				      style="--bs-btn-font-size: .75rem;"
-				      data-filter="<%= 'cn=' . $_ . ',' . $search_base_case %>"
-				      onClick="$('.search_base_case').val($(this).data('filter')); $('#searchMachine').submit();">
-				<%= $_ %>
-			      </button>
-			    </span>
-			  % }
-			</form>
-		      </details>
-		  </dd>
+	    %# PROJECTS
+	    <dt class="col-1 text-md-end" title="projects"><i class="fa-lg fa-solid fa-folder-tree"></i></dt>
+	    <dd class="col-11">
+	      % if ( exists $projects->{$dn} ) {
+		% foreach (@{$projects->{$dn}}) {
+		  <span class="badge text-bg-secondary fw-normal"><a href="/project/<%= substr($_, 0, index($_, ':')) %>"><%= $_ %></a></span>
 		% }
 	      % }
-
-	      %# PROJECTS
-	      <dt class="col-1 text-md-end" title="projects"><i class="fa-lg fa-solid fa-folder-tree"></i></dt>
-	      <dd class="col-11">
-		% if ( exists $projects->{$dn} ) {
-		  % foreach (@{$projects->{$dn}}) {
-		    <span class="badge text-bg-secondary fw-normal"><a href="/project/<%= substr($_, 0, index($_, ':')) %>"><%= $_ %></a></span>
-		  % }
-		% }
-	      </dd>
-	    </dl>
-	    <p class="card-text text-center"><small class="text-body-secondary umi-text-tiny">
-	      Last updated on <%= strftime( "%F %T", localtime(generalizedTime_to_time($v->{modifytimestamp}->[0]))) %> by <a href="/profile/<%= $modifiersname->{$dn}->{uid}->[0] %>"><%= $modifiersname->{$dn}->{gecos}->[0] %></a>
-	    </small></p>
+	    </dd>
+	  </dl>
+	  <p class="card-text text-center"><small class="text-body-secondary umi-text-tiny">
+	    Last updated on <%= strftime( "%F %T", localtime(generalizedTime_to_time($v->{modifytimestamp}->[0]))) %> by <a href="/profile/<%= $modifiersname->{$dn}->{uid}->[0] %>"><%= $modifiersname->{$dn}->{gecos}->[0] %></a>
+	  </small></p>
 	</div>
       </div>
     </div>

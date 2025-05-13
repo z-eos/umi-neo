@@ -28,6 +28,7 @@ requires 'IPC::Run';
 requires 'Net::CIDR::Set';
 requires 'Net::DNS';
 requires 'Net::LDAP';
+requires 'Text::vCard';
 requires 'Try::Tiny';
 
 test_requires 'Test::More';

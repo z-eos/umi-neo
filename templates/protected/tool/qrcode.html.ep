@@ -13,10 +13,14 @@
      </div>     -->
 % if (defined $qrcode && %$qrcode) {
   <div id="result" class="alert alert-success" role="alert">
-    <figure class="text-center">
-      <figcaption class="h6 text-left font-monospace"><%= $par->{toqr} %></figcaption>
-      <img alt="QR for: <%= $par->{toqr} %>" src="data:image/png;base64,<%= $qrcode->{qr} =%>" class="img-thumbnail bg-light">
-    </figure>
+    <div class="row">
+      <div class="col-5 font-monospace">
+	<pre><%= $par->{toqr} %></pre>
+      </div>
+      <div class="col-7 text-center">
+	<img alt="QR for: <%= $par->{toqr} %>" src="data:image/png;base64,<%= $qrcode->{qr} =%>" class="img-thumbnail bg-light">
+      </div>
+    </div>
   </div>
 % }
 
@@ -26,10 +30,10 @@
     <label class="col text-end font-weight-bold control-label" for="toqr">Text to QR Code</label>
     <div class="input-sm col-10">
       <textarea name="toqr" id="toqr" class="input-sm text-monospace form-control"
-		placeholder="Text to QRCode" rows="4" cols="10"><%= $par->{toqr} =%></textarea>
+		placeholder="Text to QRCode" rows="15" cols="10"><%= $par->{toqr} =%></textarea>
     </div>
   </div>
-  
+
   <div class="form-group row mt-3">
     <label class="col-2 text-end font-weight-bold control-label" for="mod">
       Module Size: <span id="mod_size" class=""></span>

@@ -734,26 +734,17 @@
   <!-- <script src="https://cdn.jsdelivr.net/npm/zxcvbn@4.4.2/dist/zxcvbn.js"></script> -->
   <script src="/assets/js/zxcvbn.js"></script>
   <script>
-   $('#pwd_userdefined').on('input', function () {
-     const val = $(this).val();
-
-     if (val.length === 0) {
+   function evaluatePasswordStrength(val) {
+     if (!val || val.length === 0) {
        $('#zxcvbn-output > div').empty();
        return;
      }
 
      const result = zxcvbn(val);
      console.log(result);
-     // Fill each section
+
      $('#zxcvbn-password').html(`${result.password}`);
-     var cl;
-     if ( result.score < 2 ) {
-       cl = 'text-danger';
-     } else if ( result.score > 3 ) {
-       cl = 'text-success';
-     } else {
-       cl = 'text-warning';
-     }
+     const cl = result.score < 2 ? 'text-danger' : result.score > 3 ? 'text-success' : 'text-warning';
      $('#zxcvbn-score').html(`<span class="${cl}">${result.score} / 4</span>`);
      $('#zxcvbn-guesses').html(`${result.guesses.toLocaleString()}`);
      $('#zxcvbn-guesses-log10').html(`${result.guesses_log10.toFixed(2)}`);
@@ -768,11 +759,30 @@
 			: 'No feedback';
      $('#zxcvbn-feedback').html(`${feedbackText}`);
 
-     // Optional: detailed breakdown of sequence
      const seq = result.sequence.map((entry, idx) =>
        `<div><strong>Match ${idx + 1}:</strong><pre class="mb-2">${JSON.stringify(entry, null, 2)}</pre></div>`
      ).join('');
      $('#zxcvbn-sequence').html(`${seq}`);
+   }
+
+   // Bind directly to input
+   $('#pwd_userdefined').on('input', function () {
+     evaluatePasswordStrength($(this).val());
+   });
+
+   // Evaluate immediately on page load if field is pre-filled
+   $(document).ready(function () {
+     const initialVal = $('#pwd_userdefined').val();
+     if (initialVal.length > 0) {
+       evaluatePasswordStrength(initialVal);
+     }
+   });
+
+   // Optional: clear output on reset/emptying
+   $('#pwd_userdefined').on('change', function () {
+     if ($(this).val().length === 0) {
+       $('#zxcvbn-output > div').empty();
+     }
    });
   </script>
 

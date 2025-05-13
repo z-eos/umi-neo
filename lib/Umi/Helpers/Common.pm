@@ -3,7 +3,7 @@
 package Umi::Helpers::Common;
 
 use Mojo::Base 'Mojolicious::Plugin';
-use Mojo::Util qw( b64_encode encode );
+use Mojo::Util qw( b64_encode encode url_escape );
 
 use Umi::Constants qw(RE);
 
@@ -23,6 +23,9 @@ use Time::Piece;
 use Try::Tiny;
 use Crypt::X509;
 # use Crypt::X509::CRL;
+
+use vCard::AddressBook;
+
 
 sub register {
 
@@ -343,14 +346,17 @@ QR CODE generator
 		  return $arg->{ret};
 		});
 
-  # IMAGE SIDES
+=head2 h_img_info
+
+returns hash ref `{ width => XX, height => YY }` of the image on input
+
+=cut
+
   $app->helper( h_img_info => sub {
 		  my ($self, $image) = @_;
 		  my $i = GD::Image->new($image);
-		  return {
-			  width  => $i->width,
-			  height => $i->height
-			 };
+		  return { width  => $i->width,
+			   height => $i->height };
 		});
 
 =head2 h_img_resize
@@ -775,7 +781,7 @@ END_INPUT
 		  }
 		  # $self->h_log($p);
 
-		  if (! defined $p->{pwd}->{clear} || $p->{pwd}->{clear} eq '') {
+		  if (! defined $p->{pwd}->{clear} ) { #}|| $p->{pwd}->{clear} eq '') {
 		    ##########################################
 		    # PASSWORD GENERATION (not verification) #
 		    ##########################################
@@ -1132,28 +1138,39 @@ on input expects:
     target_id:    mandatory
     file_name:    optional
     button_class: optional
+    wrapper_class:optional
+    mimetype:     optional
+    qrcode:       optional
 
 =cut
 
   $app->helper( h_element_cp_download_btns => sub {
-		  my ($c, $target_id, $file_name, $button_class, $wrapper_class) = @_;
+		  my ($c, $target_id, $file_name, $button_class, $wrapper_class, $mimetype, $qrcode) = @_;
 
 		  # Set default values if parameters are not provided
 		  $target_id     ||= 'targetId';
 		  $file_name     ||= 'element-' . $target_id . '-value.txt';
 		  $button_class  ||= 'btn btn-secondary btn-sm';
 		  $wrapper_class ||= '';
+		  $mimetype      ||= 'text/plain';
+		  $qrcode        ||= '';
+
+		  my $qr_button = '<a href="/tool/qrcode?toqr='
+		    . url_escape($qrcode)
+		    . '&mod=5" class="btn btn-secondary btn-sm"><i class="fa-solid fa-qrcode"></i></a>'
+		    if length($qrcode);
 
 		  my $html = qq{
 <div class="btn-group $wrapper_class" id="h_element_cp_download_btns">
     <button type="button" class="$button_class" title="Copy to clipboard"
 	    onclick="copyToClipboard('#$target_id')">
-	<i class="fas fa-copy"></i>
+	<i class="fa-solid fa-copy"></i>
     </button>
     <button type="button" class="$button_class"  title="Download as text/plain"
-	    onclick="downloadString(document.querySelector('#$target_id').innerText, 'text/plain', '$file_name')">
-	<i class="fas fa-download"></i>
+	    onclick="downloadString(document.querySelector('#$target_id').innerText, '$mimetype', '$file_name')">
+	<i class="fa-solid fa-download"></i>
     </button>
+    $qr_button
 </div>
 	};
 
@@ -1565,6 +1582,50 @@ EXAMPLE
 		  # $self->h_log(\%r);
 		  return \%r;
 
+		});
+
+=head2 h_vcard
+
+receives Net::LDAP::Search->as_struct for root object/s
+
+returns all the vCards as a single string
+
+=cut
+
+  $app->helper( h_vcard => sub {
+		  my ($self, $entries) = @_;
+		  # $self->h_log( $entries );
+
+		  my $abook = vCard::AddressBook->new();
+
+		  foreach my $dn (sort keys %$entries) {
+		    my %h;
+		    my $e = $entries->{$dn};
+
+		    $h{full_name} = $e->{gecos}->[0]  if exists $e->{gecos};
+		    $h{given_names} = $e->{givenname} if exists $e->{givenname};
+		    $h{family_names} = $e->{sn}	      if exists $e->{sn};
+		    $h{title} = $e->{title}->[0]      if exists $e->{title};
+
+		    if (exists $e->{mail}) {
+		      for (@{$e->{mail}}) {
+			push @{$h{email_addresses}}, { type => ['work'], address => $_ };
+		      }
+		    }
+
+		    if (exists $e->{telephonenumber}) {
+		      for (@{$e->{telephonenumber}}) {
+			push @{$h{phones}}, { type => ['work'], number => $_ };
+		      }
+		    }
+
+		    my $vcard = $abook->add_vcard();
+		    $vcard->load_hashref(\%h);
+		    # $self->h_log( $vcard->as_string );
+		    # $self->h_log( \%h );
+		  }
+
+		  return $abook->as_string;
 		});
 
 

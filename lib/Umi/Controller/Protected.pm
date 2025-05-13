@@ -296,6 +296,10 @@ sub pwdgen ($self) {
     $v->error( xk_pad_to_length => ['can not be empty'])
       if exists $par->{xk_padding_type} && $par->{xk_padding_type} eq 'pad-adaptive'
       && exists $par->{xk_pad_to_length} && length($par->{xk_pad_to_length}) < 1;
+
+    $v->error( pwd_userdefined => ['can not be empty'])
+      if $par->{pwd_alg} eq 'alg-userdefined'
+      && exists $par->{pwd_userdefined} && length($par->{pwd_userdefined}) < 1;
   }
 
   my $pwdgen;
@@ -332,17 +336,14 @@ sub pwdgen ($self) {
 			{ $mesg->{status} => [ $mesg->{message},
 					       sprintf('new password: <span class="badge text-bg-secondary user-select-all">%s</span>',
 						       $pwdgen->{clear}),
-					       $qr->{html}
-					     ]
+					       $qr->{html} ]
 			}});
 	}
       } else {
 	$self->stash({debug =>
-		      { $pwdgen->{stats}->{passwords_generated} > 0
-			? 'ok' : 'warn' => [ sprintf('<span class="badge text-bg-secondary user-select-all">%s</span>',
+		      { ok  => [ sprintf('<span class="badge text-bg-secondary user-select-all">%s</span>',
 						     $pwdgen->{clear}),
-					     $qr->{html}
-					   ]
+					     $qr->{html} ]
 		      }});
       }
     }
@@ -670,7 +671,7 @@ sub profile ($self) {
     $filter = sprintf("(uid=%s)", $self->session('uid'));
   }
 
-  $chi = $self->chi('fs')->get($chi_key);
+  $chi = $self->chi('fs')->get($chi_key.'killme');
   if ( $chi ) {
     if ($chi->{contextCSN} ge $contextCSN) {
       $self->h_log($chi->{contextCSN});
