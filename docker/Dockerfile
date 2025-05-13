@@ -35,6 +35,7 @@ RUN cpan -T -i \
     Net::CIDR::Set \
     Net::DNS \
     Net::LDAP \
+    Text::vCard \
     Try::Tiny
 
 WORKDIR /
