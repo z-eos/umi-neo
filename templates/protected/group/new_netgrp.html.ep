@@ -1,19 +1,19 @@
 %# -*- mode: web; eval: (follow-mode) -*-
 
 % my $dn_to_modify_netgr = stash->{dn_to_modify_netgr};
+
 <h3 class="fw-bold p-5">
   <i class="fas fa-users-line fa-lg me-3 text-muted"></i>
   <%= defined $dn_to_modify_netgr ? 'Modify' : 'New' %> NetGroup <small><em class="text-muted font-monospace"></em></small>
 </h3>
 <hr>
 
-% my $em = stash->{emploees};
 %= form_for '/netgroup/new' => {class => "form-horizontal"} => (method => 'POST') => begin
 
   % if ( defined $dn_to_modify_netgr ) {
     %= hidden_field dn_to_modify_netgr => $dn_to_modify_netgr
   % }
-  
+
   % param cn => stash->{cn} unless param 'cn';
   <div class="row mb-3">
     %= label_for cn => 'CN', class => 'col-sm-2 col-form-label text-end fw-bold text-uppercase'
@@ -54,11 +54,14 @@
   % $hosts = [[]] if ! defined $hosts;
   % $hosts_orig = stash->{hosts_orig};
   % $memberUid = stash->{memberUid};
+  % $memberUid = [[]] if ! defined $memberUid;
   % $memberUid_orig = stash->{memberUid_orig};
-  
+
   % my ($opts_h, $opts_m, %s, $class);
   % for ( my $i = 0; $i < scalar @$hosts; $i++)
   % {
+
+    % h_log $i; h_log $hosts->[$i]; h_log $memberUid->[$i];
 
     % $class = '" id="to-clone';
     % if ( h_is_empty_nested_arr($hosts) )
@@ -68,7 +71,7 @@
     % } else
     % {
       % $class = ' clone-section' if $i == 0;
-      
+
       % %s = map { $_ => 1 } @{$hosts->[$i]};
       % @$opts_h = map { $s{$_} ? [ $_ => $_, selected => 'selected' ] : $_ } @$hosts_orig;
 
@@ -77,41 +80,48 @@
 	% my $e = $_;
 	% $s{$e->[1]} ? [ @$e, selected => 'selected' ] : $e
       % } @$memberUid_orig;
-      
+
     % }
-    
-    <div class="my-2 py-2 <%== $class %>">
-      <div class="row mb-3" title="">
-	%= label_for memberUid => 'Member', class => 'col-sm-2 col-form-label text-end fw-bold text-uppercase'
+
+    <div class="my-2 pb-2 <%== $class %>">
+      <div class="row mb-1" title="">
+	%# = label_for hosts => 'Host', class => 'col-sm-2 col-form-label text-end fw-bold text-uppercase'
+	<label class="col-sm-2 col-form-label text-end fw-bold text-uppercase" for="hosts" title="hosts"><i class="fa-solid fa-computer"></i></label>
 	<div class="col-sm-10">
-	  %= select_field 'memberUid[' . $i . ']' => $opts_m, id => 'memberUid[' . $i . ']', class => 'form-select select2', multiple => 'multiple'
+	  %= select_field 'hosts[' . $i . ']' => $opts_h, id => 'hosts[' . $i . ']', class => 'form-select select2-hosts', title => 'hosts', multiple => 'multiple'
 	</div>
       </div>
 
       <div class="row" title="">
-	%= label_for hosts => 'Hosts', class => 'col-sm-2 col-form-label text-end fw-bold text-uppercase'
+	%# = label_for memberUid => 'Member', class => 'col-sm-2 col-form-label text-end fw-bold text-uppercase'
+	<label class="col-sm-2 col-form-label text-end fw-bold text-uppercase" for="memberUid" title="members"><i class="fa-solid fa-people-group"></i></label>
 	<div class="col-sm-10">
-	  %= select_field 'hosts[' . $i . ']' => $opts_h, id => 'hosts[' . $i . ']', class => 'form-select select2-hosts', multiple => 'multiple'
+	  %= select_field 'memberUid[' . $i . ']' => $opts_m, id => 'memberUid[' . $i . ']', class => 'form-select select2', title => 'members', multiple => 'multiple'
 	</div>
       </div>
     </div>
+
+    % undef $opts_h;
+    % undef $opts_m;
   % }
-  
+
   <div id="clones-container" class="m-2 p-2"></div>
 
   <div class="d-none">
     <div id="to-clone-meta" class="my-2 py-2">
-      <div class="row mb-3" title="">
-	%= label_for memberUid => 'Member', class => 'col-sm-2 col-form-label text-end fw-bold text-uppercase'
+      <div class="row mb-1" title="">
+	%# = label_for hosts => 'Host', class => 'col-sm-2 col-form-label text-end fw-bold text-uppercase'
+	<label class="col-sm-2 col-form-label text-end fw-bold text-uppercase" for="hosts" title="hosts"><i class="fa-solid fa-computer"></i></label>
 	<div class="col-sm-10">
-	  %= select_field 'memberUidMeta' => stash->{memberUid_orig}, class => 'form-select', multiple => 'multiple'
+	  %= select_field 'hostsMeta' => $hosts_orig, class => 'form-select', title => 'hosts', multiple => 'multiple'
 	</div>
       </div>
 
       <div class="row" title="">
-	%= label_for hosts => 'Hosts', class => 'col-sm-2 col-form-label text-end fw-bold text-uppercase'
+	%# = label_for memberUid => 'Member', class => 'col-sm-2 col-form-label text-end fw-bold text-uppercase'
+	<label class="col-sm-2 col-form-label text-end fw-bold text-uppercase" for="memberUid" title="members"><i class="fa-solid fa-people-group"></i></label>
 	<div class="col-sm-10">
-	  %= select_field 'hostsMeta' => stash->{hosts_orig}, class => 'form-select', multiple => 'multiple'
+	  %= select_field 'memberUidMeta' => $memberUid_orig, class => 'form-select', title => 'members', multiple => 'multiple'
 	</div>
       </div>
     </div>
@@ -123,7 +133,7 @@
 
 %# % my $attrs = stash->{attrs};
 %# <pre class="p-5 font-monospace umi-text-tiny"><%= dumper $attrs if defined $attrs %></pre>
-%# 
+%#
 %# % my $tuples_grouped = stash->{tuples_grouped};
 %# <pre class="p-5 font-monospace umi-text-tiny">
 %# Object tuples grouped by Cartesian products:
@@ -168,10 +178,10 @@
      const originalMarkup = $('#to-clone-meta').prop('outerHTML');
      const $newClone = $(originalMarkup);
      $newClone.removeAttr('id').addClass('clone-section');
-     
+
      $newClone.insertBefore('#clones-container');
-     const elementIndex = $('.clone-section').length;
-     
+     const elementIndex = $('.clone-section').length + 1;
+
      $newClone.find('[name=memberUidMeta]').attr('name', 'memberUid['+elementIndex+']').select2({
        placeholder: "Select or add options",
        allowClear: true
@@ -188,7 +198,6 @@
    $('#deleteButton').on('click', function () {
      $('.clone-section').last().remove();
    });
-   
+
  });
 </script>
-

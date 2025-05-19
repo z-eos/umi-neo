@@ -24,6 +24,7 @@ use Try::Tiny;
 use Crypt::X509;
 # use Crypt::X509::CRL;
 
+use Text::vCard::Addressbook;
 use vCard::AddressBook;
 
 
@@ -169,6 +170,44 @@ returns 1 if it is and 0 if not
 		  my ($self, $arg) = @_;
 		  return (($arg // '') ne '' && $arg =~ /^$re->{ip}\s+$re->{ip}$/) ? 1 : 0;
 		});
+
+=head2 h_telephonenumer
+
+checks whether the argument is a comma delimited telephone numbers in
+international notation
+
+returns hash of two elements: a ref to an array of numbers parsed (empty on success)
+and string of errors (empty on success)
+
+=cut
+
+  $app->helper( h_telephonenumber => sub {
+		  my ($self, $str) = @_;
+		  my (@num, $err, %t);
+		  if ( $str =~ /[^\d\+\(\)\s,]/ ) {
+		    return { num => \@num, err => 'Invalid characters. Only digits, plus sign, parentheses, spaces, and commas are allowed.' };
+		  } else {
+		    @num = split /\s*,\s*/, $str;  # Split the input by commas
+		    @num = grep { $_ ne '' } @num; # Remove any empty elements
+
+		    # Check the length of each phone number
+		    foreach my $number (@num) {
+		      my $digits_only = $number; # Count only digits in the phone number
+		      $digits_only =~ s/[^\d]//g;
+		      # Most phone numbers worldwide have between 7 and 15 digits
+		      my $digit_count = length($digits_only);
+		      if ($digit_count < 7 || $digit_count > 15) {
+			$err .= "Number $number has $digit_count digits. Must be between 7 and 15. ";
+		      }
+		    }
+		    # Normalize numbers: keep only digits and leading +
+		    @num = map { s/[^\d\+]+//gr } @num;
+		    $t{$_} = 1 foreach (@num);
+		    @num = keys %t;
+		    return { num => \@num, err => $err };
+		  }
+		});
+
 
 =head2 h_is_ip_pair
 
@@ -1155,7 +1194,8 @@ on input expects:
 		  $mimetype      ||= 'text/plain';
 		  $qrcode        ||= '';
 
-		  my $qr_button = '<a href="/tool/qrcode?toqr='
+		  my $qr_button = '';
+		  $qr_button = '<a href="/tool/qrcode?toqr='
 		    . url_escape($qrcode)
 		    . '&mod=5" class="btn btn-secondary btn-sm"><i class="fa-solid fa-qrcode"></i></a>'
 		    if length($qrcode);
@@ -1606,6 +1646,8 @@ returns all the vCards as a single string
 		    $h{given_names} = $e->{givenname} if exists $e->{givenname};
 		    $h{family_names} = $e->{sn}	      if exists $e->{sn};
 		    $h{title} = $e->{title}->[0]      if exists $e->{title};
+		    # otherwise warning '... uninitialized value ... vCard.pm line 112' occures
+		    $h{photo} = '';
 
 		    if (exists $e->{mail}) {
 		      for (@{$e->{mail}}) {
@@ -1627,7 +1669,6 @@ returns all the vCards as a single string
 
 		  return $abook->as_string;
 		});
-
 
   ### END OF REGISTER --------------------------------------------------------------------------------------------
 }

@@ -60,13 +60,13 @@
       % else { $mps = ''; }
     % }
     % $col .= '-subtle';
-    
+
     % my @dn_ico = ($e->dn =~ /authorizedService=([^,]+)\@/g);
 
     %## extracting users root object dn
     % my $root_usr_dn = h_get_root_dn $e->dn;
     % $root_usr_dn = '' if ! defined $root_usr_dn;
-    
+
     <div class="card border border-<%= $col %> my-1" id="card-<%= $i %>">
 
 	<div class="card-header bg-<%= $col %> p-0 m-0 fs-6">
@@ -83,7 +83,7 @@
 	    % $rrdn = $1 if $e->dn =~ /^uid=([^,]+),ou=People,dc=/i;
 	    %= include 'protected/search/common-menu', e => $e, i => $i, rrdn => $rrdn
 	  % }
-	  
+
 	  %# ICO after BURGER MENU
 	  % my $re_accesslog = app->{cfg}->{ldap}->{accesslog};
 	  %= form_for '/search/common' => (class => "injectable-form", method => 'POST') => begin
@@ -140,7 +140,7 @@
 	    </li>
 	  </ul>
 	% }
-	
+
       </div>
 
       <div class="collapse<%= ' show' if scalar @$entries == 1 %>" id="collapse-<%= $i %>">
@@ -158,7 +158,7 @@
 
 	    <div class="row">
 	      <div class="col-3 text-end fw-bold fs-6 text-truncate"><%= $attr %></div>
-	      <div class="col-9 user-select-all">
+	      <div class="col-9">
 
 		% for my $attr_val (@{$e->get_value($attr, asref => 1)}) {
 		    % if ($attr eq "jpegPhoto") {
@@ -260,12 +260,12 @@
      $('#searchresult .collapse').each(function() {
        const $this = $(this);
        if ($this.hasClass('show')) {
-         $this.collapse('hide');
+	 $this.collapse('hide');
        } else {
-         $this.collapse('show');
+	 $this.collapse('show');
        }
      });
-     
+
 %#     // Optionally, update the state of the toggleAllBtn icon and flag:
 %#     // If you want to reset the overall state flag (optional):
 %#     allExpanded = $('#searchresult .collapse.show').length === $('#searchresult .collapse').length;

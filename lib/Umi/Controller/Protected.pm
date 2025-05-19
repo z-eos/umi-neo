@@ -596,7 +596,7 @@ sub modify ($self) {
     if ($changes) {
       # $self->h_log($changes);
       my $msg = $ldap->modify($s->entry->dn, $changes);
-      push @{$debug{$msg->{status}}}, $msg->{message};
+      push @{$debug{$msg->{status}}}, $msg->{message}, $self->h_np($changes);
 
       if ( exists $p->{'userCertificate;binary'} ) {
 	# ($service) = $p->{authorizedService} =~ /([^@]+)/;
@@ -918,6 +918,12 @@ sub profile_new ($self) {
   $v->error(user_first_name => ['User with such first and last names exists']) if $search->count > 0;
   $v->error(user_last_name  => ['User with such first and last names exists']) if $search->count > 0;
 
+  my $phone_numbers;
+  if ( exists $p->{telephoneNumber} && $p->{telephoneNumber} ne '' ) {
+    $phone_numbers = $self->h_telephonenumber( $p->{telephoneNumber} );
+    $v->error(telephoneNumber => [$phone_numbers->{err}]) if exists $phone_numbers->{err} && $phone_numbers->{err} ne '';
+  }
+
   # my $jpegPhoto_error;
   # if ($upload->{jpegPhoto}->size) {
   #   my $sides = $self->h_img_info($upload->{jpegPhoto}->slurp);
@@ -937,7 +943,6 @@ sub profile_new ($self) {
   #			      $upload->{jpegPhoto}->filename,
   #			      $self->{app}->{cfg}->{ldap}->{defaults}->{attr}->{jpegPhoto}->{max_size})
   #   if $upload->{jpegPhoto}->size > $self->{app}->{cfg}->{ldap}->{defaults}->{attr}->{jpegPhoto}->{max_size};
-
   # $v->error( jpegPhoto => [ $jpegPhoto_error ] ) if defined $jpegPhoto_error;
 
   if ( ! $v->has_error ) {
@@ -960,6 +965,17 @@ sub profile_new ($self) {
 
     # $attrs->{jpegPhoto} = $upload->{jpegPhoto}->slurp if $upload->{jpegPhoto}->size > 0;
     $attrs->{jpegPhoto} = $self->h_img_resize( $upload->{jpegPhoto}->slurp ) if $upload->{jpegPhoto}->size > 0;
+    @{$attrs->{telephoneNumber}} = @{$phone_numbers->{num}} if exists $phone_numbers->{num} && @{$phone_numbers->{num}};
+
+    if ( exists $p->{umiUserIm} && $p->{umiUserIm} ne '' ) {
+      my @im = split /\s*,\s*/, $p->{umiUserIm};
+      @im = map { s/[\s]+//gr } @im;
+      my %t;
+      $t{$_} = 1 foreach (@im);
+      @im = keys %t;
+      @{$attrs->{umiUserIm}} = @im if @im;
+    }
+
 
     my $u = $ldap->last_num;
     if ( $u->[1] ) {
@@ -1005,11 +1021,13 @@ sub profile_modify ($self) {
 				   l
 				   sn
 				   title
+				   telephoneNumber
 				   umiUserCountryOfResidence
 				   umiUserDateOfBirth
 				   umiUserDateOfEmployment
 				   umiUserDateOfTermination
 				   umiUserGender
+				   umiUserIm
 				)], };
   my $search = $ldap->search( $search_arg );
   $self->{app}->h_log( $self->{app}->h_ldap_err($search, $search_arg) ) if $search->code;
@@ -1018,6 +1036,8 @@ sub profile_modify ($self) {
     %$from_ldap = map {
       if ( $_ eq 'mail' || $_ eq 'jpegPhoto' ) {
 	$_ => $search->entry->get_value($_);
+      } elsif ( $_ eq 'telephoneNumber' || $_ eq 'umiUserIm' ) {
+	$_ => $search->entry->get_value($_, asref => 1);
       } else {
 	$_ => utf8::is_utf8($search->entry->get_value($_)) ? $search->entry->get_value($_) : decode_utf8($search->entry->get_value($_));
       }

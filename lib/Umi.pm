@@ -141,6 +141,21 @@ sub _startup_session ($self) {
 		  }
 		});
 
+  $self->helper(
+		h_np => sub {
+		  my ($self, $data, $html, $class) = @_;
+		  $html  = $html  //= 1;
+		  $class = $class //= 'umi-text-tiny';
+		  my $ret;
+		  my $np = np $data, caller_info => 0;
+		  if ( $html == 1 ) {
+		    $ret = sprintf('<pre class="%s">%s</pre>', $class, $np );
+		  } else {
+		    $ret = $np;
+		  }
+		  return $ret;
+		});
+
   # Helper to set user session after successful authentication
   $self->helper(
 		set_user_session => sub {
@@ -215,8 +230,8 @@ sub _startup_config ($self) {
       my @keys = split /__/, lc $name;
       my $current = $self->app->cfg;
       while (@keys > 1) {
-        my $key = shift @keys;
-        $current = $current->{$key} //= {}; # Navigate or create nested hash
+	my $key = shift @keys;
+	$current = $current->{$key} //= {}; # Navigate or create nested hash
       }
       # Assign value to the last key
       $current->{$keys[0]} = $ENV{$env};
@@ -275,9 +290,10 @@ sub _startup_routes ($self) {
   $protected_root->get('/other')->to('protected#other');
 
 
-  ######################################################################################################################
-  # mod Authorization start only with v.1.0.6 — $...->requires(has_priv => ['r-people,r-group', {cmp => 'and'}])->...; #
-  ######################################################################################################################
+  ##########################################################################
+  # mod Authorization start only with v.1.0.6                              #
+  # $...->requires(has_priv => ['r-people,r-group', {cmp => 'and'}])->...; #
+  ##########################################################################
 
   ## PROFILE
   $protected_root
@@ -533,7 +549,7 @@ sub _startup_routes ($self) {
   #######################################################################
   # Default to 404 for anything that has not been handled explicitly.   #
   # This is probably reinventing a wheel already present in Mojolicious #
-  # Without this 404 is returned even on auth expiration	        #
+  # Without this 404 is returned even on auth expiration		#
   #######################################################################
   my $nf = sub ($c) {$c->render(template => 'not_found', status => 404)};
   $public_root->any($_ => $nf) for qw< * / >;
