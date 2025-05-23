@@ -1,22 +1,28 @@
 %# -*- mode: web; eval: (follow-mode) -*-
 
+% my $action = $c->req->url->path =~ /^\/project\/modify.*/ ? 'modify' : 'new';
+
 <h3 class="fw-bold p-5">
-  <i class="fas fa-folder fa-lg me-3 text-muted"></i>
-  New Project <small><em class="text-muted font-monospace"></em></small>
+  <i class="fa-solid <%= $action eq 'new' ? 'fa-file-circle-plus' : 'fa-file-pen' %> fa-lg me-3 text-muted"></i>
+  <%= ucfirst $action %> Project <small><em class="text-muted font-monospace"></em></small>
 </h3>
 <hr>
 
 % my $em = stash->{employees};
 % my $p = stash->{project_new_params};
 % my $option_checked = '';
-%= form_for '/project/new' => (class => "form-horizontal", method => 'POST') => begin
+%= form_for '/project/' . $action => (class => "form-horizontal", method => 'POST') => begin
+
+  % if ( $action eq 'modify' ) {
+    %= hidden_field proj_to_modify => 'proj_to_modify', id => 'proj_to_modify', value => exists stash->{from_form}->{proj_to_modify} ? stash->{from_form}->{proj_to_modify} : ''
+  % }
 
   <div class="row mb-3">
-    %= label_for proj_name => (class => 'col-sm-2 col-form-label text-end fw-bold') => begin
+    %= label_for cn => (class => 'col-sm-2 col-form-label text-end fw-bold') => begin
       Name:
     % end
     <div class="col-sm-10">
-      %= text_field 'proj_name', class => 'form-control', id => 'proj_name', placeholder => 'Short name to be used for technical needs mostly'
+      %= text_field 'cn', class => 'form-control', id => 'cn', placeholder => 'Short name to be used for technical needs mostly'
     </div>
   </div>
 
@@ -25,9 +31,7 @@
       Description:
     % end
     <div class="col-sm-10">
-      %= text_area proj_descr => (cols => 3, class => 'form-control', placeholder => 'Short description') => begin
-	<%= exists $p->{proj_descr} ? $p->{proj_descr} : '' =%>
-      % end
+      %= text_area 'description', cols => 3, class => 'form-control', placeholder => 'Short description'
     </div>
   </div>
 
@@ -66,11 +70,9 @@
 
 <script>
  $(document).ready(function() {
-
    $('.select2').select2({
-     placeholder: "Select or add options", // Optional placeholder text
-     allowClear: true                 // Optional: allows the user to clear selection
+     placeholder: "Select or add options",
+     allowClear: true
    });
-
  });
 </script>

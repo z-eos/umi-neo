@@ -12,6 +12,7 @@ use IO::Compress::Gzip qw(gzip $GzipError);
 use POSIX qw(strftime);
 use Encode qw(decode_utf8);
 use Net::LDAP::Constant qw(
+			    LDAP_ALREADY_EXISTS
 			    LDAP_SUCCESS
 			    LDAP_PROTOCOL_ERROR
 			    LDAP_NO_SUCH_OBJECT
@@ -68,7 +69,7 @@ sub delete ($self) {
 		 );
 }
 
-=head2 fire
+=head1 fire
 
 steps to do on employee firing
 
@@ -154,6 +155,12 @@ sub fire ($self) {
 
 }
 
+=head1 ldif_import
+
+import LDIF record or file
+
+=cut
+
 sub ldif_import ($self) {
   my $p = $self->req->params->to_hash;
   # $self->h_log($p);
@@ -181,6 +188,12 @@ sub ldif_import ($self) {
 		      );
 }
 
+=head1 ldif_export
+
+export LDIF record for the object chosen
+
+=cut
+
 sub ldif_export ($self) {
   my $v = $self->validation;
   return $self->render(template => 'protected/tool/ldif-export') unless $v->has_data;
@@ -204,6 +217,13 @@ sub ldif_export ($self) {
   return $self->render(template => 'protected/tool/ldif-export'); #, layout => undef);
 }
 
+=head1 ldif_clone
+
+generate LDIF for the object chosen and insert it into an import form
+template
+
+=cut
+
 sub ldif_clone ($self) {
   my $p = $self->req->params->to_hash;
 
@@ -223,6 +243,23 @@ sub ldif_clone ($self) {
   $self->stash(ldif => exists $p->{ldif} ? $p->{ldif} : $ldif,
 	       dn_to_clone => $p->{dn_to_clone});
   return $self->render( template => 'protected/tool/ldif-clone', );
+}
+
+=head1 undo_al
+
+undo changes in the accesslog object chosen
+
+=cut
+
+sub undo_al ($self) {
+  my $p = $self->req->params->to_hash;
+
+  my $ldap = Umi::Ldap->new( $self->{app}, $self->session('uid'), $self->session('pwd') );
+  $self->h_log($ldap->undo_al($p->{dn_to_undo}));
+
+  $self->req->params->merge( ldif => $ldap->undo_al($p->{dn_to_undo})->{ldif} );
+  $self->stash(dn_to_undo => $p->{dn_to_undo});
+  return $self->render( template => 'protected/tool/ldif-import', );
 }
 
 sub sysinfo ($self) {
@@ -406,7 +443,7 @@ sub keygen_gpg ($self) {
 }
 
 
-=head2 keyimport_gpg
+=head1 keyimport_gpg
 
 Import GPG from file or string
 
@@ -632,6 +669,19 @@ sub modify ($self) {
 
   return $self->render(template => 'protected/tool/modify'); #, layout => undef);
 }
+
+=head1 profile
+
+prepares user/s data to show profile/s (conditionally) according a route
+placeholder :uid, which must not be empty (in this case redirect to home
+page is done) and can be one of these keywords:
+
+    all
+    disabled
+    active
+    uid-of-user
+
+=cut
 
 sub profile ($self) {
   my $p = $self->req->params->to_hash;
@@ -874,6 +924,12 @@ sub profile ($self) {
   }
 }
 
+=head1 profile_new
+
+create a new user account - profile
+
+=cut
+
 sub profile_new ($self) {
   my $p = $self->req->params->to_hash;
   $self->h_log($p);
@@ -890,33 +946,34 @@ sub profile_new ($self) {
 
   my $re_name = qr/^\p{Lu}\p{L}*([-']\p{L}+)*[0-9]*$/;
   my $re_date = qr/^(\d{4})-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/;
-  $v->required('user_first_name')->like($re_name);
-  $v->required('user_last_name')->like($re_name);
+  $v->required('givenName')->like($re_name);
+  $v->required('sn')->like($re_name);
   $v->required('title');
   $v->required('umiUserDateOfEmployment')->like($re_date);
   ### $v->required('umiUserDateOfBirth')->like($re_date);
-  $v->required('city');
+  $v->required('l');
   $v->required('umiUserGender');
   $v->required('umiUserCountryOfResidence');
 
-  $v->error(user_first_name => ['Required, can contain alfanumeric characters and dash, first letter capital']) if $v->error('user_first_name');
-  $v->error(user_last_name => ['Required, can contain alfanumeric characters and dash, first letter capital']) if $v->error('user_last_name');
+  $v->error(givenName => ['Required, can contain alfanumeric characters and dash, first letter capital']) if $v->error('givenName');
+  $v->error(sn => ['Required, can contain alfanumeric characters and dash, first letter capital']) if $v->error('sn');
 
-  my $nf = $self->h_translit(lc $p->{user_first_name});
-  my $nl = $self->h_translit(lc $p->{user_last_name});
-  my $nn = sprintf("%s %s", $self->h_translit($p->{user_first_name}), $self->h_translit($p->{user_last_name}));
+  my $nf = $self->h_translit(lc $p->{givenName});
+  my $nl = $self->h_translit(lc $p->{sn});
+  my $nn = sprintf("%s %s", $self->h_translit($p->{givenName}), $self->h_translit($p->{sn}));
+
   my $ldap = Umi::Ldap->new( $self->{app}, $self->session('uid'), $self->session('pwd') );
   my $search_arg = { base => $self->{app}->{cfg}->{ldap}->{base}->{acc_root},
 		     filter => sprintf("(|(&(givenName=%s)(sn=%s))(uid=%s.%s))",
-				       $p->{user_first_name},
-				       $p->{user_last_name},
+				       $p->{givenName},
+				       $p->{sn},
 				       $nf,
 				       $nl),
 		     scope => "one" };
   my $search = $ldap->search( $search_arg );
   $self->{app}->h_log( $self->{app}->h_ldap_err($search, $search_arg) ) if $search->code;
-  $v->error(user_first_name => ['User with such first and last names exists']) if $search->count > 0;
-  $v->error(user_last_name  => ['User with such first and last names exists']) if $search->count > 0;
+  $v->error(givenName => ['User with such first and last names exists']) if $search->count > 0;
+  $v->error(sn  => ['User with such first and last names exists']) if $search->count > 0;
 
   my $phone_numbers;
   if ( exists $p->{telephoneNumber} && $p->{telephoneNumber} ne '' ) {
@@ -950,12 +1007,12 @@ sub profile_new ($self) {
 		 cn        => $nn,
 		 gecos     => $nn,
 		 gidNumber => $self->{app}->{cfg}->{ldap}->{defaults}->{attr}->{gidNumber}->{onboarding},
-		 givenName => $p->{user_first_name},
-		 l         => $p->{city},
+		 givenName => $p->{givenName},
+		 l         => $p->{l},
 		 homeDirectory => sprintf("/usr/local/home/%s.%s", $nf, $nl),
 		 objectClass   => $self->{app}->{cfg}->{ldap}->{objectClass}->{acc_root},
 		 umiUserGender => $p->{umiUserGender},
-		 sn            => $p->{user_last_name},
+		 sn            => $p->{sn},
 		 title         => $p->{title},
 		 uid           => sprintf("%s.%s", $nf, $nl),
 		 umiUserCountryOfResidence => $p->{umiUserCountryOfResidence},
@@ -998,58 +1055,118 @@ sub profile_new ($self) {
   $self->render(template => 'protected/profile/new');
 }
 
+=head1 profile_modify
+
+modification of profile
+
+=cut
+
 sub profile_modify ($self) {
   my $from_form = $self->req->params->to_hash;
+  # $self->h_log($from_form);
+  $self->h_compact($from_form);
   $self->h_log($from_form);
+
+  if (
+      ! exists $from_form->{uid_to_modify} &&
+      ( ! defined $self->stash('uid') || $self->stash('uid') eq '' )
+      ) {
+    return $self->render(template => 'protected/home');
+  }
+
+  my $attrs = [qw(
+		   givenName
+		   jpegPhoto
+		   l
+		   sn
+		   telephoneNumber
+		   title
+		   umiUserCountryOfResidence
+		   umiUserDateOfBirth
+		   umiUserDateOfEmployment
+		   umiUserDateOfTermination
+		   umiUserGender
+		   umiUserIm
+		)];
+
+  my $uid = $self->stash('uid') // $from_form->{uid_to_modify} // '';
+  ###$from_form->{uid_to_modify} = $self->stash->{uid} if exists $self->stash->{uid};
+  $from_form->{uid_to_modify} = $uid;
+  $self->stash(uid_to_modify => $uid);
+
+  my $ldap = Umi::Ldap->new($self->{app}, $self->session('uid'), $self->session('pwd'));
+  my $search_arg = { base => $self->{app}->{cfg}->{ldap}->{base}->{acc_root},
+		     filter => '(uid=' . $uid .')',
+		     scope => 'one',
+		     attrs => $attrs, };
+  # $self->h_log($search_arg);
+  my $search = $ldap->search( $search_arg );
+  $self->{app}->h_log( $self->{app}->h_ldap_err($search, $search_arg) ) if $search->code;
+  my ($from_ldap, $dn, $e);
+  if ($search->count) {
+    $e = $search->entry;
+    %$from_ldap = map {
+      if ( $_ eq 'mail' || $_ eq 'jpegPhoto' ) {
+	$_ => $e->get_value($_);
+      } elsif ( $_ eq 'telephoneNumber' || $_ eq 'umiUserIm' ) {
+	#############################################################################
+	# telephoneNumber and umiUserIm attributes values are treated as array refs #
+	#############################################################################
+	$_ => $e->get_value($_, asref => 1);
+      } else {
+	$_ => utf8::is_utf8($e->get_value($_)) ? $e->get_value($_) : decode_utf8($e->get_value($_));
+      }
+    } $e->attributes;
+    $dn = $e->dn;
+  }
+
+  # $self->h_log($from_ldap);
+  # $self->h_log($from_form);
+  $self->stash(from_ldap => $from_ldap);
+
+  $from_form->{telephoneNumber} = $self->h_telephonenumber($from_form->{telephoneNumber})->{num}
+    if exists $from_form->{telephoneNumber} && $from_form->{telephoneNumber} ne '';
+
+  if ( exists $from_form->{umiUserIm} && $from_form->{umiUserIm} ne '' ) {
+    my @im = split /\s*,\s*/, $from_form->{umiUserIm};
+    @im = map { s/[\s]+//gr } @im;
+    my %t;
+    $t{$_} = 1 foreach (@im);
+    @im = keys %t;
+    $from_form->{umiUserIm} = \@im if @im;
+  }
+
+  $self->stash(from_form => $from_form);
+
+  my $v = $self->validation;
+  # return $self->render(template => 'protected/profile/modify') unless $v->has_data;
+
+  ###############################
+  # data population to the form #
+  ###############################
+  unless (keys %$from_form > 1) {
+    foreach (@$attrs) {
+      next if $_ eq 'jpegPhoto';
+      ####################################################################
+      # telephoneNumber and umiUserIm values are represented in the form #
+      # as strings, so we need them passed to/fro form as strings	 #
+      ####################################################################
+      if ( $_ eq 'telephoneNumber' || $_ eq 'umiUserIm' ) {
+	$self->req->params->merge( $_ => join(', ', @{$from_ldap->{$_}}) );
+      } else {
+	$self->req->params->merge( $_ => $from_ldap->{$_} ) if $e->exists($_);
+      }
+    }
+    $self->req->params->merge( uid_to_modify => $uid );
+    return $self->render(template => 'protected/profile/new');
+  }
+
   my $upload;
   my $uploads = $self->req->uploads;
   # $self->h_log($uploads);
   if ( @$uploads ) {
     %$upload = map { $_->name => $_ } @$uploads;
   }
-  $self->h_compact($from_form);
-
-  my $uid = $self->stash->{uid} // $from_form->{uid_to_modify} // '';
-  $from_form->{uid_to_modify} = $self->stash->{uid} if exists $self->stash->{uid};
-  my $ldap = Umi::Ldap->new( $self->{app}, $self->session('uid'), $self->session('pwd') );
-  my $search_arg = { base => $self->{app}->{cfg}->{ldap}->{base}->{acc_root},
-		     filter => '(uid=' . $uid .')',
-		     scope => 'one',
-		     attrs => [qw(
-				   givenName
-				   jpegPhoto
-				   l
-				   sn
-				   title
-				   telephoneNumber
-				   umiUserCountryOfResidence
-				   umiUserDateOfBirth
-				   umiUserDateOfEmployment
-				   umiUserDateOfTermination
-				   umiUserGender
-				   umiUserIm
-				)], };
-  my $search = $ldap->search( $search_arg );
-  $self->{app}->h_log( $self->{app}->h_ldap_err($search, $search_arg) ) if $search->code;
-  my ($from_ldap, $dn, $e);
-  if ($search->count) {
-    %$from_ldap = map {
-      if ( $_ eq 'mail' || $_ eq 'jpegPhoto' ) {
-	$_ => $search->entry->get_value($_);
-      } elsif ( $_ eq 'telephoneNumber' || $_ eq 'umiUserIm' ) {
-	$_ => $search->entry->get_value($_, asref => 1);
-      } else {
-	$_ => utf8::is_utf8($search->entry->get_value($_)) ? $search->entry->get_value($_) : decode_utf8($search->entry->get_value($_));
-      }
-    } $search->entry->attributes;
-    $dn = $search->entry->dn;
-  }
-
-  $self->stash(from_ldap => $from_ldap);
-  $self->stash(from_form => $from_form);
-
-  my $v = $self->validation;
-  return $self->render(template => 'protected/profile/modify') unless $v->has_data;
 
   my $re_name = qr/^\p{Lu}\p{L}*([-']\p{L}+)*[0-9]*$/;
   my $re_date = qr/^(\d{4})-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/;
@@ -1065,40 +1182,9 @@ sub profile_modify ($self) {
   $v->error( sn        => ['UTF-8 and - characters only'] ) if $v->error('sn');
   $v->error( title     => ['UTF-8 and - characters only'] ) if $v->error('title');
 
-  # my $jpegPhoto_error;
-  # if ($upload->{jpegPhoto}->size) {
-  #   my $sides = $self->h_img_info($upload->{jpegPhoto}->slurp);
-  #   if ( $sides->{width} > $self->{app}->{cfg}->{ldap}->{defaults}->{attr}->{jpegPhoto}->{max_side} ) {
-  #     $jpegPhoto_error .= sprintf('File %s width is %s what is bigger than %s px; ',
-  #				  $upload->{jpegPhoto}->filename,
-  #				  $sides->{width},
-  #				  $self->{app}->{cfg}->{ldap}->{defaults}->{attr}->{jpegPhoto}->{max_side});
-  #   } elsif ( $sides->{height} > $self->{app}->{cfg}->{ldap}->{defaults}->{attr}->{jpegPhoto}->{max_side} ) {
-  #     $jpegPhoto_error .= sprintf('File %s height is %s what is bigger than %s px; ',
-  #				  $upload->{jpegPhoto}->filename,
-  #				  $sides->{height},
-  #				  $self->{app}->{cfg}->{ldap}->{defaults}->{attr}->{jpegPhoto}->{max_side});
-  #   }
-  # }
-  # $jpegPhoto_error .= sprintf('File %s is bigget than %s bytes.',
-  #			      $upload->{jpegPhoto}->filename,
-  #			      $self->{app}->{cfg}->{ldap}->{defaults}->{attr}->{jpegPhoto}->{max_size})
-  #   if $upload->{jpegPhoto}->size > $self->{app}->{cfg}->{ldap}->{defaults}->{attr}->{jpegPhoto}->{max_size};
-
-  # $v->error( jpegPhoto => [ $jpegPhoto_error ] ) if defined $jpegPhoto_error;
-
   if ( ! $v->has_error ) {
     # $self->h_log($from_form);
     $from_form->{jpegPhoto} = $upload->{jpegPhoto}->slurp if $upload->{jpegPhoto}->size > 0;
-
-    $self->stash( debug_status => 'debug',
-		  debug_message => sprintf("<pre>%s</pre>",
-					   dumper {
-					     from_form => $from_form,
-					       uid => $self->stash->{uid},
-					       from_ldap => $self->stash->{from_ldap}
-					     })
-		);
 
     my ($tmp_k, $tmp_v) = ('uid_to_modify', $from_form->{uid_to_modify});
 
@@ -1107,9 +1193,6 @@ sub profile_modify ($self) {
     my %f = %$from_form;
     delete $f{jpegPhoto} if exists $f{jpegPhoto};
     delete $f{uid_to_modify};
-    # $f{umiUserDateOfBirth} .= 'Z' if exists $f{umiUserDateOfBirth} && $f{umiUserDateOfBirth} !~ /^.*Z$/;
-    # $f{umiUserDateOfEmployment} .= 'Z' if exists $f{umiUserDateOfEmployment} && $f{umiUserDateOfEmployment} !~ /^.*Z$/;
-    # $f{umiUserDateOfTermination} .= 'Z' if exists $f{umiUserDateOfTermination} && $f{umiUserDateOfTermination} !~ /^.*Z$/;
 
     $f{umiUserDateOfBirth} = $self->h_ts_to_generalizedTime($f{umiUserDateOfBirth})
       if exists $f{umiUserDateOfBirth} && $f{umiUserDateOfBirth} ne '';
@@ -1118,10 +1201,28 @@ sub profile_modify ($self) {
     $f{umiUserDateOfTermination} = $self->h_ts_to_generalizedTime($f{umiUserDateOfTermination})
       if exists $f{umiUserDateOfTermination} && $f{umiUserDateOfTermination} ne '';
 
+    ############################################################
+    # telephoneNumber and umiUserIm attributes values are      #
+    # treated as array refs, so diif should be done separately #
+    ############################################################
+    my ($l_tel, $f_tel, $diff_tel, $l_im, $f_im, $diff_im);
+    if ( exists $l{telephoneNumber} && exists $f{telephoneNumber} ) {
+      $l_tel = delete $l{telephoneNumber};
+      $f_tel = delete $f{telephoneNumber};
+      $diff_tel = $self->h_array_diff($l_tel, $f_tel);
+      #$self->h_log($diff_tel);
+    }
+    if ( exists $l{umiUserIm} && exists $f{umiUserIm} ) {
+      $l_im = delete $l{umiUserIm};
+      $f_im = delete $f{umiUserIm};
+      $diff_im = $self->h_array_diff($l_im, $f_im);
+      #$self->h_log($diff_im);
+    }
+
     my $diff = $self->h_hash_diff( \%l, \%f);
-    $self->h_log($diff);
-    $self->h_log([keys(%l)]);
-    $self->h_log([keys(%f)]);
+    # $self->h_log($diff);
+    # $self->h_log([keys(%l)]);
+    # $self->h_log([keys(%f)]);
 
     my ($add, $delete, $replace, $changes);
 
@@ -1134,9 +1235,15 @@ sub profile_modify ($self) {
     if ( %{$diff->{added}} ) {
       push @$add, $_ => $diff->{added}->{$_} foreach (keys(%{$diff->{added}}));
     }
+    push @$add, telephoneNumber => $diff_tel->{added} if defined $diff_tel && exists $diff_tel->{added} && @{$diff_tel->{added}};
+    push @$add, umiUserIm => $diff_im->{added} if defined $diff_im && exists $diff_im->{added} && @{$diff_im->{added}};
+
     if ( %{$diff->{removed}} ) {
       push @$delete, $_ => [] foreach (keys(%{$diff->{removed}}));
     }
+    push @$delete, telephoneNumber => $diff_tel->{removed} if defined $diff_tel && exists $diff_tel->{removed} && @{$diff_tel->{added}};
+    push @$delete, umiUserIm => $diff_im->{removed} if defined $diff_im && exists $diff_im->{removed} && @{$diff_im->{added}};
+
     if ( %{$diff->{changed}} ) {
       push @$replace, $_ => $diff->{changed}->{$_}->{new} foreach (keys(%{$diff->{changed}}));
     }
@@ -1151,52 +1258,33 @@ sub profile_modify ($self) {
     if ( $changes ) {
       my $msg = $ldap->modify($dn, $changes);
       $self->stash(debug => {$msg->{status} => [ $msg->{message} ]});
-      # need this to get form updated on submit
-      $search_arg = { base => $self->{app}->{cfg}->{ldap}->{base}->{acc_root},
-		      filter => '(uid=' . $uid .')',
-		      scope => 'one',
-		      attrs => [qw( givenName
-				    jpegPhoto
-				    l
-				    sn
-				    title
-				    umiUserCountryOfResidence
-				    umiUserDateOfBirth
-				    umiUserDateOfEmployment
-				    umiUserDateOfTermination
-				    umiUserGender )], };
-      $search = $ldap->search( $search_arg );
-      $self->{app}->h_log( $self->{app}->h_ldap_err($search, $search_arg) ) if $search->code;
-      if ($search->count) {
-	%$from_ldap = map {
-	  if ( $_ eq 'mail' || $_ eq 'jpegPhoto' ) {
-	    $_ => $search->entry->get_value($_);
-	  } else {
-	    $_ => utf8::is_utf8($search->entry->get_value($_)) ? $search->entry->get_value($_) : decode_utf8($search->entry->get_value($_));
-	  }
-	} $search->entry->attributes;
-      }
-      $self->stash(from_ldap => $from_ldap);
     }
   }
-  $self->render(template => 'protected/profile/modify'); #, layout => undef);
+
+  $self->render(template => 'protected/profile/new'); #, layout => undef);
 }
+
+=head1 project_new
+
+creation of a new project
+
+=cut
 
 sub project_new ($self) {
   my $ldap = Umi::Ldap->new( $self->{app}, $self->session('uid'), $self->session('pwd') );
-  my ($search, $search_arg);
+  my ($search, $search_arg, $debug);
   my ($employees, $err) = $ldap->all_users;
 
   my $par = $self->req->params->to_hash;
-  # $self->h_log($par);
+  $self->h_log($par);
   $self->stash(project_new_params => $par, employees => $employees);
 
   my $v = $self->validation;
   return $self->render(template => 'protected/project/new') unless $v->has_data;
 
-  $v->required('proj_name')->check('size', 2, 50)->check('like', qr/^[A-Za-z0-9.-_]+$/);
-  $v->error( proj_name   => ['Must be 2-50 charaters in length and can be only ASCII characters: A-Za-z0-9.-_'] )
-    if $v->error('proj_name');
+  $v->required('cn')->check('size', 2, 50)->check('like', qr/^[A-Za-z0-9.-_]+$/);
+  $v->error( cn   => ['Must be 2-50 charaters in length and can be only ASCII characters: A-Za-z0-9.-_'] )
+    if $v->error('cn');
   # looks like some projects can be empty
   # $v->required('team_pm');
   # $v->required('team_back');
@@ -1213,70 +1301,95 @@ sub project_new ($self) {
 
   if ( ! $v->has_error ) {
     $search_arg = { base => $self->{app}->{cfg}->{ldap}->{base}->{project},
-		    filter => "(cn=" . $par->{proj_name} . ")",
+		    filter => "(cn=" . $par->{cn} . ")",
 		    scope => "one",
 		    attrs => ['cn'] };
     $search = $ldap->search( $search_arg );
-    $self->{app}->h_log( $self->{app}->h_ldap_err($search, $search_arg) ) if $search->code;
-    $v->error(proj_name => ['Project with such name exists']) if $search->count > 0;
+    $self->h_log( $self->h_ldap_err($search, $search_arg) ) if $search->code;
+    $v->error(cn => ['Project with such name exists']) if $search->count > 0;
 
-    ### attribute associatedDomain is been set by admins after project object creation
-    my $attrs = {
-		 objectClass => $self->{app}->{cfg}->{ldap}->{objectClass}->{project},
-		 ### FIX proj_name must comply regex ^[A-Za-z0-9.-_]+$
-		 cn => lc $par->{proj_name},
-		 description => $par->{proj_descr},
-		 associatedDomain => 'unknown'
-		};
-
+    my $attrs =
+      {
+       objectClass => $self->{app}->{cfg}->{ldap}->{objectClass}->{project},
+       cn => lc $par->{cn},
+       description => $par->{description} ne '' ? $par->{description} : 'no description',
+       #------------------------------------------------------------------------------
+       # attribute associatedDomain is set by admins after project object is creation
+       #------------------------------------------------------------------------------
+       associatedDomain => 'unknown'
+      };
     $self->h_log($attrs);
 
-    my $msg = $ldap->add(sprintf("cn=%s,%s",
-				 lc $par->{proj_name},
-				 $self->{app}->{cfg}->{ldap}->{base}->{project}),
-			 $attrs);
-    my $debug;
+    my $p_dn = sprintf("cn=%s,%s", lc $par->{cn}, $self->{app}->{cfg}->{ldap}->{base}->{project});
+    my $msg = $ldap->add( $p_dn, $attrs );
     push @{$debug->{$msg->{status}}}, $msg->{message};
-    my @groups = keys %{$self->{app}->{cfg}->{ui}->{project}->{team}->{roles}};
-    foreach my $g (@groups) {
-      ### FIX proj_name must comply regex ^[A-Za-z0-9.-_]+$
-      $attrs = {
-		objectClass => $self->{app}->{cfg}->{ldap}->{objectClass}->{project_groups},
-		cn => sprintf("%s_%s", lc $par->{proj_name}, $g),
-		memberUid => $par->{$g}
-	       };
-      my $gn = $ldap->last_num($self->{app}->{cfg}->{ldap}->{base}->{project_groups}, '(cn=*)', 'gidNumber');
-      if ( $gn->[1] ) {
-	$self->h_log($gn->[1]);
-	$attrs->{gidNumber} = undef;
-      } else {
-	$attrs->{gidNumber} = $gn->[0] + 1;
-      }
-      $self->h_log($attrs);
 
-      $msg = $ldap->add(sprintf("cn=%s,%s",
-				sprintf("%s_%s", lc $par->{proj_name}, $g),
-				$self->{app}->{cfg}->{ldap}->{base}->{project_groups}),
-			$attrs);
-      push @{$debug->{$msg->{status}}}, $msg->{message};
+    if ( ! exists $msg->{error} ) {
+      ###################################################
+      # creating all, even empty, project teams groups  #
+      ###################################################
+      foreach my $g (keys %{$self->{app}->{cfg}->{ui}->{project}->{team}->{roles}}) {
+	my $g_rdn = sprintf("%s_%s", lc $par->{cn}, $g);
+	my $g_dn = sprintf("cn=%s,%s", $g_rdn, $self->{app}->{cfg}->{ldap}->{base}->{project_groups});
+	$search_arg = { base => $g_dn, score => 'base' };
+	$search = $ldap->search( $search_arg );
+	$self->h_log( $self->h_ldap_err($search, $search_arg) )
+	  if $search->code != LDAP_NO_SUCH_OBJECT;
+
+	if ( $search->count > 0  ) {
+	  push @{$debug->{warn}}, $g_dn . ' exists';
+	} else {
+	  $attrs = {
+		    objectClass => $self->{app}->{cfg}->{ldap}->{objectClass}->{project_groups},
+		    cn => $g_rdn,
+		   };
+
+	  $attrs->{memberUid} = $par->{$g}
+	    if $self->h_is_meaningful_arrayref($g) || $par->{$g} ne '';
+
+	  my $gn = $ldap->last_num($self->{app}->{cfg}->{ldap}->{base}->{project_groups}, '(cn=*)', 'gidNumber');
+	  if ( $gn->[1] ) {
+	    $self->h_log($gn->[1]);
+	    $attrs->{gidNumber} = undef;
+	  } else {
+	    $attrs->{gidNumber} = $gn->[0] + 1;
+	  }
+	  # $self->h_log($attrs);
+
+	  $msg = $ldap->add( $g_dn, $attrs);
+	  push @{$debug->{$msg->{status}}}, $msg->{message};
+	}
+      }
     }
-    $self->h_log($debug);
     $self->stash(debug => $debug);
   }
-
   $self->render(template => 'protected/project/new'); #, layout => undef);
 }
+
+=head1 project_modify
+
+modification of project
+
+=cut
 
 sub project_modify ($self) {
   my $from_form = $self->req->params->to_hash;
   my $debug;
-  #$self->h_log($from_form);
+  $self->h_log($from_form);
 
-  my $proj = $self->stash->{proj} // $from_form->{proj_to_modify} // '';
-  $from_form->{proj_to_modify} = $self->stash->{proj} if exists $self->stash->{proj};
-  #$self->h_log($from_form);
+  if (
+      ! exists $from_form->{proj_to_modify} &&
+      ( ! defined $self->stash('proj') || $self->stash('proj') eq '' )
+     ) {
+    $self->h_log($from_form);
+    return $self->render(template => 'protected/home');
+  }
 
-  my $ldap = Umi::Ldap->new( $self->{app}, $self->session('uid'), $self->session('pwd') );
+  my $proj = $self->stash->{proj} // $from_form->{proj_to_modify};
+  $from_form->{proj_to_modify} = $proj;
+  $self->stash(proj_to_modify => $proj);
+
+  my $ldap = Umi::Ldap->new($self->{app}, $self->session('uid'), $self->session('pwd'));
 
   ### PROJECT OBJECT
   my $search_arg = { base => $self->{app}->{cfg}->{ldap}->{base}->{project},
@@ -1288,70 +1401,71 @@ sub project_modify ($self) {
   my $from_ldap;
   if ($search->count) {
     %{$from_ldap->{proj}->{obj}} =
-      map { $_ => ref($search->entry->get_value($_)) eq 'ARRAY' ? [$search->entry->get_value($_)] : $search->entry->get_value($_) }
+      map {
+	$_ => ref($search->entry->get_value($_)) eq 'ARRAY'
+	  ? [$search->entry->get_value($_)]
+	  : $search->entry->get_value($_)
+	}
       $search->entry->attributes;
     $from_ldap->{proj}->{dn} = $search->entry->dn;
   }
 
   ### PROJECT GROUPS
   $from_ldap->{groups} = {};
-  $search_arg = { base => sprintf("ou=group,%s", $self->{app}->{cfg}->{ldap}->{base}->{project}),
+  $search_arg = { base => 'ou=group,' . $self->{app}->{cfg}->{ldap}->{base}->{project},
 		  filter => '(cn=' . $proj . '*)', };
   $search = $ldap->search( $search_arg );
-  $self->{app}->h_log( $self->{app}->h_ldap_err($search, $search_arg) ) if $search->code;
-  $from_ldap->{groups}->{$_->get_value('cn')} = $_->get_value('memberUid', asref => 1)
-    foreach ($search->entries);
+  $self->h_log( $self->h_ldap_err($search, $search_arg) ) if $search->code;
+  foreach ($search->entries) {
+    $from_ldap->{groups}->{$_->get_value('cn')} =
+      $_->exists('memberUid') ? $_->get_value('memberUid', asref => 1) : [];
+  }
 
   ### EMPLOYEES:TEAM MEMBERS SELECT ELEMENTS
-  $search_arg =
-    { base => $self->{app}->{cfg}->{ldap}->{base}->{acc_root},
-      filter => sprintf("(&(uid=*)(!(gidNumber=%s)))",
-			$self->{app}->{cfg}->{ldap}->{defaults}->{group}->{blocked}->{gidnumber}),
-      scope => "one",
-      attrs => [qw(uid givenName sn)] };
-  $search = $ldap->search( $search_arg );
-  $self->h_log( $self->{app}->h_ldap_err($search, $search_arg) ) if $search->code;
-  my $e_str = $search->as_struct;
-  my ($team, $employees, $employees_sorted);
-  foreach my $g (keys(%{$from_ldap->{groups}})) {
-    foreach my $k (keys(%$e_str)) {
-      next if ! exists $e_str->{$k}->{givenname} || ! exists $e_str->{$k}->{sn};
-      my $gecos = $e_str->{$k}->{sn}->[0] . " " . $e_str->{$k}->{givenname}->[0];
-      utf8::decode($gecos) unless utf8::is_utf8($gecos);
-      if ( grep {$e_str->{$k}->{uid}->[0] eq $_} @{$from_ldap->{groups}->{$g}} ) {
-	push @$team, [ $gecos => $e_str->{$k}->{uid}->[0], selected => 'selected' ];
-      } else {
-	push @$team, [ $gecos => $e_str->{$k}->{uid}->[0] ];
-      }
-    }
-    @{$from_ldap->{employees}->{$g}} = sort {$a->[0] cmp $b->[0]} @$team;
-    $team = undef;
-  }
-
-  foreach my $k (keys(%$e_str)) {
-    next if ! exists $e_str->{$k}->{givenname} || ! exists $e_str->{$k}->{sn};
-    push @$team, [ $e_str->{$k}->{sn}->[0] . " " . $e_str->{$k}->{givenname}->[0] => $e_str->{$k}->{uid}->[0] ];
-  }
-  @{$from_ldap->{employees}->{asis}} = sort {$a->[0] cmp $b->[0]} @$team;
+  my ($employees, $err) = $ldap->all_users;
+  push @{$debug->{$err->{status}}}, $err->{message} if defined $err;
+  undef $err;
+  $self->stash( debug => $debug, employees => $employees );
+  #$self->h_log($employees);
 
   ### REST
 
-  #$self->h_log($from_ldap->{groups});
+  $self->h_log($from_ldap, 'from_ldap');
   $self->stash(from_ldap => $from_ldap);
 
-  $self->h_log($from_form);
+  $self->h_log($from_form, 'from_form');
   $self->stash(from_form => $from_form);
 
   $self->stash( proj => $self->stash->{proj},
 		from_ldap => $self->stash->{from_ldap},
 		project_team_roles => [ keys %{$self->{app}->{cfg}->{ui}->{project}->{team}->{roles}} ] );
 
-  my $v = $self->validation;
-  return $self->render(template => 'protected/project/modify') unless $v->has_data;
+  #############################################
+  # data population to html form on first run #
+  #############################################
+  unless (keys %$from_form > 1) {
+    $self->req->params->merge( cn => $from_ldap->{proj}->{obj}->{cn} );
+    $self->req->params->merge( description => $from_ldap->{proj}->{obj}->{description});
+    ##########################################################################
+    # group name notation is PROJNAME_TEAMNAME, html form uses only TEAMNAME #
+    ##########################################################################
+    foreach (keys %{$from_ldap->{groups}}) {
+      $self->req->params->merge( substr($_, length($proj) + 1)
+				 =>
+				 $from_ldap->{groups}->{$_} )
+	if $self->h_is_meaningful_arrayref($from_ldap->{groups}->{$_});
+    }
+
+    return $self->render(template => 'protected/project/new');
+  }
 
   my $re = qr/^[a-z0-9_.\-]+$/;
+  my $v = $self->validation;
   $v->required('cn')->size(1, 50)->like($re);
 
+  #############################
+  # processing project object #
+  #############################
   my ($msg, $diff, $add, $delete, $replace, $changes, $chg);
   $diff = $self->h_hash_diff( $from_ldap->{proj}->{obj},
 			      { cn => $from_form->{cn},
@@ -1366,7 +1480,8 @@ sub project_modify ($self) {
     push @$changes, delete => $delete;
   }
   if ( %{$diff->{changed}} ) {
-    push @$replace, $_ => $diff->{changed}->{$_}->{new} foreach (keys(%{$diff->{changed}}));
+    push @$replace, $_ => $diff->{changed}->{$_}->{new}
+      foreach (keys(%{$diff->{changed}}));
     push @$changes, replace => $replace;
   }
 
@@ -1378,38 +1493,42 @@ sub project_modify ($self) {
   }
   $diff = $add = $delete = $replace = $changes = undef;
 
-  # $self->h_log($self->{app}->{cfg}->{ui}->{project}->{team}->{roles});
+  #####################################
+  # processing project groups objects #
+  #####################################
+  foreach my $team_role (keys %{$self->{app}->{cfg}->{ui}->{project}->{team}->{roles}} ) {
+    my $f = $from_form->{$team_role} if exists $from_form->{$team_role};
+    my $lgn = $from_ldap->{proj}->{obj}->{cn} . '_' . $team_role;
+    my $l = $from_ldap->{groups}->{$lgn} if exists $from_ldap->{groups}->{$lgn};
+    # $self->h_log($l, "from_ldap->{groups}->{$lgn}");
+    # $self->h_log($f, "from_form->{$team_role}");
 
-  foreach my $team_role ( @{[ keys %{$self->{app}->{cfg}->{ui}->{project}->{team}->{roles}} ]} ) {
-    my $ldap_group_name = $from_ldap->{proj}->{obj}->{cn} . '_' . $team_role;
-    if ( ! exists $from_form->{$team_role} && ! exists $from_ldap->{groups}->{ $ldap_group_name } ) {
+    if ( (! defined $f && ! defined $l)
+	 || (! defined $f && ! $self->h_is_meaningful_arrayref($l)) ) {
+      # this is redundant since we create groups (even empty) for each role
       next;
-    } elsif ( ! exists $from_form->{$team_role} && exists $from_ldap->{groups}->{ $ldap_group_name } ) {
+    } elsif ( ! defined $f && defined $l && $self->h_is_meaningful_arrayref($l) ) {
       push @$changes, delete => [memberUid => []];
-    } elsif ( exists $from_form->{$team_role} && ! exists $from_ldap->{groups}->{ $ldap_group_name } ) {
+    } elsif ( defined $f && ! defined $l ) {
       push @$changes, add =>
-	[ memberUid => ref($from_form->{$team_role}) ne 'ARRAY' ? [ $from_form->{$team_role} ] : $from_form->{$team_role} ];
+	[ memberUid => ref($f) ne 'ARRAY' ? [ $f ] : $f ];
     } else {
-      # $self->h_log($from_ldap->{groups}->{ $ldap_group_name });
-      # $self->h_log($from_form->{$team_role});
-      $diff = $self
-	->h_array_diff( $from_ldap->{groups}->{ $ldap_group_name },
-			ref($from_form->{$team_role}) ne 'ARRAY' ? [$from_form->{$team_role}] : $from_form->{$team_role});
-      $self->h_log($diff);
-      if ( @{$diff->{added}} ) {
+      # $self->h_log($l); $self->h_log($f);
+      $diff = $self->h_array_diff( $l, ref($f) ne 'ARRAY' ? [$f] : $f );
+      # $self->h_log($diff);
+      if ( scalar @{$diff->{added}} > 0 ) {
 	push @$add, memberUid => $diff->{added};
 	push @$changes, add => $add;
       }
-      if ( @{$diff->{removed}} ) {
+      if ( scalar @{$diff->{removed}} > 0 ) {
 	push @$delete, memberUid => [];
 	push @$changes, delete => $delete;
       }
     }
 
     if (defined $changes) {
-      $msg = $ldap->modify(sprintf("cn=%s,%s",
-				   $ldap_group_name,
-				   $self->{app}->{cfg}->{ldap}->{base}->{project_groups}),
+      $msg = $ldap->modify('cn=' . $lgn . ','
+			   . $self->{app}->{cfg}->{ldap}->{base}->{project_groups},
 			   $changes);
       ### !!! to push to debug_message rather than overwrite
       push @{$debug->{$msg->{status}}}, $msg->{message};
@@ -1419,7 +1538,7 @@ sub project_modify ($self) {
   }
   $self->h_log($chg);
 
-  $self->render(template => 'protected/project/modify', debug => $debug); # , layout => undef);
+  $self->render(template => 'protected/project/new', debug => $debug); # , layout => undef);
 }
 
 sub resolve ($self) {

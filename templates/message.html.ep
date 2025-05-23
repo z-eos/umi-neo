@@ -16,6 +16,8 @@
 
 %# expected debug message format: status => [ 'message', ... ]
 % if ( defined $debug ) {
+  %#<pre class="mt-5 umi-text-tiny text-muted"><%= dumper $debug %></pre>
+  %# %$debug keys available, are defined in config file -> ui -> page -> debug -> status
   % foreach my $k (sort(keys(%$debug))) {
     <div id="message" class="alert alert-dismissible alert-<%= app->{cfg}->{ui}->{page}->{debug}->{status}->{$k} %> mt-4 ">
 	<i class="fa-solid fa-<%= app->{cfg}->{ui}->{page}->{debug}->{ico}->{$k} %> me-3"></i>

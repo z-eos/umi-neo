@@ -78,11 +78,11 @@
 	    <i class="fa-solid fa-caret-right"></i>
 	  </button>
 	  %# BURGER MENU
-	  % if ( $e->dn !~ /$re/ ) {
+	  %# if ( $e->dn !~ /$re/ ) {
 	    % my $rrdn = '';
 	    % $rrdn = $1 if $e->dn =~ /^uid=([^,]+),ou=People,dc=/i;
 	    %= include 'protected/search/common-menu', e => $e, i => $i, rrdn => $rrdn
-	  % }
+	  %# }
 
 	  %# ICO after BURGER MENU
 	  % my $re_accesslog = app->{cfg}->{ldap}->{accesslog};
@@ -222,6 +222,9 @@
 
 	  % }
 
+	  % if ($e->dn =~ /^.*,$re_accesslog$/) {
+	    <a href="/tool/undo?reqStart=<%= $e->get_value('reqStart') %>" class="btn btn-sm btn-secondary" role="button"><i class="fa-solid fa-rotate-left"></i></a>
+	  % }
 	</div>
       </div>
 

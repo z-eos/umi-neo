@@ -53,19 +53,19 @@ sub new {
   #   # $self->{log}->debug(dumper($cf->{conn}->{start_tls}));
   #   $m = try {
   #     $ldap->start_tls(
-  # 		       verify     => $cf->{conn}->{start_tls}->{verify},
-  # 		       cafile     => $cf->{conn}->{start_tls}->{cafile},
-  # 		       checkcrl   => $cf->{conn}->{start_tls}->{checkcrl},
-  # 		       sslversion => $cf->{conn}->{start_tls}->{sslversion},
-  # 		      );
+  #		       verify     => $cf->{conn}->{start_tls}->{verify},
+  #		       cafile     => $cf->{conn}->{start_tls}->{cafile},
+  #		       checkcrl   => $cf->{conn}->{start_tls}->{checkcrl},
+  #		       sslversion => $cf->{conn}->{start_tls}->{sslversion},
+  #		      );
   #   }
   #   catch {
   #     $self->{app}->h_log("ERROR: Net::LDAP start_tls: $@"); # if $m->error;
   #   } finally {
   #     if (@_) {
-  # 	$self->{ldap} = @_;
+  #	$self->{ldap} = @_;
   #     } else {
-  # 	$self->{ldap} = $ldap;
+  #	$self->{ldap} = $ldap;
   #     }
   #   };
   # }
@@ -133,7 +133,7 @@ sub err {
 
   $err->{supplementary} = '<div class=""><ul class="list-unstyled">' . $err->{supplementary} . '</ul></div>'
     if $err->{supplementary} ne '';
-  
+
   $err->{html} = sprintf( 'call from <b><em>%s</em></b>: <dl class="row mt-5">
   <dt class="col-2 text-end">DN</dt>
   <dd class="col-10 text-monospace">%s</dd>
@@ -149,13 +149,13 @@ sub err {
 
   <dt class="col-2 text-end">error name</dt>
   <dd class="col-10 text-monospace">%s</dd>
-  
+
   <dt class="col-2 text-end">error text</dt>
   <dd class="col-10 text-monospace"><em><small><pre><samp>%s</samp></pre></small></em></dd>
 
   <dt class="col-2 text-end">error description</dt>
   <dd class="col-10 text-monospace">%s</dd>
- 
+
   <dt class="col-2 text-end">server_error</dt>
   <dd class="col-10 text-monospace">%s</dd>
 </dl>',
@@ -501,18 +501,18 @@ sub all_users {
     # $self->{app}->h_log( $mesg->as_struct );
     my ($i, %seen, $res);
     # $res = [
-    # 	    map {
-    # 	      $i = sprintf( "%s %s (%s)",
-    # 			    $_->get_value('sn') // '',
-    # 			    $_->get_value('givenName') // '',
-    # 			    $_->get_value('uid') );
+    #	    map {
+    #	      $i = sprintf( "%s %s (%s)",
+    #			    $_->get_value('sn') // '',
+    #			    $_->get_value('givenName') // '',
+    #			    $_->get_value('uid') );
 
-    # 	      utf8::decode($i) if ! utf8::is_utf8($i);
+    #	      utf8::decode($i) if ! utf8::is_utf8($i);
 
-    # 	      [ $i => $_->get_value('uid') ]
+    #	      [ $i => $_->get_value('uid') ]
 
-    # 	    } $mesg->sorted('sn')
-    # 	   ];
+    #	    } $mesg->sorted('sn')
+    #	   ];
     $res = [
 	    map {
 	      my $sn  = $_->get_value('sn') // '';
@@ -657,5 +657,75 @@ sub ldif_read {
 
   return $res;
 }
+
+=head2 undo_al
+
+generate LDIF to undo actions of accesslog object
+
+on input expects DN of an object in cn=accesslog
+
+returns LDIF to undo changes done in the object
+
+=cut
+
+sub undo_al {
+  my ($self, $dn_to_undo) = @_;
+  my %mod_type = ( add => 'delete', delete => 'add', modify => 'modify' );
+  my $res;
+  my $search_arg = {
+		    base   => $dn_to_undo,
+		    scope => 'base',
+		    attrs  => [qw{reqDN reqMod reqType}]
+		   };
+  $self->{app}->h_log($search_arg);
+  my $mesg = $self->search( $search_arg );
+  if ( $mesg->code && $mesg->code != 32 ) {
+    $self->{app}->h_log( $self->{app}->h_ldap_err($mesg, $search_arg) );
+    $res->{err} = $self->{app}->h_ldap_err($mesg, $search_arg);
+  } else {
+    $self->{app}->h_log($mesg->as_struct);
+    my $al = $mesg->entry;
+    my @ldif = ( 'dn: ' . $al->get_value('reqDN'), 'changetype: ' . $mod_type{$al->get_value('reqType')} );
+    my %chg;
+
+    foreach (@{$al->get_value('reqMod', asref => 1)}) {
+      if ( my ($attr,$op,$val) = $_ =~ m/^(\S+):([=+-])\s+(.+)$/ ) {
+	push @{$chg{$op}{$attr}}, $val
+	  if $attr !~ /^creat|modif|entry|structural/;
+      }
+    }
+    # $self->{app}->h_log(\%chg);
+
+    if ( $chg{'-'} ) {
+      foreach my $i (keys %{ $chg{'-'} }) {
+	push @ldif,
+	  "add: $i",
+	  map { "$i: $_" } @{ $chg{'-'}{$i} };
+	push @ldif, '-';
+      }
+    }
+    if ( $chg{'+'} ) {
+      foreach my $i (keys %{ $chg{'+'} }) {
+	push @ldif,
+	  "delete: $i",
+	  map { "$i: $_" } @{ $chg{'+'}{$i} };
+	push @ldif, '-';
+      }
+    }
+    if ( $chg{'='} ) {
+      foreach my $i (keys %{ $chg{'='} }) {
+	push @ldif,
+	  "delete: $i",
+	  map { "$i: $_" } @{ $chg{'='}{$i} };
+	push @ldif, '-';
+      }
+    }
+    $res->{ldif} = join("\n", @ldif);
+    $self->{app}->h_log($res);
+  }
+
+  return $res;
+}
+
 
 1;

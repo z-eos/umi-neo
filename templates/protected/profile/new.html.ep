@@ -1,16 +1,22 @@
 %# -*- mode: web; eval: (follow-mode) -*-
 
+% my $action = $c->req->url->path =~ /^\/profile\/modify.*/ ? 'modify' : 'new';
+
 <h3 class="fw-bold p-4">
-  <i class="fas fa-user-plus fa-lg me-3 text-muted"></i>
-  New User <small><em class="text-muted font-monospace"></em></small>
+  <i class="fas fa-user-<%= $action eq 'new' ? 'plus' : 'pen' %> fa-lg me-3 text-muted"></i>
+  <%= ucfirst $action %> User <small><em class="text-muted font-monospace"></em></small>
 </h3>
 
-%= form_for '/profile/new' => (class => "form-horizontal", method => 'POST', enctype => 'multipart/form-data') => begin
+%= form_for '/profile/' . $action => (class => "form-horizontal single-new-modify-template", method => 'POST', enctype => 'multipart/form-data') => begin
+
+  % if ( $action eq 'modify' ) {
+    %= hidden_field uid_to_modify => 'uid_to_modify', id => 'uid_to_modify', value => exists stash->{from_form}->{uid_to_modify} ? stash->{from_form}->{uid_to_modify} : ''
+  % }
 
   <div class="input-group mb-3">
-    %= label_for user_first_name => 'First / Last Names', class => 'input-group-text'
-    %= text_field 'user_first_name', class => 'form-control', id => 'user_first_name', maxlength => "50", placeholder => 'First name, 1 to 50, UTF-8 characters', title => 'First name, 1 to 50, UTF-8 characters'
-    %= text_field 'user_last_name', class => 'form-control', id => 'user_last_name', maxlength => "50", placeholder => 'Last name, 1 to 50, UTF-8 characters', title => 'Last name, 1 to 50, UTF-8 characters'
+    %= label_for givenName => 'First / Last Names', class => 'input-group-text'
+    %= text_field 'givenName', class => 'form-control', id => 'givenName', maxlength => "50", placeholder => 'First name, 1 to 50, UTF-8 characters', title => 'First name, 1 to 50, UTF-8 characters'
+    %= text_field 'sn', class => 'form-control', id => 'sn', maxlength => "50", placeholder => 'Last name, 1 to 50, UTF-8 characters', title => 'Last name, 1 to 50, UTF-8 characters'
   </div>
 
   % my $img_title = 'User avatar image. Must be resolution max 300x300px and max 50kB size';
@@ -32,7 +38,7 @@
 
   <div class="input-group mb-3">
     <span class="input-group-text">Employee Location:</span>
-    %= text_field 'city', class => 'form-control', id => 'city', maxlength => "30", placeholder => 'City', title => 'Employee city'
+    %= text_field 'l', class => 'form-control', id => 'l', maxlength => "30", placeholder => 'City', title => 'Employee city'
     % my $options = [ ['--- choose COUNTRY ---' => ''],
     %                 map { [ $_ => constant('COUNTRIES')->{$_}->{two} ] } sort(keys(%{constant('COUNTRIES')})) ];
     %= select_field 'umiUserCountryOfResidence' => $options, id => 'umiUserCountryOfResidence', class => 'form-select select2-hosts', title => 'Countries (ISO 3166)'
@@ -46,19 +52,19 @@
 
   <div class="input-group mb-3">
     <label class="input-group-text" for="gender">Gender</label>
-    % my $options = [ ['--- choose GENDER ---' => ''],
-    %                 map { [ constant('GENDER')->{$_} => $_ ] } sort(keys(%{constant('GENDER')})) ];
+    % $options = [ ['--- choose GENDER ---' => ''],
+    %              map { [ constant('GENDER')->{$_} => $_ ] } sort(keys(%{constant('GENDER')})) ];
     %= select_field 'umiUserGender' => $options, id => 'umiUserGender', class => 'form-select select2-hosts', title => 'Representation of human sex (see ISO 5218)'
   </div>
 
   <div class="input-group mb-3">
     %= label_for title => 'Tel:', class => 'input-group-text'
-    %= text_field 'telephoneNumber', class => 'form-control', id => 'telephoneNumber', maxlength => "250", placeholder => 'Employee phone number/s', title => 'Employee  phone number/s'
+    %= text_field 'telephoneNumber', class => 'form-control', id => 'telephoneNumber', maxlength => "250", placeholder => '+12034567899, +380441234567', title => 'Comma separated, employee phone number/s'
   </div>
 
   <div class="input-group mb-3">
     %= label_for title => 'IM:', class => 'input-group-text'
-    %= text_field 'umiUserIm', class => 'form-control', id => 'umiUserIm', maxlength => "250", placeholder => 'Employee IM IDs', title => 'Employee IM IDs'
+    %= text_field 'umiUserIm', class => 'form-control', id => 'umiUserIm', maxlength => "250", placeholder => 'https://t.me/jdoe, xmpp://jdoe@foo.bar', title => 'Comma separated, employee IM IDs'
   </div>
 
   %= submit_button 'Submit', class => 'btn btn-success font-weight-bold text-uppercase text-end'

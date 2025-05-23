@@ -134,10 +134,11 @@ sub _startup_session ($self) {
   ## ?? # Mojolicious::Plugin::ServerSession
   $self->helper(
 		h_log => sub {
-		  my ($self, $data) = @_;
+		  my ($self, $val, $name) = @_;
 		  if ($self->app->cfg->{debug}->{level} > 0) {
+		    $name = defined $name ? sprintf("\n%s = ", $name) : '';
 		    my ($package, $filename, $line) = caller(1);
-		    p $data, caller_message => "$package $filename:$line";
+		    p $val, caller_message => "$package $filename:$line$name";
 		  }
 		});
 
@@ -505,6 +506,15 @@ sub _startup_routes ($self) {
     ->to('protected#ldif_clone');
 
   $protected_root
+    ->get( '/tool/undo')
+    ->requires(is_role => ['admin', {cmp => 'or'}])
+    ->to('protected#undo_al');
+  $protected_root
+    ->post('/tool/undo')
+    ->requires(is_role => ['admin', {cmp => 'or'}])
+    ->to('protected#undo_al');
+
+  $protected_root
     ->get( '/tool/modify')
     ->requires(is_role => ['admin,coadmin,hr', {cmp => 'or'}])
     ->to('protected#modify')->name('modify');
@@ -557,7 +567,7 @@ sub _startup_routes ($self) {
 
   $self->controller_class('Umi::Controller');
   $self->defaults(layout => 'default');
-  $self->log->info('-=* STARTUP COMPLETE *=-');
+  $self->log->info('-=*=-' . ' -'x10 . 'STARTUP COMPLETE' . ' -'x10 . ' -=*=-');
 
   return $self;
 }

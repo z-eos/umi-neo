@@ -1,8 +1,17 @@
 %# -*- mode: web; eval: (follow-mode); -*-
 
+% my $action;
+% if ( $c->req->url->path =~ /^\/tool\/ldif-import.*/ )
+% {
+  % $action = 'ldif-clone';
+% } elsif ( $c->req->url->path =~ /^\/tool\/undo.*/ )
+%{
+  % $action = 'undo';
+% }
+
 <h2 class="py-5">
   <i class="fa-solid <%= app->{cfg}->{ui}->{menu}->{ldif}->{ico} . ' ' .  app->{cfg}->{ui}->{menu}->{ldif}->{col} %> me-3"></i>
-  LDIF to import <small><em class="text-muted font-monospace">( either LDIF file or LDIF data )</em></small>
+  LDIF to import <small><em class="text-muted font-monospace fs-6">( <%= $action eq 'undo' ? 'undo accesslog ' . stash('dn_to_undo') : 'either LDIF file or LDIF data' %> )</em></small>
 </h2>
 <hr>
 
@@ -19,7 +28,7 @@
   <div class="row mb-3" id="text">
     <label class="col-1 col-form-label text-end fw-bold" for="keyText">LDIF</label>
     <div class="input-sm col-11">
-      %= text_area 'ldif', id => 'keyText', cols => 10, rows => 20, class => 'font-monospace form-control', spellcheck => 'false'
+      %= text_area 'ldif', id => 'keyLdif', cols => 10, rows => 20, class => 'font-monospace form-control', spellcheck => 'false'
     </div>
   </div>
 
@@ -30,15 +39,15 @@
 % end
 
 <script>
- const divText = document.getElementById('text');
+ const divLdif = document.getElementById('ldif');
  const divFile = document.getElementById('file');
- const elText = document.getElementById('keyText');
+ const elLdif = document.getElementById('keyLdif');
  const elFile = document.getElementById('keyFile');
  const rstBtn = document.getElementById('resetButton');
- 
+
  function toggleVisibility() {
    // Hide file input if the textarea has content
-   if (elText.value.trim() !== "") {
+   if (elLdif.value.trim() !== "") {
      divFile.classList.add('d-none');
    } else {
      divFile.classList.remove('d-none');
@@ -46,19 +55,24 @@
 
    // Hide textarea if a file is selected in the file input
    if (elFile.files.length > 0) {
-     divText.classList.add('d-none');
+     divLdif.classList.add('d-none');
    } else {
-     divText.classList.remove('d-none');
+     divLdif.classList.remove('d-none');
    }
  }
 
  // Attach event listeners to handle input changes
- elText.addEventListener('input', toggleVisibility);
+ elLdif.addEventListener('input', toggleVisibility);
  elFile.addEventListener('change', toggleVisibility);
  rstBtn.addEventListener('click', function() {
-   elText.value = "";
+   elLdif.value = "";
    elFile.value = "";
-   divText.classList.remove('d-none');
+   divLdif.classList.remove('d-none');
    divFile.classList.remove('d-none');
+ });
+
+ // New: Initial check in case value is prefilled by controller
+ document.addEventListener('DOMContentLoaded', function () {
+   toggleVisibility();
  });
 </script>

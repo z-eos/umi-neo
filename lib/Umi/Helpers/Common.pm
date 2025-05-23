@@ -145,17 +145,45 @@ returns compacted array or hash
 =cut
 
   $app->helper( h_compact => sub {
-		  my ($c, $target) = @_;
+		  my ($self, $target) = @_;
 		  if (ref $target eq 'ARRAY') {
 		    # Filter out any undefined or empty string elements.
 		    @$target = grep { defined($_) && $_ ne '' } @$target;
 		  } elsif (ref $target eq 'HASH') {
 		    # Remove hash keys with undefined or empty string values.
 		    foreach my $key (keys %$target) {
-		      delete $target->{$key} if ! defined($target->{$key}) || $target->{$key} eq '';
+		      delete $target->{$key}
+			if ! defined($target->{$key}) || $target->{$key} eq '';
 		    }
 		  }
 		  return $target;
+		});
+
+=head2 h_is_meaningful_arrayref
+
+returns true if its single argument is:
+
+    a reference to an array,
+    not an empty array, and
+    not an array containing just the empty string
+
+    EXAMPLES:
+    Case	Returns
+    -------------------
+    undef	false
+    []		false
+    [""]	false
+    ["foo"]	true
+    ["", "bar"]	true
+
+=cut
+
+  $app->helper( h_is_meaningful_arrayref => sub {
+		  my ($self, $aref) = @_;
+		  return 0 unless ref($aref) eq 'ARRAY';
+		  return 0 if @$aref == 0;
+		  return 0 if @$aref == 1 && $aref->[0] eq '';
+		  return 1;
 		});
 
 =head2 h_is_ip

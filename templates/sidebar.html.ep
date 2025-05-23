@@ -2,7 +2,7 @@
 
 % my $account = $c->current_user;
 % if ( $account ) {
-  
+
   <!-- sidebar start -->
 
   <nav id="sidebar-left" class="collapse show">
@@ -56,7 +56,7 @@
 		% }
 	      </ul>
 	    </li>
-	    
+
 	    <li class="nav-item dropdown">
 	      <a class="nav-link dropdown-toggle text-secondary text-start"
 		 data-bs-toggle="dropdown"
@@ -86,7 +86,7 @@
 		</li>
 	      </ul>
 	    </li>
-	    
+
 	    % if ( app->{cfg}->{ui}->{sidebar}->{audit}->{projects} == 1 && is_role 'admin,coadmin,hr', {cmp => 'or'} ) {
 	      <li class="nav-item dropdown">
 		<a class="nav-link dropdown-toggle text-secondary text-start"
@@ -108,7 +108,7 @@
 		</ul>
 	      </li>
 	    % }
-	    
+
 	    <!-- <li class="nav-item">
 		 <a class="nav-link btn btn-link text-secondary text-start" href="/servermta"
 		 tabindex="2"
@@ -140,7 +140,7 @@
 	    % if ( app->{cfg}->{ui}->{sidebar}->{new}->{project} == 1 ) {
 	      <li class="nav-item">
 		<a class="nav-link btn btn-link text-secondary text-start" href="/project/new" tabindex="2">
-		  <i class="fa-solid fa-fw fa-folder-plus"></i> Project
+		  <i class="fa-solid fa-fw fa-file-circle-plus"></i> Project
 		</a>
 	      </li>
 	    % }
@@ -251,7 +251,7 @@
 	  % }
 	</ul>
       </li>
-      
+
       % if ( is_role 'admin,coadmin', {cmp => 'or'} ) {
 	<li class="nav-item">
 	  <a href="#submenuInfo"
@@ -277,7 +277,7 @@
 	</li>
       % }
   </nav>
-  
+
   <!-- sidebar end -->
 
 % }
