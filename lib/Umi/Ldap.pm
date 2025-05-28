@@ -360,10 +360,14 @@ sub get_role {
       $self->{app}->h_log( $self->{app}->h_ldap_err($msg, $search_arg) );
       $err = $self->{app}->h_ldap_err($msg, $search_arg)->{html};
     } else {
+      #$self->{app}->h_log( $msg->entry->get_value( 'cn', asref => 1 ) );
       if ( $msg->count && $msg->count == 1 ) {
 	$res = $msg->entry->get_value( 'cn' );
+      } elsif ( $msg->count && $msg->count == 0 ) {
+	$res = 'none';
+	$err = sprintf("root account of uid: %s does not belong to any role", $uid);
       } else {
-	$err = sprintf("root account uid: %s belongs to multiple roles", $uid);
+	$err = sprintf("root account of uid: %s belongs to multiple roles", $uid);
       }
     }
   }

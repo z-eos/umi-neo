@@ -23,7 +23,7 @@ use Net::LDAP::Constant qw(
 use Umi::Ldap;
 
 sub newsvc ($self) {
-  my (%debug, $p);
+  my (%debug, $p, $err);
   my $par = $self->req->params->to_hash;
   %$p = map { $_ => $par->{$_} } grep { defined $par->{$_} && $par->{$_} ne '' } keys %$par;
   $self->h_log($p);
@@ -45,13 +45,8 @@ sub newsvc ($self) {
     push @$domains_arr, @$domains_ref if $domains_ref->[0] ne 'unknown';
   }
 
-  $search_arg = { base => $self->{app}->{cfg}->{ldap}->{base}->{machines},
-		  attrs => ['cn'] };
-  $search = $ldap->search( $search_arg );
-  $self->h_log( $self->{app}->h_ldap_err($search, $search_arg) ) if $search->code && $search->code != 32;
-  push @$domains_arr, $_->get_value('cn') foreach ($search->entries);
-  my %domains_hash = map { $_ => 1 } @$domains_arr;
-  @$domains = sort keys %domains_hash;
+  ($domains, $err) = $ldap->all_hosts;
+  $self->h_log( $err ) if $err;
 
   $search_arg = { base => $self->{app}->{cfg}->{ldap}->{base}->{rad_groups},
 		  filter => '(cn=*)' };

@@ -27,7 +27,7 @@
 %= form_for '/tool/qrcode' => {class => "form-horizontal"} => (method => 'POST') => begin
 
   <div class="form-group row mt-3">
-    <label class="col text-end font-weight-bold control-label" for="toqr">Text to QR Code</label>
+    <label class="col text-uppercase text-end fw-bold control-label" for="toqr">Text to QR Code</label>
     <div class="input-sm col-10">
       <textarea name="toqr" id="toqr" class="input-sm text-monospace form-control"
 		placeholder="Text to QRCode" rows="15" cols="10"><%= $par->{toqr} =%></textarea>

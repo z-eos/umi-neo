@@ -15,7 +15,7 @@
   <a class="navbar-brand" href="/" accesskey="h">
     <img src="/assets/images/umi-logo.50x50.png" width="30" height="30" alt="logo">
   </a>
-  
+
   % if ( is_role 'admin,coadmin', {cmp => 'or'} ) {
     %= include 'header-form-admin'
   % }
@@ -25,7 +25,7 @@
   % else {
     %# = include 'header-form'
   % }
-  
+
   <ul class="navbar-nav">
     <li class="nav-item dropdown">
       <a class="nav-link dropdown-toggle"
@@ -50,23 +50,23 @@
 	</li>
 	<li><hr class="dropdown-divider"></li>
 	<li><span class="dropdown-header">Theme</span></li>
-        <li>
+	<li>
 
 	  <ul class="list-unstyled" aria-labelledby="bd-theme-text" data-bs-popper="static">
 	    <li>
-              <button type="button" class="dropdown-item" data-bs-theme-value="light" aria-pressed="false" accesskey="l">
+	      <button type="button" class="dropdown-item" data-bs-theme-value="light" aria-pressed="false" accesskey="l">
 		<i class="fa-solid fa-fw fa-sun"></i><span class="ms-2">Light</span>
-              </button>
+	      </button>
 	    </li>
 	    <li>
-              <button type="button" class="dropdown-item" data-bs-theme-value="dark" aria-pressed="false" accesskey="d">
+	      <button type="button" class="dropdown-item" data-bs-theme-value="dark" aria-pressed="false" accesskey="d">
 		<i class="fa-solid fa-fw fa-moon"></i><span class="ms-2">Dark</span>
-              </button>
+	      </button>
 	    </li>
 	    <li>
-              <button type="button" class="dropdown-item" data-bs-theme-value="auto" aria-pressed="true">
+	      <button type="button" class="dropdown-item" data-bs-theme-value="auto" aria-pressed="true">
 		<i class="fa-solid fa-fw fa-circle-half-stroke"></i><span class="ms-2">Auto</span>
-              </button>
+	      </button>
 	    </li>
 	  </ul>
 
@@ -74,7 +74,7 @@
 	<li><hr class="dropdown-divider"></li>
 	<li>
 	  <a class="dropdown-item" href="/chi?command=remove">
-	    <i class="fa-solid fa-fw fa-square-xmark"></i><span class="ms-2">Purge Cashe</span>
+	    <i class="fa-solid fa-fw fa-square-xmark"></i><span class="ms-2">Purge Cache</span>
 	  </a>
 	</li>
 	<li><hr class="dropdown-divider"></li>
@@ -86,7 +86,7 @@
       </ul>
     </li>
   </ul>
-  
+
   % if ( is_role 'admin,coadmin', {cmp => 'or'} ) {
     <button class="btn border-0 text-secondary" type="button"
 	    data-bs-toggle="collapse"
@@ -99,7 +99,7 @@
       <i class="fa-solid fa-bars"></i>
     </button>
   % }
-  
+
 </nav>
 
 <style>
@@ -108,7 +108,7 @@
    max-width: 500px !important;  /* Adjust width as needed */
    white-space: normal;          /* Allows multi-line content */
    text-align: left;             /* Align text properly */
-   
+
    /* Improved background opacity for readability */
    background-color: rgba(var(--bs-body-bg-rgb), 0.95); /* Uses theme-aware background with higher opacity */
    color: var(--bs-body-color);                         /* Matches current theme */

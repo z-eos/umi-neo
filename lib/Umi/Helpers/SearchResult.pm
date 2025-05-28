@@ -132,10 +132,14 @@ returns undef if it doesn't
 
 =head2 h_is_authorized
 
-returns 0 or 1 if role of current user is superior to role of the user the
-manipulated object belongs to
+Returns 0 or 1 depending on whether the role of the current user is superior
+to the role of the user to whom the manipulated object belongs.
 
-relation of roles defined with constant UMIAUTH in lib/Umi/Constants.pm
+The current user's role number must be less than the role number of the user
+to whom the manipulated object belongs.
+
+The relationship between roles is defined by the constant `UMIAUTH` in
+`lib/Umi/Constants.pm`.
 
 =cut
 
@@ -148,8 +152,11 @@ relation of roles defined with constant UMIAUTH in lib/Umi/Constants.pm
 		 my $role = $ldap->get_role($uid);
 		 # $self->h_log( $role );
 
-		 my $auth = exists UMIAUTH->{role}->{$role->[0]} &&
-		   UMIAUTH->{role}->{$role->[0]} < UMIAUTH->{role}->{$self->session('role')} ? 0 : 1;
+		 my $auth =
+		   defined $role
+		   && exists UMIAUTH->{role}->{$role}
+		   && UMIAUTH->{role}->{$self->session('role')} > UMIAUTH->{role}->{$role}
+		   ? 0 : 1;
 
 		 return $auth;
 	       });

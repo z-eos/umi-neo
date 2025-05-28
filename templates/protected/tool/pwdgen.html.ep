@@ -1,5 +1,4 @@
 %# -*- mode: web; eval: (follow-mode); -*-
-<script src="/assets/js/fontawesome/all.js"></script>
 
 % my $p_p = stash('pwdgen_params');
 % my %pp = defined $p_p ? %$p_p : ();

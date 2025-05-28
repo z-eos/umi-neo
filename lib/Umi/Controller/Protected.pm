@@ -53,9 +53,11 @@ sub delete ($self) {
 
   my $auth = $self->h_is_authorized($p->{delete_dn});
   $self->h_log($auth);
+
   return $self->render(template => 'not_allowed',
 		       debug => { warn => ['attempt to delete dn: ' . $p->{delete_dn}]})
     unless $auth;
+
   my $msg = $ldap->delete($p->{delete_dn},
 			  exists $p->{delete_recursive} && $p->{delete_recursive} eq 'on' ? 1 : 0);
   $self->session( debug => $msg );
