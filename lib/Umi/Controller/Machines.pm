@@ -17,6 +17,72 @@ use Net::LDAP::Constant qw(
 
 use Umi::Ldap;
 
+=head1 create_or_update
+
+EXAMPLE
+
+curl -X POST -u uid=john,ou=People,dc=foo,dc=bar:*** http://10.0.0.1:3000/public/machines -H "Content-Type: application/json" -d @FILE.json -s | jq
+
+foo-create.json
+
+    {
+      "hostname": "foo.norse.digital",
+      "domain": [ "jobastre.norse.digital",
+		  "cretin.norse.digital",
+		  "lampiste.norse.co" ],
+      "ipaddr": "192.0.2.1",
+      "status": "up",
+      "cpu_count": 24000001,
+      "ram_size": 32731636,
+      "devices": [ "/dev/sdd=vol-0e91bf61c401abe38 32G",
+		   "/dev/sda1=vol-032c8367041821f3c 8G" ],
+	    "os": {
+		    "name": "Linux",
+		    "version": "5.4.0-1088",
+		    "arch": "x86_64",
+		    "distro-name": "debian",
+		    "distro-version": "12",
+		    "distro-family": "debian"
+	    },
+	    "id": "i-deadbeef",
+	    "type": "s3.verylarge",
+	    "location": "moon-copernicus-1",
+	    "account_id": "OUCH3158206",
+	    "hosting_id": "CloudAssHole"
+    }
+
+
+foo-update.json
+
+    {
+      "hostname": "foo.norse.digital",
+      "domain": [ "jobastre.norse.digital",
+		  "cretin.norse.digital",
+		  "lampiste.norse.co" ],
+      "ipaddr": "10.173.95.111",
+      "status": "up",
+      "cpu_count": 2,
+      "ram_size": 32731636,
+      "devices": [ "/dev/sdz9=vol-0e938 32E",
+		   "/dev/sda1=vol-0323c 8Z" ],
+	    "os": {
+		    "name": "Linux",
+		    "version": "5.4.0-1088",
+		    "arch": "x86_64",
+		    "distro-name": "debian",
+		    "distro-version": "17",
+		    "distro-family": "debian"
+	    },
+	    "id": "i-deadpork",
+	    "type": "s3.notverylarge",
+	    "location": "moon-copernicus-1",
+	    "account_id": "OUCH3158206",
+	    "hosting_id": "CloudAssHole"
+    }
+
+
+=cut
+
 sub create_or_update ($self) {
   my $auth = $self->req->headers->authorization || '';
   # Expect "Basic <base64encoded>"
@@ -84,7 +150,7 @@ sub create_or_update ($self) {
   }
 
   my $search_arg = { base => $self->{app}->{cfg}->{ldap}->{base}->{machines},
-  		     filter => sprintf("(cn=%s)", $data->{hostname}),
+		     filter => sprintf("(cn=%s)", $data->{hostname}),
 		     attrs => [qw(
 				   associatedDomain
 				   grayDeviceMapping
