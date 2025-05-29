@@ -47,6 +47,9 @@ sub newsvc ($self) {
 
   ($domains, $err) = $ldap->all_hosts;
   $self->h_log( $err ) if $err;
+  my $axfr = $self->h_dns_resolver({ type => 'AXFR', ns_custom => 1 })->{success};
+  my %seen;
+  @{$domains} = grep { !$seen{$_}} (@$domains, @$axfr);
 
   $search_arg = { base => $self->{app}->{cfg}->{ldap}->{base}->{rad_groups},
 		  filter => '(cn=*)' };

@@ -122,6 +122,8 @@
   </div>
 </div>
 
+%# <pre class="umi-text-tiny"><%= dumper h_dns_resolver({ type => 'AXFR', ns_custom => 1 })->{success} %></pre>
+
 %#<script>
 %#
 %#  var colors = [

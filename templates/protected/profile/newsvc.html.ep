@@ -40,7 +40,7 @@
     % }
     % elsif ( $fld eq 'associatedDomain' )
     % {
-      % my $options = [ ['--- choose domain ---' => ''], map { [ $_ => $_ ] } @$domains ];
+      % my $options = [ ['--- choose 1 from ' . scalar @$domains . ' domains ---' => ''], map { [ $_ => $_ ] } @$domains ];
       <div class="input-group my-3 d-none" data-field="<%= $fld %>">
 	%= label_for $fld => $fld, class => 'input-group-text', title => $schema->{$fld}->{desc}
 	%= select_field $fld => $options, id => $fld, class => 'custom-select form-control'
@@ -169,9 +169,9 @@
      fieldsToShow.forEach(fieldName => {
        const field = document.querySelector(`#dynamicForm [data-field="${fieldName}"]`);
        if (field) {
-         field.classList.remove('d-none');
-         field.querySelector('input, select, textarea').disabled = false;
-         // Ensure the field is moved to the correct position
+	 field.classList.remove('d-none');
+	 field.querySelector('input, select, textarea').disabled = false;
+	 // Ensure the field is moved to the correct position
 	 formGroupContainer.appendChild(field);
        }
      });
@@ -203,4 +203,3 @@
  });
 
 </script>
-

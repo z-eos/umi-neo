@@ -222,9 +222,6 @@
 
 	  % }
 
-	  % if ($e->dn =~ /^.*,$re_accesslog$/) {
-	    <a href="/tool/undo?reqStart=<%= $e->get_value('reqStart') %>" class="btn btn-sm btn-secondary" role="button"><i class="fa-solid fa-rotate-left"></i></a>
-	  % }
 	</div>
       </div>
 

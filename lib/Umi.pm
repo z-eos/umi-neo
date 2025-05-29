@@ -567,7 +567,7 @@ sub _startup_routes ($self) {
 
   $self->controller_class('Umi::Controller');
   $self->defaults(layout => 'default');
-  $self->log->info('-=*=-' . ' -'x10 . 'STARTUP COMPLETE' . ' -'x10 . ' -=*=-');
+  $self->log->info('='x25 . '[ STARTUP COMPLETE ]' . '='x25);
 
   return $self;
 }
