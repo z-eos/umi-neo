@@ -17,6 +17,7 @@ services:
       - "127.0.0.1:${UMI_PORT}:3000"
     environment:
       PIES_SYSLOG_SERVER: ${PIES_SYSLOG_SERVER:-/proc/1/fd/1}
+      MOJO_REVERSE_PROXY: 1
     volumes:
       - conf:/umi/conf
 
