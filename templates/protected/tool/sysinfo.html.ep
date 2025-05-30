@@ -111,6 +111,7 @@
 % use Mojo::JSON qw(decode_json encode_json to_json);
 % my $cfg = app->cfg;
 % $cfg->{jwt}->{secret} = '***';
+% $cfg->{tool}->{pwdgen}->{sha}->{salt} = '***';
 % $cfg->{secrets} = [ '***' ];
 <script>
 
