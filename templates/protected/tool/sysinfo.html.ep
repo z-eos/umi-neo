@@ -109,6 +109,9 @@
 
 <script type="text/javascript" src="/assets/js/renderjson.js"></script>
 % use Mojo::JSON qw(decode_json encode_json to_json);
+% my $cfg = app->cfg;
+% $cfg->{jwt}->{secret} = '***';
+% $cfg->{secrets} = [ '***' ];
 <script>
 
  const render = renderjson
@@ -118,7 +121,7 @@
 
  [
    { id: "schema", data: <%== stash->{schema} %> },
-   { id: "config", data: <%== encode_json(app->cfg) %> }
+   { id: "config", data: <%== encode_json($cfg) %> }
  ].forEach(({ id, data }) => {
    document.getElementById(id).appendChild(render(data));
  });

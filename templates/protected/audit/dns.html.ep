@@ -6,6 +6,10 @@
   <small><em class="text-muted font-monospace"><%= join ', ', @{app->{cfg}->{tool}->{dns}->{zone}} %></em></small>
 </h1>
 
+% my ($insts_str, %insts, $inst_id);
+% $insts_str = `/usr/bin/eclat --format-expr 'if (.DescribeInstancesResponse.reservationSet) { for (var in .DescribeInstancesResponse.reservationSet.item) { if (var.instancesSet) { for (inst in var.instancesSet.item) { print(inst.instanceId," "); } } } }' lsinst`;
+% %insts = map { $_ => 1 } @{[split /\s/, $insts_str]};
+
 <pre><%# = dumper $zones %></pre>
 <div class="table-responsive">
   <table id="dataTableToDraw" class="table table-sm table-hover">
@@ -26,19 +30,22 @@
     </tfoot>
     <tbody class="table-group-divider">
       % foreach (@$zones) {
-	<tr class="umi-text-xs <%= $_->{type} eq 'CNAME' ? 'table-warning' : 'table-info' %>">
+	% $inst_id = $_->{fqdn} =~ /\.aws\./ && $_->{txt} =~ /^aS/ ? Mojo::Util::b64_decode($_->{txt}) : '';
+	<tr class="umi-text-xs <%= $_->{type} eq 'CNAME' ? 'table-warning' : 'table-info' %><%= ' text-danger' if $inst_id ne '' && ! exists $insts{$inst_id} %>">
 	  <td class="text-end"></td>
 	  <td class=""><%= $_->{fqdn} %></td>
 	  <td class="text-start"><%= join('.', reverse @{[split(/\./, $_->{fqdn})]}) %></td>
 	  <td class="text-center"><%= $_->{type} %></td>
 	  <td class=""><%= $_->{rdstring} %></td>
 	  <td class=""><%= $_->{zone} %></td>
-	  <td class="font-monospace umi-text-xs text-break"><%= $_->{fqdn} =~ /\.aws\./ && $_->{txt} =~ /^aS/ ? 'AWS inst id: ' . Mojo::Util::b64_decode($_->{txt}) : $_->{txt} %></td>
+	  <td class="font-monospace umi-text-xs text-break"><%= $inst_id eq '' ? $_->{txt} : $inst_id %></td>
 	</tr>
       % }
     </tbody>
   </table>
 </div>
+
+<pre><%= dumper $insts_str %></pre>
 
 <script src="/assets/js/datatables/datatables.min.js"></script>
 <script>
