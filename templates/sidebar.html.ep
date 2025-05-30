@@ -109,6 +109,25 @@
 	      </li>
 	    % }
 
+	    <li class="nav-item dropdown">
+	      <a class="nav-link dropdown-toggle text-secondary text-start"
+		 data-bs-toggle="dropdown"
+		 href="#"
+		 role="button"
+		 aria-expanded="false"
+	      >
+		<i class="fa-solid fa-earth-americas me-2"></i> DNS
+	      </a>
+
+	      <ul class="dropdown-menu px-2">
+		<li>
+		  <a class="dropdown-item text-lowercase px-0" href="/audit/dns/zones">
+		    <i class="fa-solid fa-globe fa-fw me-2"></i> norse.digital
+		  </a>
+		</li>
+	      </ul>
+	    </li>
+
 	    <!-- <li class="nav-item">
 		 <a class="nav-link btn btn-link text-secondary text-start" href="/servermta"
 		 tabindex="2"

@@ -248,6 +248,20 @@ from config file
     tcp_timeout    - default: 1
     udp_timeout    - default: 1
 
+Returns:
+
+    for A / PTR
+    {
+      success => x.x.x.x / FQDN,
+      error   => { errdescr => ..., errcode => ..., errstr => ...  }
+    }
+
+    for AXFR
+    {
+      success => { FQDN => { type => A/CNAME, rdstring => x.x.x.x} },
+      error   => { errdescr => ..., errcode => ..., errstr => ...  }
+    }
+
 =cut
 
   $app->helper( h_dns_resolver => sub {
@@ -265,6 +279,7 @@ from config file
 			    tcp_timeout    => $A->{tcp_timeout}    // 1,
 			    udp_timeout    => $A->{udp_timeout}    // 1,
 			    ns_custom      => $A->{ns_custom}      // 0,
+			    with_txt       => $A->{with_txt}       // 0,
 			  };
 
 		  my (%return, %domains);
@@ -291,21 +306,57 @@ from config file
 		       && exists $self->{app}->{cfg}->{tool}->{dns}->{zone}
 		       && @{$self->{app}->{cfg}->{tool}->{dns}->{zone}}) {
 
-		    foreach (@{$self->{app}->{cfg}->{tool}->{dns}->{zone}}) {
-		      my @zone_rrs = $r->axfr($_);
+		    foreach my $z (@{$self->{app}->{cfg}->{tool}->{dns}->{zone}}) {
+		      my @zone_rrs = $r->axfr($z);
 
 		      if (@zone_rrs) {
+			my %txt_by_name;
+
+			# First, collect all TXT records indexed by name
 			foreach my $rr (@zone_rrs) {
-			  $domains{$rr->name}++ if $rr->type eq 'A' || $rr->type eq 'CNAME';
+			  if ($rr->type eq 'TXT') {
+			    push @{ $txt_by_name{ $rr->name }{txt} }, $rr->txtdata;
+			    $txt_by_name{ $rr->name }{owner} = $rr->owner;
+			    # $self->h_log($rr->string);
+			  }
 			}
+			# $self->h_log(\%txt_by_name);
+
+			# Now process A and CNAME records
+			foreach my $rr (@zone_rrs) {
+			  #next unless $rr->type eq 'A' || $rr->type eq 'CNAME' || $rr->type eq 'SRV';
+
+			  my $txt = '';
+			  if ($a->{with_txt} == 1) {
+			    if (exists $txt_by_name{ $rr->name }) {
+			      $txt = ref($txt_by_name{$rr->name}{txt}) eq 'ARRAY' ? join("", @{$txt_by_name{$rr->name}{txt}}) : $txt_by_name{$rr->name}{txt};
+			    }
+			  }
+
+			  $domains{ $rr->name } = {
+						   type     => $rr->type,
+						   rdstring => $rr->type ne 'TXT'? $rr->rdstring : '',
+						   zone     => $z,
+						   txt      => $txt
+						  };
+			}
+
 		      } else {
-			if ( exists $return{errstr} && $return{errstr} ne 'NOERROR' ) {
-			  $return{error}{errcode} = DNS->{ $r->errorstring }->{descr}
+			if (exists $return{errstr} && $return{errstr} ne 'NOERROR') {
+			  $return{error}{html} = sprintf(
+							 "<i class='h6'>dns_resolver()</i>: zone: %s %s ( %s )",
+							 $z,
+							 DNS->{ $r->errorstring }->{descr},
+							 $r->errorstring
+							);
+			  $return{error}{errdescr} = DNS->{ $r->errorstring }->{descr};
+			  $return{error}{errcode}  = DNS->{ $r->errorstring }->{dec};
+			  $return{error}{errstr}   = $r->errorstring;
 			}
 		      }
 		    }
 
-		    @{$return{success}} = sort keys %domains;
+		    %{$return{success}} = %domains;
 
 		  } else {
 		    my $rr = $r->search($a->{name});
@@ -355,7 +406,7 @@ from config file
 
 
 		  # p $a->{fqdn}; p $r;
-		  # $self->h_log( $return );
+		  # $self->h_log( \%return );
 		  return \%return;
 		});
 

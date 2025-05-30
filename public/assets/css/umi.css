@@ -720,3 +720,24 @@ details[open] summary::before {
 .btn-add, .btn-delete {
   z-index: 0 !important;
 }
+
+/* -------------------------------
+   Renderjson
+   Render JSON into collapsible HTML
+
+   https://caldwell.github.io/renderjson/
+   https://github.com/caldwell/renderjson
+   ------------------------------- */
+/*
+.renderjson a { text-decoration: none; }
+.renderjson .disclosure { color: crimson;
+			  font-size: 150%; }
+.renderjson .syntax { color: grey; }
+.renderjson .string { color: darkred; }
+.renderjson .number { color: darkcyan; }
+.renderjson .boolean { color: blueviolet; }
+.renderjson .key    { color: var(--bs-cyan); }
+.renderjson .keyword { color: var(--bs-cyan); }
+.renderjson .object.syntax { color: lightseagreen; }
+.renderjson .array.syntax  { color: orange; }
+*/

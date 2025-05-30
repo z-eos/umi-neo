@@ -1572,6 +1572,33 @@ sub resolve ($self) {
 		 text => join("\n", @{$a->{body}}) // '' );
 }
 
+=head1 audit_dns_zones
+
+AXFR zones configured in config file
+
+=cut
+
+sub audit_dns_zones ($self) {
+  # my $p = $self->req->params->to_hash;
+  # my $a = { query => { A   => $p->{a}   // '',
+  #		       PTR => $p->{ptr} // '',
+  #		       MX  => $p->{mx}  // '', }, };
+
+  my $zones;
+  my $axfr = $self->h_dns_resolver({ type => 'AXFR', ns_custom => 1, with_txt => 1 })->{success};
+  # $self->h_log($_) foreach ($axfr);
+  push @$zones, {
+		 fqdn => $_,
+		 type => $axfr->{$_}->{type},
+		 zone => $axfr->{$_}->{zone},
+		 rdstring => $axfr->{$_}->{rdstring},
+		 txt => $axfr->{$_}->{txt}
+		}
+    foreach (sort keys %{$axfr});
+
+  $self->render( template => 'protected/audit/dns', zones => $zones );
+}
+
 =head1 moddn
 
 Rename the entry given by "DN" on the server.

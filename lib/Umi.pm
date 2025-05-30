@@ -469,6 +469,10 @@ sub _startup_routes ($self) {
     ->requires(is_role => ['admin,coadmin,hr', {cmp => 'or'}])
     ->to('protected#profile');
 #    ->to('audit#users');
+  $protected_root
+    ->get( '/audit/dns/zones')
+    ->requires(is_role => ['admin,coadmin,hr', {cmp => 'or'}])
+    ->to('protected#audit_dns_zones');
 
   ## TOOLs
   ### aside
@@ -565,6 +569,7 @@ sub _startup_routes ($self) {
   $public_root->any($_ => $nf) for qw< * / >;
   $protected_root->any($_ => $nf) for qw< * / >;
 
+  # $self->app->reverse_proxy(1);
   $self->controller_class('Umi::Controller');
   $self->defaults(layout => 'default');
   $self->log->info('='x25 . '[ STARTUP COMPLETE ]' . '='x25);

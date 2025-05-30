@@ -186,7 +186,7 @@ returns true if its single argument is:
 		  return 1;
 		});
 
-=head2 h_is_ip
+=head2 h_is_ip_pair
 
 checks whether the argument is a space delimited pair of ip addresses
 
@@ -237,7 +237,7 @@ and string of errors (empty on success)
 		});
 
 
-=head2 h_is_ip_pair
+=head2 h_is_ip
 
 checks whether the argument is ip address
 

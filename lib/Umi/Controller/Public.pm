@@ -38,8 +38,7 @@ sub do_login ($self) {
       }
 
       my $e = $search->entry;
-      # $self->h_log($search->count);
-      %$user_obj = map { lc($_) => $e->get_value($_) } $e->attributes;
+      %$user_obj = map { lc($_) => $e->get_value($_) // '' } @{[$e->attributes]};
       $user_obj->{dn} = $e->dn;
 
       ### user's role
@@ -66,7 +65,7 @@ sub do_login ($self) {
 				user_obj => $user_obj,
 				role => $role,
 				privileges => \%privileges });
-      $self->log->info(sprintf("user `%s` logged in", $username));
+      $self->log->info(sprintf("=== connect from %s, user %s logged in", $self->tx->remote_address, $username));
       return $self->redirect_to('protected_root');
     }
   }
@@ -76,7 +75,7 @@ sub do_login ($self) {
 }
 
 sub do_logout ($self) {
-  $self->log->info(sprintf("user `%s` logged out", $self->session->{uid}));
+  $self->log->info(sprintf("user %s logged out", $self->session->{uid}));
   $self->logout;
   $self->session(expires => 1);
   return $self->redirect_to('/');

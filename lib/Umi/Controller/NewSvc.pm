@@ -49,7 +49,7 @@ sub newsvc ($self) {
   $self->h_log( $err ) if $err;
   my $axfr = $self->h_dns_resolver({ type => 'AXFR', ns_custom => 1 })->{success};
   my %seen;
-  @{$domains} = grep { !$seen{$_}} (@$domains, @$axfr);
+  @{$domains} = grep { !$seen{$_}} (@$domains, sort keys %{$axfr});
 
   $search_arg = { base => $self->{app}->{cfg}->{ldap}->{base}->{rad_groups},
 		  filter => '(cn=*)' };
