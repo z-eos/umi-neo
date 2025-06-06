@@ -1,0 +1,61 @@
+%# -*- mode: web; eval: (follow-mode) -*-
+
+% use Encode qw(decode_utf8);
+% use Net::LDAP::Util qw(generalizedTime_to_time);
+% use POSIX qw(strftime);
+% use Time::Piece;
+
+<link href="/assets/js/datatables/datatables.min.css" rel="stylesheet" type="text/css">
+
+<h1 class="mt-3 mb-4">
+  GPG keys</br>
+  <small><em class="text-muted font-monospace"></em></small>
+</h1>
+
+<pre><%# = dumper $zones %></pre>
+<div class="table-responsive">
+  <table id="dataTableToDraw" class="table table-sm table-hover">
+    % my @fields = qw( № pgpUserID pgpCertID pgpKeyID pgpKeyCreateTime pgpKeyExpireTime );
+    <thead class="table-bordered border-secondary">
+      <tr class="text-uppercase">
+	% foreach (@fields) {
+	  <th class="text-center"><%== $_ =%></th>
+	% }
+      </tr>
+    </thead>
+    <tfoot class="table-bordered border-secondary">
+      <tr class="text-uppercase">
+	% foreach (@fields) {
+	  <th class="text-center"><%== $_ =%></th>
+	% }
+      </tr>
+    </tfoot>
+    <tbody class="table-group-divider">
+      % foreach (keys %$gpg) {
+	% my $exp = Time::Piece->strptime($gpg->{$_}->{pgpKeyExpireTime}, '%Y%m%d%H%M%SZ') if $gpg->{$_}->{pgpKeyExpireTime} ne '';
+	% my $now = localtime;
+	% my $col = $now > $exp ? 'table-danger' : '';
+	<tr class="umi-text-xs font-monospace <%= $col %>">
+	  <td class="text-end"></td>
+	  <td class=""><%= utf8::is_utf8($gpg->{$_}->{pgpUserID}) ? $gpg->{$_}->{pgpUserID} : decode_utf8($gpg->{$_}->{pgpUserID}) %></td>
+	  <td class=""><%= $_ %></td>
+	  <td class=""><%= $gpg->{$_}->{pgpKeyID} %></td>
+	  <td class=""><%= strftime( "%F %T", localtime(generalizedTime_to_time($gpg->{$_}->{pgpKeyCreateTime})))
+		       if defined $gpg->{$_}->{pgpKeyCreateTime} %></td>
+	  <td class=""><%= strftime( "%F %T", localtime(generalizedTime_to_time($gpg->{$_}->{pgpKeyExpireTime})))
+		       if $gpg->{$_}->{pgpKeyExpireTime} ne '' %></td>
+	</tr>
+      % }
+    </tbody>
+  </table>
+</div>
+
+%# <pre><%= dumper $insts_str %></pre>
+
+<script src="/assets/js/datatables/datatables.min.js"></script>
+<script>
+ window.appContext = {
+   type: "<%= stash->{type} // '' %>"
+ };
+</script>
+<script src="/assets/js/umi-datatables.js"></script>

@@ -1688,9 +1688,9 @@ sub onboarding ($self) {
   my $svcs = $self->{app}->{cfg}->{ui}->{onboarding}->{services};
   # $self->h_log($svcs);
 
-  ######################################################
-  # check for what services user does have or doesn't' #
-  ######################################################
+  ###########################################
+  # what services user does have or doesn't #
+  ###########################################
   foreach my $svc (keys %$svcs) {
     foreach my $d (@{$svcs->{$svc}->{fqdn}}) {
       $search_arg = { base => sprintf('authorizedService=%s@%s,%s', $svcs->{$svc}->{svc}, $d, $self->session->{user_obj}->{dn}),
