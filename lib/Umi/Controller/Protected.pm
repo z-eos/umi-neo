@@ -10,6 +10,7 @@ use Mojolicious::Validator;
 
 use IO::Compress::Gzip qw(gzip $GzipError);
 use POSIX qw(strftime);
+use Time::Piece;
 use Encode qw(decode_utf8);
 use Net::LDAP::Constant qw(
 			    LDAP_ALREADY_EXISTS
@@ -1572,33 +1573,6 @@ sub resolve ($self) {
 		 text => join("\n", @{$a->{body}}) // '' );
 }
 
-=head1 audit_dns_zones
-
-AXFR zones configured in config file
-
-=cut
-
-sub audit_dns_zones ($self) {
-  # my $p = $self->req->params->to_hash;
-  # my $a = { query => { A   => $p->{a}   // '',
-  #		       PTR => $p->{ptr} // '',
-  #		       MX  => $p->{mx}  // '', }, };
-
-  my $zones;
-  my $axfr = $self->h_dns_resolver({ type => 'AXFR', ns_custom => 1, with_txt => 1 })->{success};
-  # $self->h_log($_) foreach ($axfr);
-  push @$zones, {
-		 fqdn => $_,
-		 type => $axfr->{$_}->{type},
-		 zone => $axfr->{$_}->{zone},
-		 rdstring => $axfr->{$_}->{rdstring},
-		 txt => $axfr->{$_}->{txt}
-		}
-    foreach (sort keys %{$axfr});
-
-  $self->render( template => 'protected/audit/dns', zones => $zones );
-}
-
 =head1 moddn
 
 Rename the entry given by "DN" on the server.
@@ -1713,6 +1687,10 @@ sub onboarding ($self) {
   my (%debug, $service);
   my $svcs = $self->{app}->{cfg}->{ui}->{onboarding}->{services};
   # $self->h_log($svcs);
+
+  ######################################################
+  # check for what services user does have or doesn't' #
+  ######################################################
   foreach my $svc (keys %$svcs) {
     foreach my $d (@{$svcs->{$svc}->{fqdn}}) {
       $search_arg = { base => sprintf('authorizedService=%s@%s,%s', $svcs->{$svc}->{svc}, $d, $self->session->{user_obj}->{dn}),
@@ -1739,35 +1717,23 @@ sub onboarding ($self) {
 
   $self->stash( debug => \%debug );
 
+  # On GET (not POST), render the form and stop here
   return $self->render(template => 'protected/profile/onboarding') unless $v->has_data;
 
   $self->stash( is_submited => 1 );
 
+  ########################
+  # Generate SSH keypair #
+  ########################
+  my $k_ssh = $self->h_keygen_ssh;
+  # $self->stash(debug => $k_ssh->{debug});
+  # $self->h_log($k_ssh);
+  # $self->h_log(\%debug);
+
   my ($svc_details, $br, $s);
   my $dry_run = 0;
 
-  my $k_ssh = $self->h_keygen_ssh;
-  # $self->stash(debug => $k_ssh->{debug});
-
-  my $k_gpg = $self->h_keygen_gpg({ name =>
-				    { real  => sprintf("%s %s",
-						       $self->session->{user_obj}->{givenname},
-						       $self->session->{user_obj}->{sn}) // "name is absent",
-				      email => $self->session->{user_obj}->{mail} // "mail is absent" }});
-  # $self->stash(debug => $k_gpg->{debug});
-
-  my ($mesg, $op_dn, $op_attrs);
-  if ( $dry_run == 0 && exists $k_gpg->{send_key} ) {
-    $op_dn = sprintf("pgpCertID=%s,%s",
-		     $k_gpg->{send_key}->{pgpCertID},
-		     $self->{app}->{cfg}->{ldap}->{base}->{pgp});
-    %{$op_attrs} = map { $_ => $k_gpg->{send_key}->{$_} } keys %{$k_gpg->{send_key}};
-    #$self->h_log($add_dn);
-    #$self->h_log($add_attrs);
-    $mesg = $ldap->add( $op_dn, $op_attrs );
-    push @{$debug{$mesg->{status}}}, $mesg->{message};
-  }
-
+  my (%to_enc, $op_dn, $mesg, $op_attrs);
   foreach my $svc (keys %$service) {
     # next if $service->{$svc}->{exists} == 1;
 
@@ -1780,6 +1746,7 @@ sub onboarding ($self) {
 	$br = $self->h_branch_add_if_not_exists($p, $ldap, $root, \%debug, $dry_run);
 	$s = $self->h_service_add_if_not_exists($p, $ldap, $root, $br, \%debug, $dry_run);
 	push @{$svc_details->{$svc}->{added}}, { fqdn => $d, svc_details => $s->{svc_details} };
+	$to_enc{ 'svc_' . $svc . $d . $s->{svc_details}->{uid} } = $s->{svc_details}->{userPassword};
       } elsif ( $svc eq 'ssh-acc' ) {
 	$op_dn = sprintf('uid=%s,authorizedService=%s@%s,%s',
 			 lc(sprintf("%s.%s", $self->session->{user_obj}->{givenname}, $self->session->{user_obj}->{sn})),
@@ -1798,12 +1765,35 @@ sub onboarding ($self) {
   }
 
   my $root_pwd = $self->h_pwdgen;
+  $to_enc{root} = $root_pwd->{clear};
   $mesg = $ldap->modify( $self->session->{user_obj}->{dn},
 			 [ replace => [ userPassword => $root_pwd->{ssha} ] ] );
   push @{$debug{$mesg->{status}}}, $mesg->{message};
 
-  # $self->h_log($k_ssh);
-  # $self->h_log(\%debug);
+  ##################################################
+  # Generate GPG keypair and uload GPG key to LDAP #
+  ##################################################
+  my $k_gpg = $self->h_keygen_gpg({ name => {
+					     real  => sprintf("%s %s",
+							      $self->session->{user_obj}->{givenname},
+							      $self->session->{user_obj}->{sn}) // "name is absent",
+					     email => $self->session->{user_obj}->{mail} // "mail is absent"
+					    },
+				    to_enc => \%to_enc
+				  });
+  # $self->stash(debug => $k_gpg->{debug});
+
+  if ( $dry_run == 0 && exists $k_gpg->{send_key} ) {
+    $op_dn = sprintf("pgpCertID=%s,%s",
+		     $k_gpg->{send_key}->{pgpCertID},
+		     $self->{app}->{cfg}->{ldap}->{base}->{pgp});
+    %{$op_attrs} = map { $_ => $k_gpg->{send_key}->{$_} } keys %{$k_gpg->{send_key}};
+    #$self->h_log($add_dn);
+    #$self->h_log($add_attrs);
+    $mesg = $ldap->add( $op_dn, $op_attrs );
+    push @{$debug{$mesg->{status}}}, $mesg->{message};
+  }
+
   delete $debug{ok};
   delete $service->{$_}->{acc} foreach (keys %$service);
 
@@ -1967,5 +1957,90 @@ sub sudo ($self) {
   $self->stash( debug => \%debug, schema => \%schema_all_attributes );
   $self->render(template => 'protected/sudo/new');
 }
+
+=head1 audit_dns_zones
+
+AXFR zones configured in config file
+
+=cut
+
+sub audit_dns_zones ($self) {
+  # my $p = $self->req->params->to_hash;
+  # my $a = { query => { A   => $p->{a}   // '',
+  #		       PTR => $p->{ptr} // '',
+  #		       MX  => $p->{mx}  // '', }, };
+
+  my $zones;
+  my $axfr = $self->h_dns_resolver({ type => 'AXFR', ns_custom => 1, with_txt => 1, whole_axfr => 1 })->{success};
+  # $self->h_log($_) foreach ($axfr);
+  push @$zones, {
+		 fqdn => $_,
+		 type => $axfr->{$_}->{type},
+		 zone => $axfr->{$_}->{zone},
+		 rdstring => $axfr->{$_}->{rdstring},
+		 txt => $axfr->{$_}->{txt}
+		}
+    foreach (sort keys %{$axfr});
+
+  $self->render( template => 'protected/audit/dns', zones => $zones );
+}
+
+=head1 audit_gpg_keys
+
+
+
+=cut
+
+sub audit_gpg_keys ($self) {
+  my $p = $self->req->params->to_hash;
+  my $reqpath = $self->req->url->to_abs->path;
+  my ($filter, $state);
+
+  ### PROFILE TO GET:
+  if ($self->stash->{key} eq 'all') {
+    $filter = '(pgpCertId=*)';
+  } elsif ($self->stash->{key} eq 'expired') {
+    $filter = '(pgpCertId=*)';
+    $state = $self->stash->{key};
+  } elsif ($self->stash->{key} eq 'active') {
+    $filter = '(pgpCertId=*)';
+    $state = $self->stash->{key};
+  } elsif ($self->stash->{key} ne '') {
+    $filter = sprintf("(pgpUserID=*%s*)", $self->stash->{key});
+    } else {
+  }
+
+  # $self->h_log($self->stash->{key});
+
+  my $ldap = Umi::Ldap->new( $self->{app}, $self->session('uid'), $self->session('pwd') );
+
+  my $attrs = [qw(pgpCertID pgpKeyID pgpUserID pgpKeyCreateTime pgpKeyExpireTime pgpKey)];
+  my $search_arg = { base => $self->{app}->{cfg}->{ldap}->{base}->{pgp},
+		     filter => $filter,
+		     attrs => $attrs};
+  my $search = $ldap->search( $search_arg );
+  $self->h_log( $self->{app}->h_ldap_err($search, $search_arg) ) if $search->code;
+
+  my %gpg;
+  my $now = localtime;
+  foreach ($search->entries) {
+    my $exp_ts = $_->get_value('pgpKeyExpireTime') if $_->exists('pgpKeyExpireTime');
+    # $self->h_log($exp_ts);
+    my $exp = Time::Piece->strptime($exp_ts, '%Y%m%d%H%M%SZ') if defined $exp_ts;
+
+    next if $self->stash->{key} eq 'active'  && defined $exp && $now > $exp;
+    next if $self->stash->{key} eq 'expired' && ((defined $exp && $now < $exp) || ! defined $exp);
+
+    $gpg{$_->get_value('pgpCertID')} = {
+					pgpKeyID => $_->get_value('pgpKeyID'),
+					pgpUserID => $_->get_value('pgpUserID'),
+					pgpKeyCreateTime => $_->get_value('pgpKeyCreateTime'),
+					pgpKeyExpireTime => $exp_ts // '',
+				       };
+    }
+
+  return $self->render( template => 'protected/audit/gpg', gpg => \%gpg );
+}
+
 
 1;

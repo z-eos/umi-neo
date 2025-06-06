@@ -166,18 +166,27 @@
 			<img src="data:image/jpg;base64,<%= Mojo::Util::b64_encode $attr_val %>"
 			     class="img-thumbnail" alt="<%= $e->dn %>">
 		      </div>
+
 		    % } elsif ( $attr eq 'gidNumber' )
 		    % {
 		      <a href="/search/common?search_filter=gidNumber=<%= $attr_val %>&search_base_case=ou=group,dc=nxc,dc=no"
-			 class="btn btn-link btn-sm px-0<%= ' text-danger fw-bold' if $attr_val eq app->{cfg}->{ldap}->{defaults}->{group}->{blocked}->{gidnumber} %>">
-			<%= $attr_val %><%= $attr_val eq app->{cfg}->{ldap}->{defaults}->{group}->{blocked}->{gidnumber} ? ' / ' . app->{cfg}->{ldap}->{defaults}->{group}->{blocked}->{cn} : '' %>
+			 class="btn btn-link btn-sm px-0<%= ' text-danger fw-bold'
+							if $attr_val eq app->{cfg}->{ldap}->{defaults}->{group}->{blocked}->{gidnumber} %>"
+		      >
+			<%= $attr_val %>
+			<%= $attr_val eq app->{cfg}->{ldap}->{defaults}->{group}->{blocked}->{gidnumber}
+			? ' / ' . app->{cfg}->{ldap}->{defaults}->{group}->{blocked}->{cn}
+			: '' %>
 		      </a>
+
 		    % } elsif ( $attr eq 'userPassword' )
 		    % {
 		      <%== '<i class="fa-solid fa-asterisk text-muted"></i>' x 6 %>
+
 		    % } elsif ( $attr eq 'reqMod' )
 		    % {
-		      <div class="user-select-all font-monospace umi-text-tiny mb-1"><%= $attr_val %></div>
+		      <div class="user-select-all font-monospace umi-text-tiny mb-1" style="white-space: pre;"><%= $attr_val %></div>
+
 		    % } elsif ( grep {$attr eq $_} (@attr_break, @attr_wrap))
 		    % {
 		      % my $text_pre;
@@ -195,6 +204,7 @@
 			% gunzip \$decoded => \$attr_val_processed;
 		      % }
 		      <pre class="user-select-all<%= $text_pre %> umi-text-tiny" id="<%= $attr %>""><%= $attr_val_processed %></pre>
+
 		    % } elsif ($attr eq 'userCertificate;binary' || $attr eq 'cACertificate;binary')
 		    % {
 		      % my $ci = $self->h_cert_info({ cert => $attr_val, ts => "%Y%m%d%H%M%S", });

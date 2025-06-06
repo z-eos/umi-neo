@@ -3,7 +3,7 @@
 package Umi::Controller::Public;
 
 use Mojo::Base 'Umi::Controller', -signatures;
-use Mojo::Util qw( dumper );
+use Mojo::Util qw( dumper b64_decode );
 
 use Umi::Ldap;
 
@@ -91,6 +91,62 @@ sub homepage ($self) {
 
 sub other ($self) {
   return $self->render(template => 'public/other');
+}
+
+=head1 get_gpg_keys
+
+public (BASIC AUTH) endpoint to get GPG key by keyword matched against a
+value of pgpUserID attribute
+
+curl -X GET -u uid=john,ou=People,dc=foo,dc=bar:*** -H "Content-Type: application/json" -d @FILE.json -s http://10.0.0.1:3000/public/gpg/john@foo | jq
+
+
+=cut
+
+sub get_gpg_key ($self) {
+  my ($filter, $state );
+
+  my $ldap = $self->h_auth_basic;
+
+  if ( defined $ldap ) {
+    my $key = $self->stash->{key};
+    return $self->render(json => {})
+      unless defined $key
+      && $key =~ /^[[:alnum:] _\-@.,]+$/;
+
+    if ($key ne '') {
+      $filter = sprintf("(pgpUserID=*%s*)", $self->stash->{key});
+    }
+    # $self->h_log($self->stash->{key});
+
+    my $attrs = [qw(pgpCertID pgpKeyID pgpUserID pgpKeyCreateTime pgpKeyExpireTime pgpKey)];
+    my $search_arg = { base => $self->{app}->{cfg}->{ldap}->{base}->{pgp},
+		       filter => $filter,
+		       attrs => $attrs};
+    my $search = $ldap->search( $search_arg );
+    $self->h_log( $self->{app}->h_ldap_err($search, $search_arg) ) if $search->code;
+
+    my %gpg;
+    my $now = localtime;
+    foreach ($search->entries) {
+      my $exp_ts = $_->get_value('pgpKeyExpireTime') if $_->exists('pgpKeyExpireTime');
+      # $self->h_log($exp_ts);
+      my $exp = Time::Piece->strptime($exp_ts, '%Y%m%d%H%M%SZ') if defined $exp_ts;
+
+      next if $self->stash->{key} eq 'active'  && defined $exp && $now > $exp;
+      next if $self->stash->{key} eq 'expired' && ((defined $exp && $now < $exp) || ! defined $exp);
+
+      $gpg{$_->get_value('pgpCertID')} = {
+					  pgpKeyID => $_->get_value('pgpKeyID'),
+					  pgpUserID => $_->get_value('pgpUserID'),
+					  pgpKeyCreateTime => $_->get_value('pgpKeyCreateTime'),
+					  pgpKeyExpireTime => $exp_ts // '',
+					  pgpKey => $_->get_value('pgpKey'),
+					 };
+    }
+
+    return $self->render(json => \%gpg);
+  }
 }
 
 1;

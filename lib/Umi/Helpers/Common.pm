@@ -3,7 +3,7 @@
 package Umi::Helpers::Common;
 
 use Mojo::Base 'Mojolicious::Plugin';
-use Mojo::Util qw( b64_encode encode url_escape );
+use Mojo::Util qw( b64_encode b64_decode encode url_escape );
 
 use Umi::Constants qw(RE);
 
@@ -23,6 +23,9 @@ use Time::Piece;
 use Try::Tiny;
 use Crypt::X509;
 # use Crypt::X509::CRL;
+use URI::Escape;
+use Encode qw(decode is_utf8);
+
 
 use Text::vCard::Addressbook;
 use vCard::AddressBook;
@@ -35,6 +38,66 @@ sub register {
   my $re = RE;			# defined in Umi::Constants;
 
   ### BEGINNING OF REGISTER
+
+=head2 h_auth_basic
+
+  my $ldap = $c->h_auth_basic;
+
+Performs HTTP Basic Authentication and returns an authenticated C<Umi::Ldap>
+object on success.
+
+This helper inspects the C<Authorization> header in the incoming request,
+expecting it to contain HTTP Basic credentials. If the credentials are
+missing or invalid, it sets a C<WWW-Authenticate> response header and halts
+the request with a 401 Unauthorized status.
+
+On success, it constructs and returns an instance of L<Umi::Ldap>,
+initialized with the provided username and password. The LDAP connection
+must succeed (i.e., be a L<Net::LDAP> object) or authentication is
+considered to have failed.
+
+B<Returns>: C<Umi::Ldap> object on success, or halts request with a 401
+response on failure.
+
+B<Example>:
+
+  sub some_action {
+    my $self = shift;
+    my $ldap = $self->h_auth_basic or return;
+    ...
+  }
+
+=cut
+
+  $app->helper( h_auth_basic => sub {
+		  my  ($self) = @_;
+
+		  my $auth = $self->req->headers->authorization || '';
+		  # Expect "Basic <base64encoded>"
+		  unless ( $auth && $auth =~ /^Basic\s+(.+)$/ ) {
+		    $self->res->headers->www_authenticate('Basic realm="Protected Area"');
+		    $self->render(text => 'Authentication required', status => 401);
+		    $self->log->info(sprintf("=== connect from %s, unauthorized", $self->tx->remote_address));
+		    return;
+		  }
+
+		  my $encoded = $1;
+		  my $decoded = b64_decode($encoded) || '';
+		  # Expect decoded string to be "username:password"
+		  my ($user, $pass) = split /:/, $decoded, 2;
+
+		  my $ldap = Umi::Ldap->new( $self->{app}, $user, $pass, 1 );
+		  # $self->h_log(ref($ldap->ldap));
+		  unless ( ref($ldap->ldap) eq 'Net::LDAP' ) {
+		    $self->res->headers->www_authenticate('Basic realm="Protected Area"');
+		    $self->render(text => 'Authentication required', status => 401);
+		    $self->log->info(sprintf("=== connect from %s, user %s login failed", $self->tx->remote_address, $user));
+		    return;
+		  }
+		  $self->log->info(sprintf("=== connect from %s, user %s authenticated", $self->tx->remote_address, $user));
+
+		  return $ldap;
+		});
 
   $app->helper(		 header_form_subsearch_button => sub {
 			   my ($self, $text) = @_;
@@ -199,7 +262,7 @@ returns 1 if it is and 0 if not
 		  return (($arg // '') ne '' && $arg =~ /^$re->{ip}\s+$re->{ip}$/) ? 1 : 0;
 		});
 
-=head2 h_telephonenumer
+=head2 h_telephonenumber
 
 checks whether the argument is a comma delimited telephone numbers in
 international notation
@@ -365,6 +428,36 @@ get random id of length N passed as input, default is 8
 		  $len = $len // 8;
 		  my @chars = ('A'..'Z', 'a'..'z', 0..9);
 		  return join '', map { $chars[rand @chars] } 1 .. $len;
+		});
+
+=head2 h_maybe_percent_decode_utf8
+
+Detects whether a string contains percent-encoded UTF-8 byte sequences
+(e.g., "Bj%C3%B8rn"), and if so, decodes it into a proper UTF-8 Perl string.
+
+Returns a scalar string, decoded as UTF-8 if appropriate.
+
+=head3 Example
+
+  my $s = "Bj%C3%B8rn";
+  say maybe_percent_decode_utf8($s);  # prints "Bjørn"
+
+=cut
+
+  $app->helper( h_maybe_percent_decode_utf8 => sub {
+		  my ($self, $s) = @_;
+
+		  # Step 1: Check for percent-encoded patterns
+		  if ( $s =~ /%[0-9A-Fa-f]{2}/ ) {
+		    # Step 2: URI-decode
+		    my $decoded = uri_unescape($s);
+
+		    # Step 3: Decode only if not already flagged as UTF-8
+		    return is_utf8($decoded) ? $decoded : decode('UTF-8', $decoded);
+		  }
+
+		  return $s;
+
 		});
 
 =head2 h_qrcode
@@ -604,34 +697,44 @@ this method is supposed to work with the only one single key in keyring
 		  my ( $self, $args ) = @_;
 
 		  my $res;
+		  # Check if GPG configuration section exists in app config
 		  if (!exists $app->{cfg}->{tool}->{gpg}) {
 		    $res->{debug}->{error} = ['Configuration lacks GPG related section. Inform admins.'];
 		    return $res;
 		  }
 
-		  my $arg = { bits     => $args->{bits}     // 4096,
-			      key_type => $args->{key_type} // 'eddsa',
-			      import   => $args->{import}   // '',
-			      send_key => $args->{send_key} // 0,
-			      name     => $args->{name} // { real  => "not signed in $$",
-							     email => "not signed in $$" },
+		  # Set default parameters for key generation with fallback values
+		  my $arg = { bits     => $args->{bits}     // 4096,    # Key size in bits (default 4096)
+			      key_type => $args->{key_type} // 'eddsa',	# Crypto algorithm (default EdDSA)
+			      import   => $args->{import}   // '',      # Import existing key data
+			      send_key => $args->{send_key} // 0,       # Send to LDAP keyserver flag
+			      name     => $args->{name} // { real  => "not signed in $$",   # Default user real name
+							     email => "not signed in $$" }, # Default email
+			      to_enc   => $args->{to_enc} // {} # text to encrypt with newly generated key
 			    };
 
+		  # Generate timestamp for key comment
 		  my $date = strftime('%Y%m%d%H%M%S', localtime);
 
+		  # Create temporary GPG home directory (auto-cleanup on exit)
 		  $ENV{GNUPGHOME} = tempdir(TEMPLATE => '/var/tmp/.umi-gnupg.XXXXXX', CLEANUP => 1 );
 
 		  my ($key, @gpg, @run, $obj, $gpg_bin, $fh, $tf, $stdout, $stderr);
+		  # Locate GPG binary in system PATH
 		  my $to_which = 'gpg';
 		  $gpg_bin = which $to_which;
 		  if ( defined $gpg_bin ) {
+		    # Build base GPG command with standard options
 		    push @gpg, $gpg_bin, '--no-tty', '--yes', '--quiet';
 		  } else {
+		    # GPG binary not found - log error
 		    push @{$res->{debug}->{error}},  "command <code>$to_which</code> not found";
 		    $self->h_log($res);
 		  }
 
+		  # IMPORT MODE: Import existing GPG key from file or text
 		  if ( $arg->{import} ne '' ) {
+		    # Create temporary file for key import
 		    ($fh, $tf) = tempfile( 'import.XXXXXX', DIR => $ENV{GNUPGHOME} );
 		    if ( exists $arg->{import}->{key_file} && $arg->{import}->{key_file} ne '' ) {
 		      print $fh $arg->{import}->{key_file};
@@ -646,14 +749,21 @@ this method is supposed to work with the only one single key in keyring
 		      push @{$res->{debug}->{error}},  $? >> 8, $stderr;
 
 		  } else {
-		    ### https://www.gnupg.org/documentation/manuals/gnupg-devel/Unattended-GPG-key-generation.html
-		    ### https://lists.gnupg.org/pipermail/gnupg-users/2017-December/059622.html
-		    ### Key-Type: default
-		    ### Key-Length: $arg->{bits}
-		    ### Subkey-Type: default
+		    ###################################################################################################
+		    # GENERATION MODE: Create new GPG key pair using batch file					      #
+		    #												      #
+		    #    References for unattended GPG key generation:						      #
+		    #    https://www.gnupg.org/documentation/manuals/gnupg-devel/Unattended-GPG-key-generation.html   #
+		    #    https://lists.gnupg.org/pipermail/gnupg-users/2017-December/059622.html		      #
+		    #    Key-Type: default									      #
+		    #    Key-Length: $arg->{bits}								      #
+		    #    Subkey-Type: default									      #
+		    ###################################################################################################
 
+		    # Create batch file for unattended key generation
 		    ($fh, $tf) = tempfile( 'batch.XXXXXX', DIR => $ENV{GNUPGHOME} );
 		    if ($arg->{key_type} eq 'eddsa') {
+		      # EdDSA key generation template (modern elliptic curve crypto)
 		      print $fh <<"END_INPUT";
 %echo Generating a GPG key
 %no-protection
@@ -671,6 +781,7 @@ Expire-Date: $app->{cfg}->{tool}->{gpg}->{expire}
 %echo Done
 END_INPUT
 		    } elsif ($arg->{key_type} eq 'RSA') {
+		      # RSA key generation template (traditional crypto)
 		      print $fh <<"END_INPUT";
 %echo Generating a GPG key
 %no-protection
@@ -689,6 +800,9 @@ END_INPUT
 
 		    close $fh || die "Cannot close file $tf: $!";
 
+		    #############################
+		    # GPG key generation        #
+		    #############################
 		    @run = (@gpg, '--batch', '--gen-key', $tf);
 		    # $self->h_log(\@run);
 		    run \@run, '>', \$stdout, '2>', \$stderr ||
@@ -711,12 +825,16 @@ END_INPUT
 		  # $self->h_log($stdout);
 		  # $self->h_log($stderr);
 
+		  #######################################################################
+		  # Extract key fingerprint (unique 40-character hex identifier)        #
+		  #######################################################################
 		  if ( !$? ) {
 		    $stdout = $stderr = undef;
 		    @run = (@gpg, '--list-keys', '--with-colons', '--fingerprint');
 		    # $self->h_log(\@run);
 		    run \@run, '>', \$stdout, '2>', \$stderr ||
 		      push @{$res->{debug}->{error}},  $? >> 8, $stderr;
+		    # Parse fingerprint from colon-separated output
 		    $stdout =~ /^fpr:{9}([A-F0-9]{40})/m;
 		    $res->{fingerprint} = $1;
 		    $arg->{fingerprint} = $1;
@@ -726,6 +844,9 @@ END_INPUT
 		  # $self->h_log($stdout);
 		  # $self->h_log($stderr);
 
+		  ##################################################
+		  # Export public key in ASCII armor format	   #
+		  ##################################################
 		  if ( !$? ) {
 		    $stdout = $stderr = undef;
 		    @run = (@gpg, '--armor', '--export', $arg->{fingerprint});
@@ -739,6 +860,26 @@ END_INPUT
 		  # $self->h_log($stdout);
 		  # $self->h_log($stderr);
 
+		  #########################################################
+		  # Encrypt $arg->{to_enc} if it is not an empty hash: {} #
+		  #########################################################
+		  if ( !$? && ref($arg->{to_enc}) eq 'HASH' && %{$arg->{to_enc}} ) {
+		    foreach (keys %{$arg->{to_enc}}) {
+		      $stdout = $stderr = undef;
+		      @run = (@gpg, '--armor', '--encrypt', '--recipient', $arg->{fingerprint});
+		      # $self->h_log(\@run);
+		      run \@run, \$arg->{to_enc}->{$_}, \$stdout, '2>', \$stderr ||
+			push @{$res->{debug}->{error}},  $? >> 8, $stderr;
+		      $res->{enc}->{$_} = $stdout;
+		      # $self->h_log($stdout);
+		      # $self->h_log($stderr);
+		    }
+		    # $self->h_log($res->{enc});
+		  }
+
+		  #############################
+		  # Export private key	      #
+		  #############################
 		  if ( !$? ) {
 		    $stdout = $stderr = undef;
 		    @run = (@gpg, '--fingerprint');
@@ -760,6 +901,9 @@ END_INPUT
 		  # $self->h_log($stdout);
 		  # $self->h_log($stderr);
 
+		  #########################################
+		  # Get human-readable key listing	  #
+		  #########################################
 		  if ( !$? ) {
 		    $stdout = $stderr = undef;
 		    @run = (@gpg, '--list-keys', $arg->{fingerprint});
@@ -773,8 +917,12 @@ END_INPUT
 		  # $self->h_log($stdout);
 		  # $self->h_log($stderr);
 
+		  ############################################################
+		  # Send key to LDAP keyserver if requested or store in LDAP #
+		  ############################################################
 		  ### gpg2 --keyserver 'ldap://192.168.137.1/ou=Keys,ou=PGP,dc=umidb????bindname=uid=umi-admin%2Cou=People%2Cdc=umidb,password=testtest' --send-keys 79F6E0C65DF4EC16
 		  if ( !$? && $arg->{send_key} ) {
+		    # URL-encode commas in LDAP bind DN
 		    $arg->{ldap}->{bindname} =~ s/,/%2C/g;
 		    $stdout = $stderr = undef;
 		    @run = (@gpg,
@@ -789,19 +937,27 @@ END_INPUT
 		    run \@run, '>', \$stdout, '2>', \$stderr ||
 		      push @{$res->{debug}->{error}}, $? >> 8, $stderr;
 		  } elsif ( !$stderr && ! $arg->{send_key} ) {
-		    ## https://gnupg.org/documentation/manuals/gnupg/GPG-Input-and-Output.html#GPG-Input-and-Output
-		    ## https://github.com/CSNW/gnupg/blob/master/doc/DETAILS
-		    ## $arg->{key}->{lst}->{colons} indexes are -2 from described in DETAILS file
+
+		    #########################################################################################################
+		    # Prepare LDAP entry data for PGP key storage							    #
+		    # References for GPG output parsing:								    #
+		    #   https://gnupg.org/documentation/manuals/gnupg/GPG-Input-and-Output.html#GPG-Input-and-Output	    #
+		    #   https://github.com/CSNW/gnupg/blob/master/doc/DETAILS						    #
+		    #   $arg->{key}->{lst}->{colons} indexes are -2 from described in DETAILS file			    #
+		    #########################################################################################################
+
 		    $stdout = $stderr = undef;
 		    @run = (@gpg, '--with-colons', '--list-keys', $arg->{fingerprint});
 		    run \@run, '>', \$stdout, '2>', \$stderr ||
 		      push @{$res->{debug}->{error}}, $? >> 8, $stderr;
 		    # $self->h_log($stdout);
 
+		    # Parse colon-separated GPG output into hash structure
 		    %{$arg->{key}->{lst}->{colons}} =
 		      map { (split(/:/, $_))[0] => [tail(-1, @{[split(/:/, $_)]})] }
 		      split(/\n/, $stdout);
 
+		    # Build LDAP entry attributes for pgpKeyInfo object class
 		    $arg->{key}->{snd} =
 		      {
 		       objectClass => [ 'pgpKeyInfo' ],
@@ -829,6 +985,235 @@ END_INPUT
 		  return $res;
 		});
 
+# noAI #   $app->helper( h_keygen_gpg => sub {
+# noAI #		  my ( $self, $args ) = @_;
+# noAI #
+# noAI #		  my $res;
+# noAI #		  if (!exists $app->{cfg}->{tool}->{gpg}) {
+# noAI #		    $res->{debug}->{error} = ['Configuration lacks GPG related section. Inform admins.'];
+# noAI #		    return $res;
+# noAI #		  }
+# noAI #
+# noAI #		  my $arg = { bits     => $args->{bits}     // 4096,
+# noAI #			      key_type => $args->{key_type} // 'eddsa',
+# noAI #			      import   => $args->{import}   // '',
+# noAI #			      send_key => $args->{send_key} // 0,
+# noAI #			      name     => $args->{name} // { real  => "not signed in $$",
+# noAI #							     email => "not signed in $$" },
+# noAI #			    };
+# noAI #
+# noAI #		  my $date = strftime('%Y%m%d%H%M%S', localtime);
+# noAI #
+# noAI #		  $ENV{GNUPGHOME} = tempdir(TEMPLATE => '/var/tmp/.umi-gnupg.XXXXXX', CLEANUP => 1 );
+# noAI #
+# noAI #		  my ($key, @gpg, @run, $obj, $gpg_bin, $fh, $tf, $stdout, $stderr);
+# noAI #		  my $to_which = 'gpg';
+# noAI #		  $gpg_bin = which $to_which;
+# noAI #		  if ( defined $gpg_bin ) {
+# noAI #		    push @gpg, $gpg_bin, '--no-tty', '--yes', '--quiet';
+# noAI #		  } else {
+# noAI #		    push @{$res->{debug}->{error}},  "command <code>$to_which</code> not found";
+# noAI #		    $self->h_log($res);
+# noAI #		  }
+# noAI #
+# noAI #		  if ( $arg->{import} ne '' ) {
+# noAI #		    ($fh, $tf) = tempfile( 'import.XXXXXX', DIR => $ENV{GNUPGHOME} );
+# noAI #		    if ( exists $arg->{import}->{key_file} && $arg->{import}->{key_file} ne '' ) {
+# noAI #		      print $fh $arg->{import}->{key_file};
+# noAI #		    } elsif ( exists $arg->{import}->{key_text} && $arg->{import}->{key_text} ne '' ) {
+# noAI #		      print $fh $arg->{import}->{key_text};
+# noAI #		    }
+# noAI #		    close $fh;
+# noAI #		    $stdout = $stderr = undef;
+# noAI #		    @run = (@gpg, '--import', $tf);
+# noAI #		    # $self->h_log(\@run);
+# noAI #		    run \@run, '>', \$stdout, '2>', \$stderr ||
+# noAI #		      push @{$res->{debug}->{error}},  $? >> 8, $stderr;
+# noAI #
+# noAI #		  } else {
+# noAI #		    ### https://www.gnupg.org/documentation/manuals/gnupg-devel/Unattended-GPG-key-generation.html
+# noAI #		    ### https://lists.gnupg.org/pipermail/gnupg-users/2017-December/059622.html
+# noAI #		    ### Key-Type: default
+# noAI #		    ### Key-Length: $arg->{bits}
+# noAI #		    ### Subkey-Type: default
+# noAI #
+# noAI #		    ($fh, $tf) = tempfile( 'batch.XXXXXX', DIR => $ENV{GNUPGHOME} );
+# noAI #		    if ($arg->{key_type} eq 'eddsa') {
+# noAI #		      print $fh <<"END_INPUT";
+# noAI # %echo Generating a GPG key
+# noAI # %no-protection
+# noAI # Key-Type: $arg->{key_type}
+# noAI # Key-Curve: Ed25519
+# noAI # Key-Usage: sign
+# noAI # Subkey-Type: ecdh
+# noAI # Subkey-Curve: Curve25519
+# noAI # Subkey-Usage: encrypt
+# noAI # Name-Real: $arg->{name}->{real}
+# noAI # Name-Email: $arg->{name}->{email}
+# noAI # Name-Comment: $app->{cfg}->{tool}->{gpg}->{comment} on $date
+# noAI # Expire-Date: $app->{cfg}->{tool}->{gpg}->{expire}
+# noAI # %commit
+# noAI # %echo Done
+# noAI # END_INPUT
+# noAI #		    } elsif ($arg->{key_type} eq 'RSA') {
+# noAI #		      print $fh <<"END_INPUT";
+# noAI # %echo Generating a GPG key
+# noAI # %no-protection
+# noAI # Key-Type: $arg->{key_type}
+# noAI # Key-Length: $arg->{bits}
+# noAI # Subkey-Type: $arg->{key_type}
+# noAI # Subkey-Length: $arg->{bits}
+# noAI # Name-Real: $arg->{name}->{real}
+# noAI # Name-Email: $arg->{name}->{email}
+# noAI # Name-Comment: $app->{cfg}->{tool}->{gpg}->{comment} on $date
+# noAI # Expire-Date: $app->{cfg}->{tool}->{gpg}->{expire}
+# noAI # %commit
+# noAI # %echo Done
+# noAI # END_INPUT
+# noAI #		    }
+# noAI #
+# noAI #		    close $fh || die "Cannot close file $tf: $!";
+# noAI #
+# noAI #		    @run = (@gpg, '--batch', '--gen-key', $tf);
+# noAI #		    # $self->h_log(\@run);
+# noAI #		    run \@run, '>', \$stdout, '2>', \$stderr ||
+# noAI #		      push @{$res->{debug}->{error}},
+# noAI #		      sprintf('<code>%s</code> exited with:
+# noAI # <dl class="row mt-4">
+# noAI #   <dt class="col-2 text-right">ERROR:</dt>
+# noAI #   <dd class="col-10 text-monospace"><small><pre>%s</pre></small></dd>
+# noAI #   <dt class="col-2 text-right">STDERR:</dt>
+# noAI #   <dd class="col-10 text-monospace"><small><pre>%s</pre></small></dd>
+# noAI #   <dt class="col-2 text-right">STDOUT:</dt>
+# noAI #   <dd class="col-10 text-monospace"><small><pre>%s</pre></small></dd>
+# noAI # </dl>',
+# noAI #			      join(' ', @run),
+# noAI #			      $? >> 8,
+# noAI #			      $stderr // '',
+# noAI #			      $stdout // '');
+# noAI #
+# noAI #		  }
+# noAI #		  # $self->h_log($stdout);
+# noAI #		  # $self->h_log($stderr);
+# noAI #
+# noAI #		  if ( !$? ) {
+# noAI #		    $stdout = $stderr = undef;
+# noAI #		    @run = (@gpg, '--list-keys', '--with-colons', '--fingerprint');
+# noAI #		    # $self->h_log(\@run);
+# noAI #		    run \@run, '>', \$stdout, '2>', \$stderr ||
+# noAI #		      push @{$res->{debug}->{error}},  $? >> 8, $stderr;
+# noAI #		    $stdout =~ /^fpr:{9}([A-F0-9]{40})/m;
+# noAI #		    $res->{fingerprint} = $1;
+# noAI #		    $arg->{fingerprint} = $1;
+# noAI #		    #$arg->{fingerprint} =~ tr/ \n//ds;
+# noAI #		    # log_debug { np($arg->{fingerprint}) };
+# noAI #		  }
+# noAI #		  # $self->h_log($stdout);
+# noAI #		  # $self->h_log($stderr);
+# noAI #
+# noAI #		  if ( !$? ) {
+# noAI #		    $stdout = $stderr = undef;
+# noAI #		    @run = (@gpg, '--armor', '--export', $arg->{fingerprint});
+# noAI #		    # $self->h_log(\@run);
+# noAI #		    run \@run, '>', \$stdout, '2>', \$stderr ||
+# noAI #		      push @{$res->{debug}->{error}},  $? >> 8, $stderr;
+# noAI #		    # $self->h_log($res);
+# noAI #		    $arg->{key}->{pub} = $stdout;
+# noAI #		    $res->{public}   = $arg->{key}->{pub};
+# noAI #		  }
+# noAI #		  # $self->h_log($stdout);
+# noAI #		  # $self->h_log($stderr);
+# noAI #
+# noAI #		  if ( !$? ) {
+# noAI #		    $stdout = $stderr = undef;
+# noAI #		    @run = (@gpg, '--fingerprint');
+# noAI #		    # $self->h_log(\@run);
+# noAI #		    run \@run, '>', \$stdout, '2>', \$stderr ||
+# noAI #		      push @{$res->{debug}->{error}}, $? >> 8, $stderr;
+# noAI #		    # $self->h_log($res);
+# noAI #
+# noAI #		    if ( $arg->{import} eq '' ) {
+# noAI #		      $stdout = $stderr = undef;
+# noAI #		      @run = (@gpg, '--armor', '--export-secret-key', $arg->{fingerprint});
+# noAI #		      run \@run, '>', \$stdout, '2>', \$stderr ||
+# noAI #			push @{$res->{debug}->{error}}, $? >> 8, $stderr;
+# noAI #		      # $self->h_log($res);
+# noAI #		      $arg->{key}->{pvt} = $stdout;
+# noAI #		      $res->{private} = $arg->{key}->{pvt};
+# noAI #		    }
+# noAI #		  }
+# noAI #		  # $self->h_log($stdout);
+# noAI #		  # $self->h_log($stderr);
+# noAI #
+# noAI #		  if ( !$? ) {
+# noAI #		    $stdout = $stderr = undef;
+# noAI #		    @run = (@gpg, '--list-keys', $arg->{fingerprint});
+# noAI #		    # $self->h_log(\@run);
+# noAI #		    run \@run, '>', \$stdout, '2>', \$stderr ||
+# noAI #		      push @{$res->{debug}->{error}}, $? >> 8, $stderr;
+# noAI #		    # $self->h_log($res);
+# noAI #		    $arg->{key}->{lst}->{hr} = $stdout;
+# noAI #		    $res->{list_key} = $arg->{key}->{lst};
+# noAI #		  }
+# noAI #		  # $self->h_log($stdout);
+# noAI #		  # $self->h_log($stderr);
+# noAI #
+# noAI #		  ### gpg2 --keyserver 'ldap://192.168.137.1/ou=Keys,ou=PGP,dc=umidb????bindname=uid=umi-admin%2Cou=People%2Cdc=umidb,password=testtest' --send-keys 79F6E0C65DF4EC16
+# noAI #		  if ( !$? && $arg->{send_key} ) {
+# noAI #		    $arg->{ldap}->{bindname} =~ s/,/%2C/g;
+# noAI #		    $stdout = $stderr = undef;
+# noAI #		    @run = (@gpg,
+# noAI #			    '--keyserver',
+# noAI #			    sprintf('ldap://%s:389/%s????bindname=%s,password=%s',
+# noAI #				    $arg->{ldap}->{server},
+# noAI #				    $arg->{ldap}->{base},
+# noAI #				    $arg->{ldap}->{bindname},
+# noAI #				    $arg->{ldap}->{password} ),
+# noAI #			    '--send-keys',
+# noAI #			    $arg->{fingerprint});
+# noAI #		    run \@run, '>', \$stdout, '2>', \$stderr ||
+# noAI #		      push @{$res->{debug}->{error}}, $? >> 8, $stderr;
+# noAI #		  } elsif ( !$stderr && ! $arg->{send_key} ) {
+# noAI #		    ## https://gnupg.org/documentation/manuals/gnupg/GPG-Input-and-Output.html#GPG-Input-and-Output
+# noAI #		    ## https://github.com/CSNW/gnupg/blob/master/doc/DETAILS
+# noAI #		    ## $arg->{key}->{lst}->{colons} indexes are -2 from described in DETAILS file
+# noAI #		    $stdout = $stderr = undef;
+# noAI #		    @run = (@gpg, '--with-colons', '--list-keys', $arg->{fingerprint});
+# noAI #		    run \@run, '>', \$stdout, '2>', \$stderr ||
+# noAI #		      push @{$res->{debug}->{error}}, $? >> 8, $stderr;
+# noAI #		    # $self->h_log($stdout);
+# noAI #
+# noAI #		    %{$arg->{key}->{lst}->{colons}} =
+# noAI #		      map { (split(/:/, $_))[0] => [tail(-1, @{[split(/:/, $_)]})] }
+# noAI #		      split(/\n/, $stdout);
+# noAI #
+# noAI #		    $arg->{key}->{snd} =
+# noAI #		      {
+# noAI #		       objectClass => [ 'pgpKeyInfo' ],
+# noAI #		       pgpSignerID => $arg->{key}->{lst}->{colons}->{pub}->[3],
+# noAI #		       pgpCertID   => $arg->{key}->{lst}->{colons}->{pub}->[3],
+# noAI #		       pgpKeyID    => substr($arg->{key}->{lst}->{colons}->{pub}->[3], 8),
+# noAI #		       pgpKeySize  => sprintf("%05s", $arg->{key}->{lst}->{colons}->{pub}->[1]),
+# noAI #		       pgpKeyType  => $arg->{key}->{lst}->{colons}->{pub}->[2],
+# noAI #		       pgpRevoked  => 0,
+# noAI #		       pgpDisabled => 0,
+# noAI #		       pgpKey      => $arg->{key}->{pub},
+# noAI #		       pgpUserID   => $arg->{key}->{lst}->{colons}->{uid}->[8],
+# noAI #		       pgpSubKeyID => $arg->{key}->{lst}->{colons}->{sub}->[3],
+# noAI #		       pgpKeyCreateTime => strftime('%Y%m%d%H%M%SZ', localtime($arg->{key}->{lst}->{colons}->{pub}->[4])),
+# noAI #		       pgpKeyExpireTime => strftime('%Y%m%d%H%M%SZ', localtime($arg->{key}->{lst}->{colons}->{pub}->[5])),
+# noAI #		      };
+# noAI #
+# noAI #		    $res->{send_key} = $arg->{key}->{snd};
+# noAI #		  }
+# noAI #
+# noAI #		  #File::Temp::cleanup();
+# noAI #
+# noAI #		  # $self->h_log($arg);
+# noAI #		  # $self->h_log($res);
+# noAI #		  return $res;
+# noAI #		});
+
   # PWDGEN
   $app->helper( h_pwdgen => sub {
 		  my ( $self, $par ) = @_;
@@ -841,7 +1226,7 @@ END_INPUT
 		  $p->{pnum} = exists $par->{pwd_num} ? $par->{pwd_num} : $cf->{pnum};
 		  if ( exists $par->{pwd_vrf} && $par->{pwd_vrf} ne '' ) {
 		    $p->{pwd}->{clear} = $par->{pwd_vrf};
-		  } elsif ( $par->{pwd_alg} eq 'alg-userdefined' ) {
+		  } elsif ( exists $par->{pwd_alg} && $par->{pwd_alg} eq 'alg-userdefined' ) {
 		    $p->{pwd}->{clear} = $par->{pwd_userdefined};
 		  } else {
 		    $p->{pwd}->{clear} = undef;
@@ -1555,7 +1940,7 @@ EXAMPLE
 			$pwd->{ssha};
 		      $svc_details{userPassword} = $pwd->{clear};
 		    } elsif ($df eq 'sshKeyText' || $df eq 'sshKeyFile') {
-		      push @{$svc_attrs->{sshPublicKey}}, $p->{$df} if $p->{$df} ne '';
+		      push @{$svc_attrs->{sshPublicKey}}, $p->{$df} if exists $p->{$df} && $p->{$df} ne '';
 		    } elsif (!exists $p->{$df}) {
 		      if (exists $self->{app}->{cfg}->{ldap}->{authorizedService}->{$p->{authorizedService}}->{attr}->{$df . '_prefix'}) {
 			$svc_attrs->{$df} = sprintf(

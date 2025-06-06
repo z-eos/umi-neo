@@ -128,6 +128,35 @@
 	      </ul>
 	    </li>
 
+	    <li class="nav-item dropdown">
+	      <a class="nav-link dropdown-toggle text-secondary text-start"
+		 data-bs-toggle="dropdown"
+		 href="#"
+		 role="button"
+		 aria-expanded="false"
+	      >
+		<i class="fa-solid fa-lock me-2"></i> GPG
+	      </a>
+
+	      <ul class="dropdown-menu px-2">
+		<li>
+		  <a class="dropdown-item text-lowercase px-0" href="/audit/gpg">
+		    <i class="fa-solid fa-list fa-fw me-2"></i> all keys
+		  </a>
+		</li>
+		<li>
+		  <a class="dropdown-item text-lowercase px-0" href="/audit/gpg/active">
+		    <i class="fa-solid fa-list fa-fw me-2"></i> active
+		  </a>
+		</li>
+		<li>
+		  <a class="dropdown-item text-lowercase px-0" href="/audit/gpg/expired">
+		    <i class="fa-solid fa-list fa-fw me-2"></i> expired
+		  </a>
+		</li>
+	      </ul>
+	    </li>
+
 	    <!-- <li class="nav-item">
 		 <a class="nav-link btn btn-link text-secondary text-start" href="/servermta"
 		 tabindex="2"
@@ -199,13 +228,13 @@
 		  </a>
 		</li>
 	      % }
-	      % if ( app->{cfg}->{ui}->{sidebar}->{new}->{org} == 1 ) {
-		<li class="nav-item">
-		  <a class="nav-link btn btn-link text-secondary text-start disabled" href="/org" tabindex="4">
-		    <i class="fa-solid fa-fw fa-building"></i> Org
-		  </a>
-		</li>
-	      % }
+	      %# if ( app->{cfg}->{ui}->{sidebar}->{new}->{org} == 1 ) {
+		<!-- <li class="nav-item">
+		     <a class="nav-link btn btn-link text-secondary text-start disabled" href="/org" tabindex="4">
+		     <i class="fa-solid fa-fw fa-building"></i> Org
+		     </a>
+		     </li> -->
+	      %# }
 	    % }
 	  </ul>
 	</li>

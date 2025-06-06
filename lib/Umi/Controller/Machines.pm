@@ -84,26 +84,27 @@ foo-update.json
 =cut
 
 sub create_or_update ($self) {
-  my $auth = $self->req->headers->authorization || '';
-  # Expect "Basic <base64encoded>"
-  unless ( $auth && $auth =~ /^Basic\s+(.+)$/ ) {
-    $self->res->headers->www_authenticate('Basic realm="Protected Area"');
-    $self->render(text => 'Authentication required', status => 401);
-    return;
-  }
+  my $ldap = $self->h_auth_basic;
+  # my $auth = $self->req->headers->authorization || '';
+  # # Expect "Basic <base64encoded>"
+  # unless ( $auth && $auth =~ /^Basic\s+(.+)$/ ) {
+  #   $self->res->headers->www_authenticate('Basic realm="Protected Area"');
+  #   $self->render(text => 'Authentication required', status => 401);
+  #   return;
+  # }
 
-  my $encoded = $1;
-  my $decoded = b64_decode($encoded) || '';
-  # Expect decoded string to be "username:password"
-  my ($user, $pass) = split /:/, $decoded, 2;
+  # my $encoded = $1;
+  # my $decoded = b64_decode($encoded) || '';
+  # # Expect decoded string to be "username:password"
+  # my ($user, $pass) = split /:/, $decoded, 2;
 
-  my $ldap = Umi::Ldap->new( $self->{app}, $user, $pass, 1 );
-  # $self->h_log(ref($ldap->ldap));
-  unless ( ref($ldap->ldap) eq 'Net::LDAP' ) {
-    $self->res->headers->www_authenticate('Basic realm="Protected Area"');
-    $self->render(text => 'Authentication required', status => 401);
-    return;
-  }
+  # my $ldap = Umi::Ldap->new( $self->{app}, $user, $pass, 1 );
+  # # $self->h_log(ref($ldap->ldap));
+  # unless ( ref($ldap->ldap) eq 'Net::LDAP' ) {
+  #   $self->res->headers->www_authenticate('Basic realm="Protected Area"');
+  #   $self->render(text => 'Authentication required', status => 401);
+  #   return;
+  # }
 
   my $data = $self->req->json;
   # $self->h_log($data);

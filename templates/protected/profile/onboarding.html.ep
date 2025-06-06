@@ -6,6 +6,71 @@
 </h3>
 <hr class="pb-3">
 
+<div class="card border border-info">
+  <div class="card-header bg-info">
+    <h3 class="mb-0"><i class="fa-solid fa-exclamation-circle me-3"></i> Instruction</h3>
+  </div>
+  <div class="card-body">
+
+    <p>Upon submitting the onboarding form, the following credentials and cryptographic materials will be generated and assigned to you:</p>
+
+    <ul>
+      <li><strong>SSH key pair</strong> (private and public key)</li>
+      <li><strong>GPG key pair</strong> (private and public key)</li>
+      <li>Your <strong>profile account password</strong> and associated <strong>service account passwords</strong> will be:
+	<ul>
+	  <li><strong>Reset</strong> to new values</li>
+	  <li><strong>Encrypted</strong> using your newly generated GPG public key</li>
+	</ul>
+      </li>
+    </ul>
+
+    <h3 class="mt-5">Required Actions</h3>
+
+    <ol>
+      <li>
+	<strong>Install GnuPG (GPG):</strong> Ensure you have GnuPG installed on your workstation. Visit
+	<a href="https://gnupg.org" target="_blank">https://gnupg.org</a> for installation instructions appropriate for your operating system.
+      </li>
+      <li>
+	<strong>Import Your GPG Key:</strong> Use the <code>gpg --import</code> command to import your newly generated GPG private key into your keyring.
+      </li>
+      <li>
+	<strong>Decrypt Your Passwords:</strong> Once the key is imported, use <code>gpg --decrypt</code> to access the encrypted password files provided to you.
+      </li>
+    </ol>
+
+    <h3 class="mt-5">Your Responsibility</h3>
+    <p>This page is ephemeral and non-persistent; its contents will be lost upon refresh.</p>
+    <p>You are solely responsible for <strong>securely backing up</strong> all sensitive data provided during the onboarding process, including:</p>
+    <ul>
+      <li>Your private <strong>SSH</strong> and <strong>GPG</strong> keys</li>
+      <li>The decrypted password data for your accounts</li>
+    </ul>
+
+    <div class="alert alert-danger">
+      Loss of these materials may result in access restrictions and require administrative intervention to re-issue credentials.
+    </div>
+
+    <p>For any issues or assistance, please contact the system administrator.</p>
+
+  </div>
+</div>
+
+%#<div class="card border border-info">
+%#  <h5 class="card-header text-bg-info">
+%#    <i class="fa-solid fa-exclamation-circle fa-lg me-4"></i>On submit, this page triggers the following actions for your user <b>&laquo;<%= session->{user_obj}->{uid} %>&raquo;</b>:
+%#  </h5>
+%#  <div class="card-body">
+%#    <ol class="mb-0">
+%#      <li>Generate new GPG and SSH key pairs, and (if not already existing) GitLab, Vault, and Docker accounts. <i class="fa-solid fa-triangle-exclamation"></i><span class="text-decoration-underline fw-bold">You must back them up.</span><i class="fa-solid fa-triangle-exclamation"></i></li>
+%#      <li>Distribute your GPG and SSH public keys to the corporate database. All your previously generated keys will be withdrawn.</li>
+%#      <li>Finally, your password for this account will be reset, so <span class="text-decoration-underline fw-bold">don't forget to back it up as well</span>.
+%#    </ol>
+%#  </div>
+%#</div>
+
+
 % my $is_submited = stash->{is_submited};
 % my $d = stash('svc_added');
 %# <pre><%= dumper keys %{stash->{service}} %></pre>
@@ -18,84 +83,26 @@
 % }
 % else
 % {
+  % my $key = stash->{k_gpg};
   <table class="table table-sm table-borderless table-responsive caption-top mt-3" id="services">
     <caption>
       <div class="alert alert-warning" role="alert">
 	<h4 class="alert-heading"><i class="fa-solid fa-circle-exclamation"></i> Complete successfully!</h4>
 	<br />
 	<p class="fw-bold">please, backup all bellow credentials, this page is ephemeral, temporary and non-persistent, and will be lost on refresh</p>
-      </div>      
+      </div>
+
       <div class="alert alert-success" role="alert">
 	<h4 class="alert-heading"><i class="fa-solid fa-fingerprint"></i> Your profile password is been changed!</h4>
 	<br />
-	<p class="">do backup your profile new password: <mark><%= stash->{root_pwd} %></mark></p>
-      </div>      
+	%#<p class="">do backup your profile new password: <mark><%= stash->{root_pwd} %></mark></p>
+	<p class="">do backup your profile new password:</p>
+	%== h_element_cp_download_btns( 'root_pwd', 'root_pwd' . '.asc', undef, 'mb-2' );
+	<pre id="root_pwd" class="user-select-all umi-text-tiny"><%= $key->{enc}->{root} %></pre>
+      </div>
     </caption>
-    % my $key;
     % my $class_th = 'px-3 text-uppercase umi-text-bg-teal';
-    % foreach my $s (sort keys %$d) {
-      <tr class="mt-3">
-	<th colspan="3" class="<%= $class_th %>">
-	  <i class="<%= app->{cfg}->{ui}->{onboarding}->{services}->{$s}->{icon} %> me-3"></i><%= $s %>
-	</th>
-      </tr>
-      % if ( exists $d->{$s}->{exists} && $d->{$s}->{exists} == 1 ) {
-	<tr><td colspan="3" class="pb-3">You already have account for this service, for password change go to your <a href="/profile">profile</a> <i class="fa-solid fa-arrow-right-long"></i> services <i class="fa-solid fa-arrow-right-long"></i> <i class="<%= app->{cfg}->{ui}->{icon}->{attr}->{userPassword} %> text-danger"></i></td></tr>
-	<tr><td></td></td>
-      % } else
-      % {
-	% foreach my $entry (@{$d->{$s}->{added}}) {
-	  <tr class="">
-	    <th class="text-end">FQDN:</th>
-	    <td class=""><%= $entry->{fqdn} %></td>
-	    <td></td>
-	  </tr>
-	  <tr class="">	  
-	    <th class="text-end">login:</th>
-	    <td class=""><%= $entry->{svc_details}->{uid} %></td>
-	    <td></td>
-	  </tr>
-	  <tr class="">	  
-	    <th class="text-end">password:</th>
-	    <td class="font-monospace user-select-all"><%= $entry->{svc_details}->{userPassword} %></td>
-	    <td></td>
-	  </tr>
-	  <tr><td></td></td>
-	% }
-      % }
-    % }
 
-    % $key = stash->{k_ssh};
-    % if ( defined $key && ref($key) eq 'HASH' ) {      
-      <tr class="mt-3"><th colspan="3" class="<%= $class_th %>"><i class="fa-solid fa-terminal me-3"></i>SSH key pair</th></tr>
-	<tr>
-	  <td><div class="btn-toolbar my-3" role="toolbar">
-	    <div class="btn-group" role="group">
-	      <button class="btn btn-info" title="Copy SSH private key to clipboard"
-	 	      onclick="copyToClipboard('#ssh_private')"
-	 	      type="button"><i class="fa-solid fa-copy"></i></button>
-	      <button class="btn btn-info" title="Download SSH private key"
-	 	      onclick="downloadString(document.querySelector('#ssh_private').innerText, 'text/plain', 'ssh-key-<%= $key->{date} %>.pvt')"
-	 	      type="button"><i class="fa-solid fa-file-download"></i></button>
-	    </div></div>
-	    <pre class="user-select-all" id="ssh_private"><%= $key->{private} %></pre>
-	  </td>
-	  <td><div class="btn-toolbar my-3" role="toolbar"><div class="btn-group" role="group">
-	    <button class="btn btn-info" title="Copy SSH public key to clipboard"
-	 	    onclick="copyToClipboard('#ssh_public')"
-	 	    type="button"><i class="fa-solid fa-copy"></i></button>
-	    <button class="btn btn-info" title="Download SSH public key"
-	 	    onclick="downloadString(document.querySelector('#ssh_public').innerText, 'text/plain', 'ssh-key-<%= $key->{date} %>.pub')"
-	 	    type="button"><i class="fa-solid fa-file-download"></i></button>
-	  </div></div>
-	  <div class="user-select-all"><small id="ssh_public" class="font-monospace text-break"><%= $key->{public} %></small></div>
-	  <script src="/assets/js/umi-tool-keygen-ssh.js"></script>
-	  </td>
-	  <td></td>
-	</tr>
-    % }
-
-    % $key = stash->{k_gpg};
     % if ( defined $key && ref($key) eq 'HASH') {
       % my $file_name = sprintf("gpg-key_%s_%s_%s",session('uid'),$key->{send_key}->{pgpKeyCreateTime},$key->{fingerprint});
 
@@ -109,19 +116,19 @@
 		  type="button"><i class="fa-solid fa-copy"></i></button>
 	  <button class="btn btn-info"
 		  onclick="downloadString(document.querySelector('#private').innerText, 'text/plain', '<%= $file_name =%>-pvt.asc')"
-       		  title="Download private key"
+		  title="Download private key"
 		  type="button"><i class="fa-solid fa-file-download"></i></button>
 	</div></div>
-        <pre id="private" class="user-select-all"><%= $key->{private} %></pre>
+	<pre id="private" class="user-select-all"><%= $key->{private} %></pre>
 	</td>
 	<td><div class="btn-toolbar my-3" role="toolbar"><div class="btn-group" role="group">
-          <button class="btn btn-info"
+	  <button class="btn btn-info"
 		  onclick="copyDivToClipboard('#public')"
-       		  title="Copy public key to clipboard"
+		  title="Copy public key to clipboard"
 		  type="button"><i class="fa-solid fa-copy"></i></button>
 	  <button class="btn btn-info"
 		  onclick="downloadString(document.querySelector('#public').innerText, 'text/plain', '<%= $file_name =%>-pub.asc')"
-       		  title="Download public key"
+		  title="Download public key"
 		  type="button"><i class="fa-solid fa-file-download"></i></button>
 	</div></div>
 	<pre id="public" class="user-select-all"><%= $key->{public} %></pre>
@@ -139,8 +146,79 @@
 	<td></td>
       </tr>
       <tr><td class="py-3">&nbsp;</td></tr>
-      
+
     % }
+
+    % foreach my $s (sort keys %$d) {
+      <tr class="mt-3">
+	<th colspan="3" class="<%= $class_th %>">
+	  <i class="<%= app->{cfg}->{ui}->{onboarding}->{services}->{$s}->{icon} %> me-3"></i><%= $s %>
+	</th>
+      </tr>
+      % if ( exists $d->{$s}->{exists} && $d->{$s}->{exists} == 1 ) {
+	<tr><td colspan="3" class="pb-3">You already have account for this service, for password change go to your <a href="/profile">profile</a> <i class="fa-solid fa-arrow-right-long"></i> services <i class="fa-solid fa-arrow-right-long"></i> <i class="<%= app->{cfg}->{ui}->{icon}->{attr}->{userPassword} %> text-danger"></i></td></tr>
+	<tr><td></td></td>
+      % } else
+      % {
+	% foreach my $entry (@{$d->{$s}->{added}}) {
+	  <tr class="">
+	    <th class="text-end">FQDN:</th>
+	    <td class=""><%= $entry->{fqdn} %></td>
+	    <td></td>
+	  </tr>
+	  <tr class="">
+	    <th class="text-end">login:</th>
+	    <td class=""><%= $entry->{svc_details}->{uid} %></td>
+	    <td></td>
+	  </tr>
+	  <tr class="">
+	    <th class="text-end">password:</th>
+	    %# <td class="font-monospace user-select-all"><%= $entry->{svc_details}->{userPassword} %></td>
+	    <td class="font-monospace user-select-all">
+	      % my $id = 'svc_' . $s . $entry->{fqdn} . $entry->{svc_details}->{uid};
+	      % my $eid = ($id =~ s/\./-/gr);
+	      %== h_element_cp_download_btns( $eid, $eid . '.asc', undef, 'mb-2' );
+	      <pre id="<%= $eid %>" class="user-select-all umi-text-tiny"><%= $key->{enc}->{$id} %></pre>
+	    </td>
+	    <td></td>
+	  </tr>
+	  <tr><td></td></td>
+	% }
+      % }
+    % }
+
+    % $key = stash->{k_ssh};
+    % if ( defined $key && ref($key) eq 'HASH' ) {
+      <tr class="mt-3"><th colspan="3" class="<%= $class_th %>"><i class="fa-solid fa-terminal me-3"></i>SSH key pair</th></tr>
+	<tr>
+	  <td><div class="btn-toolbar my-3" role="toolbar">
+	    <div class="btn-group" role="group">
+	      <button class="btn btn-info" title="Copy SSH private key to clipboard"
+		      onclick="copyToClipboard('#ssh_private')"
+		      type="button"><i class="fa-solid fa-copy"></i></button>
+	      <button class="btn btn-info" title="Download SSH private key"
+		      onclick="downloadString(document.querySelector('#ssh_private').innerText, 'text/plain', 'ssh-key-<%= $key->{date} %>.pvt')"
+		      type="button"><i class="fa-solid fa-file-download"></i></button>
+	    </div></div>
+	    <pre class="user-select-all" id="ssh_private"><%= $key->{private} %></pre>
+	  </td>
+	  <td><div class="btn-toolbar my-3" role="toolbar"><div class="btn-group" role="group">
+	    <button class="btn btn-info" title="Copy SSH public key to clipboard"
+		    onclick="copyToClipboard('#ssh_public')"
+		    type="button"><i class="fa-solid fa-copy"></i></button>
+	    <button class="btn btn-info" title="Download SSH public key"
+		    onclick="downloadString(document.querySelector('#ssh_public').innerText, 'text/plain', 'ssh-key-<%= $key->{date} %>.pub')"
+		    type="button"><i class="fa-solid fa-file-download"></i></button>
+	  </div></div>
+	  <div class="user-select-all"><small id="ssh_public" class="font-monospace text-break"><%= $key->{public} %></small></div>
+	  <script src="/assets/js/umi-tool-keygen-ssh.js"></script>
+	  </td>
+	  <td></td>
+	</tr>
+    % }
+
   </table>
+
+  % session(expires => 1);
 
 % }

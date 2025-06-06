@@ -7,8 +7,8 @@
 </h1>
 
 % my ($insts_str, %insts, $inst_id);
-% $insts_str = `/usr/bin/eclat --format-expr 'if (.DescribeInstancesResponse.reservationSet) { for (var in .DescribeInstancesResponse.reservationSet.item) { if (var.instancesSet) { for (inst in var.instancesSet.item) { print(inst.instanceId," "); } } } }' lsinst`;
-% %insts = map { $_ => 1 } @{[split /\s/, $insts_str]};
+%# $insts_str = `/usr/bin/eclat --format-expr 'if (.DescribeInstancesResponse.reservationSet) { for (var in .DescribeInstancesResponse.reservationSet.item) { if (var.instancesSet) { for (inst in var.instancesSet.item) { print(inst.instanceId," "); } } } }' lsinst`;
+%# %insts = map { $_ => 1 } @{[split /\s/, $insts_str]};
 
 <pre><%# = dumper $zones %></pre>
 <div class="table-responsive">
@@ -30,7 +30,7 @@
     </tfoot>
     <tbody class="table-group-divider">
       % foreach (@$zones) {
-	% $inst_id = $_->{fqdn} =~ /\.aws\./ && $_->{txt} =~ /^aS/ ? Mojo::Util::b64_decode($_->{txt}) : '';
+	% $inst_id = $_->{fqdn} =~ /^_sig\..*\.aws\.norse\.digital$/ ? Mojo::Util::b64_decode($_->{txt}) : '';
 	<tr class="umi-text-xs <%= $_->{type} eq 'CNAME' ? 'table-warning' : 'table-info' %><%= ' text-danger' if $inst_id ne '' && ! exists $insts{$inst_id} %>">
 	  <td class="text-end"></td>
 	  <td class=""><%= $_->{fqdn} %></td>
@@ -45,7 +45,7 @@
   </table>
 </div>
 
-<pre><%= dumper $insts_str %></pre>
+%# <pre><%= dumper $insts_str %></pre>
 
 <script src="/assets/js/datatables/datatables.min.js"></script>
 <script>

@@ -3,6 +3,7 @@
 package Umi::Helpers::SearchResult;
 
 use Mojo::Base 'Mojolicious::Plugin';
+use Mojo::Util qw( b64_decode );
 
 use Umi::Constants qw( DNS UMIAUTH );
 
@@ -34,7 +35,7 @@ returns dn rewritten to be used in a header of the object on a search page
 
 =head1 h_dn_color
 
-returns fa- class color to be used for the entr
+returns fa- class color to be used for the entry
 
 =cut
 
@@ -48,8 +49,9 @@ returns fa- class color to be used for the entr
 		 } elsif ( $e->dn =~ /^cn=.*,authorizedService=ovpn@.*/ && $e->exists('umiUserCertificateNotAfter') &&
 			   $time > generalizedTime_to_time($e->get_value('umiUserCertificateNotAfter') . 'Z') ) {
 		   return 'danger';
-		 } elsif ( $e->dn =~ /^pgpCertID=.*,$app->{cfg}->{ldap}->{base}->{pgp}/ &&
-			   $time > generalizedTime_to_time($e->get_value('pgpKeyExpireTime')) ) {
+		 } elsif ( $e->dn =~ /^pgpCertID=.*,$app->{cfg}->{ldap}->{base}->{pgp}/
+			   && $e->exists('pgpKeyExpireTime')
+			   && $time > generalizedTime_to_time($e->get_value('pgpKeyExpireTime')) ) {
 		   return 'danger';
 		 } elsif ( $e->dn =~ /^author/ ) {
 		   return 'warning';
@@ -280,6 +282,7 @@ Returns:
 			    udp_timeout    => $A->{udp_timeout}    // 1,
 			    ns_custom      => $A->{ns_custom}      // 0,
 			    with_txt       => $A->{with_txt}       // 0,
+			    whole_axfr     => $A->{whole_axfr}     // 0,
 			  };
 
 		  my (%return, %domains);
@@ -324,7 +327,8 @@ Returns:
 
 			# Now process A and CNAME records
 			foreach my $rr (@zone_rrs) {
-			  #next unless $rr->type eq 'A' || $rr->type eq 'CNAME' || $rr->type eq 'SRV';
+
+			  next if $a->{whole_axfr} == 0 && $rr->type ne 'A' && $rr->type ne 'CNAME';
 
 			  my $txt = '';
 			  if ($a->{with_txt} == 1) {

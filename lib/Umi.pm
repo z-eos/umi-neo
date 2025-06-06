@@ -81,7 +81,15 @@ sub startup ($self) {
 		    return 0 unless ($self->session('role'));
 		    my $r = $self->session('role');
 		    my @roles = split(/,/, $role);
-		    # p $priv; p $extradata; p $roles; p @privs;
+
+		    # my ($package, $filename, $line) = caller(1);
+		    # my $debug = sprintf("check user %s role/s (%s) against roles %s with extra data: %s",
+		    #			$self->session('uid'),
+		    #			$role,
+		    #			np(@roles, caller_info => 0),
+		    #			np($extradata, caller_info => 0));
+		    # p $debug, caller_message => "$package $filename:$line";
+
 		    if ( scalar(@roles) == 1 ) {
 		      return 1 if $roles[0] eq $r;
 		    } elsif ( $extradata->{cmp} eq 'or' ) {
@@ -252,12 +260,17 @@ sub _startup_routes ($self) {
   #   authentication checks
   # - anything else under / is protected
   # - anything not dealt with explicitly is a 404
-  my $root           = $self->routes;
+  my $root = $self->routes;
 
-  # public routes: a home page and some other page
+  ################################################################
+  # public routes: a home page and some other page		 #
+  # IMPORTANT: all public routes must be prefixed with `/public` #
+  ################################################################
   my $public_root = $root->any('/public');
   $public_root->get('/')->to('public#homepage')->name('public_root');
   $public_root->get('/other')->to('public#other');
+
+  $public_root->get('/gpg/:key')->to('public#get_gpg_key');
 
   ## MACHINES
   $public_root->get( '/machines')->to('machines#list');
@@ -473,6 +486,10 @@ sub _startup_routes ($self) {
     ->get( '/audit/dns/zones')
     ->requires(is_role => ['admin,coadmin,hr', {cmp => 'or'}])
     ->to('protected#audit_dns_zones');
+  $protected_root
+    ->get( '/audit/gpg/:key')
+    ->requires(is_role => ['admin,coadmin,hr', {cmp => 'or'}])
+    ->to('protected#audit_gpg_keys', key => 'all');
 
   ## TOOLs
   ### aside
