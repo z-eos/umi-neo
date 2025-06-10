@@ -283,11 +283,13 @@
 		  <i class="fa-solid fa-fw fa-file-circle-plus"></i> keygen
 		</a>
 	      </li>
-	      <li class="nav-item">
-		<a class="nav-link btn btn-link text-secondary text-start" href="/tool/keyimport/gpg">
-		  <i class="fa-solid fa-fw fa-file-import"></i> key import
-		</a>
-	      </li>
+	      % if ( is_role 'admin,coadmin', {cmp => 'or'} ) {
+		<li class="nav-item">
+		  <a class="nav-link btn btn-link text-secondary text-start" href="/tool/keyimport/gpg">
+		    <i class="fa-solid fa-fw fa-file-import"></i> key import
+		  </a>
+		</li>
+	      % }
 	    </ul>
 	  </li>
 	    <li class="nav-item">

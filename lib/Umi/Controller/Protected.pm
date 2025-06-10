@@ -21,6 +21,7 @@ use Net::LDAP::Constant qw(
 			    LDAP_INSUFFICIENT_ACCESS
 			    LDAP_CONTROL_SORTRESULT
 			 );
+use Storable qw(nfreeze);
 use Umi::Ldap;
 
 sub homepage ($self) {
@@ -47,6 +48,7 @@ sub manage_chi ($self) {
 }
 
 sub delete ($self) {
+  my %debug;
   my $p = $self->req->params->to_hash;
   $self->h_log($p);
 
@@ -61,7 +63,9 @@ sub delete ($self) {
 
   my $msg = $ldap->delete($p->{delete_dn},
 			  exists $p->{delete_recursive} && $p->{delete_recursive} eq 'on' ? 1 : 0);
-  $self->session( debug => $msg );
+  push @{$debug{$msg->{status}}}, $msg->{message};
+  $self->stash(debug => \%debug);
+  $self->h_log(\%debug);
 
   ### alas, this redirect by nature performs a GET request
   return $self
@@ -425,19 +429,55 @@ sub keygen_ssh ($self) {
 }
 
 sub keygen_gpg ($self) {
-  my $par = $self->req->params->to_hash;
-  # $self->h_log($par);
+  my (%debug, $ldap, $search_arg, $search, $msg, $k, $op_dn, $op_attrs);
+  my $p = $self->req->params->to_hash;
+  $self->h_log($p);
   my $v = $self->validation;
   return $self->render(template => 'protected/tool/keygen/gpg') unless $v->has_data;
 
-  $par->{name} = {
-		  real => sprintf("%s %s", $self->session->{user_obj}->{givenname}, $self->session->{user_obj}->{sn}),
-		  email => $self->session->{user_obj}->{mail}
-		 };
-  my $k = $self->h_keygen_gpg($par);
-  $self->stash(debug => $k->{debug});
+  $p->{name} = {
+		real => sprintf("%s %s", $self->session->{user_obj}->{givenname}, $self->session->{user_obj}->{sn}),
+		email => exists $self->session->{user_obj}->{mail} ? $self->session->{user_obj}->{mail} : 'no email'
+	       };
 
-  # $self->h_log($k);
+  if ( $p->{replace_keys} eq 'on') {
+    # $self->h_log($self->session('user_obj')->{mail});
+    # $self->h_log('!!! FINISH keygen_gpg controller !!!');
+
+    $ldap = Umi::Ldap->new( $self->{app}, $self->session('uid'), $self->session('pwd') );
+    $search_arg = {
+		   base => $self->{app}->{cfg}->{ldap}->{base}->{pgp},
+		   filter => sprintf("(|(pgpUserID=*%s*)(pgpUserID=*%s*))", $p->{name}->{real}, $p->{name}->{email})
+		  };
+    $search = $ldap->search( $search_arg );
+    $self->h_log( $self->h_ldap_err($search, $search_arg) ) if $search->code;
+    # $self->h_log( $self->h_ldap_err($search) );
+    if ( $search->count ) {
+      foreach ($search->entries) {
+	$msg = $ldap->delete($_->dn, 0);
+	$self->h_log( $msg );
+	push @{$debug{$msg->{status}}}, $msg->{message};
+      }
+      # $self->h_log( 'DELETE DN:' . $_->dn ) foreach ($search->entries);
+    }
+
+    $k = $self->h_keygen_gpg($p);
+    %debug = %{$k->{debug}} if exists $k->{debug};
+    #$self->h_log($k);
+
+    $op_dn = sprintf("pgpCertID=%s,%s",
+		     $k->{send_key}->{pgpCertID},
+		     $self->{app}->{cfg}->{ldap}->{base}->{pgp});
+    %{$op_attrs} = map { $_ => $k->{send_key}->{$_} } keys %{$k->{send_key}};
+    # $self->h_log($op_dn);
+    # $self->h_log($op_attrs);
+    $msg = $ldap->add( $op_dn, $op_attrs );
+    push @{$debug{$msg->{status}}}, $msg->{message};
+  }
+
+  $self->stash(debug => \%debug);
+
+  # $self->h_log(\%debug);
 
   return $self->render(template => 'protected/tool/keygen/gpg',
 		       key => $k,
@@ -648,8 +688,20 @@ sub modify ($self) {
 	my $modified_dn = $s->entry->dn;
 	$modified_dn =~ s/^(.*?=)[^,]+(,.*)/$1$crt->{CN}$2/;
 	# $self->h_log(\%debug);
-	return $self->session(debug => \%debug)->redirect_to($self->url_for('modify')
-							   ->query( dn_to_modify => $modified_dn ));
+
+	my $changes_serialized = nfreeze(\%debug);
+	my $changes_size = length($changes_serialized);
+	 $self->h_log($changes_size);
+	if ( $changes_size < 1000 ) {
+	  $self->stash(debug => \%debug);
+	} else {
+	  # causes `Cookie "xxx" is bigger than 4KiB`, so ... if we really need it then put it into CHI
+	  $self->chi('fs')->set( debug => { $msg->{status} => [ $msg->{message}, $self->h_np($changes) ] });
+	}
+
+	# return $self->session( debug => \%debug )
+	return $self->redirect_to($self->url_for('modify')
+				  ->query( dn_to_modify => $modified_dn ));
       }
 
     }
@@ -661,7 +713,6 @@ sub modify ($self) {
   @attr_unused = $self->h_attr_unused($s->entry, \%oc) if ! defined $attr_to_add;
 
   $self->stash(
-	       debug => \%debug,
 	       entry => $s->entry,
 	       aa => \%aa, as => \%as, oc => \%oc,
 	       attr_unused => \@attr_unused,
@@ -669,6 +720,15 @@ sub modify ($self) {
 	       attr_to_ignore => $attr_to_ignore,
 	       #dn_to_modify => $attr_to_add
 	      );
+
+  my $changes_serialized = nfreeze(\%debug);
+  my $changes_size = length($changes_serialized);
+  if ( $changes_size < 3500 ) {
+    $self->stash(debug => \%debug);
+  } else {
+    # causes `Cookie "xxx" is bigger than 4KiB`, so ... if we really need it then put it into CHI
+    $self->chi('fs')->set( debug => \%debug );
+  }
 
   return $self->render(template => 'protected/tool/modify'); #, layout => undef);
 }
@@ -1670,6 +1730,30 @@ sub groups ($self) {
   $self->stash( select_options => \@e, debug => $debug );
   $self->render(template => 'protected/profile/groups');
 }
+
+=head1 onboarding
+
+structure of svc_details
+
+    $svc_details = {
+      $service_name => {
+	exists => 0 | 1,   # whether the service entry already existed (1) or was newly created (0)
+	added  => [        # present only if exists == 0 and new entries were added
+	  {
+	    fqdn        => $fqdn,          # fully qualified domain name (associatedDomain)
+	    svc_details => {
+	      uid          => $uid,        # login name generated or supplied
+	      userPassword => $cleartext,  # cleartext password, if generated (or cert CN, if cert-based)
+	      # more fields may appear in future if svc_details is expanded
+	    },
+	  },
+	  ...
+	],
+      },
+      ...
+    };
+
+=cut
 
 sub onboarding ($self) {
   my $p = $self->req->params->to_hash;

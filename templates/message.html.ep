@@ -1,22 +1,41 @@
 %# -*- mode: web; eval: (follow-mode) -*-
 
-% my $debug;
-% if ( flash('debug') && ! stash('debug') ) {
-  % $debug = flash('debug');
-  % delete flash->{debug};
-% } elsif ( session('debug') && ! stash('debug') )
-% {
-  % $debug = session('debug');
-  % delete session->{debug};
-% } elsif ( stash('debug') )
-% {
-  % $debug = stash('debug');
-  % delete stash->{debug};
+% my $d = {};
+%# Gather and delete from flash
+% if (my $f = flash('debug')) {
+  % $d->{flash} = $f;
+  % flash(debug => undef);
 % }
+
+%# Gather and delete from session
+% if (my $s = session('debug')) {
+  % $d->{session} = $s;
+  % session(debug => undef);
+% }
+
+%# Gather and delete from stash
+% if (my $st = stash('debug')) {
+  % $d->{stash} = $st;
+  % stash(debug => undef);
+% }
+
+%# Gather and remove from CHI
+% my $c = chi('fs')->get('debug');
+% if ($c) {
+  % $d->{chi} = $c;
+  % chi('fs')->remove('debug');
+% }
+
+% my $debug = {};
+% foreach my $source (keys %$d) {
+  % push @{$debug->{$_}}, @{$d->{$source}->{$_}} foreach (keys %{$d->{$source}});
+% }
+%# h_log $debug;
 
 %# expected debug message format: status => [ 'message', ... ]
 % if ( defined $debug ) {
   %#<pre class="mt-5 umi-text-tiny text-muted"><%= dumper $debug %></pre>
+
   %# %$debug keys available, are defined in config file -> ui -> page -> debug -> status
   % foreach my $k (sort(keys(%$debug))) {
     <div id="message" class="alert alert-dismissible alert-<%= app->{cfg}->{ui}->{page}->{debug}->{status}->{$k} %> mt-4 ">
@@ -30,7 +49,8 @@
 	<hr class="">
 	<pre class="mt-0 umi-text-tiny">
       % }
-      <ul id="debug-<%= $k %>" class="ms-0 mt-2">
+
+      <ul id="debug-<%= $k %>" class="list-unstyled ms-0 mt-2">
 	% foreach my $i (@{$debug->{$k}}) {
 	  <li>
 	    <%== $i %>
@@ -45,8 +65,5 @@
       </button>
     </div>
   % }
-
-  % delete session->{debug};
-  % delete stash->{debug};
 
 % }

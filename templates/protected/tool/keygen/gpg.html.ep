@@ -11,7 +11,20 @@
     <span class="input-group-text">Key Type</span>
     %= select_field key_type => ['eddsa', 'RSA'], id => 'key_type', class => 'form-select'
   </div>
-  %# = submit_button 'generate', class => 'btn btn-success font-weight-bold text-uppercase'
+
+  <div class="form-check">
+    <input class="form-check-input" type="radio" name="replace_keys" id="replace_keys2" value="off" checked>
+    <label class="form-check-label" for="replace_keys2">
+      Simply generate a new key and leave the existing ones unchanged.
+    </label>
+  </div>
+  <div class="form-check mb-3">
+    <input class="form-check-input" type="radio" name="replace_keys" id="replace_keys1" value="on">
+    <label class="form-check-label text-danger" for="replace_keys1">
+      Delete my existing keys and replace them with the newly generated one.
+    </label>
+  </div>
+
   <button type="submit" class="btn btn-success font-weight-bold text-uppercase">
     <i class="fa-solid fa-lock me-1"></i> generate gpg key
   </button>
@@ -69,9 +82,9 @@
 	  </span>
 	</button>
 	<button class="btn btn-info btn-sm"
-		       onclick="downloadString(document.querySelector('#public').innerText, 'text/plain', '<%= $file_name =%>-pub.asc')"
-		       title="Download public key"
-		       type="button">
+		onclick="downloadString(document.querySelector('#public').innerText, 'text/plain', '<%= $file_name =%>-pub.asc')"
+		title="Download public key"
+		type="button">
 	  <span>
 	    <i class="fas fa-file-download fa-lg fa-fw"></i>
 	  </span>

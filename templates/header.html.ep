@@ -23,7 +23,8 @@
     %= include 'header-form-hr'
   % }
   % else {
-    %# = include 'header-form'
+    <div class="container-fluid"> </div>
+    %# = include 'header-form-stub'
   % }
 
   <ul class="navbar-nav">
@@ -51,7 +52,6 @@
 	<li><hr class="dropdown-divider"></li>
 	<li><span class="dropdown-header">Theme</span></li>
 	<li>
-
 	  <ul class="list-unstyled" aria-labelledby="bd-theme-text" data-bs-popper="static">
 	    <li>
 	      <button type="button" class="dropdown-item" data-bs-theme-value="light" aria-pressed="false" accesskey="l">
@@ -69,14 +69,15 @@
 	      </button>
 	    </li>
 	  </ul>
-
 	</li>
 	<li><hr class="dropdown-divider"></li>
-	<li>
-	  <a class="dropdown-item" href="/chi?command=remove">
-	    <i class="fa-solid fa-fw fa-square-xmark"></i><span class="ms-2">Purge Cache</span>
-	  </a>
-	</li>
+	% if ( is_role 'admin,coadmin', {cmp => 'or'} ) {
+	  <li>
+	    <a class="dropdown-item" href="/chi?command=remove">
+	      <i class="fa-solid fa-fw fa-square-xmark"></i><span class="ms-2">Purge Cache</span>
+	    </a>
+	  </li>
+	% }
 	<li><hr class="dropdown-divider"></li>
 	<li>
 	  <a class="dropdown-item" href="/logout" accesskey="o">

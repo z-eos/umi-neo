@@ -719,18 +719,20 @@ this method is supposed to work with the only one single key in keyring
 		  # Create temporary GPG home directory (auto-cleanup on exit)
 		  $ENV{GNUPGHOME} = tempdir(TEMPLATE => '/var/tmp/.umi-gnupg.XXXXXX', CLEANUP => 1 );
 
-		  my ($key, @gpg, @run, $obj, $gpg_bin, $fh, $tf, $stdout, $stderr);
+		  my ($key, @gpg, @run, $obj, $gpg_bin, $fh, $tf, $stdout, $stderr, $exitcode);
 		  # Locate GPG binary in system PATH
 		  my $to_which = 'gpg';
 		  $gpg_bin = which $to_which;
 		  if ( defined $gpg_bin ) {
 		    # Build base GPG command with standard options
-		    push @gpg, $gpg_bin, '--no-tty', '--yes', '--quiet';
+		    push @gpg, $gpg_bin, '--no-tty', '--yes', '--quiet', '--status-fd=2';
 		  } else {
 		    # GPG binary not found - log error
 		    push @{$res->{debug}->{error}},  "command <code>$to_which</code> not found";
 		    $self->h_log($res);
 		  }
+
+		  $ENV{LANG} = 'C'; # for predictable (English) GPG output
 
 		  # IMPORT MODE: Import existing GPG key from file or text
 		  if ( $arg->{import} ne '' ) {
@@ -745,8 +747,8 @@ this method is supposed to work with the only one single key in keyring
 		    $stdout = $stderr = undef;
 		    @run = (@gpg, '--import', $tf);
 		    # $self->h_log(\@run);
-		    run \@run, '>', \$stdout, '2>', \$stderr ||
-		      push @{$res->{debug}->{error}},  $? >> 8, $stderr;
+		    $exitcode = run \@run, '>', \$stdout, '2>', \$stderr;
+		    push @{$res->{debug}->{error}},  $? >> 8, $stderr unless $exitcode;
 
 		  } else {
 		    ###################################################################################################
@@ -805,8 +807,8 @@ END_INPUT
 		    #############################
 		    @run = (@gpg, '--batch', '--gen-key', $tf);
 		    # $self->h_log(\@run);
-		    run \@run, '>', \$stdout, '2>', \$stderr ||
-		      push @{$res->{debug}->{error}},
+		    $exitcode = run \@run, '>', \$stdout, '2>', \$stderr;
+		    push @{$res->{debug}->{error}},
 		      sprintf('<code>%s</code> exited with:
 <dl class="row mt-4">
   <dt class="col-2 text-right">ERROR:</dt>
@@ -819,9 +821,10 @@ END_INPUT
 			      join(' ', @run),
 			      $? >> 8,
 			      $stderr // '',
-			      $stdout // '');
-
+			      $stdout // '') unless $exitcode;
 		  }
+
+		  # $self->h_log($res->{debug});
 		  # $self->h_log($stdout);
 		  # $self->h_log($stderr);
 
@@ -832,8 +835,8 @@ END_INPUT
 		    $stdout = $stderr = undef;
 		    @run = (@gpg, '--list-keys', '--with-colons', '--fingerprint');
 		    # $self->h_log(\@run);
-		    run \@run, '>', \$stdout, '2>', \$stderr ||
-		      push @{$res->{debug}->{error}},  $? >> 8, $stderr;
+		    $exitcode = run \@run, '>', \$stdout, '2>', \$stderr;
+		    push @{$res->{debug}->{error}},  $? >> 8, $stderr unless $exitcode;
 		    # Parse fingerprint from colon-separated output
 		    $stdout =~ /^fpr:{9}([A-F0-9]{40})/m;
 		    $res->{fingerprint} = $1;
@@ -851,8 +854,8 @@ END_INPUT
 		    $stdout = $stderr = undef;
 		    @run = (@gpg, '--armor', '--export', $arg->{fingerprint});
 		    # $self->h_log(\@run);
-		    run \@run, '>', \$stdout, '2>', \$stderr ||
-		      push @{$res->{debug}->{error}},  $? >> 8, $stderr;
+		    $exitcode = run \@run, '>', \$stdout, '2>', \$stderr;
+		    push @{$res->{debug}->{error}},  $? >> 8, $stderr unless $exitcode;
 		    # $self->h_log($res);
 		    $arg->{key}->{pub} = $stdout;
 		    $res->{public}   = $arg->{key}->{pub};
@@ -868,8 +871,8 @@ END_INPUT
 		      $stdout = $stderr = undef;
 		      @run = (@gpg, '--armor', '--encrypt', '--recipient', $arg->{fingerprint});
 		      # $self->h_log(\@run);
-		      run \@run, \$arg->{to_enc}->{$_}, \$stdout, '2>', \$stderr ||
-			push @{$res->{debug}->{error}},  $? >> 8, $stderr;
+		      $exitcode = run \@run, \$arg->{to_enc}->{$_}, \$stdout, '2>', \$stderr;
+		      push @{$res->{debug}->{error}},  $? >> 8, $stderr unless $exitcode;
 		      $res->{enc}->{$_} = $stdout;
 		      # $self->h_log($stdout);
 		      # $self->h_log($stderr);
@@ -884,15 +887,15 @@ END_INPUT
 		    $stdout = $stderr = undef;
 		    @run = (@gpg, '--fingerprint');
 		    # $self->h_log(\@run);
-		    run \@run, '>', \$stdout, '2>', \$stderr ||
-		      push @{$res->{debug}->{error}}, $? >> 8, $stderr;
+		    $exitcode = run \@run, '>', \$stdout, '2>', \$stderr;
+		    push @{$res->{debug}->{error}}, $? >> 8, $stderr unless $exitcode;
 		    # $self->h_log($res);
 
 		    if ( $arg->{import} eq '' ) {
 		      $stdout = $stderr = undef;
 		      @run = (@gpg, '--armor', '--export-secret-key', $arg->{fingerprint});
-		      run \@run, '>', \$stdout, '2>', \$stderr ||
-			push @{$res->{debug}->{error}}, $? >> 8, $stderr;
+		      $exitcode = run \@run, '>', \$stdout, '2>', \$stderr;
+		      push @{$res->{debug}->{error}}, $? >> 8, $stderr unless $exitcode;
 		      # $self->h_log($res);
 		      $arg->{key}->{pvt} = $stdout;
 		      $res->{private} = $arg->{key}->{pvt};
@@ -908,8 +911,8 @@ END_INPUT
 		    $stdout = $stderr = undef;
 		    @run = (@gpg, '--list-keys', $arg->{fingerprint});
 		    # $self->h_log(\@run);
-		    run \@run, '>', \$stdout, '2>', \$stderr ||
-		      push @{$res->{debug}->{error}}, $? >> 8, $stderr;
+		    $exitcode = run \@run, '>', \$stdout, '2>', \$stderr;
+		    push @{$res->{debug}->{error}}, $? >> 8, $stderr unless $exitcode;
 		    # $self->h_log($res);
 		    $arg->{key}->{lst}->{hr} = $stdout;
 		    $res->{list_key} = $arg->{key}->{lst};
@@ -934,9 +937,10 @@ END_INPUT
 				    $arg->{ldap}->{password} ),
 			    '--send-keys',
 			    $arg->{fingerprint});
-		    run \@run, '>', \$stdout, '2>', \$stderr ||
-		      push @{$res->{debug}->{error}}, $? >> 8, $stderr;
-		  } elsif ( !$stderr && ! $arg->{send_key} ) {
+		    $exitcode = run \@run, '>', \$stdout, '2>', \$stderr;
+		    push @{$res->{debug}->{error}}, $? >> 8, $stderr unless $exitcode;
+		    #} elsif ( !$stderr && ! $arg->{send_key} ) {
+		  } else {
 
 		    #########################################################################################################
 		    # Prepare LDAP entry data for PGP key storage							    #
@@ -948,8 +952,8 @@ END_INPUT
 
 		    $stdout = $stderr = undef;
 		    @run = (@gpg, '--with-colons', '--list-keys', $arg->{fingerprint});
-		    run \@run, '>', \$stdout, '2>', \$stderr ||
-		      push @{$res->{debug}->{error}}, $? >> 8, $stderr;
+		    $exitcode = run \@run, '>', \$stdout, '2>', \$stderr;
+		    push @{$res->{debug}->{error}}, $? >> 8, $stderr unless $exitcode;
 		    # $self->h_log($stdout);
 
 		    # Parse colon-separated GPG output into hash structure

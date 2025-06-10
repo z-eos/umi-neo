@@ -210,6 +210,41 @@ sub add {
   return {status => $status, message => $message->{html}};
 }
 
+sub delete {
+  my ($self, $dn, $recursively, $scope) = @_;
+  $recursively = 0 if ! defined $recursively;
+  $scope = 'sub' if ! defined $scope;
+  my ($entries, $msg, $return, $search);
+
+  # !! to add it latter # my $g_mod = $self->del_from_groups($dn);
+  # !! to add it latter # push @{$return->{error}}, $g_mod->{error} if defined $g_mod->{error};
+
+  if ($recursively) {
+    $search = $self->search({ base => $dn, filter => '(objectclass=*)', scope => $scope });
+    ## taken from perl-ldap/contrib/recursive-ldap-delete.pl
+    # delete the entries found in a sorted way:
+    # those with more "," (= more elements) in their DN, which are deeper in the DIT, first
+    # trick for the sorting: tr/,// returns number of , (see perlfaq4 for details)
+    @$entries = sort { $b->dn =~ tr/,// <=> $a->dn =~ tr/,// } $search->entries()
+  } else {
+    $entries = [ $dn ];
+  }
+
+  foreach my $e (@$entries) {
+    $msg = $self->ldap->delete($e);
+    # $self->{app}->h_log($self->err($msg));
+    if ( $msg->code == LDAP_SUCCESS ) {
+      $return = { status => 'ok', message => 'DN: ' . $dn . ' has been successfully deleted' };
+    } elsif ( $msg->code == LDAP_NO_SUCH_OBJECT ) {
+      $return = { status => 'warn', message => $self->err( $msg, 0, $dn )->{html} };
+    } else {
+      $return = { status => 'error', message => $self->err( $msg, 0, $dn )->{html} };
+    }
+  }
+
+  return $return;
+}
+
 =head2 modify
 
 EXAMPLE:
@@ -537,41 +572,6 @@ sub all_users {
   }
   # $self->{app}->h_log( \@users );
   return wantarray ? ( \@users, $err ) : [ \@users, $err ];
-}
-
-sub delete {
-  my ($self, $dn, $recursively, $scope) = @_;
-  $recursively = 0 if ! defined $recursively;
-  $scope = 'sub' if ! defined $scope;
-  my ($entries, $msg, $return, $search);
-
-  # !! to add it latter # my $g_mod = $self->del_from_groups($dn);
-  # !! to add it latter # push @{$return->{error}}, $g_mod->{error} if defined $g_mod->{error};
-
-  if ($recursively) {
-    $search = $self->search({ base => $dn, filter => '(objectclass=*)', scope => $scope });
-    ## taken from perl-ldap/contrib/recursive-ldap-delete.pl
-    # delete the entries found in a sorted way:
-    # those with more "," (= more elements) in their DN, which are deeper in the DIT, first
-    # trick for the sorting: tr/,// returns number of , (see perlfaq4 for details)
-    @$entries = sort { $b->dn =~ tr/,// <=> $a->dn =~ tr/,// } $search->entries()
-  } else {
-    $entries = [ $dn ];
-  }
-
-  foreach my $e (@$entries) {
-    $msg = $self->ldap->delete($e);
-    # $self->{app}->h_log($self->err($msg));
-    if ( $msg->code == LDAP_SUCCESS ) {
-      $return = { ok => [ 'successfully deleted <mark class="bg-success">' . $dn . '</mark>' ] };
-    } elsif ( $msg->code == LDAP_NO_SUCH_OBJECT ) {
-      $return = { warn => [$self->err( $msg, 0, $dn )->{html}] };
-    } else {
-      $return = { error => [$self->err( $msg, 0, $dn )->{html}] };
-    }
-  }
-
-  return $return;
 }
 
 =head2 moddn

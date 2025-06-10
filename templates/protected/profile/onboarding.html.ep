@@ -2,7 +2,7 @@
 
 <h3 class="fw-bold p-3">
   <i class="fa-solid fa-baby fa-lg me-3 text-muted"></i>
-  Onboarding for <small><em class="text-muted font-monospace"><%= session->{user_obj}->{dn} %></em></small>
+  Onboarding for <small><em class="text-muted font-monospace"><%= session->{user_obj}->{givenname} . ' ' . session->{user_obj}->{sn} %></em></small>
 </h3>
 <hr class="pb-3">
 
@@ -56,20 +56,6 @@
 
   </div>
 </div>
-
-%#<div class="card border border-info">
-%#  <h5 class="card-header text-bg-info">
-%#    <i class="fa-solid fa-exclamation-circle fa-lg me-4"></i>On submit, this page triggers the following actions for your user <b>&laquo;<%= session->{user_obj}->{uid} %>&raquo;</b>:
-%#  </h5>
-%#  <div class="card-body">
-%#    <ol class="mb-0">
-%#      <li>Generate new GPG and SSH key pairs, and (if not already existing) GitLab, Vault, and Docker accounts. <i class="fa-solid fa-triangle-exclamation"></i><span class="text-decoration-underline fw-bold">You must back them up.</span><i class="fa-solid fa-triangle-exclamation"></i></li>
-%#      <li>Distribute your GPG and SSH public keys to the corporate database. All your previously generated keys will be withdrawn.</li>
-%#      <li>Finally, your password for this account will be reset, so <span class="text-decoration-underline fw-bold">don't forget to back it up as well</span>.
-%#    </ol>
-%#  </div>
-%#</div>
-
 
 % my $is_submited = stash->{is_submited};
 % my $d = stash('svc_added');
