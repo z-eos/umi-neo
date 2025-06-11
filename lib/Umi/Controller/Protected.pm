@@ -162,6 +162,166 @@ sub fire ($self) {
 
 }
 
+=head2 block
+
+block all user accounts (via password change and ssh-key modification)
+to make it impossible to use any of them
+
+unblock is possible only via password change, ssh-key modification and
+removal from the special group for blocked users
+
+=cut
+
+
+sub block ($self) {
+  my $p = $self->req->params->to_hash;
+  $self->h_log($p);
+
+  return $self->render(template => 'protected/home') unless $p->{fire_dn};
+
+  my $ldap = Umi::Ldap->new( $self->{app}, $self->session('uid'), $self->session('pwd') );
+
+  my $search_arg = { base => $p->{block_dn},
+		     scope => 'sub',
+		     attrs => [] };
+  # $self->h_log($search_arg);
+  my $search = $ldap->search( $search_arg );
+  $self->h_log( $self->h_ldap_err($search, $search_arg) ) if $search->code;
+
+  # ### alas, this redirect by nature performs a GET request
+  # return $self
+  #   ->redirect_to($self->url_for('search_common')
+  #		  ->query( search_base_case => $p->{search_base_case},
+  #			   search_filter => $p->{search_filter},
+  #			   ldap_subtree => $p->{ldap_subtree} )
+  #		 );
+
+#   my $callername = (caller(1))[3];
+#   $callername = 'main' if ! defined $callername;
+#   my $return; # = 'call to LDAP_CRUD->block from ' . $callername . ': ';
+#   my $attr;
+#   my $userPassword;
+#   my @userPublicKeys;
+#   my @keys;
+#   my ( $msg, $msg_usr, $msg_add, $msg_chg, $ent_svc, $ent_chg, @blockgr );
+
+#   # log_debug { np( $args ) };
+
+#   $msg = $self->modify( $args->{dn},
+#			[ replace => [ gidNumber => $self->cfg->{stub}->{group_blocked_gid}, ],	], );
+
+#   # log_debug { np( $msg ) };
+#   if ( $msg eq '0' ) {
+#     $return->{success} = $args->{dn} . "\n";
+#   } else {
+#     $return->{error} = $msg->{html};
+#   }
+#   # log_debug { np( $return ) };
+
+#   $msg_usr = $self->search ( { base      => $args->{dn},
+#			       sizelimit => 0, } );
+#   # log_debug { np( $msg_usr->count ) };
+#   if ( $msg_usr->is_error() ) {
+#     $return->{error} = $self->err( $msg_usr )->{html};
+#   } else {
+#     # bellow we are blocking services
+#     my @ent_toblock = $msg_usr->entries;
+#     foreach $ent_svc ( @ent_toblock ) {
+#       if ( $ent_svc->exists('userPassword') &&
+#	 $ent_svc->get_value('userPassword') !~ /^\!-disabled-by-/) {
+#	# before 20210419 # $userPassword = $self->pwdgen;
+#	$msg = $self->modify( $ent_svc->dn,
+#			      [ replace =>
+#				[ userPassword =>
+#				  sprintf("!-disabled-by-%s-on-%s-%s",
+#					  $self->user,
+#					  $self->ts({ format => "%Y%m%d%H%M%S" }),
+#					  $ent_svc->get_value('userPassword')),	],
+#			      ], );
+# # before 20210419 #	      [ replace => [ userPassword => $userPassword->{ssha}, ], ], );
+#	if ( ref($msg) eq 'HASH' ) {
+#	  $return->{error} .= $msg->{html};
+#	} else {
+#	  $return->{success} .= $ent_svc->dn . "\n";
+#	}
+#       }
+#       # log_debug { np( $return ) };
+
+#       if ( $ent_svc->exists('sshPublicKey') ) {
+#	@userPublicKeys = $ent_svc->get_value('sshPublicKey');
+#	@keys = map { $_ !~ /^from="127.0.0.1" / ? sprintf('from="127.0.0.1" %s', $_) : $_ } @userPublicKeys;
+#	$msg = $self->modify( $ent_svc->dn,
+#			      [ replace => [ sshPublicKey => \@keys, ],], );
+#	if ( ref($msg) eq 'HASH' ) {
+#	  $return->{error} .= $msg->{html};
+#	} else {
+#	  $return->{success} .= $ent_svc->dn . "\n";
+#	}
+#       }
+#       # log_debug { np( $return ) };
+
+#       if ( $ent_svc->exists('grayPublicKey') ) {
+#	@userPublicKeys = $ent_svc->get_value('grayPublicKey');
+#	@keys = map { $_ !~ /^from="127.0.0.1" / ? sprintf('from="127.0.0.1" %s', $_) : $_ } @userPublicKeys;
+#	$msg = $self->modify( $ent_svc->dn,
+#			      [ replace => [ grayPublicKey => \@keys, ],], );
+#	if ( ref($msg) eq 'HASH' ) {
+#	  $return->{error} .= $msg->{html};
+#	} else {
+#	  $return->{success} .= $ent_svc->dn . "\n";
+#	}
+#       }
+#       # log_debug { np( $return ) };
+
+#       if ( $ent_svc->exists('umiOvpnAddStatus') ) {
+#	$msg = $self->modify( $ent_svc->dn,
+#			      [ replace => [ umiOvpnAddStatus => 'disabled', ], ], );
+#	if ( ref($msg) eq 'HASH' ) {
+#	  $return->{error} .= $msg->{html};
+#	} else {
+#	  $return->{success} .= $ent_svc->dn . "\n";
+#	}
+#       }
+#       # log_debug { np( $return ) };
+
+#     }
+#   }
+#   # log_debug { np( $return ) };
+
+#   # is this user in block group?
+#   my $blockgr_dn =
+#     sprintf('cn=%s,%s',
+#	    $self->cfg->{stub}->{group_blocked},
+#	    $self->cfg->{base}->{group});
+
+#   $msg = $self->search ( { base   => $self->cfg->{base}->{group},
+#			   filter => sprintf('(&(cn=%s)(memberUid=%s))',
+#					     $self->cfg->{stub}->{group_blocked},
+#					     substr( (split /,/, $args->{dn})[0], 4 )),
+#			   sizelimit => 0, } );
+#   if ( $msg->is_error() ) {
+#     $return->{error} .= $self->err( $msg )->{html};
+#   } elsif ( $msg->count == 0) {
+#     $msg_chg = $self->search ( { base => $blockgr_dn, } );
+#     if ( $msg_chg->is_error() ) {
+#       $return->{error} .= $self->err( $msg_chg )->{html};
+#     } else {
+#       $ent_chg = $self->modify( $blockgr_dn,
+#				[ add =>
+#				  [ memberUid => substr( (split /,/, $args->{dn})[0], 4 ), ], ], );
+#       if ( ref($ent_chg) eq 'HASH' ) {
+#	$return->{error} .= $ent_chg->{html};
+#       } else {
+#	$return->{success} .= $args->{dn} . " successfully blocked.\n";
+#       }
+#     }
+#   }
+
+#   log_debug { np( $return ) };
+
+#   return $return;
+}
+
 =head1 ldif_import
 
 import LDIF record or file

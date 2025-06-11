@@ -112,7 +112,7 @@ sub get_gpg_key ($self) {
     my $key = $self->stash->{key};
     return $self->render(json => {})
       unless defined $key
-      && $key =~ /^[[:alnum:] _\-@.,]+$/;
+      && $key =~ /^[[:alnum:] %_\-@.,]+$/;
 
     if ($key ne '') {
       $filter = sprintf("(pgpUserID=*%s*)", $self->stash->{key});

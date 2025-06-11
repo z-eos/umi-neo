@@ -24,14 +24,14 @@
 	  %= hidden_field search_base_case => $po->{search_base_case}
 	  %= hidden_field search_filter => $po->{search_filter}
 	  %= hidden_field ldap_subtree => $po->{ldap_subtree}
-	  
+
 	  <div class="">
 	    %= label_for 'modal_' . $it . '_descr' . $i => 'Description', class => 'form-label'
 	    %= text_area 'description', id => 'modal_' . $it . '_descr' . $i, class => "form-cnotrol", rows => 5, cols => 40
 	  </div>
 	  <div class="modal-error mx-5"></div>
 	  <div class="btn-group float-end mt-3">
-	    
+
 	    <button type="submit" class="btn btn-sm btn-block <%= h_col_to_bg($menu->{$it}->{col}) %>"
 	      name="<%= $it %>_dn" value="<%= $dn_orig %>" data-bs-action="<%= $it %>">
 	      Archive and delete entire subtree
@@ -60,7 +60,7 @@
 	  %= hidden_field search_base_case => $po->{search_base_case}
 	  %= hidden_field search_filter => $po->{search_filter}
 	  %= hidden_field ldap_subtree => $po->{ldap_subtree}
-	  
+
 	  <div class="form-check form-switch">
 	    <input type="checkbox" class="form-check-input" role="switch"
 		   name="<%= $it %>_recursive"
@@ -90,22 +90,28 @@
       <div class="modal-content border border-<%= h_get_col($menu->{$it}->{col}) %> border-1">
 	  <div class="modal-header <%= h_col_to_bg($menu->{$it}->{col}) %> row m-0">
 	      <h4 class="modal-title mb-3" id="modal_<%= $it %><%= $i %>_label">
-		  <i class="fa <%= $menu->{$it}->{ico} %> fa-xl me-3"></i>
-		  Block DN: <b><%= $dn %></b>
+		<i class="fa <%= $menu->{$it}->{ico} %> fa-xl me-3"></i>
+		Block DN: <b><%= $dn %></b><br>
+		and all it's subordinates
 	      </h4>
 	  </div>
-	  <form role="form" method="POST" class="formajaxer" action="/searchby/block">
-	      <div class="modal-footer">
-		  <div class="btn-group float-end">
-		    %== $button_close
-		    <button type="submit" class="btn btn-sm btn-block <%= h_col_to_bg($menu->{$it}->{col}) %> umi-btn-event umi-btn-ajax"
-			    name="user_block" value="<%= $dn %>" data-bs-action="<%= $it %>">
-		      Yes, BLOCK
-		    </button>
-		  </div>
+	  %= form_for '/tool/block' => (class => "", method => 'POST') => begin
+	    % my $po = $search_common_params->{params_orig};
+	    %= hidden_field search_base_case => $po->{search_base_case}
+	    %= hidden_field search_filter => $po->{search_filter}
+	    %= hidden_field ldap_subtree => $po->{ldap_subtree}
+
+	    <div class="modal-footer">
+	      <div class="btn-group float-end">
+		%== $button_close
+		<button type="submit" class="btn btn-sm btn-block <%= h_col_to_bg($menu->{$it}->{col}) %> umi-btn-event umi-btn-ajax"
+			name="<%= $it %>_dn" value="<%= $dn_orig %>" data-bs-action="<%= $it %>">
+		  Yes, BLOCK
+		</button>
 	      </div>
-	      <div class="modal-error mx-5"></div>
-	  </form>
+	    </div>
+	    <div class="modal-error mx-5"></div>
+	  % end
       </div>
   </div>
 </div>
@@ -132,7 +138,7 @@
 	    </span>
 	    %= text_field 'newrdn', class => 'form-control', id => 'newRdn', placeholder => (split(/,/, $dn))[0], title => 'new RDN'
 	  </div>
-	  
+
 	  <div class="input-group">
 	    <span class="input-group-text text-right text-uppercase fw-bold" for="newSuperior">
 	      <abbr title="If given this value should be the DN of the new superior for  DN">new superior:</abbr>
@@ -228,7 +234,7 @@
 	      minimal info vCard (name, email/s, IM id/s and telephone number/s)
 	    </label>
 	  </div>
-	  
+
 	  <div class="radio">
 	    <span class="fa fa-battery-full fa-lg col-xs-1 text-right"></span>
 	    <label>
@@ -236,7 +242,7 @@
 	      full info vCard
 	    </label>
 	  </div>
-	  
+
 	  <div class="custom-control custom-switch">
 	    <input type="checkbox"
 		   class="custom-control-input"
