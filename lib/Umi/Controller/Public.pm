@@ -110,9 +110,10 @@ sub get_gpg_key ($self) {
 
   if ( defined $ldap ) {
     my $key = $self->stash->{key};
+    $self->h_log($key);
     return $self->render(json => {})
       unless defined $key
-      && $key =~ /^[[:alnum:] %_\-@.,]+$/;
+      && $key =~ /^[[:alnum:] _\-@.,]+$/;
 
     if ($key ne '') {
       $filter = sprintf("(pgpUserID=*%s*)", $self->stash->{key});

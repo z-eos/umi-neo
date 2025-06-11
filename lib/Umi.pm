@@ -270,7 +270,7 @@ sub _startup_routes ($self) {
   $public_root->get('/')->to('public#homepage')->name('public_root');
   $public_root->get('/other')->to('public#other');
 
-  $public_root->get('/gpg/:key')->to('public#get_gpg_key');
+  $public_root->get('/gpg/:key' => [ key => qr/[^\/]+/ ])->to('public#get_gpg_key');
 
   ## MACHINES
   $public_root->get( '/machines')->to('machines#list');

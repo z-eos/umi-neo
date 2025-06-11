@@ -177,7 +177,7 @@ sub block ($self) {
   my $p = $self->req->params->to_hash;
   $self->h_log($p);
 
-  return $self->render(template => 'protected/home') unless $p->{fire_dn};
+  return $self->render(template => 'protected/home') unless $p->{block_dn};
 
   my $ldap = Umi::Ldap->new( $self->{app}, $self->session('uid'), $self->session('pwd') );
 
@@ -188,13 +188,13 @@ sub block ($self) {
   my $search = $ldap->search( $search_arg );
   $self->h_log( $self->h_ldap_err($search, $search_arg) ) if $search->code;
 
-  # ### alas, this redirect by nature performs a GET request
-  # return $self
-  #   ->redirect_to($self->url_for('search_common')
-  #		  ->query( search_base_case => $p->{search_base_case},
-  #			   search_filter => $p->{search_filter},
-  #			   ldap_subtree => $p->{ldap_subtree} )
-  #		 );
+  ### alas, this redirect by nature performs a GET request
+  return $self
+    ->redirect_to($self->url_for('search_common')
+		  ->query( search_base_case => $p->{search_base_case},
+			   search_filter => $p->{search_filter},
+			   ldap_subtree => $p->{ldap_subtree} )
+		 );
 
 #   my $callername = (caller(1))[3];
 #   $callername = 'main' if ! defined $callername;
