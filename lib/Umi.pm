@@ -31,6 +31,7 @@ sub startup ($self) {
 
   $self->plugin('Umi::Helpers');
   $self->plugin('Umi::Helpers::Common');
+  $self->plugin('Umi::Helpers::Dns');
   $self->plugin('Umi::Helpers::SearchResult');
 
   # handling authentication calls.
