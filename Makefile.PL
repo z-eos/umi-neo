@@ -11,6 +11,7 @@ all_from 'lib/Umi.pm';
 
 requires 'Mojolicious';
 requires 'Mojolicious::Plugin::Authentication';
+# probably you may need 'cpan -f -i Mojolicious::Plugin::Authorization'
 requires 'Mojolicious::Plugin::Authorization';
 requires 'Mojolicious::Plugin::StaticCache';
 requires 'Mojolicious::Plugin::CHI';

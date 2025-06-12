@@ -54,10 +54,10 @@
 	    % }
 
 	    <dt class="col-1 text-md-end" title="title"><i class="fa-lg fa-solid fa-user-graduate"></i></dt>
-	    <dd class="col-11 user-select-all"><%== exists $v->{title} ? $v->{title}->[0] : $na %></dd>
+	    <dd class="col-11 user-select-all"><%== h_as_struct_decode $v, 'title' %></dd>
 
 	    <dt class="col-1 text-md-end" title="description"><i class="fa-lg fa-solid fa-feather-pointed"></i></dt>
-	    <dd class="col-11 user-select-all"><%== exists $v->{description} ? $v->{description}->[0] : $na %></dd>
+	    <dd class="col-11 user-select-all"><%== h_as_struct_decode $v, 'description' %></dd>
 
 	    <dt class="col-1 text-md-end" title="uid">ID</dt>
 	    <dd class="col-11 user-select-all"><%== exists $v->{uid} ? $v->{uid}->[0] : $na %></dd>
@@ -90,7 +90,7 @@
 	    <dd class="col-11 user-select-all"><%== exists $v->{umiuserim} && scalar @{$v->{umiuserim}} > 1 ? join '<br>', @{$v->{umiuserim}} : $na %></dd>
 
 	    <dt class="col-1 text-md-end" title="Location: City, Country"><i class="fa-lg fa-solid fa-location-dot"></i></dt>
-	    <dd class="col-11 user-select-all"><%== exists $v->{l} ? $v->{l}->[0] : $na %>, <%== exists $v->{umiusercountryofresidence} ? $v->{umiusercountryofresidence}->[0] : $na %></dd>
+	    <dd class="col-11 user-select-all"><%== h_as_struct_decode $v, 'l' %>, <%== h_as_struct_decode $v, 'umiusercountryofresidence' %></dd>
 
 	    <dt class="col-1 text-md-end" title="Birth Date"><i class="fa-lg fa-solid fa-cake-candles"></i></dt>
 	    <dd class="col-11 user-select-all">
