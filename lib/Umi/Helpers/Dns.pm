@@ -31,218 +31,191 @@ sub register {
 
   ### BEGINNING OF REGISTER
 
-=head1 h_dns_resolver
-
-Net::DNS wrapper to resolve A, MX, PTR records and AXFR zones from NS-es
-from config file
-
-    fqdn      - FQDN to resolve (types A, MX)
-    type      - DNS query type (A, MX, PTR, AXFR)
-    name      - IP address to resolve
-    legend    - part of legend for debug
-    ns_custom - name servers configured in UMI config file
-
-    Net::DNS::Resolver options
-    debug          - default: 0
-    force_v4       - default: 1
-    persistent_tcp - default: 1
-    persistent_udp - default: 1
-    recurse        - default: 1
-    retry          - default: 1
-    tcp_timeout    - default: 1
-    udp_timeout    - default: 1
-
-Returns:
-
-    for A / PTR
-    {
-      success => x.x.x.x / FQDN,
-      error   => { errdescr => ..., errcode => ..., errstr => ...  }
-    }
-
-    for AXFR
-    {
-      success => { FQDN => { type => A/CNAME, rdstring => x.x.x.x} },
-      error   => { errdescr => ..., errcode => ..., errstr => ...  }
-    }
-
-=cut
-
-  $app->helper( h_dns_resolver => sub {
-		  my ($self, $A) = @_;
-		  my $a = { name           => $A->{name},
-			    fqdn           => $A->{fqdn}           // $A->{name},
-			    type           => $A->{type}           // 'PTR',
-			    legend         => $A->{legend}         // '',
-			    debug          => $A->{debug}          // 0,
-			    force_v4       => $A->{force_v4}       // 1,
-			    persistent_tcp => $A->{persistent_tcp} // 1,
-			    persistent_udp => $A->{persistent_udp} // 1,
-			    recurse        => $A->{recurse}        // 1,
-			    retry          => $A->{retry}          // 1,
-			    tcp_timeout    => $A->{tcp_timeout}    // 1,
-			    udp_timeout    => $A->{udp_timeout}    // 1,
-			    ns_custom      => $A->{ns_custom}      // 0,
-			    with_txt       => $A->{with_txt}       // 0,
-			    whole_axfr     => $A->{whole_axfr}     // 0,
-			  };
-
-		  my (%return, %domains);
-		  my $r = new Net::DNS::Resolver(
-						 debug          => $a->{debug},
-						 force_v4       => $a->{force_v4},
-						 persistent_tcp => $a->{persistent_tcp},
-						 persistent_udp => $a->{persistent_udp},
-						 recurse        => $a->{recurse},
-						 retry          => $a->{retry},
-						 tcp_timeout    => $a->{tcp_timeout},
-						 udp_timeout    => $a->{udp_timeout},
-						);
-
-		  if ( $a->{ns_custom} == 1
-		       && exists $self->{app}->{cfg}->{tool}->{dns}->{ns}
-		       && @{$self->{app}->{cfg}->{tool}->{dns}->{ns}} ) {
-
-		    $r->nameservers( $_ )
-		      foreach ( @{$self->{app}->{cfg}->{tool}->{dns}->{ns}} );
-		  }
-
-		  if ( $a->{type} eq 'AXFR'
-		       && exists $self->{app}->{cfg}->{tool}->{dns}->{zone}
-		       && @{$self->{app}->{cfg}->{tool}->{dns}->{zone}}) {
-
-		    foreach my $z (@{$self->{app}->{cfg}->{tool}->{dns}->{zone}}) {
-		      my @zone_rrs = $r->axfr($z);
-
-		      if (@zone_rrs) {
-			my %txt_by_name;
-
-			# First, collect all TXT records indexed by name
-			foreach my $rr (@zone_rrs) {
-			  if ($rr->type eq 'TXT') {
-			    push @{ $txt_by_name{ $rr->name }{txt} }, $rr->txtdata;
-			    $txt_by_name{ $rr->name }{owner} = $rr->owner;
-			    # $self->h_log($rr->string);
-			  }
-			}
-			# $self->h_log(\%txt_by_name);
-
-			# Now process A and CNAME records
-			foreach my $rr (@zone_rrs) {
-
-			  next if $a->{whole_axfr} == 0 && $rr->type ne 'A' && $rr->type ne 'CNAME';
-
-			  my $txt = '';
-			  if ($a->{with_txt} == 1) {
-			    if (exists $txt_by_name{ $rr->name }) {
-			      $txt = ref($txt_by_name{$rr->name}{txt}) eq 'ARRAY' ? join("", @{$txt_by_name{$rr->name}{txt}}) : $txt_by_name{$rr->name}{txt};
-			    }
-			  }
-
-			  $domains{ $rr->name } = {
-						   type     => $rr->type,
-						   rdstring => $rr->type ne 'TXT'? $rr->rdstring : '',
-						   zone     => $z,
-						   txt      => $txt
-						  };
-			}
-
-		      } else {
-			if (exists $return{errstr} && $return{errstr} ne 'NOERROR') {
-			  $return{error}{html} = sprintf(
-							 "<i class='h6'>dns_resolver()</i>: zone: %s %s ( %s )",
-							 $z,
-							 DNS->{ $r->errorstring }->{descr},
-							 $r->errorstring
-							);
-			  $return{error}{errdescr} = DNS->{ $r->errorstring }->{descr};
-			  $return{error}{errcode}  = DNS->{ $r->errorstring }->{dec};
-			  $return{error}{errstr}   = $r->errorstring;
-			}
-		      }
-		    }
-
-		    %{$return{success}} = %domains;
-
-		  } else {
-		    my $rr = $r->search($a->{name});
-		    $return{errstr}  = $r->errorstring;
-
-		    if ( defined $rr) {
-		      foreach ($rr->answer) {
-			if ( $a->{type} eq 'PTR' ) {
-			  $return{success} = $_->ptrdname if $_->type eq $a->{type};
-			} elsif ( $a->{type} eq 'A' ) {
-			  $return{success} = $_->address if $_->type eq $a->{type};
-			} elsif ( $a->{type} eq 'MX' ) {
-			  my @mx_arr = mx( $r, $a->{fqdn} );
-			  if (@mx_arr) {
-			    $return{success} = $mx_arr[0]->exchange;
-			  }
-			}
-
-			if ( $return{errstr} ne 'NOERROR' ) {
-			  $return{error}{html} = sprintf("<i class='h6'>dns_resolver()</i>: %s %s: %s ( %s )",
-							 $a->{fqdn},
-							 $a->{legend},
-							 DNS->{ $r->errorstring }->{descr},
-							 $r->errorstring );
-			  $return{error}{errdescr} = DNS->{ $r->errorstring }->{descr};
-			  $return{error}{errcode}  = DNS->{ $r->errorstring }->{dec};
-			  $return{error}{errstr}   = $r->errorstring;
-			}
-
-		      }
-		    } else {
-		      if ( $return{errstr} ne 'NOERROR') {
-			$return{error}{html} = sprintf("<i class='h6'>dns_resolver()</i>: %s %s: %s ( %s )",
-							   $a->{fqdn},
-							   $a->{legend},
-							   DNS->{ $r->errorstring }->{descr} // 'NA',
-							   $r->errorstring // 'NA' );
-			$return{error}{errdescr} = DNS->{ $r->errorstring }->{descr};
-			$return{error}{errstr}   = $r->errorstring;
-		      }
-		    }
-		    $return{errcode} = DNS->{ $r->errorstring }->{descr}
-		      if exists $return{errstr};
-		  }
-
-
-
-
-		  # p $a->{fqdn}; p $r;
-		  # $self->h_log( \%return );
-		  return \%return;
-		});
-
-
-# {
-#     error   {
-#         errcode    3,
-#         errdescr   "Non-Existent Domain",
-#         errstr     "NXDOMAIN",
-#         html       "<i class='h6'>dns_single_query()</i>: 10.11.9.10 Non-Existent Domain ( NXDOMAIN )"
-#     }
-# }
-# [2025-06-12 16:16:32.24793] [3589] [info] Successfull authentication occured, protected routes are available.
-# Umi::Controller::Protected /home/zeus/src/umi-neo/umi-neo/lib/Umi/Controller/Protected.pm:1730
-# {
-#     ptr   "10.11.9.11" (dualvar: 10.11)
-# }
-# Umi::Controller::Protected /home/zeus/src/umi-neo/umi-neo/lib/Umi/Controller/Protected.pm:1736
-# {
-#     success   [
-#         [0] {
-#                 name       "11.9.11.10.in-addr.arpa" (dualvar: 11.9),
-#                 rdstring   "gray-home.vpn.norse.digital.",
-#                 ttl        600,
-#                 type       "PTR"
-#             }
-#     ]
-# }
-
-# Enhanced DNS resolver helpers for Mojo
+# deprecated # =head1 h_dns_resolver
+# deprecated #
+# deprecated # Net::DNS wrapper to resolve A, MX, PTR records and AXFR zones from NS-es
+# deprecated # from config file
+# deprecated #
+# deprecated #     fqdn      - FQDN to resolve (types A, MX)
+# deprecated #     type      - DNS query type (A, MX, PTR, AXFR)
+# deprecated #     name      - IP address to resolve
+# deprecated #     legend    - part of legend for debug
+# deprecated #     ns_custom - name servers configured in UMI config file
+# deprecated #
+# deprecated #     Net::DNS::Resolver options
+# deprecated #     debug          - default: 0
+# deprecated #     force_v4       - default: 1
+# deprecated #     persistent_tcp - default: 1
+# deprecated #     persistent_udp - default: 1
+# deprecated #     recurse        - default: 1
+# deprecated #     retry          - default: 1
+# deprecated #     tcp_timeout    - default: 1
+# deprecated #     udp_timeout    - default: 1
+# deprecated #
+# deprecated # Returns:
+# deprecated #
+# deprecated #     for A / PTR
+# deprecated #     {
+# deprecated #       success => x.x.x.x / FQDN,
+# deprecated #       error   => { errdescr => ..., errcode => ..., errstr => ...  }
+# deprecated #     }
+# deprecated #
+# deprecated #     for AXFR
+# deprecated #     {
+# deprecated #       success => { FQDN => { type => A/CNAME, rdstring => x.x.x.x} },
+# deprecated #       error   => { errdescr => ..., errcode => ..., errstr => ...  }
+# deprecated #     }
+# deprecated #
+# deprecated # =cut
+# deprecated #
+# deprecated #   $app->helper( h_dns_resolver => sub {
+# deprecated #		  my ($self, $A) = @_;
+# deprecated #		  my $a = { name           => $A->{name},
+# deprecated #			    fqdn           => $A->{fqdn}           // $A->{name},
+# deprecated #			    type           => $A->{type}           // 'PTR',
+# deprecated #			    legend         => $A->{legend}         // '',
+# deprecated #			    debug          => $A->{debug}          // 0,
+# deprecated #			    force_v4       => $A->{force_v4}       // 1,
+# deprecated #			    persistent_tcp => $A->{persistent_tcp} // 1,
+# deprecated #			    persistent_udp => $A->{persistent_udp} // 1,
+# deprecated #			    recurse        => $A->{recurse}        // 1,
+# deprecated #			    retry          => $A->{retry}          // 1,
+# deprecated #			    tcp_timeout    => $A->{tcp_timeout}    // 1,
+# deprecated #			    udp_timeout    => $A->{udp_timeout}    // 1,
+# deprecated #			    ns_custom      => $A->{ns_custom}      // 0,
+# deprecated #			    with_txt       => $A->{with_txt}       // 0,
+# deprecated #			    whole_axfr     => $A->{whole_axfr}     // 0,
+# deprecated #			  };
+# deprecated #
+# deprecated #		  my (%return, %domains);
+# deprecated #		  my $r = new Net::DNS::Resolver(
+# deprecated #						 debug          => $a->{debug},
+# deprecated #						 force_v4       => $a->{force_v4},
+# deprecated #						 persistent_tcp => $a->{persistent_tcp},
+# deprecated #						 persistent_udp => $a->{persistent_udp},
+# deprecated #						 recurse        => $a->{recurse},
+# deprecated #						 retry          => $a->{retry},
+# deprecated #						 tcp_timeout    => $a->{tcp_timeout},
+# deprecated #						 udp_timeout    => $a->{udp_timeout},
+# deprecated #						);
+# deprecated #
+# deprecated #		  if ( $a->{ns_custom} == 1
+# deprecated #		       && exists $self->{app}->{cfg}->{tool}->{dns}->{ns}
+# deprecated #		       && @{$self->{app}->{cfg}->{tool}->{dns}->{ns}} ) {
+# deprecated #
+# deprecated #		    $r->nameservers( $_ )
+# deprecated #		      foreach ( @{$self->{app}->{cfg}->{tool}->{dns}->{ns}} );
+# deprecated #		  }
+# deprecated #
+# deprecated #		  if ( $a->{type} eq 'AXFR'
+# deprecated #		       && exists $self->{app}->{cfg}->{tool}->{dns}->{zone}
+# deprecated #		       && @{$self->{app}->{cfg}->{tool}->{dns}->{zone}}) {
+# deprecated #
+# deprecated #		    foreach my $z (@{$self->{app}->{cfg}->{tool}->{dns}->{zone}}) {
+# deprecated #		      my @zone_rrs = $r->axfr($z);
+# deprecated #
+# deprecated #		      if (@zone_rrs) {
+# deprecated #			my %txt_by_name;
+# deprecated #
+# deprecated #			# First, collect all TXT records indexed by name
+# deprecated #			foreach my $rr (@zone_rrs) {
+# deprecated #			  if ($rr->type eq 'TXT') {
+# deprecated #			    push @{ $txt_by_name{ $rr->name }{txt} }, $rr->txtdata;
+# deprecated #			    $txt_by_name{ $rr->name }{owner} = $rr->owner;
+# deprecated #			    # $self->h_log($rr->string);
+# deprecated #			  }
+# deprecated #			}
+# deprecated #			# $self->h_log(\%txt_by_name);
+# deprecated #
+# deprecated #			# Now process A and CNAME records
+# deprecated #			foreach my $rr (@zone_rrs) {
+# deprecated #
+# deprecated #			  next if $a->{whole_axfr} == 0 && $rr->type ne 'A' && $rr->type ne 'CNAME';
+# deprecated #
+# deprecated #			  my $txt = '';
+# deprecated #			  if ($a->{with_txt} == 1) {
+# deprecated #			    if (exists $txt_by_name{ $rr->name }) {
+# deprecated #			      $txt = ref($txt_by_name{$rr->name}{txt}) eq 'ARRAY' ? join("", @{$txt_by_name{$rr->name}{txt}}) : $txt_by_name{$rr->name}{txt};
+# deprecated #			    }
+# deprecated #			  }
+# deprecated #
+# deprecated #			  $domains{ $rr->name } = {
+# deprecated #						   type     => $rr->type,
+# deprecated #						   rdstring => $rr->type ne 'TXT'? $rr->rdstring : '',
+# deprecated #						   zone     => $z,
+# deprecated #						   txt      => $txt
+# deprecated #						  };
+# deprecated #			}
+# deprecated #
+# deprecated #		      } else {
+# deprecated #			if (exists $return{errstr} && $return{errstr} ne 'NOERROR') {
+# deprecated #			  $return{error}{html} = sprintf(
+# deprecated #							 "<i class='h6'>dns_resolver()</i>: zone: %s %s ( %s )",
+# deprecated #							 $z,
+# deprecated #							 DNS->{ $r->errorstring }->{descr},
+# deprecated #							 $r->errorstring
+# deprecated #							);
+# deprecated #			  $return{error}{errdescr} = DNS->{ $r->errorstring }->{descr};
+# deprecated #			  $return{error}{errcode}  = DNS->{ $r->errorstring }->{dec};
+# deprecated #			  $return{error}{errstr}   = $r->errorstring;
+# deprecated #			}
+# deprecated #		      }
+# deprecated #		    }
+# deprecated #
+# deprecated #		    %{$return{success}} = %domains;
+# deprecated #
+# deprecated #		  } else {
+# deprecated #		    my $rr = $r->search($a->{name});
+# deprecated #		    $return{errstr}  = $r->errorstring;
+# deprecated #
+# deprecated #		    if ( defined $rr) {
+# deprecated #		      foreach ($rr->answer) {
+# deprecated #			if ( $a->{type} eq 'PTR' ) {
+# deprecated #			  $return{success} = $_->ptrdname if $_->type eq $a->{type};
+# deprecated #			} elsif ( $a->{type} eq 'A' ) {
+# deprecated #			  $return{success} = $_->address if $_->type eq $a->{type};
+# deprecated #			} elsif ( $a->{type} eq 'MX' ) {
+# deprecated #			  my @mx_arr = mx( $r, $a->{fqdn} );
+# deprecated #			  if (@mx_arr) {
+# deprecated #			    $return{success} = $mx_arr[0]->exchange;
+# deprecated #			  }
+# deprecated #			}
+# deprecated #
+# deprecated #			if ( $return{errstr} ne 'NOERROR' ) {
+# deprecated #			  $return{error}{html} = sprintf("<i class='h6'>dns_resolver()</i>: %s %s: %s ( %s )",
+# deprecated #							 $a->{fqdn},
+# deprecated #							 $a->{legend},
+# deprecated #							 DNS->{ $r->errorstring }->{descr},
+# deprecated #							 $r->errorstring );
+# deprecated #			  $return{error}{errdescr} = DNS->{ $r->errorstring }->{descr};
+# deprecated #			  $return{error}{errcode}  = DNS->{ $r->errorstring }->{dec};
+# deprecated #			  $return{error}{errstr}   = $r->errorstring;
+# deprecated #			}
+# deprecated #
+# deprecated #		      }
+# deprecated #		    } else {
+# deprecated #		      if ( $return{errstr} ne 'NOERROR') {
+# deprecated #			$return{error}{html} = sprintf("<i class='h6'>dns_resolver()</i>: %s %s: %s ( %s )",
+# deprecated #							   $a->{fqdn},
+# deprecated #							   $a->{legend},
+# deprecated #							   DNS->{ $r->errorstring }->{descr} // 'NA',
+# deprecated #							   $r->errorstring // 'NA' );
+# deprecated #			$return{error}{errdescr} = DNS->{ $r->errorstring }->{descr};
+# deprecated #			$return{error}{errstr}   = $r->errorstring;
+# deprecated #		      }
+# deprecated #		    }
+# deprecated #		    $return{errcode} = DNS->{ $r->errorstring }->{descr}
+# deprecated #		      if exists $return{errstr};
+# deprecated #		  }
+# deprecated #
+# deprecated #
+# deprecated #
+# deprecated #
+# deprecated #		  # p $a->{fqdn}; p $r;
+# deprecated #		  # $self->h_log( \%return );
+# deprecated #		  return \%return;
+# deprecated #		});
+# deprecated #
 
 =head2 h_dns_rr
 

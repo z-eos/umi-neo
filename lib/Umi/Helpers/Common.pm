@@ -1961,9 +1961,10 @@ EXAMPLE
 		    }
 		  }
 
-		  #---------------------------------------------------------------------
-		  # Substitute placeholders like: `%uid%`, `%associatedDomain%`, etc.
-		  #---------------------------------------------------------------------
+
+		  ############################################################################
+		  # Substitute placeholders like: `%uid%`, `%associatedDomain%`, etc.	     #
+		  ############################################################################
 		  my %replace;
 		  $replace{'%associatedDomain%'} = $svc_attrs->{associatedDomain} if exists $svc_attrs->{associatedDomain};
 		  $replace{'%givenName%'} = $root->get_value('givenName');
@@ -1995,11 +1996,11 @@ EXAMPLE
 		      if ( $attr eq 'userCertificate;binary' ) { # binary data shouldn't be substituted
 			$svc_attrs->{$attr} = $p->{'userCertificate;binary'};
 		      } else {
-			$svc_attrs->{$attr} =~ s/^%([[:alpha:]]+(?:;[[:alpha:]]+)*)%$/exists $replace{"%$1%"} ? $replace{"%$1%"} : $&/ge;
+			$svc_attrs->{$attr} =~ s/%([[:alpha:]]+(?:;[[:alpha:]]+)*)%/exists $replace{"%$1%"} ? $replace{"%$1%"} : $&/ge;
 		      }
 		    } else {
 		      $svc_attrs->{$attr} = undef;
-		      $self->h_log('ERROR: absent must attribute: ' . $attr);
+		      $self->h_log('ERROR: must attribute is absent: ' . $attr);
 		    }
 		  }
 		  foreach my $attr (keys %$svc_attrs_may) {
@@ -2008,7 +2009,7 @@ EXAMPLE
 		    if ( $attr eq 'userCertificate;binary' ) { # binary data shouldn't be substituted
 		      $svc_attrs->{$attr} = $p->{'userCertificate;binary'};
 		    } else {
-		      $svc_attrs->{$attr} =~ s/^%([[:alpha:]]+(?:;[[:alpha:]]+)*)%$/exists $replace{"%$1%"} ? $replace{"%$1%"} : $&/ge;
+		      $svc_attrs->{$attr} =~ s/%([[:alpha:]]+(?:;[[:alpha:]]+)*)%/exists $replace{"%$1%"} ? $replace{"%$1%"} : $&/ge;
 		    }
 		  }
 
