@@ -1,5 +1,7 @@
 %# -*- mode: web; eval: (follow-mode) -*-
 
+% use Mojo::Util qw(decode);
+
 % my $d = {};
 %# Gather and delete from flash
 % if (my $f = flash('debug')) {
@@ -44,7 +46,9 @@
 	<br>
 
       % if ( $k eq 'error' ) {
-	<h4 class="mt-2 alert-heading">Hey, <%= defined session('user_obj') && exists session('user_obj')->{givenname} ? session('user_obj')->{givenname} : 'no-givenName' %>!</h4>
+	<h4 class="mt-2 alert-heading">Hey,
+	  % my $c = decode 'UTF-8', session('user_obj')->{givenname};
+	  <%= $c ? $c : 'no-givenName' %>!</h4>
 	<i>Do not panic! Just report it to admins.</i>
 	<hr class="">
 	<pre class="mt-0 umi-text-tiny">
