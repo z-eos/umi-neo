@@ -142,6 +142,7 @@ sub fire ($self) {
 
   push @$changes, replace => $replace;
 
+  # !!! TODO TO FINISH ERROR HANDLING !!!
   # $self->h_log($changes);
   my $msg = $ldap->modify($p->{fire_dn}, $changes);
   $self->h_log($msg);
@@ -181,14 +182,65 @@ sub block ($self) {
 
   my $ldap = Umi::Ldap->new( $self->{app}, $self->session('uid'), $self->session('pwd') );
 
-  my $search_arg = { base => $p->{block_dn},
-		     scope => 'sub',
-		     attrs => [] };
+  my $search_arg = { base => $p->{block_dn}, scope => 'sub', attrs => [] };
   # $self->h_log($search_arg);
   my $search = $ldap->search( $search_arg );
   $self->h_log( $self->h_ldap_err($search, $search_arg) ) if $search->code;
 
-  ### alas, this redirect by nature performs a GET request
+  my (%debug, $msg);
+  foreach my $e ( $search->entries ) {
+    next if $e->dn =~ /^authorizedService=/;
+
+    if ( $e->dn eq $p->{block_dn} ) {
+      $msg = $ldap->modify( $e->dn,
+			    [
+			     replace => [ gidNumber => $self->{app}->{cfg}->{ldap}->{defaults}->{group}->{blocked}->{gidnumber},
+					  userPassword => '!' . $e->get_value('userPassword') ]
+			    ] );
+      push @{$debug{$msg->{status}}}, $msg->{message};
+    } else {
+
+      if ( $e->exists('userPassword') && substr($e->get_value('userPassword'), 0, 1) ne '!') {
+	$msg = $ldap->modify( $e->dn, [ replace =>
+					[ userPassword =>	sprintf("!%s", $e->get_value('userPassword')), ],
+				      ], );
+
+	push @{$debug{$msg->{status}}}, $msg->{message};
+      }
+
+      if ( $e->exists('sshPublicKey') ) {
+	my @keys = map
+	  {
+	    substr($_, 0, 4) eq 'ssh-' ? sprintf('from="0.0.0.0" %s', $_) : $_
+	  }
+	  @{$e->get_value('sshPublicKey', asref => 1)};
+
+	$msg = $ldap->modify( $e->dn, [ replace => [ sshPublicKey => \@keys, ],], );
+	push @{$debug{$msg->{status}}}, $msg->{message};
+      }
+
+      if ( $e->exists('grayPublicKey') ) {
+	my @keys = map
+	  {
+	    substr($_, 0, 4) eq 'ssh-' ? sprintf('from="0.0.0.0" %s', $_) : $_
+	  }
+	  @{$e->get_value('grayPublicKey', asref => 1)};
+
+	$msg = $ldap->modify( $e->dn, [ replace => [ grayPublicKey => \@keys, ],], );
+	push @{$debug{$msg->{status}}}, $msg->{message};
+      }
+
+      if ( $e->exists('umiOvpnAddStatus') ) {
+	$msg = $ldap->modify( $e->dn, [ replace => [ umiOvpnAddStatus => 'disabled', ], ], );
+	push @{$debug{$msg->{status}}}, $msg->{message};
+      }
+    }
+  }
+
+  ### alas, this redirect by nature performs a GET request and the only way
+  ### to pass debug is chi (not stash, not flash)
+  #$self->chi('fs')->set( debug => \%debug );
+  $self->flash( debug => \%debug );
   return $self
     ->redirect_to($self->url_for('search_common')
 		  ->query( search_base_case => $p->{search_base_case},
@@ -196,97 +248,6 @@ sub block ($self) {
 			   ldap_subtree => $p->{ldap_subtree} )
 		 );
 
-#   my $callername = (caller(1))[3];
-#   $callername = 'main' if ! defined $callername;
-#   my $return; # = 'call to LDAP_CRUD->block from ' . $callername . ': ';
-#   my $attr;
-#   my $userPassword;
-#   my @userPublicKeys;
-#   my @keys;
-#   my ( $msg, $msg_usr, $msg_add, $msg_chg, $ent_svc, $ent_chg, @blockgr );
-
-#   # log_debug { np( $args ) };
-
-#   $msg = $self->modify( $args->{dn},
-#			[ replace => [ gidNumber => $self->cfg->{stub}->{group_blocked_gid}, ],	], );
-
-#   # log_debug { np( $msg ) };
-#   if ( $msg eq '0' ) {
-#     $return->{success} = $args->{dn} . "\n";
-#   } else {
-#     $return->{error} = $msg->{html};
-#   }
-#   # log_debug { np( $return ) };
-
-#   $msg_usr = $self->search ( { base      => $args->{dn},
-#			       sizelimit => 0, } );
-#   # log_debug { np( $msg_usr->count ) };
-#   if ( $msg_usr->is_error() ) {
-#     $return->{error} = $self->err( $msg_usr )->{html};
-#   } else {
-#     # bellow we are blocking services
-#     my @ent_toblock = $msg_usr->entries;
-#     foreach $ent_svc ( @ent_toblock ) {
-#       if ( $ent_svc->exists('userPassword') &&
-#	 $ent_svc->get_value('userPassword') !~ /^\!-disabled-by-/) {
-#	# before 20210419 # $userPassword = $self->pwdgen;
-#	$msg = $self->modify( $ent_svc->dn,
-#			      [ replace =>
-#				[ userPassword =>
-#				  sprintf("!-disabled-by-%s-on-%s-%s",
-#					  $self->user,
-#					  $self->ts({ format => "%Y%m%d%H%M%S" }),
-#					  $ent_svc->get_value('userPassword')),	],
-#			      ], );
-# # before 20210419 #	      [ replace => [ userPassword => $userPassword->{ssha}, ], ], );
-#	if ( ref($msg) eq 'HASH' ) {
-#	  $return->{error} .= $msg->{html};
-#	} else {
-#	  $return->{success} .= $ent_svc->dn . "\n";
-#	}
-#       }
-#       # log_debug { np( $return ) };
-
-#       if ( $ent_svc->exists('sshPublicKey') ) {
-#	@userPublicKeys = $ent_svc->get_value('sshPublicKey');
-#	@keys = map { $_ !~ /^from="127.0.0.1" / ? sprintf('from="127.0.0.1" %s', $_) : $_ } @userPublicKeys;
-#	$msg = $self->modify( $ent_svc->dn,
-#			      [ replace => [ sshPublicKey => \@keys, ],], );
-#	if ( ref($msg) eq 'HASH' ) {
-#	  $return->{error} .= $msg->{html};
-#	} else {
-#	  $return->{success} .= $ent_svc->dn . "\n";
-#	}
-#       }
-#       # log_debug { np( $return ) };
-
-#       if ( $ent_svc->exists('grayPublicKey') ) {
-#	@userPublicKeys = $ent_svc->get_value('grayPublicKey');
-#	@keys = map { $_ !~ /^from="127.0.0.1" / ? sprintf('from="127.0.0.1" %s', $_) : $_ } @userPublicKeys;
-#	$msg = $self->modify( $ent_svc->dn,
-#			      [ replace => [ grayPublicKey => \@keys, ],], );
-#	if ( ref($msg) eq 'HASH' ) {
-#	  $return->{error} .= $msg->{html};
-#	} else {
-#	  $return->{success} .= $ent_svc->dn . "\n";
-#	}
-#       }
-#       # log_debug { np( $return ) };
-
-#       if ( $ent_svc->exists('umiOvpnAddStatus') ) {
-#	$msg = $self->modify( $ent_svc->dn,
-#			      [ replace => [ umiOvpnAddStatus => 'disabled', ], ], );
-#	if ( ref($msg) eq 'HASH' ) {
-#	  $return->{error} .= $msg->{html};
-#	} else {
-#	  $return->{success} .= $ent_svc->dn . "\n";
-#	}
-#       }
-#       # log_debug { np( $return ) };
-
-#     }
-#   }
-#   # log_debug { np( $return ) };
 
 #   # is this user in block group?
 #   my $blockgr_dn =

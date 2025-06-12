@@ -95,7 +95,7 @@
 		and all it's subordinates
 	      </h4>
 	  </div>
-	  %= form_for '/tool/block' => (class => "", method => 'POST') => begin
+	  %= form_for '/block' => (class => "", method => 'POST') => begin
 	    % my $po = $search_common_params->{params_orig};
 	    %= hidden_field search_base_case => $po->{search_base_case}
 	    %= hidden_field search_filter => $po->{search_filter}

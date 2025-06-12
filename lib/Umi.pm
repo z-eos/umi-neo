@@ -21,6 +21,8 @@ use Data::Printer {
 
 has 'cfg' => sub { {} };
 
+our $VERSION = '0.7.0';
+
 sub startup ($self) {
 
   $self->_startup_config;
@@ -470,6 +472,12 @@ sub _startup_routes ($self) {
     ->post('/fire')
     ->requires(is_role => ['admin,coadmin', {cmp => 'or'}])
     ->to('protected#fire');
+
+  ## BLOCK
+  $protected_root
+    ->post('/block')
+    ->requires(is_role => ['admin,coadmin', {cmp => 'or'}])
+    ->to('protected#block');
 
   ## AUDIT
   ### users

@@ -1,5 +1,8 @@
 %# -*- mode: web; eval: (follow-mode) -*-
 % use Encode qw(decode_utf8);
+% use POSIX qw(strftime);
+% use Time::Piece;
+% my $now = localtime;
 % my $i = 0;
 % my $j = 0;
 % my $attr_val_class = "";
@@ -151,12 +154,23 @@
 	    <div class="col-9 user-select-all"><%= $e->dn %></div>
 	  </div>
 
+	  %# BODY OF OBJECT
 	  % my @attr_break = qw(pgpKey certificateRevocationList;binary umiUserBackup);
 	  % my @attr_wrap = qw(grayPublicKey sshPublicKey reqMod);
 	  % for my $attr (sort( $e->attributes )) {
 	    % next if $attr eq 'createTimestamp' || $attr eq 'creatorsName' || $attr eq 'modifyTimestamp' || $attr eq 'modifiersName';
 
-	    <div class="row">
+	    % my $row_color = '';
+	    % if ( ( $attr eq 'umiOvpnAddStatus' && $e->get_value($attr) eq 'disabled' )
+	    %      || ( $attr eq 'umiUserCertificateNotAfter' && $now > Time::Piece->strptime($e->get_value($attr), '%Y%m%d%H%M%S') )
+	    %      || ( $attr eq 'pgpKeyExpireTime' && $now > Time::Piece->strptime($e->get_value($attr), '%Y%m%d%H%M%SZ') )
+	    %      || ( $attr eq 'sshPublicKey' && substr($e->get_value($attr), 0, 15) eq 'from="0.0.0.0" ' )
+	    %    )
+	    % {
+	      % $row_color = 'text-bg-danger';
+	    % }
+
+	    <div class="row <%= $row_color %>">
 	      <div class="col-3 text-end fw-bold fs-6 text-truncate"><%= $attr %></div>
 	      <div class="col-9">
 
