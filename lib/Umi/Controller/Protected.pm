@@ -905,7 +905,7 @@ sub profile ($self) {
     $filter = sprintf("(uid=%s)", $self->session('uid'));
   }
 
-  $chi = $self->chi('fs')->get($chi_key.'killme');
+  $chi = $self->chi('fs')->get($chi_key); #.'tmp-stub-so-killme');
   if ( $chi ) {
     if ($chi->{contextCSN} ge $contextCSN) {
       $self->h_log($chi->{contextCSN});
@@ -1082,8 +1082,8 @@ sub profile ($self) {
 	     modifiersname => $modifiersname,
 	    };
 
-  #$self->chi('fs')->set( profile_audit => $to_chi if $reqpath =~ /^\/audit\/.*$/;
-  #$self->chi('fs')->set( profile_all => $to_chi if $uid eq 'all';
+  # $self->chi('fs')->set( profile_audit => $to_chi) if $reqpath =~ /^\/audit\/.*$/;
+  # $self->chi('fs')->set( profile_all => $to_chi) if $uid eq 'all';
   $self->chi('fs')->set( $chi_key => $to_chi);
 
   $self->stash(

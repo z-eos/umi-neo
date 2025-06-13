@@ -447,10 +447,10 @@ EXAMPLE:
 
   $app->helper(h_decode_text => sub {
 		 my ($self, $text, $alt) = @_;
-		 $self->h_log($text);
+		 # $self->h_log($text);
 		 return $alt unless defined $text;
 		 my $decoded = decode 'UTF-8', $text;
-		 $self->h_log($decoded);
+		 # $self->h_log($decoded);
 		 return $decoded ? $decoded : $alt;
 	       });
 
