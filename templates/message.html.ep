@@ -22,9 +22,9 @@
 % }
 
 %# Gather and remove from CHI
-% my $c = chi('fs')->get('debug');
-% if ($c) {
-  % $d->{chi} = $c;
+% my $chi = chi('fs')->get('debug');
+% if ($chi) {
+  % $d->{chi} = $chi;
   % chi('fs')->remove('debug');
 % }
 
@@ -41,30 +41,26 @@
   %# %$debug keys available, are defined in config file -> ui -> page -> debug -> status
   % foreach my $k (sort(keys(%$debug))) {
     <div id="message" class="alert alert-dismissible alert-<%= app->{cfg}->{ui}->{page}->{debug}->{status}->{$k} %> mt-4 ">
-	<i class="fa-solid fa-<%= app->{cfg}->{ui}->{page}->{debug}->{ico}->{$k} %> me-3"></i>
-	%== h_element_cp_download_btns( 'debug-' . $k, 'debug-' . $k . '.txt', 'btn btn-' . app->{cfg}->{ui}->{page}->{debug}->{status}->{$k} . ' btn-sm' );
-	<br>
+      <i class="fa-solid fa-<%= app->{cfg}->{ui}->{page}->{debug}->{ico}->{$k} %> me-3"></i>
+      %# == h_element_cp_download_btns( 'debug-' . $k, 'debug-' . $k . '.txt', 'btn btn-' . app->{cfg}->{ui}->{page}->{debug}->{status}->{$k} . ' btn-sm' );
+      %== h_element_cp_download_btns( 'message', 'debug-' . $k . '.txt', 'btn btn-' . app->{cfg}->{ui}->{page}->{debug}->{status}->{$k} . ' btn-sm' );
+      <br>
 
       % if ( $k eq 'error' ) {
-	<h4 class="mt-2 alert-heading">Hey, <%= h_decode_text session('user_obj')->{givenname}, 'no-givenName' %>!</h4>
-	<i>Do not panic! Just report it to admins.</i>
+	<h4 class="mt-2 alert-heading">Hey, <i><%= h_decode_text session('user_obj')->{givenname}, 'no-givenName' %></i>!</h4>
+	<i>Do not panic! Just report it to admins (use buttons above).</i>
 	<hr class="">
-	<pre class="mt-0 umi-text-tiny">
-      % }
+	<pre class="umi-text-sm"><% } =%>
+	  <ul id="debug-<%= $k %>" class="list-unstyled"><% foreach my $i (@{$debug->{$k}}) { =%><li><%== $i %></li><% } =%></ul><%== '</pre>' if $k eq 'error' %>
 
-      <ul id="debug-<%= $k %>" class="list-unstyled ms-0 mt-2">
-	% foreach my $i (@{$debug->{$k}}) {
-	  <li>
-	    <%== $i %>
-	  </li>
-	% }
-      </ul>
-      % if ( $k eq 'error' ) {
-	</pre>
-      % }
       <button type="button" class="umi-btn-close" data-bs-dismiss="alert" aria-label="Close">
 	<i class="fa-solid fa-circle-xmark text-danger-emphasis"></i>
       </button>
+      <hr>
+      <pre class="m-0 text-center umi-text-tiny">
+	<%= sprintf("%s %s://%s:%s%s", $c->req->method // '', $c->req->url->base->scheme // '', $c->req->url->base->host // '', $c->req->url->base->port // '', $c->req->url->path // '') =%>
+	<%== '<br />query pairs: ' . dumper($c->req->url->query->pairs) if @{$c->req->url->query->pairs} =%>
+      </pre>
     </div>
   % }
 
