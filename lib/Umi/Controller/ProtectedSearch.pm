@@ -155,13 +155,11 @@ sub search_common  ($self) {
   $p->{'filter'} = '(' . $filter . ')';
 
   $self->h_log('SEARCH RESULT');
-  $ldap = Umi::Ldap->new( $self->{app},
-			  $self->session('uid'),
-			  $self->session('pwd') );
+  $ldap = Umi::Ldap->new( $self->{app}, $self->session('uid'), $self->session('pwd') );
 
   $search_arg = { base => $base,
 		  filter => $filter4search,
-		  scope => 'sub' };
+		  scope => $scope };
   $search = $ldap->search( $search_arg );
   $self->h_log( $self->{app}->h_ldap_err($search, $search_arg) ) if $search->code;
   # my @dn_s = map { $_->dn } $search->sorted;

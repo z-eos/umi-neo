@@ -557,8 +557,7 @@ sub all_users {
 	      my $sn  = $_->get_value('sn') // '';
 	      my $gn  = $_->get_value('givenName') // '';
 	      my $uid = $_->get_value('uid');
-	      my $i   = sprintf("%s %s (%s)", $sn, $gn, $uid);
-	      utf8::decode($i) unless utf8::is_utf8($i);
+	      my $i   = $self->{app}->h_decode_text( sprintf("%s %s (%s)", $sn, $gn, $uid) );
 	      # $self->{app}->h_log( $i );
 	      [ $i => $uid ]
 	    }

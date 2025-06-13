@@ -8,7 +8,7 @@ use Mojo::Util qw( b64_encode b64_decode encode decode url_escape );
 use Umi::Constants qw(RE);
 
 use Crypt::HSXKPasswd;
-use Encode qw(decode is_utf8); # ???
+# deprecated use Encode qw(decode is_utf8); # ???
 use File::Temp qw/ tempfile tempdir :POSIX /;
 use File::Which qw(which);
 use GD::Barcode::QRcode;

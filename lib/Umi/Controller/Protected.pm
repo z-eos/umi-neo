@@ -1299,7 +1299,7 @@ sub profile_modify ($self) {
 	$_ => $e->get_value($_, asref => 1);
       } else {
 	# deprecated $_ => utf8::is_utf8($e->get_value($_)) ? $e->get_value($_) : decode_utf8($e->get_value($_));
-	$_ => h_decode_text($e->get_value($_));
+	$_ => $self->h_decode_text($e->get_value($_));
       }
     } $e->attributes;
     $dn = $e->dn;
