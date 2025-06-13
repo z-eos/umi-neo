@@ -3,11 +3,12 @@
 package Umi::Helpers::Common;
 
 use Mojo::Base 'Mojolicious::Plugin';
-use Mojo::Util qw( b64_encode b64_decode encode url_escape );
+use Mojo::Util qw( b64_encode b64_decode encode decode url_escape );
 
 use Umi::Constants qw(RE);
 
 use Crypt::HSXKPasswd;
+use Encode qw(decode is_utf8); # ???
 use File::Temp qw/ tempfile tempdir :POSIX /;
 use File::Which qw(which);
 use GD::Barcode::QRcode;
@@ -24,7 +25,6 @@ use Try::Tiny;
 use Crypt::X509;
 # use Crypt::X509::CRL;
 use URI::Escape;
-use Encode qw(decode is_utf8);
 
 
 use Text::vCard::Addressbook;
@@ -35,7 +35,7 @@ sub register {
 
   my ($self, $app) = @_;
 
-  my $re = RE;			# defined in Umi::Constants;
+  my $re = RE; # defined in Umi::Constants;
 
   ### BEGINNING OF REGISTER
 
@@ -430,6 +430,30 @@ get random id of length N passed as input, default is 8
 		  return join '', map { $chars[rand @chars] } 1 .. $len;
 		});
 
+=head2 h_decode_text
+
+Attempt to decode the given C<$text> from UTF-8.
+
+If decoding succeeds, the decoded string is returned.
+
+If decoding fails or C<$text> is undefined, the optional C<$alt> is returned instead.
+
+EXAMPLE:
+
+  $decoded = $c->h_decode_text($text);
+  $decoded = $c->h_decode_text($text, $alt);
+
+=cut
+
+  $app->helper(h_decode_text => sub {
+		 my ($self, $text, $alt) = @_;
+		 $self->h_log($text);
+		 return $alt unless defined $text;
+		 my $decoded = decode 'UTF-8', $text;
+		 $self->h_log($decoded);
+		 return $decoded ? $decoded : $alt;
+	       });
+
 =head2 h_maybe_percent_decode_utf8
 
 Detects whether a string contains percent-encoded UTF-8 byte sequences
@@ -453,12 +477,37 @@ Returns a scalar string, decoded as UTF-8 if appropriate.
 		    my $decoded = uri_unescape($s);
 
 		    # Step 3: Decode only if not already flagged as UTF-8
-		    return is_utf8($decoded) ? $decoded : decode('UTF-8', $decoded);
+		    # deprecated return is_utf8($decoded) ? $decoded : decode('UTF-8', $decoded);
+		    return $self->h_decode_text($decoded);
 		  }
 
 		  return $s;
 
 		});
+
+
+=head1 h_as_struct_decode
+
+decode attribute value if it is bytes and not characters
+
+$obj_hash is ldap search->as_struct hash
+
+=cut
+
+  $app->helper( h_as_struct_decode => sub {
+		  my  ($self, $obj_hash, $attr, $na) = @_;
+		  $na = '<i class="text-muted text-opacity-50">unavailable</i>' if ! defined $na;
+		  my $res = '';
+
+		  if ( defined $obj_hash && ref($obj_hash) eq 'HASH' && exists $obj_hash->{$attr} ) {
+		    $res = $self->h_decode_text($obj_hash->{$attr}->[0]);
+		  } else {
+		    $res = $na;
+		  }
+		   $self->h_log( $res );
+		  return $res;
+	       });
+
 
 =head2 h_qrcode
 
@@ -984,7 +1033,7 @@ END_INPUT
 
 		  #File::Temp::cleanup();
 
-		  # $self->h_log($arg);
+		   $self->h_log($res->{debug});
 		  # $self->h_log($res);
 		  return $res;
 		});

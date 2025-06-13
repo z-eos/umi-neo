@@ -1,6 +1,5 @@
 %# -*- mode: web; eval: (follow-mode) -*-
 
-% use Encode qw(decode_utf8);
 % use Net::LDAP::Util qw(generalizedTime_to_time);
 % use POSIX qw(strftime);
 % use Time::Piece;
@@ -37,7 +36,7 @@
 	% my $col = $now > $exp ? 'table-danger' : '';
 	<tr class="umi-text-xs font-monospace <%= $col %>">
 	  <td class="text-end"></td>
-	  <td class=""><%= utf8::is_utf8($gpg->{$_}->{pgpUserID}) ? $gpg->{$_}->{pgpUserID} : decode_utf8($gpg->{$_}->{pgpUserID}) %></td>
+	  <td class=""><%= h_decode_text $gpg->{$_}->{pgpUserID} %></td>
 	  <td class=""><%= $_ %></td>
 	  <td class=""><%= $gpg->{$_}->{pgpKeyID} %></td>
 	  <td class=""><%= strftime( "%F %T", localtime(generalizedTime_to_time($gpg->{$_}->{pgpKeyCreateTime})))

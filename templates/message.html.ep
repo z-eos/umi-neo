@@ -46,9 +46,7 @@
 	<br>
 
       % if ( $k eq 'error' ) {
-	<h4 class="mt-2 alert-heading">Hey,
-	  % my $c = decode 'UTF-8', session('user_obj')->{givenname};
-	  <%= $c ? $c : 'no-givenName' %>!</h4>
+	<h4 class="mt-2 alert-heading">Hey, <%= h_decode_text session('user_obj')->{givenname}, 'no-givenName' %>!</h4>
 	<i>Do not panic! Just report it to admins.</i>
 	<hr class="">
 	<pre class="mt-0 umi-text-tiny">

@@ -136,28 +136,28 @@ sub err {
 
   $err->{html} = sprintf( 'call from <b><em>%s</em></b>: <dl class="row mt-5">
   <dt class="col-2 text-end">DN</dt>
-  <dd class="col-10 text-monospace">%s</dd>
+  <dd class="col-10 font-monospace">%s</dd>
 
   <dt class="col-2 text-end">admin note</dt>
-  <dd class="col-10 text-monospace">%s</dd>
+  <dd class="col-10 font-monospace">%s</dd>
 
   <dt class="col-2 text-end">supplementary data</dt>
-  <dd class="col-10 text-monospace">%s</dd>
+  <dd class="col-10 font-monospace">%s</dd>
 
   <dt class="col-2 text-end">code</dt>
-  <dd class="col-10 text-monospace">%s</dd>
+  <dd class="col-10 font-monospace">%s</dd>
 
   <dt class="col-2 text-end">error name</dt>
-  <dd class="col-10 text-monospace">%s</dd>
+  <dd class="col-10 font-monospace">%s</dd>
 
   <dt class="col-2 text-end">error text</dt>
-  <dd class="col-10 text-monospace"><em><small><pre><samp>%s</samp></pre></small></em></dd>
+  <dd class="col-10 font-monospace"><em><small><pre><samp>%s</samp></pre></small></em></dd>
 
   <dt class="col-2 text-end">error description</dt>
-  <dd class="col-10 text-monospace">%s</dd>
+  <dd class="col-10 font-monospace">%s</dd>
 
   <dt class="col-2 text-end">server_error</dt>
-  <dd class="col-10 text-monospace">%s</dd>
+  <dd class="col-10 font-monospace">%s</dd>
 </dl>',
 			  $caller,
 			  $err->{dn},

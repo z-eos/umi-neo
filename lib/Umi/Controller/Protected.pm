@@ -561,6 +561,10 @@ sub keygen_gpg ($self) {
 		email => exists $self->session->{user_obj}->{mail} ? $self->session->{user_obj}->{mail} : 'no email'
 	       };
 
+  $k = $self->h_keygen_gpg($p);
+  %debug = %{$k->{debug}} if exists $k->{debug};
+  #$self->h_log($k);
+
   if ( $p->{replace_keys} eq 'on') {
     # $self->h_log($self->session('user_obj')->{mail});
     # $self->h_log('!!! FINISH keygen_gpg controller !!!');
@@ -581,10 +585,6 @@ sub keygen_gpg ($self) {
       }
       # $self->h_log( 'DELETE DN:' . $_->dn ) foreach ($search->entries);
     }
-
-    $k = $self->h_keygen_gpg($p);
-    %debug = %{$k->{debug}} if exists $k->{debug};
-    #$self->h_log($k);
 
     $op_dn = sprintf("pgpCertID=%s,%s",
 		     $k->{send_key}->{pgpCertID},
@@ -1298,7 +1298,8 @@ sub profile_modify ($self) {
 	#############################################################################
 	$_ => $e->get_value($_, asref => 1);
       } else {
-	$_ => utf8::is_utf8($e->get_value($_)) ? $e->get_value($_) : decode_utf8($e->get_value($_));
+	# deprecated $_ => utf8::is_utf8($e->get_value($_)) ? $e->get_value($_) : decode_utf8($e->get_value($_));
+	$_ => h_decode_text($e->get_value($_));
       }
     } $e->attributes;
     $dn = $e->dn;

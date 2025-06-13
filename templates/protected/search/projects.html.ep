@@ -81,7 +81,7 @@
 	    <span class="fa-li"><i class="fa-solid fa-hourglass-half"></i></span><%= $mt %> <b><%= $mn %></b>
 	  </li>
 	</ul>
-	
+
       </div>
 
       <div class="collapse<%= keys(%$entries) == 1 ? ' show' : '' %>" id="collapse-<%= $i %>">
@@ -90,11 +90,11 @@
 	  <div class="row">
 	    <div class="col-1 text-end h4 py-4"><i class="fa-solid fa-lg fa-fw fa-compass-drafting fa-2xl" title="Project Name"></i></div>
 	    <div class="col-11 h4 py-4"><%= $en %></div>
-	    
+
 	    <div class="col-1 text-end py-4">
 	      <i class="fa-solid fa-feather-pointed fa-xl" title="description"></i></div>
 	    <div class="col-11 py-4">
-	      <%= utf8::is_utf8($v->{sprintf("cn=%s,%s",$en,$base_proj)}->{description}->[0]) ? $v->{sprintf("cn=%s,%s",$en,$base_proj)}->{description}->[0] : decode_utf8($v->{sprintf("cn=%s,%s",$en,$base_proj)}->{description}->[0]) %>
+	      <%= h_decode_text $v->{sprintf("cn=%s,%s",$en,$base_proj)}->{description}->[0] %>
 	    </div>
 
 	    <div class="col-1 text-end pt-4">
@@ -138,8 +138,8 @@
 			      <div class="col-md-8">
 				<div class="card-body">
 				  <h5 class="card-title fw-bold">
-				    <%= utf8::is_utf8($name) ? $name : decode_utf8($name) =%></h5>
-				  
+				    <%= h_decode_text $name =%></h5>
+
 				  <small class="card-text">
 				    <ul class="list-unstyled fa-ul my-0">
 				      <li>
@@ -181,7 +181,7 @@
 		    <li class="user-select-all"><%= $_ %></li>
 		  % }
 		% }
-	      </ul>		
+	      </ul>
 	    </div>
 
 	    %# SERVERS (MACHINES)
@@ -220,10 +220,10 @@
 		      </details>
 		    </li>
 		  % }
-		</ul>		
+		</ul>
 	      </div>
 	    % }
-	    
+
 	    %# REPOSITORIES/LINKS/DOC
 	    <div class="col-1 text-end pt-4">
 	      <i class="fa-solid fa-code-pull-request fa-xl" title="repositories"></i>
@@ -248,7 +248,7 @@
 		<span class="font-monospace">unknown</span>
 	      % }
 	    </div>
-	    
+
 	  </div>
 	</div>
       </div>
@@ -285,9 +285,9 @@
      $('#searchresult .collapse').each(function() {
        const $this = $(this);
        if ($this.hasClass('show')) {
-         $this.collapse('hide');
+	 $this.collapse('hide');
        } else {
-         $this.collapse('show');
+	 $this.collapse('show');
        }
      });
    });

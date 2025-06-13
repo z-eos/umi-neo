@@ -1,5 +1,4 @@
 %# -*- mode: web; eval: (follow-mode) -*-
-% use Encode qw(decode_utf8);
 % use POSIX qw(strftime);
 % use Time::Piece;
 % my $now = localtime;
@@ -236,7 +235,7 @@
 			</small>
 		      </div>
 		    % } else {
-		      <div class="col-12 font-monospace pb-1"><%= utf8::is_utf8($attr_val) ? $attr_val : decode_utf8($attr_val) %></div>
+		      <div class="col-12 font-monospace pb-1"><%= h_decode_text $attr_val %></div>
 		    % }
 		    % $j++
 		% }

@@ -251,27 +251,6 @@ is there contextCSN variable in stash
 	       });
 
 
-=head1 h_as_struct_decode
-
-decode attribute value if it should be
-
-    $obj_hash is ldap search->as_struct hash
-=cut
-
-  $app->helper( h_as_struct_decode => sub {
-		  my  ($self, $obj_hash, $attr, $na) = @_;
-		  $na = '<i class="text-muted text-opacity-50">unavailable</i>' if ! defined $na;
-		  my $res = '';
-
-		  if ( defined $obj_hash && ref($obj_hash) eq 'HASH' && exists $obj_hash->{$attr} ) {
-		    $res = utf8::is_utf8($obj_hash->{$attr}->[0]) ? $obj_hash->{$attr}->[0] : decode_utf8($obj_hash->{$attr}->[0]);
-		  } else {
-		    $res = $na;
-		  }
-		   $self->h_log( $res );
-		  return $res;
-	       });
-
   ### END OF REGISTER --------------------------------------------------------------------------------------------
 }
 
