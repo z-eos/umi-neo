@@ -504,7 +504,7 @@ $obj_hash is ldap search->as_struct hash
 		  } else {
 		    $res = $na;
 		  }
-		   $self->h_log( $res );
+		  # $self->h_log( $res );
 		  return $res;
 	       });
 
@@ -2109,21 +2109,23 @@ returns all the vCards as a single string
 		    my %h;
 		    my $e = $entries->{$dn};
 
-		    $h{full_name} = $e->{gecos}->[0]  if exists $e->{gecos};
-		    $h{given_names} = $e->{givenname} if exists $e->{givenname};
-		    $h{family_names} = $e->{sn}	      if exists $e->{sn};
-		    $h{title} = $e->{title}->[0]      if exists $e->{title};
+		    $h{full_name}    = $e->{gecos}->[0]     if $e->{gecos} && $e->{gecos}->[0] ne '';
+		    $h{given_names}  = $e->{givenname}->[0] if $e->{givenname} && $e->{givenname}->[0] ne '';
+		    $h{family_names} = $e->{sn}->[0]        if $e->{sn} && $e->{sn}->[0] ne '';
+		    $h{title}        = $e->{title}->[0]     if $e->{title} && $e->{title}->[0] ne '';
 		    # otherwise warning '... uninitialized value ... vCard.pm line 112' occures
 		    $h{photo} = '';
 
 		    if (exists $e->{mail}) {
 		      for (@{$e->{mail}}) {
+			next if $_ eq '';
 			push @{$h{email_addresses}}, { type => ['work'], address => $_ };
 		      }
 		    }
 
 		    if (exists $e->{telephonenumber}) {
 		      for (@{$e->{telephonenumber}}) {
+			next if $_ eq '';
 			push @{$h{phones}}, { type => ['work'], number => $_ };
 		      }
 		    }
