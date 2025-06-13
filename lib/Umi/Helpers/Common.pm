@@ -2109,10 +2109,10 @@ returns all the vCards as a single string
 		    my %h;
 		    my $e = $entries->{$dn};
 
-		    $h{full_name}    = $e->{gecos}->[0]     if $e->{gecos} && $e->{gecos}->[0] ne '';
-		    $h{given_names}  = $e->{givenname}->[0] if $e->{givenname} && $e->{givenname}->[0] ne '';
-		    $h{family_names} = $e->{sn}->[0]        if $e->{sn} && $e->{sn}->[0] ne '';
-		    $h{title}        = $e->{title}->[0]     if $e->{title} && $e->{title}->[0] ne '';
+		    $h{full_name}    = $e->{gecos}->[0] if $e->{gecos} && $e->{gecos}->[0] ne '';
+		    $h{given_names}  = $e->{givenname}  if $e->{givenname} && $e->{givenname}->[0] ne '';
+		    $h{family_names} = $e->{sn}         if $e->{sn} && $e->{sn}->[0] ne '';
+		    $h{title}        = $e->{title}->[0] if $e->{title} && $e->{title}->[0] ne '';
 		    # otherwise warning '... uninitialized value ... vCard.pm line 112' occures
 		    $h{photo} = '';
 
