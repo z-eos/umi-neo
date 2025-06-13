@@ -243,7 +243,7 @@ is there contextCSN variable in stash
 		    my $contextCSN = $self->stash->{contextCSN};
 		    if (defined $contextCSN) {
 		      $res = sprintf('<sup class="umi-text-xxs ms-3 text-secondary align-top"><i>cache on %s</i></sup>',
-				     strftime("%F %T", gmtime($contextCSN)));
+				     strftime("%F %T UTC%z", gmtime($contextCSN)));
 		    }
 		  }
 		  # $self->h_log( $res );

@@ -5,7 +5,7 @@
 
 <link href="/assets/js/datatables/datatables.min.css" rel="stylesheet" type="text/css">
 
-% my $contextCSN = strftime("%F %T", gmtime(stash->{contextCSN}));
+% my $contextCSN = strftime("%F %T UTC%z", gmtime(stash->{contextCSN}));
 % if (defined $contextCSN) {
   % $contextCSN = '<sup class="umi-text-xxs ms-3 text-secondary align-top"><i>cache on ' . $contextCSN . '</i></sup>';
 % }
@@ -54,7 +54,8 @@
     %# };
 
     % my @fields = exists stash->{type} && stash->{type} eq 'users-by-server'
-    % ? qw(№ ST Server UIDs) : qw( № LName FName ST Projects Servers Services Email UID BD HD TD);
+    % ? qw(№ ST Server UIDs) : qw( № LName FName ST Email UID Projects Servers Services BD HD TD);
+    %# ? qw(№ ST Server UIDs) : qw( № LName FName ST Projects Servers Services Email UID BD HD TD);
     %# : (   '№',
     %#       'LName',
     %#       'FName',
@@ -88,15 +89,15 @@
 
 	% foreach my $s (sort keys %$u_by_s) {
 	  <tr class="umi-text-xs">
-	    <td class="text-end"></td>
-	    <td class="text-center">
+	    <td id="№" class="text-end"></td>
+	    <td id="ST" class="text-center">
 	      % if ($servers_alive_list->{$s} > 0) {
 		<i class="fa-solid fa-plus text-success" title="alive"></i>
 	      % } else {
 		<i class="fa-solid fa-xmark text-danger" title="noresolve"></i>
 	      % }
 	    </td>
-	    <td>
+	    <td id="Server">
 	      <form role="form" id="searchMachine" method="POST" action="/search/common">
 		<input type="hidden" name="search_base_case" class="search_base_case" value="">
 		<span title="<%== $servers_alive_list->{$s} > 0 ? '' : 'absent in ou=machines (probably old stuff)' %>">
@@ -117,7 +118,7 @@
 	    %                                     h_get_rdn_val($_)) }
 	    %                             sort @{$u_by_s->{$s}} ]}
 	    %                );
-	    <td><%== $uids %></td>
+	    <td id="UIDs"><%== $uids %></td>
 	  </tr>
 	% }
 
@@ -152,11 +153,13 @@
 	  % if (exists stash->{type} && stash->{type} eq 'user-driven-rows') {
 
 	    <tr class="umi-text-xs <%= 'table-' . $card_col if $card_col ne '' %>">
-	      <td class="text-end"></td>
-	      <td><%= h_decode_text $v->{sn}->[0]  %></td>
-	      <td><%= h_decode_text $v->{givenname}->[0] %></td>
-	      <td class="text-center"><i class="fa-solid <%= $ico %> fa-fw text-secondary" title="<%= $title %>"></i></td>
-	      <td>
+	      <td id="№" class="text-end"></td>
+	      <td id="LName"><%= h_decode_text $v->{sn}->[0]  %></td>
+	      <td id="FName"><%= h_decode_text $v->{givenname}->[0] %></td>
+	      <td id="ST" class="text-center"><i class="fa-solid <%= $ico %> fa-fw text-secondary" title="<%= $title %>"></i></td>
+	      <td id="Email"><%== exists $v->{mail} ? sprintf('<a %s href="mailto:%s">%s</a>', $a_class, $v->{mail}->[0], $v->{mail}->[0]) : 'unavailable' %></td>
+	      <td id="UID"><%== sprintf('<a %s href="/profile/%s">%s</a>', $a_class, $v->{uid}->[0], $v->{uid}->[0]) =%></td>
+	      <td id="Projects">
 		% if ( exists $projects->{$dn} ) {
 		  % foreach (sort @{$projects->{$dn}}) {
 		    % $_ =~ s/:/::/g;
@@ -164,7 +167,7 @@
 		  % }
 		% }
 	      </td>
-	      <td>
+	      <td id="Servers">
 		<form role="form" id="searchMachine" method="POST" action="/search/common">
 		  <input type="hidden" name="search_base_case" class="search_base_case" value="">
 		  % foreach (sort(@{$servers->{$dn}})) {
@@ -180,7 +183,7 @@
 		  % }
 		</form>
 	      </td>
-	      <td>
+	      <td id="Services">
 		% if ( defined $services && exists $services->{$dn} ) {
 		  % foreach my $k (sort keys %{$services->{$dn}}) {
 		    % my $svc = $services->{$dn}->{$k}->{obj};
@@ -192,11 +195,9 @@
 		  % }
 		% }
 	      </td>
-	      <td><%== exists $v->{mail} ? sprintf('<a %s href="mailto:%s">%s</a>', $a_class, $v->{mail}->[0], $v->{mail}->[0]) : 'unavailable' %></td>
-	      <td><%== sprintf('<a %s href="/profile/%s">%s</a>', $a_class, $v->{uid}->[0], $v->{uid}->[0]) =%></td>
-	      <td><%== exists $v->{umiuserdateofbirth} ? strftime( "%F", localtime(generalizedTime_to_time($v->{umiuserdateofbirth}->[0]))) : 'unavailable' %></td>
-	      <td><%== exists $v->{umiuserdateofemployment} ? strftime( "%F", localtime(generalizedTime_to_time($v->{umiuserdateofemployment}->[0]))) : 'unavailable' %></td>
-	      <td><%== exists $v->{umiuserdateoftermination} ? strftime( "%F", localtime(generalizedTime_to_time($v->{umiuserdateoftermination}->[0]))) : 'unavailable' %></td>
+	      <td id="BD"><%== exists $v->{umiuserdateofbirth} ? strftime( "%F", localtime(generalizedTime_to_time($v->{umiuserdateofbirth}->[0]))) : 'unavailable' %></td>
+	      <td id="HD"><%== exists $v->{umiuserdateofemployment} ? strftime( "%F", localtime(generalizedTime_to_time($v->{umiuserdateofemployment}->[0]))) : 'unavailable' %></td>
+	      <td id="TD"><%== exists $v->{umiuserdateoftermination} ? strftime( "%F", localtime(generalizedTime_to_time($v->{umiuserdateoftermination}->[0]))) : 'unavailable' %></td>
 	    </tr>
 
 	  % } elsif (exists stash->{type} && stash->{type} eq 'server-driven-rows')
@@ -205,18 +206,20 @@
 	    % $servers->{$dn} = ['none'] if ! @{$servers->{$dn}};
 	    % foreach my $s (sort(@{$servers->{$dn}})) {
 	      <tr class="umi-text-xs <%= 'table-danger' if $card_col eq 'danger' %>">
-		<td></td>
-		<td><%= h_decode_text $v->{sn}->[0] %></td>
-		<td><%= h_decode_text $v->{givenname}->[0] %></td>
-		<td class="mono"><%= $card_col eq 'danger' ? 'yes' : 'no' %></td>
-		<td>
+		<td id="№"></td>
+		<td id="LName"><%= h_decode_text $v->{sn}->[0] %></td>
+		<td id="FName"><%= h_decode_text $v->{givenname}->[0] %></td>
+		<td id="ST" class="mono"><%= $card_col eq 'danger' ? 'yes' : 'no' %></td>
+		<td id="Email"><%== exists $v->{mail} ? sprintf('<a %s href="mailto:%s">%s</a>', $a_class, $v->{mail}->[0], $v->{mail}->[0]) : 'unavailable' %></td>
+		<td id="UID"><%== sprintf('<a %s href="/profile/%s">%s</a>', $a_class, $v->{uid}->[0], $v->{uid}->[0]) %></td>
+		<td id="Projects">
 		  % if ( exists $projects->{$dn} ) {
 		    % foreach (sort @{$projects->{$dn}}) {
 		      <span class="badge text-bg-secondary fw-bold"><a <%== $a_class %> href="/project/<%= substr($_, 0, index($_, ':')) %>"><%= $_ %></a></span>
 		    % }
 		  % }
 		</td>
-		<td>
+		<td id="Servers">
 		  % if ($s ne 'none') {
 		    <form role="form" id="searchMachine" method="POST" action="/search/common">
 		      <input type="hidden" name="search_base_case" class="search_base_case" value="">
@@ -232,12 +235,10 @@
 		    </form>
 		  % }
 		</td>
-		<td></td>
-		<td><%== exists $v->{mail} ? sprintf('<a %s href="mailto:%s">%s</a>', $a_class, $v->{mail}->[0], $v->{mail}->[0]) : 'unavailable' %></td>
-		<td><%== sprintf('<a %s href="/profile/%s">%s</a>', $a_class, $v->{uid}->[0], $v->{uid}->[0]) %></td>
-		<td><%== exists $v->{umiuserdateofbirth} ? strftime( "%F", localtime(generalizedTime_to_time($v->{umiuserdateofbirth}->[0]))) : 'unavailable' %></td>
-		<td><%== exists $v->{umiuserdateofemployment} ? strftime( "%F", localtime(generalizedTime_to_time($v->{umiuserdateofemployment}->[0]))) : 'unavailable' %></td>
-		<td><%== exists $v->{umiuserdateoftermination} ? strftime( "%F", localtime(generalizedTime_to_time($v->{umiuserdateoftermination}->[0]))) : 'unavailable' %></td>
+		<td id="Services"></td>
+		<td id="BD"><%== exists $v->{umiuserdateofbirth} ? strftime( "%F", localtime(generalizedTime_to_time($v->{umiuserdateofbirth}->[0]))) : 'unavailable' %></td>
+		<td id="HD"><%== exists $v->{umiuserdateofemployment} ? strftime( "%F", localtime(generalizedTime_to_time($v->{umiuserdateofemployment}->[0]))) : 'unavailable' %></td>
+		<td id="TD"><%== exists $v->{umiuserdateoftermination} ? strftime( "%F", localtime(generalizedTime_to_time($v->{umiuserdateoftermination}->[0]))) : 'unavailable' %></td>
 	      </tr>
 	    % }
 
