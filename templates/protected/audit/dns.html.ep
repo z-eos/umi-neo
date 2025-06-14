@@ -3,7 +3,7 @@
 
 <h1 class="mt-3 mb-4">
   DNS zones</br>
-  <small><em class="text-muted font-monospace"><%= join ', ', @{app->{cfg}->{tool}->{dns}->{zone}} %></em></small>
+  <small><em class="text-muted font-monospace"><%= join ', ', @{[keys %{app->{cfg}->{tool}->{dns}->{zones}}]} %></em></small>
 </h1>
 
 % my ($insts_str, %insts, $inst_id);

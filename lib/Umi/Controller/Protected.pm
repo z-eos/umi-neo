@@ -2197,7 +2197,7 @@ sub audit_dns_zones ($self) {
   #		       MX  => $p->{mx}  // '', }, };
 
   my $zones;
-  my $axfr = $self->h_dns_resolver({ type => 'AXFR', ns_custom => 1, with_txt => 1, whole_axfr => 1 })->{success};
+  my $axfr = $self->h_dns_rr({ type => 'AXFR', ns_custom => 1, with_txt => 1, whole_axfr => 1 })->{success};
   # $self->h_log($_) foreach ($axfr);
   push @$zones, {
 		 fqdn => $_,
