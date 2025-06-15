@@ -1,13 +1,13 @@
 %# -*- mode: web; mode: follow -*-
 
 <!--
-  MAIN ASIDE PANEL
-  This component renders the right sidebar panel with multiple tabs:
-  - LDAP tree navigator
-  - IPAM (IP Address Management) interface
-  - Settings panel
+     MAIN ASIDE PANEL
+     This component renders the right sidebar panel with multiple tabs:
+   - LDAP tree navigator
+   - IPAM (IP Address Management) interface
+   - Settings panel
 -->
-<aside id="aside" class="collapse show">
+<aside id="aside" class="flex-shrink-0 collapse show">
   <nav id="sidebar-right" class="float-right" data-url-tree="/ldap_tree">
     <!-- === *** TAB NAVIGATION BUTTONS *** === -->
     <ul class="nav nav-underline nav-fill mt-2" id="asideNav" role="tablist">

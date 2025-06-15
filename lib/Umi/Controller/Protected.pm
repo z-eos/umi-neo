@@ -2191,13 +2191,17 @@ AXFR zones configured in config file
 =cut
 
 sub audit_dns_zones ($self) {
-  # my $p = $self->req->params->to_hash;
-  # my $a = { query => { A   => $p->{a}   // '',
-  #		       PTR => $p->{ptr} // '',
-  #		       MX  => $p->{mx}  // '', }, };
+  my $p = $self->req->params->to_hash;
 
-  my $zones;
-  my $axfr = $self->h_dns_rr({ type => 'AXFR', ns_custom => 1, with_txt => 1, whole_axfr => 1 })->{success};
+  my $v = $self->validation;
+  return $self->render(template => 'protected/audit/dns') unless $v->has_data;
+
+  my ($zones, $axfr);
+  if ( $p->{zone} eq 'all' ) {
+    $axfr = $self->h_dns_rr({ type => 'AXFR', ns_custom => 1, with_txt => 1, whole_axfr => 1 })->{success};
+  } else {
+    $axfr = $self->h_dns_axfr_single_zone($p->{zone}, { type => 'AXFR', ns_custom => 1, with_txt => 1, whole_axfr => 1 })->{success};
+  }
   # $self->h_log($_) foreach ($axfr);
   push @$zones, {
 		 fqdn => $_,

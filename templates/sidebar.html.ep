@@ -5,7 +5,7 @@
 
   <!-- sidebar start -->
 
-  <nav id="sidebar-left" class="collapse show">
+  <nav id="sidebar-left" class="flex-shrink-0 collapse show">
 
     <ul id="sidebar-left-menu" class="nav flex-column" style="--bs-nav-link-padding-y: .2rem;">
 
@@ -116,13 +116,13 @@
 		 role="button"
 		 aria-expanded="false"
 	      >
-		<i class="fa-solid fa-earth-americas me-2"></i> FIXME !!! DNS
+		<i class="fa-solid fa-cubes-stacked me-2"></i> DNS
 	      </a>
 
 	      <ul class="dropdown-menu px-2">
 		<li>
 		  <a class="dropdown-item text-lowercase px-0" href="/audit/dns/zones">
-		    <i class="fa-solid fa-globe fa-fw me-2"></i> FIXME !!! norse.digital
+		    <i class="fa-solid fa-list-check fa-fw me-2"></i> all zones
 		  </a>
 		</li>
 	      </ul>
@@ -141,17 +141,17 @@
 	      <ul class="dropdown-menu px-2">
 		<li>
 		  <a class="dropdown-item text-lowercase px-0" href="/audit/gpg">
-		    <i class="fa-solid fa-list fa-fw me-2"></i> all keys
+		    <i class="fa-solid fa-key fa-fw me-2"></i> all keys
 		  </a>
 		</li>
 		<li>
 		  <a class="dropdown-item text-lowercase px-0" href="/audit/gpg/active">
-		    <i class="fa-solid fa-list fa-fw me-2"></i> active
+		    <i class="fa-solid fa-key fa-fw me-2"></i> active
 		  </a>
 		</li>
 		<li>
 		  <a class="dropdown-item text-lowercase px-0" href="/audit/gpg/expired">
-		    <i class="fa-solid fa-list fa-fw me-2"></i> expired
+		    <i class="fa-solid fa-key fa-fw me-2"></i> expired
 		  </a>
 		</li>
 	      </ul>
