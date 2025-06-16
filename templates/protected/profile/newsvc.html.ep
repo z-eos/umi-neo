@@ -18,9 +18,11 @@
     %           app->{cfg}->{ldap}->{authorizedService}->{$_}->{disabled} == 1 );
     % push @{$options}, [app->{cfg}->{ldap}->{authorizedService}->{$_}->{descr} => $_] if !app->{cfg}->{ldap}->{authorizedService}->{$_}->{disabled};
   % }
-  <div class="input-group my-3">
-    %= label_for authorizedService => 'Service', class => 'input-group-text text-uppercase'
-    %= select_field authorizedService => $options, id => 'authorizedService', class => 'custom-select form-control', onchange => 'toggleInputField()'
+  <div id="authorizedServiceDiv" class="row my-3">
+    %= label_for authorizedService => 'Service', class => 'col-sm-2 col-form-label fw-bold text-end text-uppercase'
+    <div class="col-sm-10">
+      %= select_field authorizedService => $options, id => 'authorizedService', class => 'custom-select form-control', onchange => 'toggleInputField()'
+    </div>
   </div>
 
   % my $fields = app->{cfg}->{ui}->{form_fields};
@@ -32,66 +34,86 @@
   % foreach my $fld (sort(keys(%$f))) {
     % my $fld_label = $fld =~ s/^umiOvpn(?:Cfg|Add)//r;
     % if ( $fld eq 'userPassword' ) {
-      <div class="input-group mb-3 d-none" data-field="<%= $fld %>">
-	%= label_for password1 => 'password', class => 'input-group-text', title => $schema->{$fld}->{desc}
-	%= password_field 'password1', class => 'form-control', id => 'password1', placeholder => 'type a password'
-	%= password_field 'password2', class => 'form-control', id => 'password2', placeholder => 'confirm the password'
+      <div id="passwordDiv" class="row mb-3 d-none" title="" data-field="<%= $fld %>">
+	<!-- <div class="input-group mb-3 d-none" data-field="<%# = $fld %>"> -->
+	%= label_for password1 => 'password', class => 'col-sm-3 col-form-label fw-bold text-end text-uppercase', title => $schema->{$fld}->{desc}
+	<div class="col-sm-9">
+	  <div class="row mx-0">
+	    %= password_field 'password1', class => 'col form-control', id => 'password1', placeholder => 'type a password'
+	    %= password_field 'password2', class => 'col form-control', id => 'password2', placeholder => 'confirm the password'
+	  </div>
+	</div>
       </div>
     % }
     % elsif ( $fld eq 'associatedDomain' )
     % {
       % my $options = [ ['--- choose 1 from ' . scalar @$domains . ' domains ---' => ''], map { [ $_ => $_ ] } @$domains ];
-      <div class="input-group my-3 d-none" data-field="<%= $fld %>">
-	%= label_for $fld => $fld, class => 'input-group-text', title => $schema->{$fld}->{desc}
-	%= select_field $fld => $options, id => $fld, class => 'custom-select form-control'
+      <div id="<%= $fld %>Div" class="row my-3 d-none" title="" data-field="<%= $fld %>">
+	<!-- <div class="input-group my-3 d-none" data-field="<%# = $fld %>"> -->
+	%= label_for $fld => $fld, class => 'col-sm-3 col-form-label fw-bold text-end text-uppercase', title => $schema->{$fld}->{desc}
+	<div class="col-sm-9">
+	  %= select_field $fld => $options, id => $fld, class => 'custom-select form-select select2'
+	</div>
       </div>
     % }
     % elsif ( $fld eq 'radiusGroupName' )
     % {
       % my $options = [ ['--- choose RADIUS group ---' => ''], map { [ $rad_groups->{$_} => $_ ] } keys(%$rad_groups) ];
-      <div class="input-group my-3 d-none" data-field="<%= $fld %>">
-	%= label_for $fld => $fld, class => 'input-group-text', title => $schema->{$fld}->{desc}
-	%= select_field $fld => $options, id => $fld, class => 'custom-select form-control'
+      <div id="<%= $fld %>Div" class="row my-3 d-none" title="" data-field="<%= $fld %>">
+	%= label_for $fld => $fld, class => 'col-sm-3 col-form-label fw-bold text-end text-uppercase', title => $schema->{$fld}->{desc}
+	<div class="col-sm-9">
+	  %= select_field $fld => $options, id => $fld, class => 'custom-select form-control'
+	</div>
       </div>
     % }
     % elsif ( $fld eq 'radiusProfileDn' )
     % {
       % my $options = [ ['--- choose RADIUS profile ---' => ''], map { [ $rad_profiles->{$_} => $_ ] } keys(%$rad_profiles) ];
-      <div class="input-group my-3 d-none" data-field="<%= $fld %>">
-	%= label_for $fld => $fld, class => 'input-group-text', title => $schema->{$fld}->{desc}
-	%= select_field $fld => $options, id => $fld, class => 'custom-select form-control'
+      <div id="<%= $fld %>Div" class="row my-3 d-none" title="" data-field="<%= $fld %>">
+	%= label_for $fld => $fld, class => 'col-sm-3 col-form-label fw-bold text-end text-uppercase', title => $schema->{$fld}->{desc}
+	<div class="col-sm-9">
+	  %= select_field $fld => $options, id => $fld, class => 'custom-select form-control'
+	</div>
       </div>
     % }
     % elsif ( $fld eq 'umiOvpnAddStatus' )
     % {
-      <div class="input-group mb-3 d-none" data-field="<%= $fld %>">
-	<span class="input-group-text" title="<%= $schema->{$fld}->{desc} %>"><%= $fld_label %>:</span>
-	<select name="umiOvpnAddStatus" class="form-control custom-select" id="umiOvpnAddStatus" title="<%= app->{cfg}->{ui}->{form_fields}->{$fld}->{title} %>">
-	  % foreach (sort(keys(%{constant('UMIOVPNADDSTATUS')}))) {
-	    <option value="<%= constant('UMIOVPNADDSTATUS')->{$_} %>"<%= ' selected' if $_ eq 'enabled' %>><%= $_ %></option>
-	  % }
-	</select>
+      <div id="<%= $fld %>Div" class="row my-3 d-none" title="" data-field="<%= $fld %>">
+	<span class="col-sm-3 col-form-label fw-bold text-end text-uppercase" title="<%= $schema->{$fld}->{desc} %>"><%= $fld_label %>:</span>
+	<div class="col-sm-9">
+	  <select name="umiOvpnAddStatus" class="form-control custom-select" id="umiOvpnAddStatus" title="<%= app->{cfg}->{ui}->{form_fields}->{$fld}->{title} %>">
+	    % foreach (sort(keys(%{constant('UMIOVPNADDSTATUS')}))) {
+	      <option value="<%= constant('UMIOVPNADDSTATUS')->{$_} %>"<%= ' selected' if $_ eq 'enabled' %>><%= $_ %></option>
+	    % }
+	  </select>
+	</div>
       </div>
     % }
     % elsif ( $fld eq 'umiOvpnAddDevType' || $fld eq 'umiOvpnAddDevOS' )
     % {
       % my $options = [ ['--- choose ' . $fld . ' type ---' => ''], map { [ $_ => $_ ] } @{constant(uc $fld)} ];
-      <div class="input-group my-3 d-none" data-field="<%= $fld %>">
-	%= label_for $fld => $fld_label, class => 'input-group-text', title => $schema->{$fld}->{desc}
-	%= select_field $fld => $options, id => $fld, class => 'custom-select form-control'
+      <div id="<%= $fld %>Div" class="row my-3 d-none" title="" data-field="<%= $fld %>">
+	%= label_for $fld => $fld_label, class => 'col-sm-3 col-form-label fw-bold text-end text-uppercase', title => $schema->{$fld}->{desc}
+	<div class="col-sm-9">
+	  %= select_field $fld => $options, id => $fld, class => 'custom-select form-control'
+	</div>
       </div>
     % }
     % elsif ( exists app->{cfg}->{ui}->{form_fields}->{$fld}->{type} && app->{cfg}->{ui}->{form_fields}->{$fld}->{type} eq 'textarea' )
     % {
-      <div class="input-group mb-3 d-none" data-field="<%= $fld %>">
-	%= label_for $fld => $fld_label, class => 'input-group-text', title => $schema->{$fld}->{desc}
-	%= text_area $fld, id => $fld, rows => 3, class => 'text-monospace form-control', placeholder => app->{cfg}->{ui}->{form_fields}->{$fld}->{ph}
+      <div id="<%= $fld %>Div" class="row my-3 d-none" title="" data-field="<%= $fld %>">
+	%= label_for $fld => $fld_label, class => 'col-sm-3 col-form-label fw-bold text-end text-uppercase', title => $schema->{$fld}->{desc}
+	<div class="col-sm-9">
+	  %= text_area $fld, id => $fld, rows => 3, class => 'text-monospace form-control', placeholder => app->{cfg}->{ui}->{form_fields}->{$fld}->{ph}
+	</div>
       </div>
     % } elsif ( exists app->{cfg}->{ui}->{form_fields}->{$fld}->{type} && app->{cfg}->{ui}->{form_fields}->{$fld}->{type} eq 'file' )
     % {
-      <div class="input-group mb-3 d-none" data-field="<%= $fld %>">
-	%= label_for $fld => $fld_label, class => 'input-group-text', title => $schema->{$fld}->{desc}
-	%= file_field $fld, id => $fld, class => 'form-control form-control'
+      <div id="<%= $fld %>Div" class="row my-3 d-none" title="" data-field="<%= $fld %>">
+	%= label_for $fld => $fld_label, class => 'col-sm-3 col-form-label fw-bold text-end text-uppercase', title => $schema->{$fld}->{desc}
+	<div class="col-sm-9">
+	  %= file_field $fld, id => $fld, class => 'form-control form-control'
+	</div>
       </div>
     % } else {
       % my $ph = exists app->{cfg}->{ui}->{form_fields}->{$fld}->{ph} && app->{cfg}->{ui}->{form_fields}->{$fld}->{ph} ne '' ?
@@ -103,9 +125,11 @@
       %# $ph .= lc sprintf('%s.%s', $root->get_value('givenName'), $root->get_value('sn')) if $fld eq 'homeDirectory' || $fld eq 'login';
       % $ph .= $root->get_value('uid') if $fld eq 'homeDirectory' || $fld eq 'login';
 
-      <div class="input-group mb-3 d-none" data-field="<%= $fld %>">
-	%= label_for $fld => $fld_label, class => 'input-group-text', title => $schema->{$fld}->{desc}
-	%= text_field $fld, class => 'form-control', id => $fld, placeholder => $ph
+      <div id="<%= $fld %>Div" class="row my-3 d-none" title="" data-field="<%= $fld %>">
+	%= label_for $fld => $fld_label, class => 'col-sm-3 col-form-label fw-bold text-end text-uppercase', title => $schema->{$fld}->{desc}
+	<div class="col-sm-9">
+	  %= text_field $fld, class => 'form-control', id => $fld, placeholder => $ph
+	</div>
       </div>
     % }
   % }
@@ -200,6 +224,15 @@
    });
 
    authorizedService.dispatchEvent(new Event('change', { bubbles: true }));
+
+ });
+
+ $(document).ready(function() {
+
+   $('.select2').select2({
+     placeholder: "Select or add domain",
+     allowClear: true
+   });
 
  });
 
