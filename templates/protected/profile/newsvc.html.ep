@@ -100,7 +100,8 @@
       %              app->{cfg}->{ldap}->{defaults}->{attr}->{$fld}->{val} :
       %              '';
 
-      % $ph .= lc sprintf('%s.%s', $root->get_value('givenName'), $root->get_value('sn')) if $fld eq 'homeDirectory' || $fld eq 'login';
+      %# $ph .= lc sprintf('%s.%s', $root->get_value('givenName'), $root->get_value('sn')) if $fld eq 'homeDirectory' || $fld eq 'login';
+      % $ph .= $root->get_value('uid') if $fld eq 'homeDirectory' || $fld eq 'login';
 
       <div class="input-group mb-3 d-none" data-field="<%= $fld %>">
 	%= label_for $fld => $fld_label, class => 'input-group-text', title => $schema->{$fld}->{desc}
