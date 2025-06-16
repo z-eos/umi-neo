@@ -34,6 +34,19 @@
 % }
 %# h_log $debug;
 
+% my $uid;
+% my $s_uobj = session('user_obj');
+% my $s_uid = session('uid');
+% if ( ref($s_uobj) eq 'HASH' && exists $s_uobj->{givenname} ) {
+ % $uid = $s_uobj->{givenname}; 
+% } elsif (defined $s_uid)
+% {
+  % $uid = $s_uid;
+% } else
+% {
+  % $uid = 'Guest';
+% }
+
 %# expected debug message format: status => [ 'message', ... ]
 % if ( defined $debug ) {
   %#<pre class="mt-5 umi-text-tiny text-muted"><%= dumper $debug %></pre>
@@ -47,7 +60,7 @@
       <br>
 
       % if ( $k eq 'error' ) {
-	<h4 class="mt-2 alert-heading">Hey, <i><%= h_decode_text session('user_obj')->{givenname}, 'no-givenName' %></i>!</h4>
+	<h4 class="mt-2 alert-heading">Hey, <i><%= h_decode_text $uid, 'no-givenName' %></i>!</h4>
 	<i>Do not panic! Just report it to admins (use buttons above).</i>
 	<hr class="">
 	<pre class="umi-text-sm"><% } =%>
