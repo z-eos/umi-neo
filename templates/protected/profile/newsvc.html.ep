@@ -19,8 +19,8 @@
     % push @{$options}, [app->{cfg}->{ldap}->{authorizedService}->{$_}->{descr} => $_] if !app->{cfg}->{ldap}->{authorizedService}->{$_}->{disabled};
   % }
   <div id="authorizedServiceDiv" class="row my-3">
-    %= label_for authorizedService => 'Service', class => 'col-sm-2 col-form-label fw-bold text-end text-uppercase'
-    <div class="col-sm-10">
+    %= label_for authorizedService => 'Service', class => 'col-sm-3 fw-bold text-end text-uppercase'
+    <div class="col-sm-9">
       %= select_field authorizedService => $options, id => 'authorizedService', class => 'custom-select form-control', onchange => 'toggleInputField()'
     </div>
   </div>
@@ -36,7 +36,7 @@
     % if ( $fld eq 'userPassword' ) {
       <div id="passwordDiv" class="row mb-3 d-none" title="" data-field="<%= $fld %>">
 	<!-- <div class="input-group mb-3 d-none" data-field="<%# = $fld %>"> -->
-	%= label_for password1 => 'password', class => 'col-sm-3 col-form-label fw-bold text-end text-uppercase', title => $schema->{$fld}->{desc}
+	%= label_for password1 => 'password', class => 'col-sm-3 fw-bold text-end text-uppercase', title => $schema->{$fld}->{desc}
 	<div class="col-sm-9">
 	  <div class="row mx-0">
 	    %= password_field 'password1', class => 'col form-control', id => 'password1', placeholder => 'type a password'
@@ -49,8 +49,7 @@
     % {
       % my $options = [ ['--- choose 1 from ' . scalar @$domains . ' domains ---' => ''], map { [ $_ => $_ ] } @$domains ];
       <div id="<%= $fld %>Div" class="row my-3 d-none" title="" data-field="<%= $fld %>">
-	<!-- <div class="input-group my-3 d-none" data-field="<%# = $fld %>"> -->
-	%= label_for $fld => $fld, class => 'col-sm-3 col-form-label fw-bold text-end text-uppercase', title => $schema->{$fld}->{desc}
+	%= label_for $fld => $fld, class => 'col-sm-3 fw-bold text-end text-uppercase', title => $schema->{$fld}->{desc}
 	<div class="col-sm-9">
 	  %= select_field $fld => $options, id => $fld, class => 'custom-select form-select select2'
 	</div>
@@ -60,7 +59,7 @@
     % {
       % my $options = [ ['--- choose RADIUS group ---' => ''], map { [ $rad_groups->{$_} => $_ ] } keys(%$rad_groups) ];
       <div id="<%= $fld %>Div" class="row my-3 d-none" title="" data-field="<%= $fld %>">
-	%= label_for $fld => $fld, class => 'col-sm-3 col-form-label fw-bold text-end text-uppercase', title => $schema->{$fld}->{desc}
+	%= label_for $fld => $fld, class => 'col-sm-3 fw-bold text-end text-uppercase', title => $schema->{$fld}->{desc}
 	<div class="col-sm-9">
 	  %= select_field $fld => $options, id => $fld, class => 'custom-select form-control'
 	</div>
@@ -70,7 +69,7 @@
     % {
       % my $options = [ ['--- choose RADIUS profile ---' => ''], map { [ $rad_profiles->{$_} => $_ ] } keys(%$rad_profiles) ];
       <div id="<%= $fld %>Div" class="row my-3 d-none" title="" data-field="<%= $fld %>">
-	%= label_for $fld => $fld, class => 'col-sm-3 col-form-label fw-bold text-end text-uppercase', title => $schema->{$fld}->{desc}
+	%= label_for $fld => $fld, class => 'col-sm-3 fw-bold text-end text-uppercase', title => $schema->{$fld}->{desc}
 	<div class="col-sm-9">
 	  %= select_field $fld => $options, id => $fld, class => 'custom-select form-control'
 	</div>
@@ -79,7 +78,7 @@
     % elsif ( $fld eq 'umiOvpnAddStatus' )
     % {
       <div id="<%= $fld %>Div" class="row my-3 d-none" title="" data-field="<%= $fld %>">
-	<span class="col-sm-3 col-form-label fw-bold text-end text-uppercase" title="<%= $schema->{$fld}->{desc} %>"><%= $fld_label %>:</span>
+	<span class="col-sm-3 fw-bold text-end text-uppercase" title="<%= $schema->{$fld}->{desc} %>"><%= $fld_label %>:</span>
 	<div class="col-sm-9">
 	  <select name="umiOvpnAddStatus" class="form-control custom-select" id="umiOvpnAddStatus" title="<%= app->{cfg}->{ui}->{form_fields}->{$fld}->{title} %>">
 	    % foreach (sort(keys(%{constant('UMIOVPNADDSTATUS')}))) {
@@ -93,7 +92,7 @@
     % {
       % my $options = [ ['--- choose ' . $fld . ' type ---' => ''], map { [ $_ => $_ ] } @{constant(uc $fld)} ];
       <div id="<%= $fld %>Div" class="row my-3 d-none" title="" data-field="<%= $fld %>">
-	%= label_for $fld => $fld_label, class => 'col-sm-3 col-form-label fw-bold text-end text-uppercase', title => $schema->{$fld}->{desc}
+	%= label_for $fld => $fld_label, class => 'col-sm-3 fw-bold text-end text-uppercase', title => $schema->{$fld}->{desc}
 	<div class="col-sm-9">
 	  %= select_field $fld => $options, id => $fld, class => 'custom-select form-control'
 	</div>
@@ -102,7 +101,7 @@
     % elsif ( exists app->{cfg}->{ui}->{form_fields}->{$fld}->{type} && app->{cfg}->{ui}->{form_fields}->{$fld}->{type} eq 'textarea' )
     % {
       <div id="<%= $fld %>Div" class="row my-3 d-none" title="" data-field="<%= $fld %>">
-	%= label_for $fld => $fld_label, class => 'col-sm-3 col-form-label fw-bold text-end text-uppercase', title => $schema->{$fld}->{desc}
+	%= label_for $fld => $fld_label, class => 'col-sm-3 fw-bold text-end text-uppercase', title => $schema->{$fld}->{desc}
 	<div class="col-sm-9">
 	  %= text_area $fld, id => $fld, rows => 3, class => 'text-monospace form-control', placeholder => app->{cfg}->{ui}->{form_fields}->{$fld}->{ph}
 	</div>
@@ -110,7 +109,7 @@
     % } elsif ( exists app->{cfg}->{ui}->{form_fields}->{$fld}->{type} && app->{cfg}->{ui}->{form_fields}->{$fld}->{type} eq 'file' )
     % {
       <div id="<%= $fld %>Div" class="row my-3 d-none" title="" data-field="<%= $fld %>">
-	%= label_for $fld => $fld_label, class => 'col-sm-3 col-form-label fw-bold text-end text-uppercase', title => $schema->{$fld}->{desc}
+	%= label_for $fld => $fld_label, class => 'col-sm-3 fw-bold text-end text-uppercase', title => $schema->{$fld}->{desc}
 	<div class="col-sm-9">
 	  %= file_field $fld, id => $fld, class => 'form-control form-control'
 	</div>
@@ -126,7 +125,7 @@
       % $ph .= $root->get_value('uid') if $fld eq 'homeDirectory' || $fld eq 'login';
 
       <div id="<%= $fld %>Div" class="row my-3 d-none" title="" data-field="<%= $fld %>">
-	%= label_for $fld => $fld_label, class => 'col-sm-3 col-form-label fw-bold text-end text-uppercase', title => $schema->{$fld}->{desc}
+	%= label_for $fld => $fld_label, class => 'col-sm-3 fw-bold text-end text-uppercase', title => $schema->{$fld}->{desc}
 	<div class="col-sm-9">
 	  %= text_field $fld, class => 'form-control', id => $fld, placeholder => $ph
 	</div>

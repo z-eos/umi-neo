@@ -8,9 +8,11 @@
 %# %insts = map { $_ => 1 } @{[split /\s/, $insts_str]};
 
 %= form_for '/audit/dns/zones' => (class => "form-horizontal mb-3", method => 'GET') => begin
-  <div class="input-group mt-4">
-    <span class="input-group-text fw-bold text-uppercase text-end">select dns zone</span>
-    %= select_field zone => [ 'all', @{[keys %{app->{cfg}->{tool}->{dns}->{zones}}]} ], id => 'zones', class => 'custom-select form-control'
+  <div id="zone" class="row mt-4">
+    %= label_for zone => 'select dns zone', class => 'col-sm-3 fw-bold text-end text-uppercase', title => 'select dns zone'
+    <div class="col-sm-9">
+      %= select_field zone => [ 'all', @{[keys %{app->{cfg}->{tool}->{dns}->{zones}}]} ], id => 'zones', class => 'custom-select form-select select2'
+    </div>
   </div>
   %= submit_button 'Submit', class => 'btn btn-success fw-bold text-uppercase my-3'
 % end
@@ -63,5 +65,17 @@
    };
   </script>
   <script src="/assets/js/umi-datatables.js"></script>
+
+  <script>
+   $(document).ready(function() {
+
+     $('.select2').select2({
+       placeholder: "Select or add domain",
+       allowClear: true
+     });
+
+   });
+  </script>
+
 
 % }
