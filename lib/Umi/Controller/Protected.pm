@@ -29,6 +29,71 @@ sub homepage ($self) {
     $self->stash( debug => $self->session('debug') );
     delete $self->session->{debug};
   }
+
+  my %debug;
+  push @{$debug{ok}},
+    'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.',
+    'Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.';
+  push @{$debug{error}},
+    'call from <b><em>Umi::Ldap::modify</em></b>: <dl class="row mt-3 w-100">
+  <dt class="col-2 text-end">DN</dt>
+  <dd class="col-10 font-monospace">uid=testoid,ou=People,dc=nxc,dc=no</dd>
+
+  <dt class="col-2 text-end">admin note</dt>
+  <dd class="col-10 font-monospace"></dd>
+
+  <dt class="col-2 text-end">supplementary data</dt>
+  <dd class="col-10 font-monospace"></dd>
+
+  <dt class="col-2 text-end">code</dt>
+  <dd class="col-10 font-monospace">21</dd>
+
+  <dt class="col-2 text-end">error name</dt>
+  <dd class="col-10 font-monospace">LDAP_INVALID_SYNTAX</dd>
+
+  <dt class="col-2 text-end">error text</dt>
+  <dd class="col-10 font-monospace"><em><small><pre><samp>Some part of the request contained an invalid syntax. It could be a search
+with an invalid filter or a request to modify the schema and the given
+schema has a bad syntax.
+</samp></pre></small></em></dd>
+
+  <dt class="col-2 text-end">error description</dt>
+  <dd class="col-10 font-monospace">Invalid syntax</dd>
+
+  <dt class="col-2 text-end">server_error</dt>
+  <dd class="col-10 font-monospace">objectClass: value #6 invalid per syntax</dd>
+</dl>',
+  '[
+    [0] "replace",
+    [1] [
+	    [0] "l",
+	    [1] "деревня Гадюкино",
+	    [2] "title",
+	    [3] "big ass to kick ну или просто дурачок",
+	    [4] "objectClass",
+	    [5] [
+		    [0] "grayAccount",
+		    [1] "inetOrgPerson",
+		    [2] "organizationalPerson",
+		    [3] "person",
+		    [4] "posixAccount",
+		    [5] "shadowAccount",
+		    [6] "topxfsfdgfg",
+		    [7] "umiUser"
+		],
+	    [6] "givenName",
+	    [7] "Тестойид 11111111111111111111"
+	]
+]';
+  push @{$debug{warn}},
+    'Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.',
+    'Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.';
+
+
+  $self->stash(debug => \%debug);
+
+
+
   $self->render( template => 'protected/home' );
 }
 

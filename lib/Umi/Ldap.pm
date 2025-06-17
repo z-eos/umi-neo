@@ -134,28 +134,21 @@ sub err {
   $err->{supplementary} = '<div class=""><ul class="list-unstyled">' . $err->{supplementary} . '</ul></div>'
     if $err->{supplementary} ne '';
 
-  $err->{html} = sprintf( 'call from <b><em>%s</em></b>: <dl class="row mt-5">
+  $err->{html} = sprintf( 'call from <b><em>%s</em></b>: <dl class="row mt-3 w-100">
   <dt class="col-2 text-end">DN</dt>
   <dd class="col-10 font-monospace">%s</dd>
-
   <dt class="col-2 text-end">admin note</dt>
   <dd class="col-10 font-monospace">%s</dd>
-
   <dt class="col-2 text-end">supplementary data</dt>
   <dd class="col-10 font-monospace">%s</dd>
-
   <dt class="col-2 text-end">code</dt>
   <dd class="col-10 font-monospace">%s</dd>
-
   <dt class="col-2 text-end">error name</dt>
   <dd class="col-10 font-monospace">%s</dd>
-
   <dt class="col-2 text-end">error text</dt>
   <dd class="col-10 font-monospace"><em><small><pre><samp>%s</samp></pre></small></em></dd>
-
   <dt class="col-2 text-end">error description</dt>
   <dd class="col-10 font-monospace">%s</dd>
-
   <dt class="col-2 text-end">server_error</dt>
   <dd class="col-10 font-monospace">%s</dd>
 </dl>',
@@ -163,8 +156,9 @@ sub err {
 			  $err->{dn},
 
 			  defined $self->{app}->{cfg}->{ldap}->{err}->{$mesg->code} &&
-			  $self->{app}->{cfg}->{ldap}->{err}->{$mesg->code} ne '' ?
-			  $self->{app}->{cfg}->{ldap}->{err}->{$mesg->code} : '',
+			  $self->{app}->{cfg}->{ldap}->{err}->{$mesg->code} ne ''
+			  ? $self->{app}->{cfg}->{ldap}->{err}->{$mesg->code}
+			  : '',
 
 			  $err->{supplementary},
 			  $mesg->code,

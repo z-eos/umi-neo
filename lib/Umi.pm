@@ -157,7 +157,7 @@ sub _startup_session ($self) {
 		h_np => sub {
 		  my ($self, $data, $html, $class) = @_;
 		  $html  = $html  //= 1;
-		  $class = $class //= 'umi-text-tiny';
+		  $class = $class //= ''; # 'umi-text-tiny';
 		  my $ret;
 		  my $np = np $data, caller_info => 0;
 		  if ( $html == 1 ) {
