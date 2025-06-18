@@ -464,6 +464,15 @@ sub _startup_routes ($self) {
     ->requires(is_role => ['admin,coadmin,hr', {cmp => 'or'}])
     ->to('search#search_common')->name('search_common');
 
+  $protected_root
+    ->get( '/search/advanced')
+    ->requires(is_role => ['admin,coadmin,hr', {cmp => 'or'}])
+    ->to('search#advanced');
+  $protected_root
+    ->post('/search/advanced')
+    ->requires(is_role => ['admin,coadmin,hr', {cmp => 'or'}])
+    ->to('search#advanced')->name('advanced');
+
   ## DELETE
   $protected_root
     ->post('/delete')

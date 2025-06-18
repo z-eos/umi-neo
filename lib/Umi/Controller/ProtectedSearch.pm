@@ -39,11 +39,10 @@ sub search_common  ($self) {
 			search_common_params => $p,
 			searchres => {},
 			e_info => undef )
-    unless (exists $p->{search_filter} &&
-	    $p->{search_filter} ne '')  ||
-	      exists $p->{no_layout}    ||
-	      exists $p->{ldap_subtree} ||
-	      exists $p->{dn_to_history} ;
+    unless ( exists $p->{search_filter} && $p->{search_filter} ne '')
+    || exists $p->{no_layout}
+    || exists $p->{ldap_subtree}
+    || exists $p->{dn_to_history} ;
 
   if ($self->session('debug')) {
     $self->stash( debug => $self->session('debug') );
@@ -155,6 +154,7 @@ sub search_common  ($self) {
   $p->{'filter'} = '(' . $filter . ')';
 
   $self->h_log('SEARCH RESULT');
+
   $ldap = Umi::Ldap->new( $self->{app}, $self->session('uid'), $self->session('pwd') );
 
   $search_arg = { base => $base,
@@ -190,6 +190,75 @@ sub search_common  ($self) {
     $self->render( template => 'protected/search/common',
 		   entries => [ $search->sorted ]);
   }
+}
+
+sub advanced ($self) {
+  my $p = $self->h_compact($self->req->params->to_hash);
+  $self->h_log($p);
+
+  my $v = $self->validation;
+  return $self->render( template => 'protected/search/advanced' )
+    unless exists $p->{search_filter}
+    || exists $p->{base_dn}
+    || exists $p->{reqMod}
+    || exists $p->{reqOld}
+    || exists $p->{reqEntryUUID} ;
+
+  my ( $base, @filter_arr, $filter, $scope, $sort_order );
+
+  if ( defined $p->{search_history} && $p->{search_history} eq '1' ) {
+    $base = $self->{app}->{cfg}->{ldap}->{accesslog};
+
+    @filter_arr = map
+      { exists $p->{$_} ? "($_=$p->{$_})" : () }
+      qw(reqAuthzID reqDn reqEnd reqEntryUUI reqMessage reqMod reqOld reqResult reqStart reqType);
+
+    $filter =
+      @filter_arr > 1 ? '(&' . join('', @filter_arr) . ')'
+      : @filter_arr == 1 ? $filter_arr[0]
+      :                    '(abc stub)';
+
+    $scope = 'sub';
+  } else {
+    $base   = $p->{'base_dn'} // $self->{app}->{cfg}->{ldap}->{defaults}->{base}->{dc};
+    $filter = $p->{'search_filter'};
+    $scope  = $p->{'search_scope'};
+  }
+
+  my $ldap = Umi::Ldap->new( $self->{app}, $self->session('uid'), $self->session('pwd') );
+
+  my $search_arg = { base => $base, filter => $filter, scope => $scope };
+  @{$search_arg->{attrs}} = split(/,/, $p->{'show_attr'}) if exists $p->{'show_attr'};
+  my $search = $ldap->search( $search_arg );
+  $self->h_log( $self->{app}->h_ldap_err($search, $search_arg) ) if $search->code;
+  $self->h_log( $search_arg );
+
+  # hash to keep aux data like disabled state of the root object for branch/leaf
+  my $e_info;
+  foreach ($search->entries) {
+    $e_info->{$_->dn}->{root_dn} = $self->h_get_root_dn($_->dn) if ! exists $e_info->{$_->dn}->{root_dn};
+    $e_info->{$_->dn}->{disabled} = 0;
+    if ( defined $e_info->{$_->dn}->{root_dn} && $e_info->{$_->dn}->{root_dn} eq $_->dn ) {
+      $e_info->{$_->dn}->{disabled} = 1 if $_->get_value('gidNumber') eq $self->{app}->{cfg}->{ldap}->{defaults}->{group}->{blocked}->{gidnumber};
+    } else {
+      my $e_tmp = $ldap->search( { base => $e_info->{$_->dn}->{root_dn}, scope => 'base' } );
+      my $e_tmp_entry = $e_tmp->entry;
+      $e_info->{$_->dn}->{disabled} = 1 if $e_tmp_entry->exists('gidNumber')
+	&& $e_tmp_entry->get_value('gidNumber') eq $self->{app}->{cfg}->{ldap}->{defaults}->{group}->{blocked}->{gidnumber};
+    }
+  }
+  $self->stash(search_common_params => $p, search_arg => $search_arg, e_info => $e_info);
+
+  my @entries = $search->sorted;
+  if ( exists $p->{no_layout} ) {
+    $self->render( template => 'protected/search/advanced',
+		   layout => undef,
+		   entries => [ $search->sorted ] );
+  } else {
+    $self->render( template => 'protected/search/advanced',
+		   entries => [ $search->sorted ]);
+  }
+
 }
 
 sub search_projects  ($self) {
