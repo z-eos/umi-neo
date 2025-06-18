@@ -1,0 +1,207 @@
+%# -*- mode: web; eval: (follow-mode) -*-
+
+<h2 class="my-4">
+  <i class="fa-solid fa-binoculars fa-lg mr-3"></i>
+  Search Advanced
+  <small><em class="text-muted font-monospace"></em></small>
+</h2>
+<hr class="p-1">
+
+% my ($fld, $options);
+%= form_for '/search/advanced' => (class => "injectable-form me-3", method => 'POST') => begin
+  %= hidden_field 'ldap_subtree' => ''
+
+  % $fld = 'search_history';
+  <div id="<%= $fld %>Div" class="form-check offset-3 my-3" title="" data-field="<%= $fld %>">
+    %= check_box $fld => 1, class => 'form-check-input', id => $fld, title => 'When checked, this checkbox causes additional fields to search by in history.'
+    %= label_for $fld => 'search history', class => 'form-check-label'
+  </div>
+
+  % $fld = 'reqType';
+  <div id="<%= $fld %>Div" class="row my-3 search-history d-none" title="" data-field="<%= $fld %>">
+    %= label_for $fld => $fld, class => 'col-sm-3 fw-bold text-end'
+    <div class="col-sm-9">
+      %= select_field $fld => [ ['--- cn=umilog search type ---',''], 'add', 'modify', 'delete' ], id => $fld , class => 'custom-select form-select'
+    </div>
+  </div>
+
+  % $fld = 'reqAuthzID';
+  <div id="<%= $fld %>Div" class="row my-3 search-history d-none" title="" data-field="<%= $fld %>">
+    %= label_for $fld => $fld, class => 'col-sm-3 fw-bold text-end'
+    <div class="col-sm-9">
+      %= text_field $fld, class => 'form-control', id => $fld, placeholder => 'uid=ACTION-REQUESTED-BY,ou=People,dc=cn=ibs-accesslog', title => 'The reqAuthzID attribute is the distinguishedName of the user that performed the operation. This will usually be the same name as was established at the start of a session by a Bind request (if any) but may be altered in various circumstances.'
+    </div>
+  </div>
+
+  % $fld = 'reqDn';
+  <div id="<%= $fld %>Div" class="row my-3 search-history d-none" title="" data-field="<%= $fld %>">
+    %= label_for $fld => $fld, class => 'col-sm-3 fw-bold text-end'
+    <div class="col-sm-9">
+      %= text_field $fld, class => 'form-control', id => $fld, placeholder => 'uid=ACTION-REQUESTED-ON,ou=People,dc=dc=ibs', title => 'The reqDN attribute is the distinguishedName of the target of the operation. E.g., for a Bind request, this is the Bind DN. For an Add request, this is the DN of the entry being added. For a Search request, this is the base DN of the search.'
+    </div>
+  </div>
+
+  % $fld = 'reqEntryUUID';
+  <div id="<%= $fld %>Div" class="row my-3 search-history d-none" title="" data-field="<%= $fld %>">
+    %= label_for $fld => $fld, class => 'col-sm-3 fw-bold text-end'
+    <div class="col-sm-9">
+      %= text_field $fld, class => 'form-control', id => $fld, placeholder => 'reqEntryUUID=a14f0795-6ab6-4b73-8510-40a6c6baa49e', title => 'reqEntryUUID'
+    </div>
+  </div>
+
+  % $fld = 'reqMod';
+  <div id="<%= $fld %>Div" class="row my-3 search-history d-none" title="" data-field="<%= $fld %>">
+    %= label_for $fld => 'Request Mod', class => 'col-sm-3 fw-bold text-end'
+    <div class="col-sm-9">
+      <textarea name="<%= $fld %>" id="<%= $fld %>" class="form-control" placeholder="*uid:+*john.doe*    or    *physicalDeliveryOfficeName:=*ou=borg,*" title="reqType add: *uid:+*john.goe*;    reqType modify: *physicalDeliveryOfficeName:= ou=borg,*;    reqType delete: has no reqMod" rows="1" cols="10"></textarea>
+    </div>
+  </div>
+
+  % $fld = 'reqMessage';
+  <div id="<%= $fld %>Div" class="row my-3 search-history d-none" title="" data-field="<%= $fld %>">
+    %= label_for $fld => $fld, class => 'col-sm-3 fw-bold text-end'
+    <div class="col-sm-9">
+      <textarea name="<%= $fld %>" id="<%= $fld %>" class="form-control" placeholder="Password is in history of old passwords" title="An error code may be accompanied by a text error message which will be recorded in the reqMessage attribute." rows="1" cols="10"></textarea>
+    </div>
+  </div>
+
+  % $fld = 'reqResult';
+  <div id="<%= $fld %>Div" class="row my-3 search-history d-none" title="" data-field="<%= $fld %>">
+    %= label_for $fld => $fld, class => 'col-sm-3 fw-bold text-end'
+    <div class="col-sm-9">
+      % my $con = constant('LDAP')->{PROTOCOL};
+      % $options = [ ['--- LDAP code ---' => ''], map { [ $con->{$_} => $_ ] } sort { $a <=> $b } keys %$con ];
+      %= select_field $fld => $options, id => $fld , class => 'custom-select form-select'
+    </div>
+  </div>
+
+  % $fld = 'reqOld';
+  <div id="<%= $fld %>Div" class="row my-3 search-history d-none" title="" data-field="<%= $fld %>">
+    %= label_for $fld => 'Request Old', class => 'col-sm-3 fw-bold text-end'
+    <div class="col-sm-9">
+      <textarea name="reqOld" id="reqOld" class="form-control" placeholder="*mail: ass2kick@borg.startrek.in*" rows="1" cols="10"></textarea>
+    </div>
+  </div>
+
+  % $fld = 'reqStart';
+  <div id="<%= $fld %>Div" class="row my-3 search-history d-none" title="" data-field="<%= $fld %>">
+    %= label_for $fld => 'Request Start Time', class => 'col-sm-3 fw-bold text-end'
+    <div class="col-sm-9">
+      %= text_field $fld, class => 'form-control', id => $fld, placeholder => '20141104142246.000014Z'
+    </div>
+  </div>
+
+  % $fld = 'reqEnd';
+  <div id="<%= $fld %>Div" class="row my-3 search-history d-none" title="" data-field="<%= $fld %>">
+    %= label_for $fld => 'Request End Time', class => 'col-sm-3 fw-bold text-end'
+    <div class="col-sm-9">
+      %= text_field $fld, class => 'form-control', id => $fld, placeholder => '20141104142356.000014Z'
+    </div>
+  </div>
+
+  % $fld = 'base_dn';
+  <div id="<%= $fld %>Div" class="row my-3" title="" data-field="<%= $fld %>">
+    %= label_for $fld => 'Base DN', class => 'col-sm-3 fw-bold text-end'
+    <div class="col-sm-9">
+      %= text_field $fld, class => 'form-control', id => $fld, placeholder => 'dc=ibs', title => 'The DN that is the base object entry relative to which the search is to be performed.'
+    </div>
+  </div>
+
+  % $fld = 'search_filter';
+  <div id="<%= $fld %>Div" class="row my-3" title="" data-field="<%= $fld %>">
+    %= label_for $fld => 'Search Filter', class => 'col-sm-3 fw-bold text-end'
+    <div class="col-sm-9">
+      <textarea name="<%= $fld %>" id="<%= $fld %>" class="form-control" placeholder="objectClass=* or &(uid=*)(objectClass=account)" title="A filter that defines the conditions an entry in the directory must meet in order for it to be returned by the search. It is a string (without outmost parenthesis). Characters of filter values may need to be escaped." rows="1" cols="10"></textarea>
+    </div>
+  </div>
+
+  % $fld = 'show_attr';
+  <div id="<%= $fld %>Div" class="row my-3" title="" data-field="<%= $fld %>">
+    %= label_for $fld => 'Show Attributes', class => 'col-sm-3 fw-bold text-end'
+    <div class="col-sm-9">
+      %= text_field $fld, class => 'form-control', id => $fld, placeholder => 'cn, uid, mail, authorizedService', title => 'A list of attributes to be returned for each entry that matches the search filter. If not specified, then the server will return the attributes that are specified as accessible by default given your bind credentials. Certain additional attributes may also be available for the asking: createTimestamp'
+    </div>
+  </div>
+
+  % $fld = 'order_by';
+  <div id="<%= $fld %>Div" class="row my-3" title="" data-field="<%= $fld %>">
+    %= label_for $fld => 'Order By', class => 'col-sm-3 fw-bold text-end'
+    <div class="col-sm-9">
+      %= text_field $fld, class => 'form-control', id => $fld, placeholder => 'cn', title => 'A list of attributes, result objects to be sorted by.'
+    </div>
+  </div>
+
+  % $fld = 'search_results';
+  <div id="<%= $fld %>Div" class="row my-3" title="" data-field="<%= $fld %>">
+    %= label_for $fld => 'Search Results', class => 'col-sm-3 fw-bold text-end'
+    <div class="col-sm-9">
+      %= text_field $fld, class => 'form-control', id => $fld, placeholder => '50', title => 'A sizelimit that restricts the maximum number of entries to be returned as a result of the search. A value of 0, means that no restriction is requested.'
+    </div>
+  </div>
+
+  % $fld = 'search_scope';
+  <div id="<%= $fld %>Div" class="row my-3" title="" data-field="<%= $fld %>">
+    %= label_for $fld => 'Search Scope', class => 'col-sm-3 fw-bold text-end'
+    <div class="col-sm-9">
+      %= select_field $fld => [qw(sub children one base)], id => $fld , class => 'custom-select form-select', title => sprintf("BASE:\nsearch only the base object.\n\nONE:\nsearch the entries immediately below the base object.\n\nSUB:\nsearch the whole tree below (and including) the base object. this is the default.\n\nCHILDREN:\nsearch the whole subtree below the base object, excluding the base object itself.")
+    </div>
+  </div>
+
+  %= submit_button 'Submit', class => 'btn btn-success fw-bold text-uppercase my-3'
+
+% end
+
+% if ( defined stash('entries') ) {
+  <hr class="mt-4">
+  %= include 'protected/search/common';
+% }
+
+<script>
+ /* The logic depends on each field (including the switch container) having
+    a data-field attribute — this makes the scope of toggling predictable.  */
+
+ // Wait until the entire DOM has loaded before running the script.
+ document.addEventListener('DOMContentLoaded', function () {
+
+   // Get a reference to the checkbox (the Bootstrap checkbox).
+   const switchEl = document.getElementById('search_history');
+
+   // Get the container element of the checkbox, so we can exclude it later.
+   // This assumes the container has a 'data-field' attribute.
+   const switchContainer = switchEl.closest('[data-field]');
+
+   // Define the function that shows/hides fields based on checkbox state.
+   function toggleSearchHistoryVisibility() {
+     // Check if the checkbox is turned on (checked).
+     const isChecked = switchEl.checked;
+
+     // Loop through all form field containers that have the 'data-field' attribute.
+     document.querySelectorAll('[data-field]').forEach(function (el) {
+
+       // Skip the checkbox itself — we never want to hide it.
+       if (el === switchContainer) return;
+
+       // Check if this element has the 'search-history' class.
+       const hasSearchHistoryClass = el.classList.contains('search-history');
+
+       if (isChecked) {
+	 // When checkbox is ON:
+	 // Show only elements that have the 'search-history' class.
+	 // Hide everything else.
+	 el.classList.toggle('d-none', !hasSearchHistoryClass);
+       } else {
+	 // When checkbox is OFF:
+	 // Show elements that do not have 'search-history' class.
+	 // Hide those that do.
+	 el.classList.toggle('d-none', hasSearchHistoryClass);
+       }
+     });
+   }
+
+   // Run visibility toggle once on page load to apply correct initial state.
+   toggleSearchHistoryVisibility();
+
+   // Add event listener to react when the user toggles the checkbox.
+   switchEl.addEventListener('change', toggleSearchHistoryVisibility);
+ });
+</script>
