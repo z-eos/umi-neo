@@ -154,8 +154,8 @@
 	  </div>
 
 	  %# BODY OF OBJECT
-	  % my @attr_break = qw(pgpKey certificateRevocationList;binary umiUserBackup);
-	  % my @attr_wrap = qw(grayPublicKey sshPublicKey reqMod);
+	  % my @attr_break = @{app->{cfg}->{ui}->{page}->{search}->{attr}->{break}}; #qw(pgpKey certificateRevocationList;binary umiUserBackup);
+	  % my @attr_wrap = @{app->{cfg}->{ui}->{page}->{search}->{attr}->{wrap}}; #qw(grayPublicKey mu-sieveOnReceive sshPublicKey reqMod);
 	  % for my $attr (sort( $e->attributes )) {
 	    % next if $attr eq 'createTimestamp' || $attr eq 'creatorsName' || $attr eq 'modifyTimestamp' || $attr eq 'modifiersName';
 
