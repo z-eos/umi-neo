@@ -13,27 +13,7 @@ html,body {
   border-radius: 0 !important;
 }
 
-.umi-bg:after {
-    content: ' ';
-    display: block;
-    position: absolute;
-    left: 0;
-    top: 0;
-    width: 100%;
-    height: 100%;
-    z-index: -1;
-    background-color: var(--gray-dark);
-}
-
-#content {
-    padding-top: 70px;
-    padding-left: 30px;
-    padding-right: 30px;
-    padding-bottom: 75px;
-    min-height: 100%;
-    margin-bottom: -75px;
-}
-
+/* templates/protected/tool/keygen/ssh.html.ep */
 .required:after {
     content: "\f06a";
     font-family: "Font Awesome 5 Free";
@@ -45,63 +25,7 @@ html,body {
     padding: 0 3px 0 0;
 }
 
-.atleastone:after {
-    content: "\f071";
-    font-family: "Font Awesome 5 Free";
-    font-size: 70%;
-    font-weight: 900;
-    color: var(--warning);
-    vertical-align: top;
-    margin: 0px 0px 0px 3px;
-    padding: 0 3px 0 0;
-}
-
-.content-plus-circle:after {
-    content: "\f111";
-    font-family: "Font Awesome 5 Free";
-    font-size: 70%;
-    font-weight: 900;
-    color: var(--danger);
-    vertical-align: 60%;
-    margin: 0 0 0 -4px;
-    padding: 0 0 0 0;
-}
-
-.blocked:after {
-    content: "\f05e";
-    font-family: "Font Awesome 5 Free";
-    font-size: 70%;
-    font-weight: 900;
-    color: var(--danger);
-    vertical-align: top;
-    margin: -10px 0px 0px -20px;
-    padding: 0 5px 0 0;
-}
-
-.iconright:after {
-    content: "\f06b";
-    font-family: "Font Awesome 5 Free";
-    font-size: 100%;
-    font-weight: 900;
-    color: var(--success);
-    vertical-align: top;
-    margin: 0px 0px 5px 0px;
-    padding: 0 0 0 0;
-}
-
-.umi-dnstring:after {
-    content: "\f1ab";
-    font-family: "Font Awesome 5 Free";
-    font-size: 100%;
-    font-weight: 900;
-    color: var(--success);
-    vertical-align: top;
-    margin: 0px 0px 5px 0px;
-    padding: 0 0 0 0;
-}
-
 .mono {
-    /*  font-family: "Input Mono", monospace; */
     font-family: "Input Mono",Monaco,Menlo,Consolas,monospace,"Courier New";
     word-break: break-all;
 }
@@ -114,12 +38,6 @@ html,body {
     color:  var(--white);
     text-decoration: none;
 }
-
-/* .umi-search:hover, .umi-search:focus {
-   background-color: #F0F0F0;
-   border-color: #F0F0F0;
-   text-decoration: none;
-   } */
 
 .umi-search.btn-link:hover, .umi-search:focus {
     background-color: var(--white);
@@ -146,14 +64,6 @@ html,body {
     text-align: left;
 }
 
-.umi-text-smaller {
-    font-size: .7em;
-}
-
-.umi-text-tiny {
-    font-size: .6em;
-}
-
 .umi-text-lg {
     font-size: 1.33em;
 }
@@ -164,6 +74,14 @@ html,body {
 
 .umi-text-xs {
     font-size: .75em;
+}
+
+.umi-text-smaller {
+    font-size: .7em;
+}
+
+.umi-text-tiny {
+    font-size: .6em;
 }
 
 .umi-text-xxs {
@@ -195,10 +113,6 @@ html,body {
 .umi-margings-fixer.form-horizontal .form-group {
     margin-left: 0;
     margin-right: 0;
-}
-
-.ms-container .ms-list{
-    height: 350px;
 }
 
 #searchby {
@@ -262,86 +176,6 @@ aside, main {
 
    ------------------------------- */
 
-.sidebar-left-item {
-    opacity: 1;
-    transition: opacity cubic-bezier(1,-0.03,1,-0.09) 700ms;
-}
-
-.umi-text-truncate-noelipsis {
-    overflow: hidden;
-    white-space: nowrap;
-}
-
-#sidebar-left.folded:not(:hover) .sidebar-left-item {
-    opacity: 0;
-}
-
-#sidebar-left {
-    width: 210px;
-    /*  min-height: 100vh; */
-    transition: width cubic-bezier(1,-0.03,1,-0.09) 700ms;
-}
-
-#sidebar-left.folded:not(:hover) {
-    width: 55px;
-    text-align: left;
-}
-
-#sidebar-left.folded:hover {
-    width: 210px;
-}
-
-#sidebar-left ul.show li a {
-    text-align: left;
-    font-size: 0.80em;
-    max-height: 1000px;
-}
-
-#sidebar-left-menu ul.show {
-    padding: 0.2rem 1rem;
-}
-
-#sidebar-left ul.nav.show {
-    max-width: 210px;
-    max-height: 1000px;
-    opacity: 1;
-    transition: opacity cubic-bezier(1,-0.03,1,-0.09) 700ms, max-width cubic-bezier(1,-0.03,1,-0.09) 700ms, max-height cubic-bezier(1,-0.03,1,-0.09) 700ms;
-}
-
-#sidebar-left.folded:not(:hover) ul.nav.show {
-    max-height: 0px;
-    max-width: 0px;
-    opacity: 0;
-}
-
-/*
-#sidebar-left.folded:not(:hover) ul li a {
-  text-align: left;
-  font-size: 0.85em;
-}
-*/
-
-#sidebar-left.folded:not(:hover) ul li a b {
-    /*  display: none; */
-    max-width: 0px;
-    min-width: 0px;
-    width: 0px;
-    transition: width cubic-bezier(1,-0.03,1,-0.09) 700ms;
-}
-
-@media (max-width: 768px) {
-    #sidebar-left.folded:not(:hover) {
-	min-width: 55px;
-	max-width: 55px;
-	text-align: left;
-	margin-left: -55px !important;
-    }
-
-    /* Reappearing the sidebar on toggle button click */
-    #sidebar-left {
-	margin-left: 0;
-    }
-}
 
 
 /* -------------------------------
@@ -349,54 +183,6 @@ aside, main {
    SIDEBAR RIGHT
 
    ------------------------------- */
-
-#sidebar-right .nav-tabs .nav-link.active, #sidebar-right .nav-tabs .nav-item.show .nav-link {
-    background-color: var(--secondary);
-    /*#6b6b6b;*/
-}
-
-#sidebar-right .nav-pills .nav-link.active, #sidebar-right .nav-pills .show > .nav-link {
-    background-color:  var(--secondary);
-    /*#6b6b6b;*/
-}
-
-
-#sidebar-right {
-    width: 250px;
-    min-height: 100%;
-    transition: width cubic-bezier(1,-0.03,1,-0.09) 700ms, min-height cubic-bezier(1,-0.03,1,-0.09) 700ms;
-}
-
-#sidebar-right.folded:not(:hover) {
-    width: 55px;
-    text-align: center;
-    overflow-x: hidden;
-}
-
-#sidebar-right.folded:hover {
-    width: 250px;
-}
-
-#sidebar-right.folded:not(:hover) div.tab-content {
-    max-height: 0px;
-    max-width: 0px;
-    opacity: 0;
-    transition: opacity cubic-bezier(1,-0.03,1,-0.09) 700ms, max-width cubic-bezier(1,-0.03,1,-0.09) 700ms, max-height cubic-bezier(1,-0.03,1,-0.09) 700ms;
-}
-
-@media (max-width: 768px) {
-    #sidebar-right.folded:not(:hover) {
-	min-width: 55px;
-	max-width: 55px;
-	text-align: center;
-	margin-left: -55px !important;
-    }
-
-    /* Reappearing the sidebar on toggle button click */
-    #sidebar-right {
-	margin-left: 0;
-    }
-}
 
 /* LDAP tree */
 .ldap-tree-item {
@@ -423,42 +209,19 @@ ul.ldap-tree {
     conditional un/hiding for elements of each service
 
     --------------------------------------------------- */
-.show-none          .conditional-input {
-    display: none;
-}
-.show-mail          .conditional-input:not(.on-mail) {
-    display: none;
-}
-.show-ssh-acc       .conditional-input:not(.on-ssh-acc) {
-    display: none;
-}
-.show-comm-acc      .conditional-input:not(.on-comm-acc) {
-    display: none;
-}
-.show-dot1x-eap-md5 .conditional-input:not(.on-dot1x-eap-md5) {
-    display: none;
-}
-.show-dot1x-eap-tls .conditional-input:not(.on-dot1x-eap-tls) {
-    display: none;
-}
-.show-xmpp          .conditional-input:not(.on-xmpp) {
-    display: none;
-}
-.show-web           .conditional-input:not(.on-web) {
-    display: none;
-}
-.show-matrix        .conditional-input:not(.on-matrix) {
-    display: none;
-}
-.show-gitlab        .conditional-input:not(.on-gitlab) {
-    display: none;
-}
-form.new-user.show-simplified .hide-on-simplified {
-    display: none;
-}
-form.new-user:not(.show-simplified) .show-on-simplified {
-    display: none;
-}
+.show-none          .conditional-input                        { display: none; }
+.show-mail          .conditional-input:not(.on-mail)          { display: none; }
+.show-ssh-acc       .conditional-input:not(.on-ssh-acc)       { display: none; }
+.show-comm-acc      .conditional-input:not(.on-comm-acc)      { display: none; }
+.show-dot1x-eap-md5 .conditional-input:not(.on-dot1x-eap-md5) { display: none; }
+.show-dot1x-eap-tls .conditional-input:not(.on-dot1x-eap-tls) { display: none; }
+.show-xmpp          .conditional-input:not(.on-xmpp)          { display: none; }
+.show-web           .conditional-input:not(.on-web)           { display: none; }
+.show-matrix        .conditional-input:not(.on-matrix)        { display: none; }
+.show-gitlab        .conditional-input:not(.on-gitlab)        { display: none; }
+form.new-user.show-simplified       .hide-on-simplified       { display: none; }
+form.new-user:not(.show-simplified) .show-on-simplified       { display: none; }
+
 
 /* -------------------------------
 
@@ -524,36 +287,6 @@ form.new-user:not(.show-simplified) .show-on-simplified {
 }
 .umi-btn-close::before {
     display: none;
-}
-
-/* -------------------------------
-
-   KLUDGE patches to multi-select
-
-   ------------------------------- */
-
-.ms-container {
-    background: transparent url('../images/switch.png') no-repeat 50% 50% !important;
-    width: 100% !important;
-}
-
-.ms-selectable {
-    text-align: right;
-}
-
-/* -------------------------------
-
-   KLUDGE fixes of CoreUI theme
-
-   ------------------------------- */
-
-.aside-menu {
-    color: var(--white);
-    flex: 0 0 350px;
-}
-
-.aside-menu-hidden .aside-menu {
-    margin-right: -350px;
 }
 
 /* -------------------------------

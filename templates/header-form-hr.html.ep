@@ -7,7 +7,7 @@
 	    class="btn btn-secondary"
 	    title="clear search field"
 	    onclick="$('#shared_input').val('').focus()">
-      <i class="fas fa-eraser"></i>
+      <i class="fas fa-delete-left"></i>
     </button>
   </div>
   <input type="text"
@@ -16,19 +16,19 @@
 	 placeholder='attributeName=*value*'
 	 accesskey="s"
 	 value="<%= $par->{shared_input} %>">
-  
+
   <div class="btn-group">
     %# --- DEFAULT, SEARCH_BY_NAME BUTTON
     <form id="formUid" action="/profile" method="post">
       <input type="hidden" name="uid" id="uid">
       <button type="submit" id="submit_uid" class="btn btn-secondary">
-        <i class="fa-solid fa-search"></i>
+	<i class="fa-solid fa-search"></i>
       </button>
     </form>
-    
-    <div type="submit" 
+
+    <div type="submit"
 	 class="btn btn-secondary dropdown-toggle dropdown-toggle-split"
-	 data-bs-toggle="dropdown" 
+	 data-bs-toggle="dropdown"
 	 aria-haspopup="true"
 	 title="ldap search base by"
 	 aria-expanded="false">
@@ -58,7 +58,7 @@
 <script>
  document.querySelectorAll('form').forEach(form => {
    form.addEventListener('submit', function(e) {
-     e.preventDefault(); 
+     e.preventDefault();
      const sharedValue = document.getElementById('shared_input').value;
      this.querySelector('input[type="hidden"]').value = sharedValue;
      this.submit();

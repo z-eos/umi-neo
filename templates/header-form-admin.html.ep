@@ -14,7 +14,7 @@
 	      title="clear search field"
 	      onclick="$('#search_filter').val('').focus()"
       >
-	<i class="fas fa-eraser"></i>
+	<i class="fas fa-delete-left"></i>
       </button>
     </div>
     <input type="text"
@@ -28,20 +28,20 @@
     >
 
     <input type="hidden" name="search_base_case" id="search_base_case" >
-    
+
     <div class="btn-group">
       %# --- DEFAULT, SEARCH_BY_NAME BUTTON
       <button type="submit" title="Search &laquo;by name&raquo;"
 	      class="btn btn-secondary btn-sm"
 	      onClick="$('#search_base_case').val(this.value);$('#search_filter').focus()"
-              value="search_by_name" tabindex="13"
+	      value="search_by_name" tabindex="13"
       >
-        <i class="fas fa-search"></i>
+	<i class="fas fa-search"></i>
       </button>
 
-	<div type="submit" 
+	<div type="submit"
 	     class="btn btn-secondary btn-sm dropdown-toggle dropdown-toggle-split"
-	     data-bs-toggle="dropdown" 
+	     data-bs-toggle="dropdown"
 	     aria-haspopup="true"
 	     title="ldap search base by"
 	     aria-expanded="false">
