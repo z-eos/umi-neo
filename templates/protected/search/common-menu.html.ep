@@ -69,7 +69,7 @@
 	% } else {
 	  % my $action;
 	  % if ( $item eq 'profile' && $is_root_ppl == 1 ) {
-	    % $action = '/profile/' . $e->get_value('uid');
+	    % $action = '/profile/' . h_get_root_uid_val $e->dn;
 	  % }
 	  % elsif ( $item eq 'profile' && $is_root_prj == 1) {
 	    % $action = '/project/' . $e->get_value('cn');

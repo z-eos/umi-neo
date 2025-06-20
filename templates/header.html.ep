@@ -5,11 +5,12 @@
 >
   <button class="btn border-0 text-secondary"
 	  type="button"
-	  data-bs-toggle="collapse"
-	  data-bs-target="#sidebar-left"
 	  aria-controls="sidebar-left"
 	  aria-expanded="true"
-	  aria-label="Toggle sidebar navigation">
+	  aria-label="Toggle left sidebar"
+	  data-bs-target="#sidebar-left"
+	  data-bs-toggle="collapse"
+  >
     <i class="fa-solid fa-bars"></i>
   </button>
   <a class="navbar-brand" href="/" accesskey="h">
@@ -149,7 +150,16 @@
   <li>narrow search results for non &laquo;by ...&raquo; presets, by providing attribute in filter, like: <b>uid=*dreii.*</b></li>
   <li>to search in access log, use base <b><%= app->{cfg}->{ldap}->{accesslog} %></b></li>
 </ul>
-<a href="https://www.rfc-editor.org/rfc/rfc4515.html#section-4" target="_blank">RFC4515: LDAP Search Filters</a>`,
+<hr>
+<a href="https://www.rfc-editor.org/rfc/rfc4515.html#section-4" class="text-decoration-none" target="_blank">
+  RFC4515: LDAP Search Filters
+</a><br>
+<a href="https://ldapwiki.com/wiki/Wiki.jsp?page=LDAP%20filters%20Syntax%20and%20Choices" class="text-decoration-none" target="_blank">
+  LDAP filters Syntax and Choices
+</a><br>
+<a href="https://gist.github.com/jonlabelle/0f8ec20c2474084325a89bc5362008a7#comparison-operators" class="text-decoration-none" target="_blank">
+  LDAP Search Filter Cheatsheet
+</a>`,
      template: `
        <div class="tooltip custom-tooltip" role="tooltip">
 	 <div class="tooltip-arrow"></div>

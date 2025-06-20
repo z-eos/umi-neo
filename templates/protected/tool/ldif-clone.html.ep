@@ -2,11 +2,11 @@
 
 <h2 class="<%= app->{cfg}->{ui}->{page}->{header}->{css} %>">
   <i class="fa-solid <%= app->{cfg}->{ui}->{menu}->{clone}->{ico} . ' ' .  app->{cfg}->{ui}->{menu}->{clone}->{col} %> me-3"></i>
-  LDIF to clone <small><em class="text-muted font-monospace umi-text-tiny">( clone of dn <%= $dn_to_clone %> )</em></small>
+  LDIF to clone <br><small><em class="text-muted font-monospace umi-text-tiny">entry dn: <%= $dn_to_clone %></em></small>
 </h2>
-<hr>
+<hr class="m-0">
 
-%= form_for '/tool/clone' => (class => "form-horizontal", method => 'POST', enctype => 'multipart/form-data') => begin
+%= form_for '/tool/clone' => (class => "form-horizontal mt-4", method => 'POST', enctype => 'multipart/form-data') => begin
   <div class="row mb-3" id="text">
     <label class="col-1 col-form-label text-end fw-bold" for="keyText">LDIF</label>
     <div class="input-sm col-11">

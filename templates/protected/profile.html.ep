@@ -1,8 +1,9 @@
 %# -*- mode: web; eval: (follow-mode) -*-
 
-<h2 class="<%= app->{cfg}->{ui}->{page}->{header}->{css} %>">
+<h3 class="fw-bold <%= app->{cfg}->{ui}->{page}->{header}->{css} %>">
+  <i class="fa-regular fw-lg fa-id-card mx-2 text-success"></i>
   User profile <%== h_is_contextCSN %>
-</h2>
+</h3>
 
 % use Net::LDAP::Util qw(generalizedTime_to_time);
 % use POSIX qw(strftime);

@@ -109,12 +109,12 @@
 	    <dd class="col-sm-9">
 	      <ul class="my-0 py-0 ms-0 ps-0 list-unstyled">
 		<li>
-		  on <i class="fa-solid fa-plus"></i>
-		  /<i class="fa-solid fa-minus"></i>
+		  on <i class="fa-solid fa-plus"></i>/<i class="fa-solid fa-minus"></i>
 		  to expand/collapse the entire branch
 		</li>
 		<li>on the item searches entire branch objects</li>
 	      </ul>
+	    </dd>
 	  </dl>
 	</div>
 

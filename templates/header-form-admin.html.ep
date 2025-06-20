@@ -22,7 +22,7 @@
 	   id="search_filter"
 	   value="<%= $par->{search_filter} %>"
 	   name="search_filter"
-	   placeholder='attributeName=*value*'
+	   placeholder='(attributeName=*value*)'
 	   accesskey="s"
 	   data-bs-toggle="tooltip"
     >

@@ -111,7 +111,7 @@
   <div id="<%= $fld %>Div" class="row my-3" title="" data-field="<%= $fld %>">
     %= label_for $fld => 'Search Filter', class => 'col-sm-3 fw-bold text-end'
     <div class="col-sm-9">
-      <textarea name="<%= $fld %>" id="<%= $fld %>" class="form-control" placeholder="objectClass=* or &(uid=*)(objectClass=account)" title="A filter that defines the conditions an entry in the directory must meet in order for it to be returned by the search. It is a string (without outmost parenthesis). Characters of filter values may need to be escaped." rows="1" cols="10"></textarea>
+      %= text_area $fld, cols => 10, rows => 1, class => 'form-control', placeholder => 'objectClass=* or &(uid=*)(objectClass=account)', title => 'A filter that defines the conditions an entry in the directory must meet in order for it to be returned by the search. It is a string (without outmost parenthesis). Characters of filter values may need to be escaped.'
     </div>
   </div>
 
@@ -119,7 +119,7 @@
   <div id="<%= $fld %>Div" class="row my-3" title="" data-field="<%= $fld %>">
     %= label_for $fld => 'Show Attributes', class => 'col-sm-3 fw-bold text-end'
     <div class="col-sm-9">
-      %= text_field $fld, class => 'form-control', id => $fld, placeholder => 'cn, uid, mail, authorizedService', title => 'A list of attributes to be returned for each entry that matches the search filter. If not specified, then the server will return the attributes that are specified as accessible by default given your bind credentials. Certain additional attributes may also be available for the asking: createTimestamp'
+      %= text_field $fld, class => 'form-control', id => $fld, placeholder => 'cn, uid, e.t.c or 1.1 to get only DN', title => 'A list of attributes to be returned for each entry that matches the search filter. If not specified, then the server will return the attributes that are specified as accessible by default given your bind credentials. Certain additional attributes may also be available for the asking: createTimestamp'
     </div>
   </div>
 

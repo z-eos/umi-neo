@@ -128,7 +128,7 @@
 	    </button>
 	  % end
 	</div>
-	% if ( ! $e->exists('reqType') ) {
+	% if ( ! $e->exists('reqType') && $e->attributes > 0 ) {
 	  % $ct = substr($e->get_value('createTimestamp'), 0, -7);
 	  % $cn = substr(h_get_root_uid_val($e->get_value('creatorsName')) // $e->get_value('creatorsName'), 0, 7);
 	  % $mt = substr($e->get_value('modifyTimestamp'), 0, -7);

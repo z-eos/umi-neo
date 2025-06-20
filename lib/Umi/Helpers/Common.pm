@@ -198,6 +198,19 @@ before and after the delimiter (in most cases str is DN or RDN)
 		  return $arg->{res};
 		});
 
+=head2 h_trim_leading_newlines
+
+Removes all leading newline characters (`\n`, optionally preceded by `\r`) from the beginning of the input string.
+
+=cut
+
+  $app->helper(h_trim_leading_newlines => sub {
+		 my ($self, $text) = @_;
+		 return unless defined $text;
+		 $text =~ s/^\R+//; # \R matches any newline sequence (\n, \r, \r\n, etc.)
+		 return $text;
+	       });
+
 =head2 h_compact
 
 removes empty string values from an array or a hash by modifying the data

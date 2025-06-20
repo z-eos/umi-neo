@@ -13,7 +13,7 @@
   <input type="text"
 	 id="shared_input"
 	 class="form-control font-monospace"
-	 placeholder='attributeName=*value*'
+	 placeholder='(attributeName=*value*)'
 	 accesskey="s"
 	 value="<%= $par->{shared_input} %>">
 

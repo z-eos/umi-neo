@@ -61,7 +61,7 @@
 	  %= hidden_field search_filter => $po->{search_filter}
 	  %= hidden_field ldap_subtree => $po->{ldap_subtree}
 
-	  <div class="form-check form-switch">
+	  <div class="form-check">
 	    <input type="checkbox" class="form-check-input" role="switch"
 		   name="<%= $it %>_recursive"
 		   id="modal_<%= $it %>_switch<%= $i %>">

@@ -151,7 +151,8 @@ sub search_common  ($self) {
 									     $filter,
 									     $filter_armor );
 
-  $p->{'filter'} = '(' . $filter . ')';
+  # $p->{'filter'} = '(' . $filter . ')';
+  $p->{'filter'} = $filter =~ /^\(/ ? $filter : '(' . $filter . ')';
 
   $self->h_log('SEARCH RESULT');
 
@@ -239,7 +240,8 @@ sub advanced ($self) {
     $e_info->{$_->dn}->{root_dn} = $self->h_get_root_dn($_->dn) if ! exists $e_info->{$_->dn}->{root_dn};
     $e_info->{$_->dn}->{disabled} = 0;
     if ( defined $e_info->{$_->dn}->{root_dn} && $e_info->{$_->dn}->{root_dn} eq $_->dn ) {
-      $e_info->{$_->dn}->{disabled} = 1 if $_->get_value('gidNumber') eq $self->{app}->{cfg}->{ldap}->{defaults}->{group}->{blocked}->{gidnumber};
+      $e_info->{$_->dn}->{disabled} = 1 if $_->exists('gidNumber')
+	&& $_->get_value('gidNumber') eq $self->{app}->{cfg}->{ldap}->{defaults}->{group}->{blocked}->{gidnumber};
     } else {
       my $e_tmp = $ldap->search( { base => $e_info->{$_->dn}->{root_dn}, scope => 'base' } );
       my $e_tmp_entry = $e_tmp->entry;
