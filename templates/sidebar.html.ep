@@ -135,7 +135,7 @@
 		 role="button"
 		 aria-expanded="false"
 	      >
-		<i class="fa-solid fa-lock me-1"></i> GPG
+		<i class="fa-solid fa-lock me-2"></i> GPG
 	      </a>
 
 	      <ul class="dropdown-menu px-2">
@@ -274,7 +274,7 @@
 	       role="button"
 	       aria-expanded="false"
 	    >
-	      <i class="fa-solid fa-lock me-2"></i> GPG
+	      <i class="fa-solid fa-lock me-1"></i> GPG
 	    </a>
 
 	    <ul class="dropdown-menu px-2">

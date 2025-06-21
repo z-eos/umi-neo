@@ -229,7 +229,9 @@
  $(document).ready(function() {
 
    $('.select2').select2({
-     placeholder: "Select or add domain",
+     tags: true,
+     tokenSeparators: [',', ' '],
+     placeholder: "Select or add options",
      allowClear: true
    });
 

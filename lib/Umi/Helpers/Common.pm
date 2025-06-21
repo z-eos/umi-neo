@@ -162,6 +162,7 @@ simple transliteration to ASCII with normalization to [:alnum:]
 		  my ($self, $in) = @_;
 		  my $ou = unidecode($in);
 		  $ou =~ s/[^[:alnum:]\.-_]//g;s/[^[:alnum:]\s]//g;
+		  $self->h_log($ou);
 		  return $ou;
 		});
 
@@ -1896,6 +1897,8 @@ EXAMPLE
 
 		  $p->{login} = $self->h_macnorm({mac => $p->{login}}) if $p->{authorizedService} eq 'dot1x-eap-md5';
 
+		  ## TO INDEX ALL WHAT IS SEARCHED
+
 		  # Construct the service DN using parameters from $p and configuration.
 		  my ($ci, $rdn_val);
 		  if ( exists $p->{'userCertificate;binary'} ) {
@@ -1904,7 +1907,8 @@ EXAMPLE
 		  } elsif (exists $p->{login}) {
 		    $rdn_val = $p->{login};
 		  } else {
-		    $rdn_val = lc(sprintf("%s.%s", $root->get_value('givenName'), $root->get_value('sn')));
+		    # $rdn_val = lc(sprintf("%s.%s", $root->get_value('givenName'), $root->get_value('sn')));
+		    $rdn_val = $self->h_get_root_uid_val( $p->{dn_to_new_svc} );
 		  }
 		  my $svc_dn = sprintf(
 				       '%s=%s,%s',
@@ -1996,9 +2000,14 @@ EXAMPLE
 		  # Process each data field defined in the configuration.
 		  foreach my $df (@{$self->{app}->{cfg}->{ldap}->{authorizedService}->{$p->{authorizedService}}->{data_fields}}) {
 		    if ($df eq 'login') {
-		      $svc_attrs->{uid} = defined $p->{$df} ?
-			$p->{$df} :
-			lc(sprintf("%s.%s", $root->get_value('givenName'), $root->get_value('sn')));
+		      $svc_attrs->{uid} = $rdn_val;
+		      # $svc_attrs->{uid} = defined $p->{$df}
+		      #		? $p->{$df}
+		      #		: $self->h_get_root_uid_val($p->{dn_to_new_svc});
+		      #		# lc $self->h_translit( sprintf("%s.%s",
+		      #		#	   $root->get_value('givenName'),
+		      #		#			      $root->get_value('sn')) );
+		      $self->h_log($svc_attrs->{uid});
 		      $svc_details{uid} = $svc_attrs->{uid};
 		    } elsif ($df eq 'userPassword') {
 		      $svc_attrs->{userPassword} = exists $p->{password2} ?

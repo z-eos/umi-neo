@@ -31,6 +31,7 @@ sub newsvc ($self) {
   my $ldap = Umi::Ldap->new( $self->{app}, $self->session('uid'), $self->session('pwd') );
   my %schema_all_attributes = map { $_->{name} => $_ } $ldap->schema->all_attributes;
 
+  # collecting domains from projects
   my $search_arg = { base => $self->{app}->{cfg}->{ldap}->{base}->{project},
 		     scope => 'one',
 		     filter => '(cn=*)',
@@ -39,10 +40,23 @@ sub newsvc ($self) {
   my $search = $ldap->search( $search_arg );
   $self->h_log( $self->h_ldap_err($search, $search_arg) ) if $search->code && $search->code != LDAP_NO_SUCH_OBJECT;
 
-  my ($domains, $domains_arr, $domains_ref);
+  my ($domains, $associatedDomains, $domains_ref);
   foreach ($search->entries) {
     $domains_ref = $_->get_value('associatedDomain', asref => 1);
-    push @$domains_arr, @$domains_ref if $domains_ref->[0] ne 'unknown';
+    push @$associatedDomains, @$domains_ref if $domains_ref->[0] ne 'unknown';
+  }
+
+  # collecting domains from services
+  $search_arg = { base => $self->{app}->{cfg}->{ldap}->{base}->{acc_svc_common},
+		  filter => '(&(authorizedService=*@*)(objectClass=inetOrgPerson))',
+		  attrs => ['associatedDomain'] };
+  # $self->h_log($search_arg);
+  $search = $ldap->search( $search_arg );
+  $self->h_log( $self->h_ldap_err($search, $search_arg) ) if $search->code && $search->code != LDAP_NO_SUCH_OBJECT;
+
+  foreach ($search->entries) {
+    $domains_ref = $_->get_value('associatedDomain', asref => 1);
+    push @$associatedDomains, @$domains_ref if $domains_ref->[0] ne 'unknown';
   }
 
   ($domains, $err) = $ldap->all_hosts;
@@ -50,7 +64,7 @@ sub newsvc ($self) {
   # my $axfr = $self->h_dns_resolver({ type => 'AXFR', ns_custom => 1 })->{success};
   my $axfr = $self->h_dns_rr({ type => 'AXFR', whole_axfr => 0 })->{success};
   my %seen;
-  @{$domains} = grep { !$seen{$_}} (@$domains, sort keys %{$axfr});
+  @{$domains} = grep { !$seen{$_}} (@$associatedDomains, @$domains, sort keys %{$axfr});
 
   $search_arg = { base => $self->{app}->{cfg}->{ldap}->{base}->{rad_groups},
 		  filter => '(cn=*)' };
