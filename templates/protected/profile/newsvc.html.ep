@@ -232,7 +232,8 @@
      tags: true,
      tokenSeparators: [',', ' '],
      placeholder: "Select or add options",
-     allowClear: true
+     allowClear: true,
+     width: 'element'
    });
 
  });

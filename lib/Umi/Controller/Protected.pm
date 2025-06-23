@@ -1412,7 +1412,8 @@ sub profile_modify ($self) {
       # as strings, so we need them be passed to/fro form as strings	 #
       ####################################################################
       if ( $_ eq 'telephoneNumber' || $_ eq 'umiUserIm' ) {
-	$self->req->params->merge( $_ => join(', ', @{$from_ldap->{$_}}) );
+	$self->req->params->merge( $_ => join(', ', @{$from_ldap->{$_}}) )
+	  if exists $from_ldap->{$_};
       } else {
 	$self->req->params->merge( $_ => $from_ldap->{$_} ) if $e->exists($_);
       }

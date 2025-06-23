@@ -23,7 +23,7 @@ use Net::LDAP::Constant qw(
 use Umi::Ldap;
 
 sub newsvc ($self) {
-  my (%debug, $p, $err);
+  my (%debug, $p); #, $err);
   my $par = $self->req->params->to_hash;
   %$p = map { $_ => $par->{$_} } grep { defined $par->{$_} && $par->{$_} ne '' } keys %$par;
   $self->h_log($p);
@@ -31,65 +31,69 @@ sub newsvc ($self) {
   my $ldap = Umi::Ldap->new( $self->{app}, $self->session('uid'), $self->session('pwd') );
   my %schema_all_attributes = map { $_->{name} => $_ } $ldap->schema->all_attributes;
 
-  ####################################
-  # collecting domains from projects #
-  ####################################
-  my $search_arg = { base => $self->{app}->{cfg}->{ldap}->{base}->{project},
-		     scope => 'one',
-		     filter => '(cn=*)',
-		     attrs => ['associatedDomain'] };
-  # $self->h_log($search_arg);
-  my $search = $ldap->search( $search_arg );
-  $self->h_log( $self->h_ldap_err($search, $search_arg) ) if $search->code && $search->code != LDAP_NO_SUCH_OBJECT;
+  # ####################################
+  # # collecting domains from projects #
+  # ####################################
+  # my $search_arg = { base => $self->{app}->{cfg}->{ldap}->{base}->{project},
+  #		     scope => 'one',
+  #		     filter => '(cn=*)',
+  #		     attrs => ['associatedDomain'] };
+  # # $self->h_log($search_arg);
+  # my $search = $ldap->search( $search_arg );
+  # $self->h_log( $self->h_ldap_err($search, $search_arg) ) if $search->code && $search->code != LDAP_NO_SUCH_OBJECT;
 
-  my ($domains, $associatedDomains, $domains_ref);
-  foreach ($search->entries) {
-    $domains_ref = $_->get_value('associatedDomain', asref => 1);
-    push @$associatedDomains, @$domains_ref if $domains_ref->[0] ne 'unknown';
-  }
+  # my ($domains, $associatedDomains, $domains_ref);
+  # foreach ($search->entries) {
+  #   $domains_ref = $_->get_value('associatedDomain', asref => 1);
+  #   push @$associatedDomains, @$domains_ref if $domains_ref->[0] ne 'unknown';
+  # }
 
-  ####################################
-  # collecting domains from services #
-  ####################################
-  $search_arg = { base => $self->{app}->{cfg}->{ldap}->{base}->{acc_svc_common},
-		  filter => '(&(authorizedService=*@*)(objectClass=inetOrgPerson))',
-		  attrs => ['associatedDomain'] };
-  # $self->h_log($search_arg);
-  $search = $ldap->search( $search_arg );
-  $self->h_log( $self->h_ldap_err($search, $search_arg) ) if $search->code && $search->code != LDAP_NO_SUCH_OBJECT;
+  # ####################################
+  # # collecting domains from services #
+  # ####################################
+  # $search_arg = { base => $self->{app}->{cfg}->{ldap}->{base}->{acc_svc_common},
+  #		  filter => '(&(authorizedService=*@*)(objectClass=inetOrgPerson))',
+  #		  attrs => ['associatedDomain'] };
+  # # $self->h_log($search_arg);
+  # $search = $ldap->search( $search_arg );
+  # $self->h_log( $self->h_ldap_err($search, $search_arg) ) if $search->code && $search->code != LDAP_NO_SUCH_OBJECT;
 
-  foreach ($search->entries) {
-    $domains_ref = $_->get_value('associatedDomain', asref => 1);
-    push @$associatedDomains, @$domains_ref if $domains_ref->[0] ne 'unknown';
-  }
+  # foreach ($search->entries) {
+  #   $domains_ref = $_->get_value('associatedDomain', asref => 1);
+  #   push @$associatedDomains, @$domains_ref if $domains_ref->[0] ne 'unknown';
+  # }
 
-  ($domains, $err) = $ldap->all_hosts;
-  $self->h_log( $err ) if $err;
-  # my $axfr = $self->h_dns_resolver({ type => 'AXFR', ns_custom => 1 })->{success};
-  my $axfr = $self->h_dns_rr({ type => 'AXFR', whole_axfr => 0 })->{success};
+  # ($domains, $err) = $ldap->all_hosts;
+  # $self->h_log( $err ) if $err;
+  # # my $axfr = $self->h_dns_resolver({ type => 'AXFR', ns_custom => 1 })->{success};
+  # my $axfr = $self->h_dns_rr({ type => 'AXFR', whole_axfr => 0 })->{success};
 
-  my ($hosts, $err) = $ldap->all_hosts;
+  # my ($hosts, $err) = $ldap->all_hosts;
+  # push @{$debug{$err->{status}}}, $err->{message} if defined $err;
+  # undef $err;
+
+  # ##########################################################################
+  # # Sort domains by frequency (descending) then alphabetically (ascending) #
+  # ##########################################################################
+  # my %unique;
+  # $unique{$_}++ foreach (@$associatedDomains, @$domains, @$hosts, sort keys %{$axfr});
+  # @{$domains} = sort {
+  #   $unique{$b} <=> $unique{$a} || # Higher frequency first
+  #     $a cmp $b			   # Then alphabetically
+  #   } keys %unique;
+  # $self->h_log( $domains );
+
+  my ($domains, $err) = $ldap->all_hosts;
   push @{$debug{$err->{status}}}, $err->{message} if defined $err;
   undef $err;
-
-  ##########################################################################
-  # Sort domains by frequency (descending) then alphabetically (ascending) #
-  ##########################################################################
-  my %unique;
-  $unique{$_}++ foreach (@$associatedDomains, @$domains, @$hosts, sort keys %{$axfr});
-  @{$domains} = sort {
-    $unique{$b} <=> $unique{$a} || # Higher frequency first
-      $a cmp $b			   # Then alphabetically
-    } keys %unique;
-  # $self->h_log( $domains );
 
   ########################
   # RADIUS related stuff #
   ########################
-  $search_arg = { base => $self->{app}->{cfg}->{ldap}->{base}->{rad_groups},
+  my $search_arg = { base => $self->{app}->{cfg}->{ldap}->{base}->{rad_groups},
 		  filter => '(cn=*)' };
   # $self->h_log($search_arg);
-  $search = $ldap->search( $search_arg );
+  my $search = $ldap->search( $search_arg );
   $self->h_log( $self->h_ldap_err($search, $search_arg) ) if $search->code && $search->code != LDAP_NO_SUCH_OBJECT;
 
   my $rad_groups;
