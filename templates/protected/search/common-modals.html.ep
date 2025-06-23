@@ -141,7 +141,7 @@
 
 	  <div class="input-group">
 	    <span class="input-group-text text-right text-uppercase fw-bold" for="newSuperior">
-	      <abbr title="If given this value should be the DN of the new superior for  DN">new superior:</abbr>
+	      <abbr title="If given this value should be the DN of the new, *existent* superior for DN">new superior:</abbr>
 	    </span>
 	    %= text_field 'newsuperior', class => 'form-control', id => 'newSuperior', placeholder => substr($dn, index($dn, ',') + 1), title => 'new superior  (must exist, will not be created)'
 	  </div>

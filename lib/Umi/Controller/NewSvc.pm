@@ -31,7 +31,9 @@ sub newsvc ($self) {
   my $ldap = Umi::Ldap->new( $self->{app}, $self->session('uid'), $self->session('pwd') );
   my %schema_all_attributes = map { $_->{name} => $_ } $ldap->schema->all_attributes;
 
-  # collecting domains from projects
+  ####################################
+  # collecting domains from projects #
+  ####################################
   my $search_arg = { base => $self->{app}->{cfg}->{ldap}->{base}->{project},
 		     scope => 'one',
 		     filter => '(cn=*)',
@@ -46,7 +48,9 @@ sub newsvc ($self) {
     push @$associatedDomains, @$domains_ref if $domains_ref->[0] ne 'unknown';
   }
 
-  # collecting domains from services
+  ####################################
+  # collecting domains from services #
+  ####################################
   $search_arg = { base => $self->{app}->{cfg}->{ldap}->{base}->{acc_svc_common},
 		  filter => '(&(authorizedService=*@*)(objectClass=inetOrgPerson))',
 		  attrs => ['associatedDomain'] };
@@ -63,9 +67,25 @@ sub newsvc ($self) {
   $self->h_log( $err ) if $err;
   # my $axfr = $self->h_dns_resolver({ type => 'AXFR', ns_custom => 1 })->{success};
   my $axfr = $self->h_dns_rr({ type => 'AXFR', whole_axfr => 0 })->{success};
-  my %seen;
-  @{$domains} = grep { !$seen{$_}} (@$associatedDomains, @$domains, sort keys %{$axfr});
 
+  my ($hosts, $err) = $ldap->all_hosts;
+  push @{$debug{$err->{status}}}, $err->{message} if defined $err;
+  undef $err;
+
+  ##########################################################################
+  # Sort domains by frequency (descending) then alphabetically (ascending) #
+  ##########################################################################
+  my %unique;
+  $unique{$_}++ foreach (@$associatedDomains, @$domains, @$hosts, sort keys %{$axfr});
+  @{$domains} = sort {
+    $unique{$b} <=> $unique{$a} || # Higher frequency first
+      $a cmp $b			   # Then alphabetically
+    } keys %unique;
+  # $self->h_log( $domains );
+
+  ########################
+  # RADIUS related stuff #
+  ########################
   $search_arg = { base => $self->{app}->{cfg}->{ldap}->{base}->{rad_groups},
 		  filter => '(cn=*)' };
   # $self->h_log($search_arg);
@@ -91,12 +111,14 @@ sub newsvc ($self) {
   $self->h_log( $self->h_ldap_err($search, $search_arg) ) if $search->code && $search->code != LDAP_NO_SUCH_OBJECT;
   my $root = $search->entry;
 
+
   $self->stash( dn_to_new_svc => $p->{dn_to_new_svc},
 		root => $root,
 		schema => \%schema_all_attributes,
 		domains => $domains,
 		rad_groups => $rad_groups,
 		rad_profiles => $rad_profiles );
+
 
   my $uploads = $self->req->uploads;
   # $self->h_log($uploads);
@@ -144,17 +166,16 @@ sub newsvc ($self) {
   # $self->h_log($p);
 
   if ( ! $v->has_error ) {
-    #---------------------------------------------------------------------
-    # newsvc branch
-    #---------------------------------------------------------------------
 
+    #################
+    # newsvc branch #
+    #################
     my $br = $self->h_branch_add_if_not_exists($p, $ldap, $root, \%debug);
     # $self->h_log(\%debug);
 
-    #---------------------------------------------------------------------
-    # newsvc account
-    #---------------------------------------------------------------------
-
+    ##################
+    # newsvc account #
+    ##################
     my $svc = $self->h_service_add_if_not_exists($p, $ldap, $root, $br, \%debug);
     # $self->h_log(\%debug);
   }

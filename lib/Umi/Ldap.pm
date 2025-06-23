@@ -583,6 +583,7 @@ expected input:
 sub moddn {
   my ($self, $args) = @_;
   # $self->{app}->h_log($args);
+
   my $msg;
   if (defined $args->{newsuperior} ) {
     $msg = $self->ldap->moddn ( $args->{src_dn},
@@ -597,11 +598,10 @@ sub moddn {
   # $self->{app}->h_log($msg);
   my $return;
   if ($msg->is_error()) {
-    $return = { status => 'error', message => $self->err( $msg, 0, $args->{src_dn} )->{html} };
+    $return = { error => [ $self->err( $msg, 0, $args->{src_dn} )->{html} ] };
   } else {
-    $return = { status => 'ok',
-		message => sprintf('Entry with DN: <mark>%s</mark> successfully renamed, new RDN: <mark class="bg-success">%s</mark>',
-				   $args->{src_dn}, $args->{newrdn}) };
+    $return = { ok => [ sprintf('Entry with DN: <mark>%s</mark> successfully renamed, new RDN: <mark class="bg-success">%s</mark>',
+				$args->{src_dn}, $args->{newrdn}) ] };
   }
   # $self->{app}->h_log($return);
   return $return;

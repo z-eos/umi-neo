@@ -51,7 +51,7 @@
       <div id="<%= $fld %>Div" class="row my-3 d-none" title="" data-field="<%= $fld %>">
 	%= label_for $fld => $fld, class => 'col-sm-3 fw-bold text-end text-uppercase', title => $schema->{$fld}->{desc}
 	<div class="col-sm-9">
-	  %= select_field $fld => $options, id => $fld, class => 'custom-select form-select select2'
+	  %= select_field $fld => $options, id => $fld, class => 'custom-select form-select col-sm-9 select2'
 	</div>
       </div>
     % }
