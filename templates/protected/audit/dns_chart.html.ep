@@ -1,7 +1,10 @@
 %# -*- mode: web; eval: (follow-mode) -*-
 <link href="/assets/js/datatables/datatables.min.css" rel="stylesheet" type="text/css">
 
-<h1 class="mt-3 mb-4">Domains usage frequencies</h1>
+<h1 class="mt-3 mb-4">
+  Domains usage frequencies
+  <i class="text-body-secondary fs-4">(top <%= app->{cfg}->{tool}->{dns}->{chart}->{top_number} %> domains)</i>
+</h1>
 
 % my ($insts_str, %insts, $inst_id);
 
@@ -11,8 +14,9 @@
   <!-- ECharts Library -->
   <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
 
+
   <!-- Chart Container -->
-  <div id="myChart" style="width: 100%; max-width: 1024px; height: 768px;" class="mx-auto"></div>
+  <div id="myChart" style="width: 100%; max-width: 1024px; height: 768px;" class="vh-100 m-0 p-0"></div>
 
   <script>
    // Mojo-provided data
@@ -25,21 +29,16 @@
    // Bootstrap 5 theme detection
    const isDark = document.documentElement.getAttribute('data-bs-theme') === 'dark';
 
-   // Colors provided by your config
-   //const colorPalette = [ '<%== join "', '", @{app->{cfg}->{tool}->{dns}->{chart}->{colors}} %>' ];
-
    const rootStyles = getComputedStyle(document.documentElement);
 
    const colorPalette = [
-     rootStyles.getPropertyValue('--bs-danger').trim(),   // --bs-danger (typically red)
-     rootStyles.getPropertyValue('--bs-warning').trim(),  // --bs-warning
-     rootStyles.getPropertyValue('--bs-success').trim(),  // --bs-success
-     rootStyles.getPropertyValue('--bs-info').trim(),     // --bs-info
-     rootStyles.getPropertyValue('--bs-primary').trim(),  // --bs-primary
-     rootStyles.getPropertyValue('--bs-secondary').trim(),// --bs-secondary
-     rootStyles.getPropertyValue('--bs-dark').trim(),     // --bs-dark
-     rootStyles.getPropertyValue('--bs-light').trim(),    // --bs-light
-     rootStyles.getPropertyValue('--bs-teal')?.trim() || '#20c997', // Fallback
+     rootStyles.getPropertyValue('--bs-danger').trim(),
+     rootStyles.getPropertyValue('--bs-warning').trim(),
+     rootStyles.getPropertyValue('--bs-success').trim(),
+     rootStyles.getPropertyValue('--bs-info').trim(),
+     rootStyles.getPropertyValue('--bs-primary').trim(),
+     rootStyles.getPropertyValue('--bs-secondary').trim(),
+     rootStyles.getPropertyValue('--bs-teal')?.trim() || '#20c997',
      rootStyles.getPropertyValue('--bs-orange')?.trim() || '#fd7e14',
      rootStyles.getPropertyValue('--bs-pink')?.trim() || '#d63384',
      rootStyles.getPropertyValue('--bs-indigo')?.trim() || '#6610f2',
@@ -53,6 +52,9 @@
      value: values[idx],
      name: label
    }));
+   // Sort in descending order by value
+   seriesData.sort((a, b) => b.value - a.value);
+   const total = seriesData.reduce((sum, item) => sum + item.value, 0);
 
    // Initialize chart
    const myChart = echarts.init(document.getElementById('myChart'), null, {
@@ -68,39 +70,42 @@
        formatter: '{b}: {c} ({d}%)'
      },
      legend: {
-       // orient: 'vertical',
-       // right: 10,
-       top: 'bottom',
+       show: true,
+       orient: 'vertical',
+       right: 20,
+       top: 20,
+       itemWidth: 10,
+       itemHeight: 10,
+       icon: 'rect',
+       itemStyle: {
+	 borderWidth: 0
+       },
+       formatter: function (name) {
+	 const item = seriesData.find(d => d.name === name);
+	 if (item) {
+	   const percent = ((item.value / total) * 100).toFixed(0); // like tooltip {d}%
+	   return `${name} (${percent}%)`;
+	 }
+	 return name;
+       },
        textStyle: {
-	 color: isDark ? '#dee2e6' : '#212529',
-	 fontFamily: 'inherit',
-	 fontSize: 12
+	 color: rootStyles.getPropertyValue('--bs-secondary').trim()
        }
      },
      series: [
        {
 	 name: 'Top items',
 	 type: '<%= app->{cfg}->{tool}->{dns}->{chart}->{type} %>',
-	 radius: ['10%', '90%'],
+	 radius: ['30%', '70%'],
+	 center: ['35%', '35%'],
 	 avoidLabelOverlap: true,
 	 roseType: 'area',
 	 itemStyle: {
-	   borderRadius: 5,
-	   //borderColor: isDark ? '#212529' : '#ffffff',
-	   //borderColor: rootStyles.getPropertyValue('--bs-gray')?.trim() || '#6c757d',
-	   borderColor: isDark ? '#ffffff' : '#000000',
+	   borderRadius: 0,
+	   borderColor: rootStyles.getPropertyValue('--bs-secondary').trim(),
 	   borderWidth: 1
 	 },
 	 label: {
-	   show: false
-	 },
-	 emphasis: {
-	   label: {
-	     show: true,
-	     fontWeight: 'bold'
-	   }
-	 },
-	 labelLine: {
 	   show: false
 	 },
 	 data: seriesData
@@ -112,15 +117,15 @@
    // Render chart
    myChart.setOption(option);
 
-   // Handle theme change dynamically (if supported by your app)
    const observer = new MutationObserver(() => {
      const isNowDark = document.documentElement.getAttribute('data-bs-theme') === 'dark';
-     option.legend.textStyle.color = isNowDark ? '#dee2e6' : '#212529';
-     option.series[0].itemStyle.borderColor = isNowDark ? '#212529' : '#ffffff';
+     option.legend.textStyle.color = rootStyles.getPropertyValue('--bs-secondary').trim();
+     option.series[0].itemStyle.borderColor = rootStyles.getPropertyValue('--bs-secondary').trim();
      myChart.setOption(option);
    });
 
    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['data-bs-theme'] });
+
   </script>
 
 % }

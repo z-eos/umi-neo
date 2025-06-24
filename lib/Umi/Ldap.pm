@@ -500,7 +500,7 @@ sub all_hosts {
     if ( $mesg->count ) {
       foreach my $e ($mesg->entries) {
 	  $domains_ref = $e->get_value('associatedDomain', asref => 1);
-	  push @$domains, @$domains_ref if $domains_ref->[0] ne 'unknown';
+	  push @$domains, @$domains_ref if defined $domains_ref && $domains_ref->[0] ne 'unknown';
       }
     }
   }
