@@ -2291,6 +2291,30 @@ sub audit_dns_zones ($self) {
   $self->render( template => 'protected/audit/dns', zones => $zones );
 }
 
+=head1 audit_dns_chart
+
+
+
+=cut
+
+sub audit_dns_chart ($self) {
+  my %debug;
+  my $ldap = Umi::Ldap->new( $self->{app}, $self->session('uid'), $self->session('pwd') );
+  my ($data, $err) = $ldap->all_hosts('frequencies');
+  push @{$debug{error}}, @$err if defined $err;
+  # $self->h_log($data);
+
+  my $top_n = $self->{app}->{cfg}->{tool}->{dns}->{chart}->{top_number};
+  my @top_pairs = sort { $data->{$b} <=> $data->{$a} } keys %$data;
+  splice(@top_pairs, $top_n) if @top_pairs > $top_n;
+
+  my %filtered = map { $_ => $data->{$_} } @top_pairs;
+
+  $self->render( template => 'protected/audit/dns_chart',
+		 debug => \%debug,
+		 freq => encode_json(\%filtered) );
+}
+
 =head1 audit_gpg_keys
 
 

@@ -125,6 +125,11 @@
 		    <i class="fa-solid fa-list-check fa-fw me-2"></i> all zones
 		  </a>
 		</li>
+		<li>
+		  <a class="dropdown-item text-lowercase px-0" href="/audit/dns/charts">
+		    <i class="fa-solid fa-chart-pie fa-fw me-2"></i> freq
+		  </a>
+		</li>
 	      </ul>
 	    </li>
 

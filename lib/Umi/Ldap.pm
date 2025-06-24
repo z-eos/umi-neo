@@ -405,13 +405,18 @@ sub get_role {
 
 =head2 all_hosts
 
-get all hosts used in ou=machines and ou=Netgroups
+Collect all values of attribute associatedDomain used in: ou=machines, ou=Project and services of ou=People
+further, collect all domains used in ou=Netgroups and finally all domains (via AXFR) from zones configured
 
-return array/ref of host names arrayref and error (if any)
+Sort domains by frequency (descending) then alphabetically (ascending)
+
+Return array/ref of host names arrayref and error (if any)
 
 =cut
 
-sub all_hosts ($self) {
+sub all_hosts {
+  my ($self, $format) = @_;
+  $format = 'unique-alphabetically' if ! defined $format;
   my ($mesg, $search_arg, $err, $domains, $domains_ref);
 
   ####################################
@@ -485,7 +490,7 @@ sub all_hosts ($self) {
   # collecting domains from services #
   ####################################
   $search_arg = { base => $self->{app}->{cfg}->{ldap}->{base}->{acc_svc_common},
-		  filter => '(&(authorizedService=*@*)(objectClass=inetOrgPerson))',
+		  filter => '(&(authorizedService=*@*)(|(objectClass=inetOrgPerson)(objectClass=uidObject)))',
 		  attrs => ['associatedDomain'] };
   $mesg = $self->search( $search_arg );
   if ( $mesg->code && $mesg->code != 32 ) {
@@ -505,15 +510,21 @@ sub all_hosts ($self) {
   ################################
   my $axfr = $self->{app}->h_dns_rr({ type => 'AXFR', whole_axfr => 0 })->{success};
 
-  ##########################################################################
-  # Sort domains by frequency (descending) then alphabetically (ascending) #
-  ##########################################################################
   my %unique;
   $unique{$_}++ foreach (@$domains, sort keys %{$axfr});
-  @{$domains} = sort {
-    $unique{$b} <=> $unique{$a} || # Higher frequency first
-      $a cmp $b			   # Then alphabetically
-    } keys %unique;
+
+  if ( $format eq 'unique-alphabetically' ) {
+    ##########################################################################
+    # Sort domains by frequency (descending) then alphabetically (ascending) #
+    ##########################################################################
+    @{$domains} = sort {
+      $unique{$b} <=> $unique{$a} || # Higher frequency first
+	$a cmp $b		     # Then alphabetically
+      } keys %unique;
+  } elsif ( $format eq 'frequencies' ) {
+    # @$domains = sort { $unique{$b} <=> $unique{$a} } keys %unique;
+    $domains = \%unique;
+  }
 
   # $self->{app}->h_log( $res );
   return wantarray ? ( $domains, $err ) : [ $domains, $err ];

@@ -510,6 +510,10 @@ sub _startup_routes ($self) {
     ->get( '/audit/gpg/:key')
     ->requires(is_role => ['admin,coadmin,hr', {cmp => 'or'}])
     ->to('protected#audit_gpg_keys', key => 'all');
+  $protected_root
+    ->get( '/audit/dns/charts')
+    ->requires(is_role => ['admin,coadmin,hr', {cmp => 'or'}])
+    ->to('protected#audit_dns_chart');
 
   ## TOOLs
   ### aside
