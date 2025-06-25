@@ -2335,20 +2335,25 @@ sub audit_ages_chart ($self) {
 
   my $search_arg = { base => $self->{app}->{cfg}->{ldap}->{base}->{acc_root},
 		     scope => 'one',
-		     attrs => [qw(uid umiUserDateOfBirth) ] };
+		     attrs => [qw(uid umiUserDateOfBirth umiUserGender) ] };
   my $search = $ldap->search( $search_arg );
   $self->h_log( $self->{app}->h_ldap_err($search, $search_arg) ) if $search->code;
 
   my %ages;
   foreach ($search->entries) {
     # $self->h_log( $_->get_value('umiUserDateOfBirth') );
-    $ages{ $_->get_value('uid') } = $self->h_years_since( $_->get_value('umiUserDateOfBirth') )
-      if $_->exists('umiUserDateOfBirth');
+    if ( $_->exists('umiUserDateOfBirth') && $_->exists('umiUserGender') ) {
+      $ages{ $_->get_value('uid') } =
+	{
+	 age => $self->h_years_since( $_->get_value('umiUserDateOfBirth') ),
+	 gender => $_->get_value('umiUserGender')
+	}
+      }
   }
 
   # $self->h_log(\%ages);
 
-  $self->render( template => 'protected/audit/chart_ages', debug => \%debug, chart => \@{[values %ages]} );
+  $self->render( template => 'protected/audit/chart_ages', debug => \%debug, chart => encode_json(\@{[values %ages]}) );
 }
 
 =head1 audit_gpg_keys
