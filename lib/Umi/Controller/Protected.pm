@@ -21,6 +21,8 @@ use Net::LDAP::Constant qw(
 			    LDAP_INSUFFICIENT_ACCESS
 			    LDAP_CONTROL_SORTRESULT
 			 );
+use Net::LDAP::Util qw(generalizedTime_to_time);
+
 use Storable qw(nfreeze);
 use Umi::Ldap;
 
@@ -1407,12 +1409,18 @@ sub profile_modify ($self) {
   unless (keys %$from_form > 1) {
     foreach (@$attrs) {
       next if $_ eq 'jpegPhoto';
-      ####################################################################
-      # telephoneNumber and umiUserIm values are represented in the form #
-      # as strings, so we need them be passed to/fro form as strings	 #
-      ####################################################################
       if ( $_ eq 'telephoneNumber' || $_ eq 'umiUserIm' ) {
+	###############################################################
+	# telephoneNumber and umiUserIm attributes values are stings, #
+	# form field assumes comma delimited string		      #
+	###############################################################
 	$self->req->params->merge( $_ => join(', ', @{$from_ldap->{$_}}) )
+	  if exists $from_ldap->{$_};
+      } elsif ( $_ eq 'umiUserDateOfBirth' || $_ eq 'umiUserDateOfEmployment' || $_ eq 'umiUserDateOfTermination' ) {
+	###################################################
+	# attribute value to form field conversion	  #
+	###################################################
+	$self->req->params->merge( $_ => strftime '%Y-%m-%d', localtime(generalizedTime_to_time($from_ldap->{$_})) )
 	  if exists $from_ldap->{$_};
       } else {
 	$self->req->params->merge( $_ => $from_ldap->{$_} ) if $e->exists($_);
@@ -2293,7 +2301,7 @@ sub audit_dns_zones ($self) {
 
 =head1 audit_dns_chart
 
-
+Domain occurrence frequency in LDAP objects
 
 =cut
 
@@ -2310,9 +2318,37 @@ sub audit_dns_chart ($self) {
 
   my %filtered = map { $_ => $data->{$_} } @top_pairs;
 
-  $self->render( template => 'protected/audit/dns_chart',
+  $self->render( template => 'protected/audit/chart_dns',
 		 debug => \%debug,
 		 freq => encode_json(\%filtered) );
+}
+
+=head1 audit_ages_chart
+
+personnel age chart
+
+=cut
+
+sub audit_ages_chart ($self) {
+  my %debug;
+  my $ldap = Umi::Ldap->new( $self->{app}, $self->session('uid'), $self->session('pwd') );
+
+  my $search_arg = { base => $self->{app}->{cfg}->{ldap}->{base}->{acc_root},
+		     scope => 'one',
+		     attrs => [qw(uid umiUserDateOfBirth) ] };
+  my $search = $ldap->search( $search_arg );
+  $self->h_log( $self->{app}->h_ldap_err($search, $search_arg) ) if $search->code;
+
+  my %ages;
+  foreach ($search->entries) {
+    # $self->h_log( $_->get_value('umiUserDateOfBirth') );
+    $ages{ $_->get_value('uid') } = $self->h_years_since( $_->get_value('umiUserDateOfBirth') )
+      if $_->exists('umiUserDateOfBirth');
+  }
+
+  # $self->h_log(\%ages);
+
+  $self->render( template => 'protected/audit/chart_ages', debug => \%debug, chart => \@{[values %ages]} );
 }
 
 =head1 audit_gpg_keys

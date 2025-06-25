@@ -17,7 +17,7 @@ use IPC::Run qw(run);
 use List::Util qw(tail);
 use MIME::Base64 qw(decode_base64 encode_base64);
 use Net::CIDR::Set;
-use Net::LDAP::Util qw(ldap_explode_dn time_to_generalizedTime);
+use Net::LDAP::Util qw(ldap_explode_dn time_to_generalizedTime generalizedTime_to_time);
 use POSIX qw(strftime :sys_wait_h);
 use Text::Unidecode;
 use Time::Piece;
@@ -1757,6 +1757,25 @@ convert timestamp like YYYY-mm-dd to YYYYmmdd000000Z
 		  return $res;
 		});
 
+=head2 h_years_since
+
+calculates number of full years since date
+
+=cut
+
+  $app->helper( h_years_since => sub {
+		  my ($self, $date) = @_;
+		  my $then = localtime( generalizedTime_to_time($date) );
+		  my $now  = localtime();
+		  my $years = $now->year - $then->year;
+
+		  # Adjust if current date is before anniversary in the current year
+		  $years--
+		    if $now->mon < $then->mon || ($now->mon == $then->mon && $now->mday < $then->mday);
+
+		  return $years;
+		});
+
   # =head2 h_domains_to_hash
 
   # convert an array of domain names into a hash where the keys are the
@@ -2131,10 +2150,10 @@ returns all the vCards as a single string
 		    my %h;
 		    my $e = $entries->{$dn};
 
-		    $h{full_name}    = $e->{gecos}->[0] if $e->{gecos} && $e->{gecos}->[0] ne '';
-		    $h{given_names}  = $e->{givenname}  if $e->{givenname} && $e->{givenname}->[0] ne '';
-		    $h{family_names} = $e->{sn}         if $e->{sn} && $e->{sn}->[0] ne '';
-		    $h{title}        = $e->{title}->[0] if $e->{title} && $e->{title}->[0] ne '';
+		    $h{full_name}    = $e->{gecos}->[0] if ref($e->{gecos}) eq 'ARRAY' && $e->{gecos}->[0] ne '';
+		    $h{given_names}  = $e->{givenname}  if ref($e->{givenname}) eq 'ARRAY' && $e->{givenname}->[0] ne '';
+		    $h{family_names} = $e->{sn}         if ref($e->{sn}) eq 'ARRAY' && $e->{sn}->[0] ne '';
+		    $h{title}        = $e->{title}->[0] if ref($e->{title}) eq 'ARRAY' && $e->{title}->[0] ne '';
 		    # otherwise warning '... uninitialized value ... vCard.pm line 112' occures
 		    $h{photo} = '';
 

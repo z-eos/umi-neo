@@ -59,40 +59,40 @@
       </thead>
       <tbody>
 	<tr>
-	  <td><i class="fas fa-fw fa-search me-2"></i> focus header Search Field</td>
+	  <td class="text-secondary"><i class="fas fa-fw fa-search me-2"></i> focus header Search Field</td>
 	  <td class="fw-bold" scope="row"><kbd>s</kbd></td>
-	  <td>global</td>
+	  <td class="text-secondary">global</td>
 	</tr>
 	<tr>
-	  <td><i class="fa-solid fa-fw fa-moon me-2"></i> toggle dark theme</td>
+	  <td class="text-secondary"><i class="fa-solid fa-fw fa-moon me-2"></i> toggle dark theme</td>
 	  <td class="fw-bold" scope="row"><kbd>d</kbd></td>
-	  <td>global</td>
+	  <td class="text-secondary">global</td>
 	</tr>
 	<tr>
-	  <td><i class="fa-solid fa-fw fa-sun me-2"></i> toggle light theme</td>
+	  <td class="text-secondary"><i class="fa-solid fa-fw fa-sun me-2"></i> toggle light theme</td>
 	  <td class="fw-bold" scope="row"><kbd>l</kbd></td>
-	  <td>global</td>
+	  <td class="text-secondary">global</td>
 	</tr>
 	<tr>
-	  <td><i class="fa-solid fa-fw fa-bars me-2"></i> un/collapse right panel</td>
+	  <td class="text-secondary"><i class="fa-solid fa-fw fa-bars me-2"></i> un/collapse right panel</td>
 	  <td class="fw-bold" scope="row"><kbd>r</kbd></td>
-	  <td>global</td>
+	  <td class="text-secondary">global</td>
 	</tr>
 	<tr>
-	  <td><i class="fa-solid fa-fw fa-home me-2"></i> go to the root of the site</td>
+	  <td class="text-secondary"><i class="fa-solid fa-fw fa-home me-2"></i> go to the root of the site</td>
 	  <td class="fw-bold" scope="row"><kbd>h</kbd></td>
-	  <td>global</td>
+	  <td class="text-secondary">global</td>
 	</tr>
 
 	<tr>
-	  <td><i class="fa-solid fa-fw fa-expand me-2"></i> un/collapse all search result records</td>
+	  <td class="text-secondary"><i class="fa-solid fa-fw fa-expand me-2"></i> un/collapse all search result records</td>
 	  <td class="fw-bold" scope="row"><kbd>t</kbd></td>
-	  <td>search results</td>
+	  <td class="text-secondary">search results</td>
 	</tr>
 	<tr>
-	  <td><i class="fa-solid fa-fw fa-right-left me-2"></i> inverse un/collapse state of each search result record</td>
+	  <td class="text-secondary"><i class="fa-solid fa-fw fa-right-left me-2"></i> inverse un/collapse state of each search result record</td>
 	  <td class="fw-bold" scope="row"><kbd>i</kbd></td>
-	  <td>search results</td>
+	  <td class="text-secondary">search results</td>
 	</tr>
 
 	<!-- <tr>

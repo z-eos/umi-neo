@@ -19,16 +19,20 @@
 	    <i class="fa-solid fa-fw fa-magnifying-glass-chart"></i>
 	    <div class="sidebar-left-item d-inline-flex text-uppercase fw-bold">Audit</div>
 	  </a>
-	  <ul class="nav flex-column collapse show" id="submenuAnalyze" style="--bs-nav-link-padding-y: .2rem;">
+	  <ul class="nav flex-column collapse show ms-3 p-0" id="submenuAnalyze" style="--bs-nav-link-padding-y: .2rem;">
+
+	    %# ################################
+	    %#   ASSOCIATIONS
+	    %# ################################
 
 	    <li class="nav-item dropdown">
-	      <a class="nav-link dropdown-toggle text-secondary text-start"
+	      <a class="nav-link dropdown-toggle text-secondary text-start text-lowercase"
 		 data-bs-toggle="dropdown"
 		 href="#"
 		 role="button"
 		 aria-expanded="false"
 	      >
-		<i class="fa-solid fa-table me-2"></i> Associations
+		<i class="fa-solid fa-fw fa-table fa-sm me-1"></i>Associations
 	      </a>
 
 	      <ul class="dropdown-menu px-2">
@@ -58,13 +62,13 @@
 	    </li>
 
 	    <li class="nav-item dropdown">
-	      <a class="nav-link dropdown-toggle text-secondary text-start"
+	      <a class="nav-link dropdown-toggle text-secondary text-start text-lowercase"
 		 data-bs-toggle="dropdown"
 		 href="#"
 		 role="button"
 		 aria-expanded="false"
 	      >
-		<i class="fa-solid fa-id-card me-2"></i> Profiles
+		<i class="fa-solid fa-fw fa-id-card fa-sm me-1"></i> Profiles
 	      </a>
 
 	      <ul class="dropdown-menu px-2">
@@ -78,24 +82,31 @@
 		    <i class="fa-solid fa-user-slash fa-fw me-2"></i> Disabled
 		  </a>
 		</li>
-		<li><hr class="dropdown-divider"></li>
 		<li>
 		  <a class="dropdown-item text-lowercase px-0" href="/profile/all">
 		    <i class="fa-solid fa-users-viewfinder fa-fw me-2"></i> All
 		  </a>
 		</li>
+		<li><hr class="dropdown-divider"></li>
+		<li><span class="dropdown-header text-uppercase">charts</span></li>
+		<li>
+		  <a class="dropdown-item text-lowercase px-0" href="/audit/profile/charts">
+		    <i class="fa-solid fa-chart-column fa-fw me-2"></i> ages
+		  </a>
+		</li>
+
 	      </ul>
 	    </li>
 
 	    % if ( app->{cfg}->{ui}->{sidebar}->{audit}->{projects} == 1 && is_role 'admin,coadmin,hr', {cmp => 'or'} ) {
 	      <li class="nav-item dropdown">
-		<a class="nav-link dropdown-toggle text-secondary text-start"
+		<a class="nav-link dropdown-toggle text-secondary text-start text-lowercase"
 		   data-bs-toggle="dropdown"
 		   href="#"
 		   role="button"
 		   aria-expanded="false"
 		>
-		  <i class="fa-solid fa-folder-tree me-2"></i> Projects
+		  <i class="fa-solid fa-fw fa-folder-tree fa-sm me-1"></i> Projects
 		</a>
 
 		<ul class="dropdown-menu px-2">
@@ -110,13 +121,13 @@
 	    % }
 
 	    <li class="nav-item dropdown">
-	      <a class="nav-link dropdown-toggle text-secondary text-start"
+	      <a class="nav-link dropdown-toggle text-secondary text-start text-lowercase"
 		 data-bs-toggle="dropdown"
 		 href="#"
 		 role="button"
 		 aria-expanded="false"
 	      >
-		<i class="fa-solid fa-cubes-stacked me-2"></i> DNS
+		<i class="fa-solid fa-fw fa-cubes-stacked fa-sm me-1"></i> DNS
 	      </a>
 
 	      <ul class="dropdown-menu px-2">
@@ -125,6 +136,8 @@
 		    <i class="fa-solid fa-list-check fa-fw me-2"></i> all zones
 		  </a>
 		</li>
+		<li><hr class="dropdown-divider"></li>
+		<li><span class="dropdown-header text-uppercase">charts</span></li>
 		<li>
 		  <a class="dropdown-item text-lowercase px-0" href="/audit/dns/charts">
 		    <i class="fa-solid fa-chart-pie fa-fw me-2"></i> freq
@@ -134,13 +147,13 @@
 	    </li>
 
 	    <li class="nav-item dropdown">
-	      <a class="nav-link dropdown-toggle text-secondary text-start"
+	      <a class="nav-link dropdown-toggle text-secondary text-start text-lowercase"
 		 data-bs-toggle="dropdown"
 		 href="#"
 		 role="button"
 		 aria-expanded="false"
 	      >
-		<i class="fa-solid fa-lock me-2"></i> GPG
+		<i class="fa-solid fa-fw fa-lock fa-sm me-1"></i> GPG
 	      </a>
 
 	      <ul class="dropdown-menu px-2">
@@ -175,6 +188,10 @@
 	</li>
       % }
 
+      %# ################################
+      %#   NEW OBJ
+      %# ################################
+
       % if ( is_role 'admin,coadmin,hr', {cmp => 'or'} ) {
 	<li class="nav-item">
 	  <a href="#submenuObjects"
@@ -186,64 +203,68 @@
 	  </a>
 	  <ul class="nav flex-column collapse show ms-3 p-0" id="submenuObjects" style="--bs-nav-link-padding-y: .2rem;">
 	    <li class="nav-item">
-	      <a class="nav-link btn btn-link text-secondary text-start" href="/profile/new" tabindex="2">
-		<i class="fa-solid fa-fw fa-user-plus"></i> User
+	      <a class="nav-link btn btn-link text-secondary text-start text-lowercase" href="/profile/new" tabindex="2">
+		<i class="fa-solid fa-fw fa-user-plus fa-sm me-1"></i> User
 	      </a>
 	    </li>
 	    % if ( app->{cfg}->{ui}->{sidebar}->{new}->{project} == 1 ) {
 	      <li class="nav-item">
-		<a class="nav-link btn btn-link text-secondary text-start" href="/project/new" tabindex="2">
-		  <i class="fa-solid fa-fw fa-file-circle-plus"></i> Project
+		<a class="nav-link btn btn-link text-secondary text-start text-lowercase" href="/project/new" tabindex="2">
+		  <i class="fa-solid fa-fw fa-file-circle-plus fa-sm me-1"></i> Project
 		</a>
 	      </li>
 	    % }
 	    % if ( is_role 'admin,coadmin', {cmp => 'or'} ) {
 	      % if ( app->{cfg}->{ui}->{sidebar}->{new}->{dhcp} == 1 ) {
 		<li class="nav-item disabled">
-		  <a class="nav-link btn btn-link text-secondary text-start disabled" href="/dhcp" tabindex="7">
-		    <i class="fa-solid fa-fw fa-network-wired"></i> DHCP
+		  <a class="nav-link btn btn-link text-secondary text-start text-lowercase disabled" href="/dhcp" tabindex="7">
+		    <i class="fa-solid fa-fw fa-network-wired fa-sm me-1"></i> DHCP
 		  </a>
 		</li>
 	      % }
 	      % if ( app->{cfg}->{ui}->{sidebar}->{new}->{sudo} == 1 ) {
 		<li class="nav-item">
-		  <a class="nav-link btn btn-link text-secondary text-start" href="/sudo/new" tabindex="5">
-		    <i class="fa-solid fa-fw fa-user-shield"></i> Sudo
+		  <a class="nav-link btn btn-link text-secondary text-start text-lowercase" href="/sudo/new" tabindex="5">
+		    <i class="fa-solid fa-fw fa-user-shield fa-sm me-1"></i> Sudo
 		  </a>
 		</li>
 	      % }
 	      % if ( app->{cfg}->{ui}->{sidebar}->{new}->{group} == 1 ) {
 		<li class="nav-item">
-		  <a class="nav-link btn btn-link text-secondary text-start" href="/group/new" tabindex="3">
-		    <i class="fa-solid fa-fw fa-users"></i> Group
+		  <a class="nav-link btn btn-link text-secondary text-start text-lowercase" href="/group/new" tabindex="3">
+		    <i class="fa-solid fa-fw fa-users fa-sm me-1"></i> Group
 		  </a>
 		</li>
 	      % }
 	      % if ( app->{cfg}->{ui}->{sidebar}->{new}->{netgroup} == 1 ) {
 		<li class="nav-item">
-		  <a class="nav-link btn btn-link text-secondary text-start" href="/netgroup/new" tabindex="3">
-		    <i class="fa-solid fa-fw fa-users-line"></i> NetGr
+		  <a class="nav-link btn btn-link text-secondary text-start text-lowercase" href="/netgroup/new" tabindex="3">
+		    <i class="fa-solid fa-fw fa-users-line fa-sm me-1"></i> NetGr
 		  </a>
 		</li>
 	      % }
 	      % if ( app->{cfg}->{ui}->{sidebar}->{new}->{sargon} == 1 ) {
 		<li class="nav-item">
-		  <a class="nav-link btn btn-link text-secondary text-start" href="/sargon/new" tabindex="3">
-		    <i class="fa-solid fa-fw fa-shield-cat"></i> Sargon
+		  <a class="nav-link btn btn-link text-secondary text-start text-lowercase" href="/sargon/new" tabindex="3">
+		    <i class="fa-solid fa-fw fa-shield-cat fa-sm me-1"></i> Sargon
 		  </a>
 		</li>
 	      % }
 	      %# if ( app->{cfg}->{ui}->{sidebar}->{new}->{org} == 1 ) {
-		<!-- <li class="nav-item">
-		     <a class="nav-link btn btn-link text-secondary text-start disabled" href="/org" tabindex="4">
-		     <i class="fa-solid fa-fw fa-building"></i> Org
-		     </a>
-		     </li> -->
+	      <!-- <li class="nav-item">
+		   <a class="nav-link btn btn-link text-secondary text-start disabled" href="/org" tabindex="4">
+		   <i class="fa-solid fa-fw fa-building"></i> Org
+		   </a>
+		   </li> -->
 	      %# }
 	    % }
 	  </ul>
 	</li>
       % }
+
+      %# ################################
+      %#   TOOLS
+      %# ################################
 
       <li class="nav-item">
 	<a href="#submenuTools"
@@ -256,30 +277,30 @@
 	<ul class="nav flex-column collapse show ms-3 p-0" id="submenuTools" style="--bs-nav-link-padding-y: .2rem;">
 	  % if ( app->{cfg}->{ui}->{sidebar}->{tools}->{onboarding} == 1 ) {
 	    <li class="nav-item">
-	      <a class="nav-link btn btn-link text-secondary text-start" href="/onboarding">
-		<i class="fa-solid fa-fw fa-baby"></i> Onboarding
+	      <a class="nav-link btn btn-link text-secondary text-start text-lowercase" href="/onboarding">
+		<i class="fa-solid fa-fw fa-baby fa-sm me-1"></i> Onboarding
 	      </a>
 	    </li>
 	  % }
 	  <li class="nav-item">
-	    <a class="nav-link btn btn-link text-secondary text-start" href="/tool/pwdgen">
-	      <i class="fa-solid fa-fw fa-fingerprint"></i> Pwdgen
+	    <a class="nav-link btn btn-link text-secondary text-start text-lowercase" href="/tool/pwdgen">
+	      <i class="fa-solid fa-fw fa-fingerprint fa-sm me-1"></i> Pwdgen
 	    </a>
 	  </li>
 	  <li class="nav-item">
-	    <a class="nav-link btn btn-link text-secondary text-start" href="/tool/keygen/ssh">
-	      <i class="fa-solid fa-fw fa-key"></i> SSH keygen
+	    <a class="nav-link btn btn-link text-secondary text-start text-lowercase" href="/tool/keygen/ssh">
+	      <i class="fa-solid fa-fw fa-key fa-sm me-1"></i> SSH keygen
 	    </a>
 	  </li>
 
 	  <li class="nav-item dropdown">
-	    <a class="nav-link dropdown-toggle text-secondary text-start"
+	    <a class="nav-link dropdown-toggle text-secondary text-start text-lowercase"
 	       data-bs-toggle="dropdown"
 	       href="#"
 	       role="button"
 	       aria-expanded="false"
 	    >
-	      <i class="fa-solid fa-lock me-1"></i> GPG
+	      <i class="fa-solid fa-fw fa-lock fa-sm me-1"></i> GPG
 	    </a>
 
 	    <ul class="dropdown-menu px-2">
@@ -298,8 +319,8 @@
 	    </ul>
 	  </li>
 	    <li class="nav-item">
-	    <a class="nav-link btn btn-link text-secondary text-start" href="/tool/qrcode">
-	      <i class="fa-solid fa-fw fa-qrcode"></i> QR code
+	      <a class="nav-link btn btn-link text-secondary text-start text-lowercase" href="/tool/qrcode">
+		<i class="fa-solid fa-fw fa-qrcode fa-sm me-1"></i> QR code
 	    </a>
 	  </li>
 	  <!-- <li class="nav-item">
@@ -313,13 +334,17 @@
 		 <a class="nav-link btn btn-link text-secondary text-start disabled" href="test"><i class="fa-solid fa-fw fa-code">&nbsp;</i>Test Code</a>
 		 </li> -->
 	    <li class="nav-item">
-	      <a class="nav-link btn btn-link text-secondary text-start" href="/tool/ldif-import">
-		<i class="fa-solid fa-fw fa-file-import"></i> LDIF Import
+	      <a class="nav-link btn btn-link text-secondary text-start text-lowercase" href="/tool/ldif-import">
+		<i class="fa-solid fa-fw fa-file-import fa-sm me-1"></i> LDIF Import
 	      </a>
 	    </li>
 	  % }
 	</ul>
       </li>
+
+      %# ################################
+      %#   INFO
+      %# ################################
 
       % if ( is_role 'admin,coadmin', {cmp => 'or'} ) {
 	<li class="nav-item">
@@ -332,21 +357,23 @@
 	  </a>
 	  <ul class="nav flex-column collapse ms-3 p-0" id="submenuInfo" style="--bs-nav-link-padding-y: .2rem;">
 	    <li class="nav-item">
-	      <a class="nav-link btn btn-link text-secondary text-start" href="/tool/sysinfo">
-		<i class="fa-solid fa-fw fa-info-circle"></i> System Info
+	      <a class="nav-link btn btn-link text-secondary text-start text-lowercase" href="/tool/sysinfo">
+		<i class="fa-solid fa-fw fa-info-circle fa-sm me-1"></i> System Info
 	      </a>
 	    </li>
 	    <li class="nav-item">
-	      <a class="nav-link btn btn-link text-secondary text-start disabled" href="/about"><i class="fa-solid fa-question-circle"></i> help</a>
+	      <a class="nav-link btn btn-link text-secondary text-start text-lowercase disabled" href="/about"><i class="fa-solid fa-fw fa-question-circle fa-sm me-1"></i> help</a>
 	    </li>
 	    <li class="nav-item">
-	      <a class="nav-link btn btn-link text-secondary text-start disabled" href="#"><i class="fa-solid fa-fw fa-bug text-danger"></i> bug</a>
+	      <a class="nav-link btn btn-link text-secondary text-start text-lowercase disabled" href="#">
+		<i class="fa-solid fa-fw fa-bug text-danger-emphasis fa-sm me-1"></i> bug
+	      </a>
 	    </li>
 	  </ul>
 	</li>
       % }
-  </nav>
 
+  </nav>
   <!-- sidebar end -->
 
 % }

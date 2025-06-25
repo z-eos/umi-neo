@@ -514,6 +514,10 @@ sub _startup_routes ($self) {
     ->get( '/audit/dns/charts')
     ->requires(is_role => ['admin,coadmin,hr', {cmp => 'or'}])
     ->to('protected#audit_dns_chart');
+  $protected_root
+    ->get( '/audit/profile/charts')
+    ->requires(is_role => ['admin,coadmin,hr', {cmp => 'or'}])
+    ->to('protected#audit_ages_chart');
 
   ## TOOLs
   ### aside

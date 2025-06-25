@@ -2,7 +2,7 @@
 <link href="/assets/js/datatables/datatables.min.css" rel="stylesheet" type="text/css">
 
 <h1 class="mt-3 mb-4">
-  Domains usage frequencies
+  Domain occurrence frequency in LDAP objects
   <i class="text-body-secondary fs-4">(top <%= app->{cfg}->{tool}->{dns}->{chart}->{top_number} %> domains)</i>
 </h1>
 
@@ -11,15 +11,16 @@
 % my $freq = stash->{freq};
 % if ( defined $freq ) {
 
-  <!-- ECharts Library -->
   <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
 
-
-  <!-- Chart Container -->
   <div id="myChart" style="width: 100%; max-width: 1024px; height: 768px;" class="vh-100 m-0 p-0"></div>
 
   <script>
-   // Mojo-provided data
+
+   /*
+    * https://echarts.apache.org/en/option.html
+    *                                           */
+
    const chartData = <%== $freq %>;
 
    // Extract labels and values
@@ -64,6 +65,12 @@
 
    // Chart options
    const option = {
+     title: {
+       text: 'Domain occurrence frequency in LDAP objects',
+       textStyle: {
+	 color: rootStyles.getPropertyValue('--bs-secondary').trim()
+       }
+     },
      backgroundColor: 'transparent',
      tooltip: {
        trigger: 'item',
