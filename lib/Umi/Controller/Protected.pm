@@ -410,6 +410,47 @@ sub ldif_export ($self) {
   return $self->render(template => 'protected/tool/ldif-export'); #, layout => undef);
 }
 
+=head1 ldif_export_searchresult
+
+export searchresult as LDIF
+
+=cut
+
+sub ldif_export_searchresult ($self) {
+  my $p = $self->req->params->to_hash;
+   $self->h_log($p);
+
+  my $ldap = Umi::Ldap->new( $self->{app}, $self->session('uid'), $self->session('pwd') );
+  my $search_arg = { base => $p->{base_dn}, scope => $p->{search_scope} };
+  $search_arg->{attrs} = [ split(',', $p->{show_attr}) ] if exists $p->{show_attr};
+  $search_arg->{filter} = $p->{search_filter} if exists $p->{search_filter};
+
+  # $self->h_log($search_arg);
+  my $search = $ldap->search( $search_arg );
+  $self->h_log( $self->h_ldap_err($search, $search_arg) ) if $search->code;
+
+  my $ldif;
+  $ldif .= $_->ldif( %{$self->{app}->{cfg}->{ldap}->{defaults}->{ldif}} ) foreach ($search->entries);
+
+  # $self->h_log($ldif);
+
+  my $_val;
+  return $self->render(text => sprintf("%s##\n%s\n#\n%s",
+				       $self->h_ldif_header,
+				       join("\n",
+					    map {
+					      if (defined $search_arg->{$_} && ref($search_arg->{$_}) eq 'ARRAY') {
+						$_val = join(', ', @{$search_arg->{$_}});
+					      } else {
+						$_val = $search_arg->{$_};
+					      }
+					      '# ' . $_ . ': ' . $self->h_np($_val, 0) if defined $_val
+					    }
+					    sort keys %$search_arg),
+				       $ldif),
+		       format => 'txt');
+}
+
 =head1 ldif_clone
 
 generate LDIF for the object chosen and insert it into an import form

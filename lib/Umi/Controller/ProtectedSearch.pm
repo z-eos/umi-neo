@@ -195,7 +195,7 @@ sub search_common  ($self) {
 
 sub advanced ($self) {
   my $p = $self->h_compact($self->req->params->to_hash);
-  # $self->h_log($p);
+   $self->h_log($p);
 
   my $v = $self->validation;
   return $self->render( template => 'protected/search/advanced' )

@@ -27,6 +27,46 @@
   </div>
 </div>
 
+<script>
+ const params = {
+   base: <%= b($search_arg->{base})->quote %>,
+   filter: <%= b($search_arg->{filter})->quote %>,
+   scope: "<%= exists $search_arg->{scope} ? $search_arg->{scope} : 'sub' %>"
+ };
+
+ async function fetchLdif(params = {}) {
+   const query = new URLSearchParams({
+     base_dn: params.base,
+     search_filter: params.filter,
+     search_scope: params.scope
+   }).toString();
+   const baseUrl = '<%= url_for("get_searchresult_ldif")->to_abs %>';
+   const url = baseUrl + '?' + query;
+   // console.log(url);
+   const res = await fetch(url);
+   if (!res.ok) throw new Error("Network error");
+   return await res.text();
+ }
+
+ async function copyToClipboard() {
+   const ldif = await fetchLdif(params);
+   await navigator.clipboard.writeText(ldif);
+   alert("LDIF copied to clipboard");
+ }
+
+ async function downloadAsTxt() {
+   const ldif = await fetchLdif(params);
+   const blob = new Blob([ldif], { type: 'text/plain' });
+   const link = document.createElement('a');
+   link.href = URL.createObjectURL(blob);
+   link.download = "searchresult.ldif";
+   document.body.appendChild(link);
+   link.click();
+   document.body.removeChild(link);
+ }
+
+</script>
+
 <div class="btn-group mb-2" role="group">
   <button id="toggleAllBtn"
 	  accesskey="t"
@@ -42,8 +82,30 @@
   >
     <i id="invertAllIcon" class="fa-solid fa-right-left"></i>
   </button>
-  %== h_element_cp_download_btns( 'searchresult', 'searchresult.txt' );
+  <button id="btn-copy"
+	  class="btn btn-sm btn-secondary"
+	  title="save LDIF of this search result into clipboard"
+  >
+    <i class="fa-solid fa-copy"></i>
+  </button>
+  <button id="btn-download"
+	  class="btn btn-sm btn-secondary"
+	  title="save LDIF of this search result into plain/text file"
+  >
+    <i class="fa-solid fa-file-arrow-down"></i>
+  </button>
 </div>
+
+<script>
+ document.addEventListener('DOMContentLoaded', () => {
+   document.getElementById('btn-download').addEventListener('click', async () => {
+     await downloadAsTxt();
+   });
+   document.getElementById('btn-copy').addEventListener('click', async () => {
+     await copyToClipboard();
+   });
+ });
+</script>
 
 %# vh-100 is important, without it dropwown are not shown for collapsed rows
 <div id="searchresult" class="container-fluid vh-100">
@@ -130,10 +192,10 @@
 	  % end
 	</div>
 	% if ( ! $e->exists('reqType') && $e->attributes > 0 ) {
-	  % $ct = substr($e->get_value('createTimestamp'), 0, -7);
-	  % $cn = substr(h_get_root_uid_val($e->get_value('creatorsName')) // $e->get_value('creatorsName'), 0, 7);
-	  % $mt = substr($e->get_value('modifyTimestamp'), 0, -7);
-	  % $mn = h_get_root_uid_val($e->get_value('modifiersName')) // substr($e->get_value('modifiersName'), 0, 7);
+	  % $ct = $e->exists('createTimestamp') ? substr($e->get_value('createTimestamp'), 0, -7) : 'na';
+	  % $cn = $e->exists('creatorName')     ? substr(h_get_root_uid_val($e->get_value('creatorsName')) // $e->get_value('creatorsName'), 0, 7) : 'na';
+	  % $mt = $e->exists('modifyTimestamp') ? substr($e->get_value('modifyTimestamp'), 0, -7) : 'na';
+	  % $mn = $e->exists('modifiersName')   ? h_get_root_uid_val($e->get_value('modifiersName')) // substr($e->get_value('modifiersName'), 0, 7) : 'na';
 	  <ul class="list-unstyled fa-ul umi-text-tiny font-monospace float-end m-0 pe-2 pt-1">
 	    <li title="created GMT: <%= $ct %> by <%= $cn %>">
 	      <span class="fa-li"><i class="fa-solid fa-hourglass-start fa-sm"></i></span><%= $ct %> <%== length($cn) >= 7 ? substr($cn, 0, 7) . '&mldr;' : $cn %>

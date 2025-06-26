@@ -539,6 +539,10 @@ sub _startup_routes ($self) {
   ### sidebar
   $protected_root->get( '/tool/ldif-export')->to('protected#ldif_export');
   $protected_root->post('/tool/ldif-export')->to('protected#ldif_export');
+  $protected_root->get( '/tool/ldif-export-searchresult')
+    ->requires(is_role => ['admin,coadmin,hr', {cmp => 'or'}])
+    ->to('protected#ldif_export_searchresult')
+    ->name('get_searchresult_ldif');
 
   $protected_root
     ->get( '/tool/ldif-import')
