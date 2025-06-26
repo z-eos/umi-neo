@@ -5,7 +5,7 @@
 % my $i = 0;
 % my $j = 0;
 % my $attr_val_class = "";
-
+% my $count = @$entries;
 <div class="row w-100 <%= app->{cfg}->{ui}->{page}->{header}->{css} %>">
   <div class="col-xs-6 col-sm-6 col-md-4 col-lg-3">
     <h3 class="fw-bold">
@@ -15,7 +15,7 @@
       % }
       % else {
 	<i class="fa-solid fa-search fa-lg text-info me-2"></i>
-	Search Results
+	Search Results: <span class="fs-6 align-middle"><%= $count %> rows</span>
       % }
     </h3>
   </div>
@@ -27,31 +27,32 @@
   </div>
 </div>
 
+<div class="btn-group mb-2" role="group">
+  <button id="toggleAllBtn"
+	  accesskey="t"
+	  class="btn btn-sm btn-secondary"
+	  title="toggle state (collapsed/expanded) of each row: Alt-Shift-t"
+  >
+    <i id="toggleAllIcon" class="fa-solid fa-expand"></i>
+  </button>
+  <button id="invertAllBtn"
+	  accesskey="i"
+	  class="btn btn-sm btn-secondary me-2"
+	  title="inverse state (collapsed/expanded) of each row: Alt-Shift-i"
+  >
+    <i id="invertAllIcon" class="fa-solid fa-right-left"></i>
+  </button>
+  %== h_element_cp_download_btns( 'searchresult', 'searchresult.txt' );
+</div>
+
 %# vh-100 is important, without it dropwown are not shown for collapsed rows
 <div id="searchresult" class="container-fluid vh-100">
-
-  <div class="btn-group mb-2" role="group">
-    <button id="toggleAllBtn"
-	    accesskey="t"
-	    class="btn btn-sm btn-secondary"
-	    title="toggle state (collapsed/expanded) of each row: Alt-Shift-t"
-    >
-      <i id="toggleAllIcon" class="fa-solid fa-expand"></i>
-    </button>
-    <button id="invertAllBtn"
-	    accesskey="i"
-	    class="btn btn-sm btn-secondary"
-	    title="inverse state (collapsed/expanded) of each row: Alt-Shift-i"
-    >
-      <i id="invertAllIcon" class="fa-solid fa-right-left"></i>
-    </button>
-  </div>
 
   % my ($col, $cn, $ct, $mn, $mt);
   % my $mps = '';
   % my $acclog = app->{cfg}->{ldap}->{accesslog};
   % my $re = qr/^.*$acclog$/;
-  % for my $e (@{$entries}) {
+  % for my $e ( @$entries ) {
 
     % if ( $e_info->{$e->dn}->{disabled} ) {
       % $col = 'danger';

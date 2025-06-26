@@ -90,7 +90,7 @@
 		<li><hr class="dropdown-divider"></li>
 		<li><span class="dropdown-header text-uppercase">charts</span></li>
 		<li>
-		  <a class="dropdown-item text-lowercase px-0" href="/audit/profile/charts">
+		  <a class="dropdown-item text-lowercase px-0" href="/audit/profile/charts?status=active">
 		    <i class="fa-solid fa-chart-column fa-fw me-2"></i> ages
 		  </a>
 		</li>

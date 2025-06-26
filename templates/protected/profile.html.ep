@@ -84,7 +84,7 @@
 	    <dd class="col-11 user-select-all"><%== exists $v->{mail} ? sprintf('<a href="mailto:%s">%s</a>', $v->{mail}->[0], $v->{mail}->[0]) : $na %></dd>
 
 	    <dt class="col-1 text-md-end" title="Telephone Number"><i class="fa-lg fa-solid fa-phone"></i></dt>
-	    <dd class="col-11 user-select-all"><%== exists $v->{telephonenumber} && scalar @{$v->{telephonenumber}} > 1 ? join '<br>', @{$v->{telephonenumber}} : $na %></dd>
+	    <dd class="col-11 user-select-all"><%== exists $v->{telephonenumber} && scalar @{$v->{telephonenumber}} > 0 ? join '<br>', @{$v->{telephonenumber}} : $na %></dd>
 
 	    <dt class="col-1 text-md-end" title="Instant Messenger"><i class="fa-lg fa-solid fa-message"></i></dt>
 	    <dd class="col-11 user-select-all"><%== exists $v->{umiuserim} && scalar @{$v->{umiuserim}} > 1 ? join '<br>', @{$v->{umiuserim}} : $na %></dd>

@@ -1,7 +1,10 @@
 %# -*- mode: web; eval: (follow-mode) -*-
 
+% my $state = stash->{state};
+% $state = 'all' if ! defined $state;
+
 <h1 class="mt-3 mb-4">
-  Employees ages
+  Employees (<%= $state %>) ages
 </h1>
 
 % my $data = stash->{chart};

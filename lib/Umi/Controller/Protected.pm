@@ -2330,26 +2330,40 @@ personnel age chart
 =cut
 
 sub audit_ages_chart ($self) {
+  my $p = $self->req->params->to_hash;
+  # $self->h_log($self->stash('state'));
+  my $filter;
+  if ( defined $self->stash('state') ) {
+    if ( $self->stash('state') eq 'active' ) {
+      $filter = sprintf("(!(gidNumber=%s))",
+			$self->{app}->{cfg}->{ldap}->{defaults}->{group}->{blocked}->{gidnumber});
+    } elsif ( $self->stash('state') eq 'disabled' ) {
+      $filter = sprintf("(gidNumber=%s)",
+			$self->{app}->{cfg}->{ldap}->{defaults}->{group}->{blocked}->{gidnumber});
+    } else {
+      $filter = '(objectClass=*)';
+    }
+  }
+
   my %debug;
   my $ldap = Umi::Ldap->new( $self->{app}, $self->session('uid'), $self->session('pwd') );
 
   my $search_arg = { base => $self->{app}->{cfg}->{ldap}->{base}->{acc_root},
+		     filter => $filter,
 		     scope => 'one',
 		     attrs => [qw(uid umiUserDateOfBirth umiUserGender) ] };
   my $search = $ldap->search( $search_arg );
   $self->h_log( $self->{app}->h_ldap_err($search, $search_arg) ) if $search->code;
+  # $self->h_log($search->count);
 
   my %ages;
   foreach ($search->entries) {
     # $self->h_log( $_->get_value('umiUserDateOfBirth') );
-    if ( $_->exists('umiUserDateOfBirth') && $_->exists('umiUserGender') ) {
-      $ages{ $_->get_value('uid') } =
-	{
-	 age => $self->h_years_since( $_->get_value('umiUserDateOfBirth') ),
-	 gender => $_->get_value('umiUserGender')
-	}
-      }
+    my $age = $_->exists('umiUserDateOfBirth') ? $self->h_years_since( $_->get_value('umiUserDateOfBirth') ) : 0;
+    my $gen = $_->exists('umiUserGender') ? $_->get_value('umiUserGender') : 0;
+    $ages{ $_->get_value('uid') } = { age => $age, gender => $gen };
   }
+
 
   # $self->h_log(\%ages);
 

@@ -195,7 +195,7 @@ sub search_common  ($self) {
 
 sub advanced ($self) {
   my $p = $self->h_compact($self->req->params->to_hash);
-  $self->h_log($p);
+  # $self->h_log($p);
 
   my $v = $self->validation;
   return $self->render( template => 'protected/search/advanced' )
@@ -232,7 +232,7 @@ sub advanced ($self) {
   @{$search_arg->{attrs}} = split(/,/, $p->{'show_attr'}) if exists $p->{'show_attr'};
   my $search = $ldap->search( $search_arg );
   $self->h_log( $self->{app}->h_ldap_err($search, $search_arg) ) if $search->code;
-  $self->h_log( $search_arg );
+  # $self->h_log( $search_arg );
 
   # hash to keep aux data like disabled state of the root object for branch/leaf
   my $e_info;
