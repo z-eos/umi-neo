@@ -199,6 +199,26 @@ before and after the delimiter (in most cases str is DN or RDN)
 		  return $arg->{res};
 		});
 
+
+
+=head2 h_csv_to_arr
+
+  my $arr_ref = $c->h_csv_to_arr($csv_string);
+
+Splits a comma-separated string into an array reference, trimming leading and trailing whitespace from each resulting element.
+
+If the string does not contain a comma, a single-element array reference is returned with the trimmed input string.
+
+Returns: array reference
+
+=cut
+
+$app->helper(h_csv_to_arr => sub {
+  my ($self, $csv) = @_;
+  return [ map { s/^\s+|\s+$//gr } split /,/, $csv ];
+});
+
+
 =head2 h_trim_leading_newlines
 
 Removes all leading newline characters (`\n`, optionally preceded by `\r`) from the beginning of the input string.
@@ -1647,7 +1667,7 @@ data taken, generally, from
 	      );
 
 
-=head2 h_element_cp_download_btns
+=head2 h_btns_cp_save_from_element
 
 helper to place two buttons to copy to clipboard and download as file a
 content of an element with id passed to helper
@@ -1663,7 +1683,7 @@ on input expects:
 
 =cut
 
-  $app->helper( h_element_cp_download_btns => sub {
+  $app->helper( h_btns_cp_save_from_element => sub {
 		  my ($c, $target_id, $file_name, $button_class, $wrapper_class, $mimetype, $qrcode) = @_;
 
 		  # Set default values if parameters are not provided
@@ -1681,7 +1701,7 @@ on input expects:
 		    if length($qrcode);
 
 		  my $html = qq{
-<div class="btn-group $wrapper_class" id="h_element_cp_download_btns">
+<div class="btn-group $wrapper_class" id="h_btns_cp_save_from_element">
     <button type="button" class="$button_class" title="Copy to clipboard"
 	    onclick="copyToClipboard('#$target_id')">
 	<i class="fa-solid fa-copy"></i>
@@ -1695,6 +1715,174 @@ on input expects:
 	};
 
 		  return $html;
+		});
+
+=head2 h_btn_cp_from_url
+
+  %== h_btn_cp_from_url id => 'copy-ldif', title => 'Copy LDIF', text => '<i class="fa-solid fa-copy"></i>', js_func => sub { return "fetchLdif(params)" };
+
+Renders a button which, when clicked, copies text returned by the provided JS expression (stringified) into the clipboard.
+
+Options:
+- id:        HTML id of the button.
+- title:     Tooltip text.
+- text:      Visible button label or HTML.
+- js_func:   Subroutine reference that returns the JS expression which evaluates to a string to be copied.
+	     something like this:
+	     <script>
+	       const params = {
+		 base: <%= b($search_arg->{base})->quote %>,
+		 filter: <%= b($search_arg->{filter})->quote %>,
+		 scope: "<%= exists $search_arg->{scope} ? $search_arg->{scope} : 'sub' %>"
+	       };
+
+	       async function fetchLdif(params = {}) {
+		 const query = new URLSearchParams({
+		 base_dn: params.base,
+		 search_filter: params.filter,
+		 search_scope: params.scope
+		 }).toString();
+		 const baseUrl = '<%= url_for("get_searchresult_ldif")->to_abs %>';
+		 const url = baseUrl + '?' + query;
+		 // console.log(url);
+		 const res = await fetch(url);
+		 if (!res.ok) throw new Error("Network error");
+		 return await res.text();
+	       }
+	     </script
+
+=cut
+
+  $app->helper( h_btn_cp_from_url => sub {
+		  my ($self, %args) = @_;
+
+		  my $id     = $args{id}     || 'btn-copy';
+		  my $class  = $args{class}  || 'btn btn-sm btn-secondary';
+		  my $title  = $args{title}  || 'Copy to clipboard';
+		  my $text   = $args{text}   || '<i class="fa-solid fa-copy"></i>';
+		  my $js     = $args{js_func} ? $args{js_func}->() : '""';
+
+		  return qq{
+<button id="$id" class="$class" title="$title">
+  $text
+</button>
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    const btn = document.getElementById('$id');
+    if (!btn) return;
+    btn.addEventListener('click', function () {
+      (async () => {
+	try {
+	  const text = await ($js);
+	  const temp = document.createElement("textarea");
+	  temp.value = text;
+	  document.body.appendChild(temp);
+	  temp.select();
+	  document.execCommand("copy");
+	  document.body.removeChild(temp);
+	  alert("Copied to clipboard");
+	} catch (e) {
+	  alert("Copy failed: " + e);
+	}
+      })();
+    });
+  });
+</script>
+};
+		});
+
+=head2 h_btn_save_from_url
+
+  %== h_btn_save_from_url id => 'download-ldif', title => 'Download LDIF of this search result into text file', filename => 'searchresult.ldif', js_func => sub { return 'fetchLdif(params)' }
+
+Helper that renders a HTML button element with the given C<id> and C<title>,
+which, upon being clicked, fetches text data using the supplied JavaScript
+function expression (provided by C<js_func>) and triggers download of that data
+as a plain text file with name given in C<filename>.
+
+=head3 Parameters
+
+=over 4
+
+=item * C<id>
+
+String. Required. Will be used as the HTML C<id> of the button.
+
+=item * C<title>
+
+String. Optional. Will be used as the C<title> attribute (tooltip text).
+
+=item * C<filename>
+
+String. Optional. Default is C<data.txt>. Filename for the downloaded file.
+
+=item * C<js_func>
+
+CodeRef. Required. Must return a valid JavaScript expression that evaluates
+into a Promise resolving to text content to be downloaded.
+
+=back
+
+=head3 Example Output
+
+  <button id="download-ldif" class="btn btn-sm btn-secondary" title="Download LDIF">
+    <i class="fa-solid fa-file-arrow-down"></i>
+  </button>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      document.getElementById('download-ldif').addEventListener('click', async () => {
+	const text = await fetchLdif(params);
+	const blob = new Blob([text], { type: 'text/plain' });
+	const link = document.createElement('a');
+	link.href = URL.createObjectURL(blob);
+	link.download = "searchresult.ldif";
+	document.body.appendChild(link);
+	link.click();
+	document.body.removeChild(link);
+      });
+    });
+  </script>
+
+=cut
+
+  $app->helper( h_btn_save_from_url => sub {
+		  my ($self, %args) = @_;
+		  my $t = localtime;
+
+		  my $id       = $args{id}      || 'btn-download';
+		  my $class    = $args{class}   || 'btn btn-sm btn-secondary';
+		  my $title    = $args{title}   || 'Download as text file';
+		  my $text     = $args{text}    || '<i class="fa-solid fa-file-arrow-down"></i>';
+		  my $filename = $args{filename}|| 'searchresult-' . $t->datetime . '.ldif';
+		  my $js       = $args{js_func} ? $args{js_func}->() : '""';
+
+		  return qq{
+<button id="$id" class="$class" title="$title">
+  $text
+</button>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  const btn = document.getElementById('$id');
+  if (!btn) return;
+  btn.addEventListener('click', function () {
+    (async () => {
+      try {
+	const text = await ($js);
+	const blob = new Blob([text], { type: 'text/plain' });
+	const link = document.createElement('a');
+	link.href = URL.createObjectURL(blob);
+	link.download = '$filename';
+	document.body.appendChild(link);
+	link.click();
+	document.body.removeChild(link);
+      } catch (e) {
+	alert("Download failed: " + e);
+      }
+    })();
+  });
+});
+</script>
+};
 		});
 
 =head2 h_nested_params

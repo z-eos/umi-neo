@@ -221,18 +221,19 @@ sub advanced ($self) {
 
     $scope = 'sub';
   } else {
-    $base   = $p->{'base_dn'} // $self->{app}->{cfg}->{ldap}->{defaults}->{base}->{dc};
-    $filter = $p->{'search_filter'};
-    $scope  = $p->{'search_scope'};
+    $base   = $p->{base_dn} // $self->{app}->{cfg}->{ldap}->{defaults}->{base}->{dc};
+    $filter = $p->{search_filter};
+    $scope  = $p->{search_scope};
   }
 
   my $ldap = Umi::Ldap->new( $self->{app}, $self->session('uid'), $self->session('pwd') );
 
   my $search_arg = { base => $base, filter => $filter, scope => $scope };
-  @{$search_arg->{attrs}} = split(/,/, $p->{'show_attr'}) if exists $p->{'show_attr'};
+  $search_arg->{attrs} = $self->h_csv_to_arr($p->{show_attr}) if exists $p->{show_attr};
+
   my $search = $ldap->search( $search_arg );
   $self->h_log( $self->{app}->h_ldap_err($search, $search_arg) ) if $search->code;
-  # $self->h_log( $search_arg );
+   $self->h_log( $search_arg );
 
   # hash to keep aux data like disabled state of the root object for branch/leaf
   my $e_info;

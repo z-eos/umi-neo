@@ -422,10 +422,11 @@ sub ldif_export_searchresult ($self) {
 
   my $ldap = Umi::Ldap->new( $self->{app}, $self->session('uid'), $self->session('pwd') );
   my $search_arg = { base => $p->{base_dn}, scope => $p->{search_scope} };
-  $search_arg->{attrs} = [ split(',', $p->{show_attr}) ] if exists $p->{show_attr};
+  $search_arg->{attrs} = $self->h_csv_to_arr($p->{show_attr}) if exists $p->{show_attr};
+
   $search_arg->{filter} = $p->{search_filter} if exists $p->{search_filter};
 
-  # $self->h_log($search_arg);
+   $self->h_log($search_arg);
   my $search = $ldap->search( $search_arg );
   $self->h_log( $self->h_ldap_err($search, $search_arg) ) if $search->code;
 

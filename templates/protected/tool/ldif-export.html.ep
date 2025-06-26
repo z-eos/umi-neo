@@ -8,7 +8,7 @@
 </h2>
 <hr class="p-1 ">
 
-%== h_element_cp_download_btns( 'ldif', $ldif_export_params->{dn} . '.ldif' );
+%== h_btns_cp_save_from_element( 'ldif', $ldif_export_params->{dn} . '.ldif' );
 <pre id="ldif" class="user-select-all text-break umi-text-xs font-monospace">
     <%= $ldif =%>
 </pre>

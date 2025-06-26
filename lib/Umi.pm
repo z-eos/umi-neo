@@ -159,7 +159,7 @@ sub _startup_session ($self) {
 		  $html  = $html  //= 1;
 		  $class = $class //= ''; # 'umi-text-tiny';
 		  my $ret;
-		  my $np = np $data, caller_info => 0;
+		  my $np = np $data, caller_info => 0, show_dualvar => 'off';
 		  if ( $html == 1 ) {
 		    $ret = sprintf('<pre class="%s">%s</pre>', $class, $np );
 		  } else {

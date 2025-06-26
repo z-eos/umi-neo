@@ -55,7 +55,7 @@
   % foreach my $k (sort(keys(%$debug))) {
     <div id="message" class="alert alert-dismissible alert-<%= app->{cfg}->{ui}->{page}->{debug}->{status}->{$k} %> mt-4 ">
       <i class="fa-solid fa-<%= app->{cfg}->{ui}->{page}->{debug}->{ico}->{$k} %> me-3"></i>
-      %== h_element_cp_download_btns( 'message', 'debug-' . $k . '.txt', 'btn btn-' . app->{cfg}->{ui}->{page}->{debug}->{status}->{$k} . ' btn-sm' );
+      %== h_btns_cp_save_from_element( 'message', 'debug-' . $k . '.txt', 'btn btn-' . app->{cfg}->{ui}->{page}->{debug}->{status}->{$k} . ' btn-sm' );
       <br>
 
       % if ( $k eq 'error' ) {

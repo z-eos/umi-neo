@@ -83,7 +83,7 @@
 	<br />
 	%#<p class="">do backup your profile new password: <mark><%= stash->{root_pwd} %></mark></p>
 	<p class="">do backup your profile new password:</p>
-	%== h_element_cp_download_btns( 'root_pwd', 'root_pwd' . '.asc', undef, 'mb-2' );
+	%== h_btns_cp_save_from_element( 'root_pwd', 'root_pwd' . '.asc', undef, 'mb-2' );
 	<pre id="root_pwd" class="user-select-all umi-text-tiny"><%= $key->{enc}->{root} %></pre>
       </div>
     </caption>
@@ -163,7 +163,7 @@
 	    <td class="font-monospace user-select-all">
 	      % my $id = 'svc_' . $s . $entry->{fqdn} . $entry->{svc_details}->{uid};
 	      % my $eid = ($id =~ s/\./-/gr);
-	      %== h_element_cp_download_btns( $eid, $eid . '.asc', undef, 'mb-2' );
+	      %== h_btns_cp_save_from_element( $eid, $eid . '.asc', undef, 'mb-2' );
 	      <pre id="<%= $eid %>" class="user-select-all umi-text-tiny"><%= $key->{enc}->{$id} %></pre>
 	    </td>
 	    <td></td>

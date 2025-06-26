@@ -116,7 +116,7 @@
 	    <dt class="col-1 text-md-end" title="contact data as vCard"><i class="fa-lg fa-solid fa-address-card"></i></dt>
 	    <dd class="col-11">
 	      % my $vcf = h_vcard {$dn => $profiled_user->{$dn}};
-	      <%== h_element_cp_download_btns 'vcard_' . $iterator, $v->{uid}->[0] . '.vcf', undef, undef, 'text/x-vcard', $vcf %>
+	      <%== h_btns_cp_save_from_element 'vcard_' . $iterator, $v->{uid}->[0] . '.vcf', undef, undef, 'text/x-vcard', $vcf %>
 	      %# <a href="/tool/qrcode?toqr=<%= url_escape $vcf %>&mod=5" class="btn btn-secondary btn-sm"><i class="fas fa-qrcode"></i></a>
 	      <textarea id="vcard_<%= $iterator %>" class="d-none"><%= $vcf %></textarea>
 	    </dd>
@@ -139,7 +139,7 @@
 			<td class="fw-bold umi-text-xs user-select-all p-0 ps-2 border-0"><i class="fa-solid fa-lock me-1"></i>
 			  <span class="font-monospace me-2"><%= $pgp->{$dn}->{$_}->{keyid} %></span>
 			  <span class="me-2"><%= $_ %></span>
-			  %== h_element_cp_download_btns( 'gpgKey' . $id, 'gpg-key-' . $pgp->{$dn}->{$_}->{keyid} . '.pub' );
+			  %== h_btns_cp_save_from_element( 'gpgKey' . $id, 'gpg-key-' . $pgp->{$dn}->{$_}->{keyid} . '.pub' );
 			</td>
 		      </tr>
 		      <tr>

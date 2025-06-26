@@ -31,38 +31,27 @@
  const params = {
    base: <%= b($search_arg->{base})->quote %>,
    filter: <%= b($search_arg->{filter})->quote %>,
-   scope: "<%= exists $search_arg->{scope} ? $search_arg->{scope} : 'sub' %>"
+   scope: "<%= exists $search_arg->{scope} ? $search_arg->{scope} : 'sub' =%>
+"<%== exists $search_arg->{attrs} ? ",\n   attrs: \"" . join(',', @{$search_arg->{attrs}}) . '"': '' %>
  };
 
  async function fetchLdif(params = {}) {
-   const query = new URLSearchParams({
+   const queryParams = {
      base_dn: params.base,
      search_filter: params.filter,
      search_scope: params.scope
-   }).toString();
-   const baseUrl = '<%= url_for("get_searchresult_ldif")->to_abs %>';
+   };
+
+   if (params.attrs) {
+     queryParams.show_attr = params.attrs;
+   }
+
+   const query = new URLSearchParams(queryParams).toString();   const baseUrl = '<%= url_for("get_searchresult_ldif")->to_abs %>';
    const url = baseUrl + '?' + query;
-   // console.log(url);
+    console.log(url);
    const res = await fetch(url);
    if (!res.ok) throw new Error("Network error");
    return await res.text();
- }
-
- async function copyToClipboard() {
-   const ldif = await fetchLdif(params);
-   await navigator.clipboard.writeText(ldif);
-   alert("LDIF copied to clipboard");
- }
-
- async function downloadAsTxt() {
-   const ldif = await fetchLdif(params);
-   const blob = new Blob([ldif], { type: 'text/plain' });
-   const link = document.createElement('a');
-   link.href = URL.createObjectURL(blob);
-   link.download = "searchresult.ldif";
-   document.body.appendChild(link);
-   link.click();
-   document.body.removeChild(link);
  }
 
 </script>
@@ -82,30 +71,11 @@
   >
     <i id="invertAllIcon" class="fa-solid fa-right-left"></i>
   </button>
-  <button id="btn-copy"
-	  class="btn btn-sm btn-secondary"
-	  title="save LDIF of this search result into clipboard"
-  >
-    <i class="fa-solid fa-copy"></i>
-  </button>
-  <button id="btn-download"
-	  class="btn btn-sm btn-secondary"
-	  title="save LDIF of this search result into plain/text file"
-  >
-    <i class="fa-solid fa-file-arrow-down"></i>
-  </button>
-</div>
 
-<script>
- document.addEventListener('DOMContentLoaded', () => {
-   document.getElementById('btn-download').addEventListener('click', async () => {
-     await downloadAsTxt();
-   });
-   document.getElementById('btn-copy').addEventListener('click', async () => {
-     await copyToClipboard();
-   });
- });
-</script>
+  %== h_btn_cp_from_url   id => 'copy-ldif', js_func => sub { return "fetchLdif(params)" }, title => 'Copy LDIF of this search to clipboard';
+  %== h_btn_save_from_url id => 'save-ldif', js_func => sub { return "fetchLdif(params)" }, title => 'Save LDIF of this search to a text file';
+
+</div>
 
 %# vh-100 is important, without it dropwown are not shown for collapsed rows
 <div id="searchresult" class="container-fluid vh-100">
@@ -271,7 +241,7 @@
 		      % } else {
 			% $text_pre = ' text-wrap';
 		      % }
-		      %== h_element_cp_download_btns( $attr, $attr . '.txt', undef, 'mb-2' );
+		      %== h_btns_cp_save_from_element( $attr, $attr . '.txt', undef, 'mb-2' );
 		      % my $attr_val_processed = $attr_val;
 		      % if ( $attr eq 'umiUserBackup' ) {
 			% use IO::Uncompress::Gunzip qw(gunzip $GunzipError) ;
