@@ -8,7 +8,8 @@ use Mojo::Util qw( b64_encode b64_decode encode decode url_escape );
 use Umi::Constants qw(RE);
 
 use Crypt::HSXKPasswd;
-# deprecated use Encode qw(decode is_utf8); # ???
+use Crypt::X509;
+# use Crypt::X509::CRL;
 use File::Temp qw/ tempfile tempdir :POSIX /;
 use File::Which qw(which);
 use GD::Barcode::QRcode;
@@ -22,8 +23,7 @@ use POSIX qw(strftime :sys_wait_h);
 use Text::Unidecode;
 use Time::Piece;
 use Try::Tiny;
-use Crypt::X509;
-# use Crypt::X509::CRL;
+use Unicode::Normalize;
 use URI::Escape;
 
 
@@ -160,8 +160,12 @@ simple transliteration to ASCII with normalization to [:alnum:]
 
   $app->helper( h_translit => sub {
 		  my ($self, $in) = @_;
-		  my $ou = unidecode($in);
-		  $ou =~ s/[^[:alnum:]\.-_]//g;s/[^[:alnum:]\s]//g;
+# Text::Unicode based		  my $ou = unidecode($in);
+# Text::Unicode based		  $ou =~ s/[^[:alnum:]\.-_]//g;s/[^[:alnum:]\s]//g;
+# Text::Unicode based		  $self->h_log($ou);
+# Text::Unicode based		  return $ou;
+		  my $ou = NFD($in);
+		  $ou =~ s/\pM//g;
 		  $self->h_log($ou);
 		  return $ou;
 		});
