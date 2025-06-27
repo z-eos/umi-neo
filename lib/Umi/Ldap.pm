@@ -29,7 +29,6 @@ use Net::LDAP::Util qw(
 		     );
 
 use Try::Tiny;
-use Encode 'decode';
 
 sub new {
   my ($class, $app, $uid, $pwd, $uid_is_dn) = @_;
@@ -605,19 +604,6 @@ sub all_users {
   } else {
     # $self->{app}->h_log( $mesg->as_struct );
     my ($i, %seen, $res);
-    # $res = [
-    #	    map {
-    #	      $i = sprintf( "%s %s (%s)",
-    #			    $_->get_value('sn') // '',
-    #			    $_->get_value('givenName') // '',
-    #			    $_->get_value('uid') );
-
-    #	      utf8::decode($i) if ! utf8::is_utf8($i);
-
-    #	      [ $i => $_->get_value('uid') ]
-
-    #	    } $mesg->sorted('sn')
-    #	   ];
     $res = [
 	    map {
 	      my $sn  = $_->get_value('sn') // '';
@@ -688,10 +674,9 @@ LDIF processing from input ldif code
 sub ldif_read {
   my ($self, $ldif) = @_;
 
-  $ldif = decode('UTF-8', $ldif) unless utf8::is_utf8($ldif);
   my ($file, $entry, $res);
   try {
-    open( $file, "<", \$ldif);
+    open( $file, "<:encoding(UTF-8)", \$ldif);
   }
   catch {
     $self->{app}->h_log("Cannot open data from variable: \$file for reading: $_");
@@ -706,8 +691,8 @@ sub ldif_read {
 	sprintf('Error msg: %s\nError lines:\n%s\n',
 		$l->error,
 		$l->error_lines );
-    } elsif (!defined $entry) {
-      return {debug => {error => ["LDIF entry is undefined but no explicit error from LDIF parser"] }};
+    } elsif ( !defined $entry || !$entry->isa('Net::LDAP::Entry') ) {
+      return {debug => {error => ["LDIF parser did not return a valid entry object. Does input data contain non ASCII characters?"] }};
     } else {
       my $mesg = $entry->update($self->ldap);
       if ( $mesg->code ) {
