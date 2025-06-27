@@ -121,7 +121,11 @@
 		      %# foreach my $p (@{$v->{group}->{sprintf("cn=%s_pm,ou=group,%s", $en, $base_proj)}->{memberuid}}) {
 		      % my $name;
 		      % foreach my $p (@{$v->{group}->{$role}->{memberuid}}) {
-			% $name = $v->{team}->{sprintf("uid=%s,%s", $p, $base_acc)}->{givenname}->[0] . " " . $v->{team}->{sprintf("uid=%s,%s", $p, $base_acc)}->{sn}->[0];
+			% $name = exists $v->{team}->{sprintf("uid=%s,%s", $p, $base_acc)}->{givenname}
+			%         ? $v->{team}->{sprintf("uid=%s,%s", $p, $base_acc)}->{givenname}->[0] : 'NA'
+			%         . " " .
+			%         exists $v->{team}->{sprintf("uid=%s,%s", $p, $base_acc)}->{sn}
+			%         ? $v->{team}->{sprintf("uid=%s,%s", $p, $base_acc)}->{sn}->[0] : 'NA';
 
 			<div class="col">
 			  <div class="card mb-3 p-2">
@@ -144,9 +148,13 @@
 				    <ul class="list-unstyled fa-ul my-0">
 				      <li>
 					<span class="fa-li">
-					  <i class="fa-regular fa-envelope" title="email"></i>
+					  <i class="fa-regular fa-at" title="email"></i>
 					</span>
-					%= link_to $v->{team}->{sprintf("uid=%s,%s", $p, $base_acc)}->{mail}->[0] => 'mailto:' . $v->{team}->{sprintf("uid=%s,%s", $p, $base_acc)}->{mail}->[0]
+					% if ( exists $v->{team}->{sprintf("uid=%s,%s", $p, $base_acc)}->{mail} ) {
+					  %= link_to $v->{team}->{sprintf("uid=%s,%s", $p, $base_acc)}->{mail}->[0] => 'mailto:' . $v->{team}->{sprintf("uid=%s,%s", $p, $base_acc)}->{mail}->[0]
+					% } else {
+					  NA
+					%}
 					<%#  = $v->{team}->{sprintf("uid=%s,%s", $p, $base_acc)}->{mail}->[0] =%>
 				      </li>
 

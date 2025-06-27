@@ -24,7 +24,6 @@
 	   name="search_filter"
 	   placeholder='(attributeName=*value*)'
 	   accesskey="s"
-	   data-bs-toggle="tooltip"
     >
 
     <input type="hidden" name="search_base_case" id="search_base_case" >

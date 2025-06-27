@@ -371,6 +371,46 @@ sub ldif_import ($self) {
 		      );
 }
 
+=head1 ldif_clone
+
+generate LDIF for the object chosen and insert it into an import form
+template
+
+=cut
+
+sub ldif_clone ($self) {
+  my $p = $self->req->params->to_hash;
+
+  my $ldap = Umi::Ldap->new( $self->{app}, $self->session('uid'), $self->session('pwd') );
+
+  my ($ldif, $search, $search_arg, $res);
+  if ( ! exists $p->{ldif} ) {
+    $search_arg = { base => $p->{dn_to_clone}, scope => 'base', attrs => [] };
+    $search = $ldap->search( $search_arg );
+    $self->h_log( $self->h_ldap_err($search, $search_arg) ) if $search->code;
+    $ldif .= $_->ldif( %{$self->{app}->{cfg}->{ldap}->{defaults}->{ldif}} ) foreach ($search->entries);
+  } else {
+    $res = $ldap->ldif_read( $p->{ldif} );
+    $self->stash(debug => $res->{debug});
+  }
+
+  # $self->h_log($ldif);
+  $self->stash(dn_to_clone => $p->{dn_to_clone},
+	       ldif => exists $p->{ldif}
+	       ? $p->{ldif}
+	       : sprintf("%s##\n# dn: %s\n%s\n#\n%s",
+			 $self->h_ldif_header,
+			 $p->{dn_to_clone},
+			 join("\n",
+			      map {
+				'# ' . $_ . ': ' . $self->h_np($search_arg->{$_}, 0) if defined $search_arg->{$_}
+			      }
+			      sort keys %$search_arg),
+			 $ldif),
+	       );
+  return $self->render( template => 'protected/tool/ldif-clone', );
+}
+
 =head1 ldif_export
 
 export LDIF record for the object chosen
@@ -450,46 +490,6 @@ sub ldif_export_searchresult ($self) {
 					    sort keys %$search_arg),
 				       $ldif),
 		       format => 'txt');
-}
-
-=head1 ldif_clone
-
-generate LDIF for the object chosen and insert it into an import form
-template
-
-=cut
-
-sub ldif_clone ($self) {
-  my $p = $self->req->params->to_hash;
-
-  my $ldap = Umi::Ldap->new( $self->{app}, $self->session('uid'), $self->session('pwd') );
-
-  my ($ldif, $search, $search_arg, $res);
-  if ( ! exists $p->{ldif} ) {
-    $search_arg = { base => $p->{dn_to_clone}, scope => 'base', attrs => [] };
-    $search = $ldap->search( $search_arg );
-    $self->h_log( $self->h_ldap_err($search, $search_arg) ) if $search->code;
-    $ldif .= $_->ldif( %{$self->{app}->{cfg}->{ldap}->{defaults}->{ldif}} ) foreach ($search->entries);
-  } else {
-    $res = $ldap->ldif_read( $p->{ldif} );
-    $self->stash(debug => $res->{debug});
-  }
-
-  # $self->h_log($ldif);
-  $self->stash(dn_to_clone => $p->{dn_to_clone},
-	       ldif => exists $p->{ldif}
-	       ? $p->{ldif}
-	       : sprintf("%s##\n# dn: %s\n%s\n#\n%s",
-			 $self->h_ldif_header,
-			 $p->{dn_to_clone},
-			 join("\n",
-			      map {
-				'# ' . $_ . ': ' . $self->h_np($search_arg->{$_}, 0) if defined $search_arg->{$_}
-			      }
-			      sort keys %$search_arg),
-			 $ldif),
-	       );
-  return $self->render( template => 'protected/tool/ldif-clone', );
 }
 
 =head1 undo_al

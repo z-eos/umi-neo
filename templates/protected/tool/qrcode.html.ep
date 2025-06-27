@@ -45,7 +45,16 @@
     <div class="col-1 font-weight-bold"><span>30</span></div>
   </div>
 
-  %= submit_button 'Submit', class => 'btn btn-success font-weight-bold text-uppercase text-end mt-3'
+  %# = submit_button 'Submit', class => 'btn btn-success font-weight-bold text-uppercase text-end mt-3'
+  <div class="row">
+    <div class="form-group col-3">
+      <div>
+	<button type="submit" class="btn btn-success fw-bold text-uppercase">
+	  <i class="fa-solid fa-qrcode me-1"></i> generate
+	</button>
+      </div>
+    </div>
+  </div>
 
 %end
 

@@ -248,9 +248,9 @@ sub _startup_config ($self) {
       # Assign value to the last key
       $current->{$keys[0]} = $ENV{$env};
     }
-
-    $self->app->cfg->{VERSION} = $VERSION;
   }
+
+  $self->app->cfg->{VERSION} = $VERSION;
 
   $self->plugin('StaticCache' => { even_in_dev => 0 });
 

@@ -29,6 +29,7 @@ use Net::LDAP::Util qw(
 		     );
 
 use Try::Tiny;
+use Encode 'decode';
 
 sub new {
   my ($class, $app, $uid, $pwd, $uid_is_dn) = @_;
@@ -687,6 +688,7 @@ LDIF processing from input ldif code
 sub ldif_read {
   my ($self, $ldif) = @_;
 
+  $ldif = decode('UTF-8', $ldif) unless utf8::is_utf8($ldif);
   my ($file, $entry, $res);
   try {
     open( $file, "<", \$ldif);
@@ -704,6 +706,8 @@ sub ldif_read {
 	sprintf('Error msg: %s\nError lines:\n%s\n',
 		$l->error,
 		$l->error_lines );
+    } elsif (!defined $entry) {
+      return {debug => {error => ["LDIF entry is undefined but no explicit error from LDIF parser"] }};
     } else {
       my $mesg = $entry->update($self->ldap);
       if ( $mesg->code ) {

@@ -1,7 +1,7 @@
 %# -*- mode: web; eval: (follow-mode) -*-
 
 <h2 class="my-4">
-  <i class="fa-solid <%= app->{cfg}->{ui}->{menu}->{new_svc}->{ico} . ' ' .  app->{cfg}->{ui}->{menu}->{new_svc}->{col} %> me-3"></i>
+  <i id="title-icon" class="fa-solid <%= app->{cfg}->{ui}->{menu}->{new_svc}->{ico} . ' ' .  app->{cfg}->{ui}->{menu}->{new_svc}->{col} %> me-3"></i>
   New Service <small><em class="text-muted font-monospace fs-6">
     for dn: <%= $dn_to_new_svc %>
   </em></small>
@@ -21,7 +21,7 @@
   <div id="authorizedServiceDiv" class="row my-3">
     %= label_for authorizedService => 'Service', class => 'col-sm-3 fw-bold text-end text-uppercase'
     <div class="col-sm-9">
-      %= select_field authorizedService => $options, id => 'authorizedService', class => 'custom-select form-control', onchange => 'toggleInputField()'
+      %== select_field authorizedService => $options, id => 'authorizedService', class => 'custom-select form-control', onchange => 'toggleInputField()'
     </div>
   </div>
 
@@ -51,7 +51,7 @@
       <div id="<%= $fld %>Div" class="row my-3 d-none" title="" data-field="<%= $fld %>">
 	%= label_for $fld => $fld, class => 'col-sm-3 fw-bold text-end text-uppercase', title => $schema->{$fld}->{desc}
 	<div class="col-sm-9">
-	  %= select_field $fld => $options, id => $fld, class => 'custom-select form-select col-sm-9 select2'
+	  %== select_field $fld => $options, id => $fld, class => 'custom-select form-select w-100 select2'
 	</div>
       </div>
     % }
@@ -136,10 +136,10 @@
   %= submit_button 'Submit', class => 'btn btn-success fw-bold text-uppercase my-3'
 % end
 
-%# == h_btns_cp_save_from_element( 'ldif', $ldif_export_params->{dn} . '.ldif' );
-<pre id="ldif" class="user-select-all text-break umi-text-xs font-monospace">
-  <%# = dumper $domains =%>
-</pre>
+%# %# == h_btns_cp_save_from_element( 'ldif', $ldif_export_params->{dn} . '.ldif' );
+%# <pre id="ldif" class="user-select-all text-break umi-text-xs font-monospace">
+%#   <%# = dumper $domains =%>
+%# </pre>
 
 <pre class="mt-5 umi-text-tiny text-muted"><%= dumper stash->{'mojo.validation'}->{error} if %{stash->{'mojo.validation'}->{error}} %></pre>
 
@@ -158,8 +158,23 @@
 
 <script>
 
+ /**
+  * Dynamic Form Field and Icon Switching for Authorized Service
+  * ------------------------------------------------------------
+  * This script listens to changes in the authorizedService <select> field
+  * and dynamically reveals/hides corresponding form fields defined in fieldMap,
+  * updates the icon shown in the page header using iconMap,
+  * and initializes any uninitialized select2 instances after display.
+  *
+  * - fieldMap: Maps service name to form field element data-field names.
+  * - iconMap: Maps service name to icon class list to update the icon in header.
+  * - Select2 widgets are only initialized after the corresponding fields are shown.
+  */
+
  document.addEventListener('DOMContentLoaded', () => {
    const authorizedService = document.getElementById('authorizedService');
+
+   // Mapping of service name to associated data fields that should be shown
    const fieldMap = {
      % my $svc = app->{cfg}->{ldap}->{authorizedService};
      % foreach my $s ( sort(keys( %$svc ))) {
@@ -168,6 +183,8 @@
        % }
      % }
    };
+
+   // Mapping of service name to corresponding FontAwesome icon classes
    const iconMap = {
      % $svc = app->{cfg}->{ldap}->{authorizedService};
      % foreach my $s ( sort(keys( %$svc ))) {
@@ -178,64 +195,63 @@
      % }
    };
 
+   // Respond to changes in selected service
    authorizedService.addEventListener('change', function () {
      const selectedService = this.value;
      const fieldsToShow = fieldMap[selectedService] || [];
 
-     // Hide all fields initially
+     // Hide all dynamic form fields and disable their input/select/textarea elements
      document.querySelectorAll('#dynamicForm [data-field]').forEach(field => {
        field.classList.add('d-none');
        field.querySelector('input, select, textarea').disabled = true;
      });
 
-     // Show relevant fields for the selected service
+     // Show relevant fields, re-enable inputs, and re-append them into form container
      const formGroupContainer = document.getElementById('dynamicForm');
      fieldsToShow.forEach(fieldName => {
        const field = document.querySelector(`#dynamicForm [data-field="${fieldName}"]`);
        if (field) {
 	 field.classList.remove('d-none');
 	 field.querySelector('input, select, textarea').disabled = false;
-	 // Ensure the field is moved to the correct position
 	 formGroupContainer.appendChild(field);
+
+	 // If the field contains a Select2 widget that has not yet been initialized, initialize it
+	 const selectEl = field.querySelector('select.select2');
+	 if (selectEl && !selectEl.classList.contains('select2-hidden-accessible')) {
+	   $(selectEl).select2({
+	     tags: true,
+	     tokenSeparators: [',', ' '],
+	     placeholder: "Select or add options",
+	     allowClear: true,
+	     width: 'resolve'
+	   });
+	 }
        }
      });
 
-     // Change the icon at the top of the page according to the selected service
+     // Update the icon at the top of the page
      const iconNode = document.querySelector('#title-icon');
-     if (!iconNode) {
-       return;
-     }
+     if (!iconNode) return;
+
+     // Remove all existing FontAwesome icon classes (starting with fa-)
      Array.from(iconNode.classList).forEach((cls) => {
        if (cls.startsWith('fa-')) {
-	 iconNode.classList.remove(cls)
+	 iconNode.classList.remove(cls);
        }
-     })
+     });
 
+     // Add the new icon class(es) depending on the selected service
      if (selectedService && iconMap[selectedService]) {
        iconMap[selectedService].forEach(cls => {
 	 iconNode.classList.add(cls);
-       })
+       });
      } else {
-       iconNode.classList.add('fa-solid');
-       iconNode.classList.add('fa-file-circle-plus');
+       iconNode.classList.add('fa-solid', 'fa-file-circle-plus');
      }
-
    });
 
+   // Trigger an initial 'change' event to initialize the form based on current selection
    authorizedService.dispatchEvent(new Event('change', { bubbles: true }));
-
- });
-
- $(document).ready(function() {
-
-   $('.select2').select2({
-     tags: true,
-     tokenSeparators: [',', ' '],
-     placeholder: "Select or add options",
-     allowClear: true,
-     width: 'element'
-   });
-
  });
 
 </script>

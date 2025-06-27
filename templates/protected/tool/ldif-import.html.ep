@@ -16,7 +16,7 @@
 <hr>
 
 %= form_for '/tool/ldif-import' => (class => "form-horizontal", method => 'POST', enctype => 'multipart/form-data') => begin
-  <div class="row mb-3" id="file">
+  <div class="row mb-3" id="file-container">
     <label class="col-1 col-form-label text-end fw-bold" for="keyFile">File</label>
     <div class="input-sm col-11">
       <div>
@@ -25,7 +25,7 @@
     </div>
   </div>
 
-  <div class="row mb-3" id="text">
+  <div class="row mb-3" id="ldif-container">
     <label class="col-1 col-form-label text-end fw-bold" for="keyText">LDIF</label>
     <div class="input-sm col-11">
       %= text_area 'ldif', id => 'keyLdif', cols => 10, rows => 20, class => 'font-monospace form-control', spellcheck => 'false'
@@ -39,8 +39,8 @@
 % end
 
 <script>
- const divLdif = document.getElementById('ldif');
- const divFile = document.getElementById('file');
+ const divLdif = document.getElementById('ldif-container');
+ const divFile = document.getElementById('file-container');
  const elLdif = document.getElementById('keyLdif');
  const elFile = document.getElementById('keyFile');
  const rstBtn = document.getElementById('resetButton');
