@@ -23,7 +23,6 @@ use POSIX qw(strftime :sys_wait_h);
 use Text::Unidecode;
 use Time::Piece;
 use Try::Tiny;
-use Unicode::Normalize;
 use URI::Escape;
 
 
@@ -160,12 +159,8 @@ simple transliteration to ASCII with normalization to [:alnum:]
 
   $app->helper( h_translit => sub {
 		  my ($self, $in) = @_;
-# Text::Unicode based		  my $ou = unidecode($in);
-# Text::Unicode based		  $ou =~ s/[^[:alnum:]\.-_]//g;s/[^[:alnum:]\s]//g;
-# Text::Unicode based		  $self->h_log($ou);
-# Text::Unicode based		  return $ou;
-		  my $ou = NFD($in);
-		  $ou =~ s/\pM//g;
+		  my $ou = unidecode($self->h_decode_text($in));
+		  $ou =~ s/[^[:alnum:]\.-_]//g;s/[^[:alnum:]\s]//g;
 		  $self->h_log($ou);
 		  return $ou;
 		});
