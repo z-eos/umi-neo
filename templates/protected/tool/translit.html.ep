@@ -1,0 +1,37 @@
+%# -*- mode: web; eval: (follow-mode); -*-
+<h3 class="fw-bold p-5">
+  <i class="fas fa-qrcode fa-lg me-3 text-muted"></i>
+  Text to transliterate<small><em class="text-muted font-monospace"></em></small>
+</h3>
+<hr>
+
+% my $par = stash('params');
+% my $translit = stash('translit');
+% if ( defined $translit ) {
+  <div id="result" class="alert alert-success" role="alert">
+    <pre><%= dumper $translit %>
+  </div>
+% }
+
+%= form_for '/tool/translit' => {class => "form-horizontal"} => (method => 'POST') => begin
+
+  <div class="form-group row mt-3">
+    <label class="col text-uppercase text-end fw-bold control-label" for="toqr">Text to transliterate</label>
+    <div class="input-sm col-10">
+      %= text_area 'text' => ( id => 'text', cols => 10, rows => 10, class => 'font-monospace form-control umi-text-xs', spellcheck => 'false' ) => begin
+      % end
+    </div>
+  </div>
+
+  %# = submit_button 'Submit', class => 'btn btn-success font-weight-bold text-uppercase text-end mt-3'
+  <div class="row">
+    <div class="form-group col-3">
+      <div>
+	<button type="submit" class="btn btn-success fw-bold text-uppercase">
+	  <i class="fa-solid fa-language me-1"></i> transliterate
+	</button>
+      </div>
+    </div>
+  </div>
+
+%end
