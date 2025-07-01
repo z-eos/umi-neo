@@ -598,6 +598,9 @@ sub _startup_routes ($self) {
   $protected_root->get( '/tool/keyimport/gpg')->to('protected#keyimport_gpg');
   $protected_root->post('/tool/keyimport/gpg')->to('protected#keyimport_gpg');
 
+  $protected_root->get( '/tool/translit')->to('protected#translit');
+  $protected_root->post('/tool/translit')->to('protected#translit');
+
   $protected_root
     ->get( '/tool/sysinfo')
     ->requires(is_role => ['admin,coadmin,hr', {cmp => 'or'}])

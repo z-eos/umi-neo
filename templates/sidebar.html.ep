@@ -323,12 +323,11 @@
 		<i class="fa-solid fa-fw fa-qrcode fa-sm me-1"></i> QR code
 	    </a>
 	  </li>
-	  <!-- <li class="nav-item">
-	       <a class="nav-link btn btn-link text-secondary text-start disabled" href="/tool/translit">
-	       <i class="fa-solid fa-fw fa-language"></i>
-	       Translit
-	       </a>
-	       </li> -->
+	  <li class="nav-item">
+	    <a class="nav-link btn btn-link text-secondary text-start text-lowercase" href="/tool/translit">
+	      <i class="fa-solid fa-fw fa-language"></i> Translit
+	    </a>
+	  </li>
 	  % if ( is_role 'admin,coadmin', {cmp => 'or'} ) {
 	    <!-- <li class="nav-item">
 		 <a class="nav-link btn btn-link text-secondary text-start disabled" href="test"><i class="fa-solid fa-fw fa-code">&nbsp;</i>Test Code</a>

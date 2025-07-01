@@ -642,19 +642,29 @@ sub qrcode ($self) {
   my $v = $self->validation;
   return $self->render(template => 'protected/tool/qrcode') unless $v->has_data;
 
-  my $par = $self->req->params->to_hash;
-  $self->stash(qrcode_params => $par);
-  return $self->render(template => 'protected/tool/qrcode' => qrcode => $self->h_qrcode($par)); # , layout => undef);
+  my $p = $self->req->params->to_hash;
+  $self->stash(qrcode_params => $p);
+  return $self->render(template => 'protected/tool/qrcode' => qrcode => $self->h_qrcode($p)); # , layout => undef);
+}
+
+sub translit ($self) {
+  my $v = $self->validation;
+  return $self->render(template => 'protected/tool/translit') unless $v->has_data;
+
+  my $p = $self->req->params->to_hash;
+  $self->stash( params => $p );
+  return $self->render( template => 'protected/tool/translit',
+			translit => $self->h_translit($p->{text}) );
 }
 
 sub keygen_ssh ($self) {
   my $v = $self->validation;
   return $self->render(template => 'protected/tool/keygen/ssh') unless $v->has_data;
 
-  my $par = $self->req->params->to_hash;
-  $self->stash(kg_ssh_params => $par);
+  my $p = $self->req->params->to_hash;
+  $self->stash(kg_ssh_params => $p);
 
-  my $k = $self->h_keygen_ssh($par);
+  my $k = $self->h_keygen_ssh($p);
   $self->stash(debug => $k->{debug});
 
   # $self->h_log($k);

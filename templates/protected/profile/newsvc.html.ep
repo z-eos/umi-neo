@@ -148,9 +148,9 @@
    % while (my ($k, $v) = each %{stash->{'mojo.validation'}->{error}}) {
      $('#<%= $k %>').addClass('is-invalid').after('<div id="<%= $k %>ValidationFeedback" class="invalid-feedback"></div>');
      % if (scalar(@$v) == 1) {
-     $('#<%= $k %>ValidationFeedback').text('<%= $v->[0] %>');
+     $('#<%= $k %>ValidationFeedback').text('<%== $v->[0] %>');
      % } else {
-     $('#<%= $k %>ValidationFeedback').text('is not <%= $v->[0] %>: <%= $v->[2] %>');
+     $('#<%= $k %>ValidationFeedback').text('is not <%== $v->[0] %>: <%== $v->[2] %>');
      % }
    % }
   </script>

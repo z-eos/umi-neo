@@ -135,6 +135,9 @@ sub newsvc ($self) {
     }
   }
 
+  ##########################
+  # form fields validation #
+  ##########################
   # $self->h_log($self->{app}->{cfg}->{ldap}->{authorizedService}->{$p->{authorizedService}}->{data_fields});
   my $v = $self->validation;
   return $self->render(template => 'protected/profile/newsvc') unless exists $p->{authorizedService};
@@ -167,6 +170,13 @@ sub newsvc ($self) {
     }
   }
 
+  ##############################
+  # service related validation #
+  ##############################
+  if ( $p->{authorizedService} eq 'gitlab' && ! $root->exists('mail') ) {
+    # gitlab service depends on mail attribute root object
+    $v->error( login => [ 'Missing required attribute mail in root object, fix before proceeding.' ] );
+  }
   # $self->h_log($p);
 
   if ( ! $v->has_error ) {

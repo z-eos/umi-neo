@@ -2,6 +2,7 @@
 
 package Umi::Constants;
 
+use utf8;
 use strict;
 use warnings;
 use Exporter 'import';
@@ -12,6 +13,7 @@ our @EXPORT_OK = qw(
 		     GENDER
 		     RE
 		     SARGON
+		     TRANSLIT
 		     UMIAUTH
 		     UMIOVPNADDDEVOS
 		     UMIOVPNADDDEVTYPE
@@ -571,6 +573,255 @@ use constant {
 				    4096 => '4096 - LDAP_SYNC_REFRESH_REQUIRED',
 				   },
 		      },
+	      TRANSLIT => {
+			   # Russian Cyrillic
+			   'А' => 'A',   'а' => 'a',
+			   'Б' => 'B',   'б' => 'b',
+			   'В' => 'V',   'в' => 'v',
+			   'Г' => 'G',   'г' => 'g',
+			   'Д' => 'D',   'д' => 'd',
+			   'Е' => 'E',   'е' => 'e',
+			   'Ё' => 'Yo',  'ё' => 'yo',
+			   'Ж' => 'Zh',  'ж' => 'zh',
+			   'З' => 'Z',   'з' => 'z',
+			   'И' => 'I',   'и' => 'i',
+			   'Й' => 'Y',   'й' => 'y',
+			   'К' => 'K',   'к' => 'k',
+			   'Л' => 'L',   'л' => 'l',
+			   'М' => 'M',   'м' => 'm',
+			   'Н' => 'N',   'н' => 'n',
+			   'О' => 'O',   'о' => 'o',
+			   'П' => 'P',   'п' => 'p',
+			   'Р' => 'R',   'р' => 'r',
+			   'С' => 'S',   'с' => 's',
+			   'Т' => 'T',   'т' => 't',
+			   'У' => 'U',   'у' => 'u',
+			   'Ф' => 'F',   'ф' => 'f',
+			   'Х' => 'Kh',  'х' => 'kh',
+			   'Ц' => 'Ts',  'ц' => 'ts',
+			   'Ч' => 'Ch',  'ч' => 'ch',
+			   'Ш' => 'Sh',  'ш' => 'sh',
+			   'Щ' => 'Shch', 'щ' => 'shch',
+			   'Ъ' => '',    'ъ' => '',
+			   'Ы' => 'Y',   'ы' => 'y',
+			   'Ь' => '',    'ь' => '',
+			   'Э' => 'E',   'э' => 'e',
+			   'Ю' => 'Yu',  'ю' => 'yu',
+			   'Я' => 'Ya',  'я' => 'ya',
+
+			   # Ukrainian specific
+			   'Ґ' => 'G',   'ґ' => 'g',
+			   'Є' => 'Ye',  'є' => 'ye',
+			   'І' => 'I',   'і' => 'i',
+			   'Ї' => 'Yi',  'ї' => 'yi',
+
+			   # Belarusian specific
+			   'Ў' => 'U',   'ў' => 'u',
+
+			   # Serbian/Macedonian/Bulgarian specific
+			   'Ђ' => 'Dj',  'ђ' => 'dj',
+			   'Ј' => 'J',   'ј' => 'j',
+			   'Љ' => 'Lj',  'љ' => 'lj',
+			   'Њ' => 'Nj',  'њ' => 'nj',
+			   'Ћ' => 'C',   'ћ' => 'c',
+			   'Џ' => 'Dz',  'џ' => 'dz',
+
+			   # FRENCH - Accented letters
+			   'À' => 'A',   'à' => 'a', # A with grave
+			   'Á' => 'A',   'á' => 'a', # A with acute
+			   'Â' => 'A',   'â' => 'a', # A with circumflex
+			   'Ã' => 'A',   'ã' => 'a', # A with tilde
+			   'Ä' => 'A',   'ä' => 'a', # A with diaeresis
+			   'Å' => 'A',   'å' => 'a', # A with ring
+			   'Æ' => 'AE',  'æ' => 'ae', # AE ligature
+			   'Ç' => 'C',   'ç' => 'c',  # C with cedilla
+			   'È' => 'E',   'è' => 'e',  # E with grave
+			   'É' => 'E',   'é' => 'e',  # E with acute
+			   'Ê' => 'E',   'ê' => 'e',  # E with circumflex
+			   'Ë' => 'E',   'ë' => 'e',  # E with diaeresis
+			   'Ì' => 'I',   'ì' => 'i',  # I with grave
+			   'Í' => 'I',   'í' => 'i',  # I with acute
+			   'Î' => 'I',   'î' => 'i',  # I with circumflex
+			   'Ï' => 'I',   'ï' => 'i',  # I with diaeresis
+			   'Ñ' => 'N',   'ñ' => 'n',  # N with tilde
+			   'Ò' => 'O',   'ò' => 'o',  # O with grave
+			   'Ó' => 'O',   'ó' => 'o',  # O with acute
+			   'Ô' => 'O',   'ô' => 'o',  # O with circumflex
+			   'Õ' => 'O',   'õ' => 'o',  # O with tilde
+			   'Ö' => 'O',   'ö' => 'o',  # O with diaeresis
+			   'Ø' => 'O',   'ø' => 'o',  # O with stroke
+			   'Œ' => 'OE',  'œ' => 'oe', # OE ligature
+			   'Ù' => 'U',   'ù' => 'u',  # U with grave
+			   'Ú' => 'U',   'ú' => 'u',  # U with acute
+			   'Û' => 'U',   'û' => 'u',  # U with circumflex
+			   'Ü' => 'U',   'ü' => 'u',  # U with diaeresis
+			   'Ý' => 'Y',   'ý' => 'y',  # Y with acute
+			   'Ÿ' => 'Y',   'ÿ' => 'y',  # Y with diaeresis
+
+			   # SPANISH specific
+			   'Ñ' => 'N',   'ñ' => 'n', # N with tilde (already above)
+			   '¿' => '',    '¡' => '', # Inverted question/exclamation marks
+
+			   # PORTUGUESE specific
+			   'Ã' => 'A',   'ã' => 'a', # A with tilde (already above)
+			   'Õ' => 'O',   'õ' => 'o', # O with tilde (already above)
+
+			   # GERMAN specific
+			   'Ä' => 'Ae',  'ä' => 'ae', # A with diaeresis (umlaut) - German style
+			   'Ö' => 'Oe',  'ö' => 'oe', # O with diaeresis (umlaut) - German style
+			   'Ü' => 'Ue',  'ü' => 'ue', # U with diaeresis (umlaut) - German style
+			   'ß' => 'ss',               # Eszett (sharp s)
+
+			   # NORWEGIAN/DANISH specific
+			   'Å' => 'A',   'å' => 'a', # A with ring (already above)
+			   'Æ' => 'AE',  'æ' => 'ae', # AE ligature (already above)
+			   'Ø' => 'O',   'ø' => 'o', # O with stroke (already above)
+
+			   # SWEDISH specific (same as Norwegian for most)
+			   # Already covered above
+
+			   # POLISH specific
+			   'Ą' => 'A',   'ą' => 'a', # A with ogonek
+			   'Ć' => 'C',   'ć' => 'c', # C with acute
+			   'Ę' => 'E',   'ę' => 'e', # E with ogonek
+			   'Ł' => 'L',   'ł' => 'l', # L with stroke
+			   'Ń' => 'N',   'ń' => 'n', # N with acute
+			   'Ó' => 'O',   'ó' => 'o', # O with acute (already above)
+			   'Ś' => 'S',   'ś' => 's', # S with acute
+			   'Ź' => 'Z',   'ź' => 'z', # Z with acute
+			   'Ż' => 'Z',   'ż' => 'z', # Z with dot above
+
+			   # CZECH specific
+			   'Á' => 'A',   'á' => 'a', # A with acute (already above)
+			   'Č' => 'C',   'č' => 'c', # C with caron
+			   'Ď' => 'D',   'ď' => 'd', # D with caron
+			   'É' => 'E',   'é' => 'e', # E with acute (already above)
+			   'Ě' => 'E',   'ě' => 'e', # E with caron
+			   'Í' => 'I',   'í' => 'i', # I with acute (already above)
+			   'Ň' => 'N',   'ň' => 'n', # N with caron
+			   'Ó' => 'O',   'ó' => 'o', # O with acute (already above)
+			   'Ř' => 'R',   'ř' => 'r', # R with caron
+			   'Š' => 'S',   'š' => 's', # S with caron
+			   'Ť' => 'T',   'ť' => 't', # T with caron
+			   'Ú' => 'U',   'ú' => 'u', # U with acute (already above)
+			   'Ů' => 'U',   'ů' => 'u', # U with ring
+			   'Ý' => 'Y',   'ý' => 'y', # Y with acute (already above)
+			   'Ž' => 'Z',   'ž' => 'z', # Z with caron
+
+			   # SLOVAK specific (similar to Czech)
+			   'Ä' => 'A',   'ä' => 'a', # A with diaeresis (already above)
+			   'Ĺ' => 'L',   'ĺ' => 'l', # L with acute
+			   'Ľ' => 'L',   'ľ' => 'l', # L with caron
+			   'Ô' => 'O',   'ô' => 'o', # O with circumflex (already above)
+			   'Ŕ' => 'R',   'ŕ' => 'r', # R with acute
+
+			   # HUNGARIAN specific
+			   'Á' => 'A',   'á' => 'a', # A with acute (already above)
+			   'É' => 'E',   'é' => 'e', # E with acute (already above)
+			   'Í' => 'I',   'í' => 'i', # I with acute (already above)
+			   'Ó' => 'O',   'ó' => 'o', # O with acute (already above)
+			   'Ö' => 'O',   'ö' => 'o', # O with diaeresis (already above)
+			   'Ő' => 'O',   'ő' => 'o', # O with double acute
+			   'Ú' => 'U',   'ú' => 'u', # U with acute (already above)
+			   'Ü' => 'U',   'ü' => 'u', # U with diaeresis (already above)
+			   'Ű' => 'U',   'ű' => 'u', # U with double acute
+
+			   # ROMANIAN specific
+			   'Ă' => 'A',   'ă' => 'a', # A with breve
+			   'Â' => 'A',   'â' => 'a', # A with circumflex (already above)
+			   'Î' => 'I',   'î' => 'i', # I with circumflex (already above)
+			   'Ș' => 'S',   'ș' => 's', # S with comma below
+			   'Ț' => 'T',   'ț' => 't', # T with comma below
+
+			   # ITALIAN specific
+			   'À' => 'A',   'à' => 'a', # A with grave (already above)
+			   'È' => 'E',   'è' => 'e', # E with grave (already above)
+			   'É' => 'E',   'é' => 'e', # E with acute (already above)
+			   'Ì' => 'I',   'ì' => 'i', # I with grave (already above)
+			   'Í' => 'I',   'í' => 'i', # I with acute (already above)
+			   'Ò' => 'O',   'ò' => 'o', # O with grave (already above)
+			   'Ó' => 'O',   'ó' => 'o', # O with acute (already above)
+			   'Ù' => 'U',   'ù' => 'u', # U with grave (already above)
+			   'Ú' => 'U',   'ú' => 'u', # U with acute (already above)
+
+			   # DUTCH specific
+			   'IJ' => 'IJ', 'ij' => 'ij', # IJ ligature
+			   'Ĳ' => 'IJ',  'ĳ' => 'ij', # IJ ligature (Unicode)
+
+			   # TURKISH specific
+			   'Ç' => 'C',   'ç' => 'c', # C with cedilla (already above)
+			   'Ğ' => 'G',   'ğ' => 'g', # G with breve
+			   'İ' => 'I',   'ı' => 'i', # I with dot / dotless i
+			   'Ö' => 'O',   'ö' => 'o', # O with diaeresis (already above)
+			   'Ş' => 'S',   'ş' => 's', # S with cedilla
+			   'Ü' => 'U',   'ü' => 'u', # U with diaeresis (already above)
+
+			   # ICELANDIC specific
+			   'Á' => 'A',   'á' => 'a', # A with acute (already above)
+			   'Ð' => 'D',   'ð' => 'd', # Eth
+			   'É' => 'E',   'é' => 'e', # E with acute (already above)
+			   'Í' => 'I',   'í' => 'i', # I with acute (already above)
+			   'Ó' => 'O',   'ó' => 'o', # O with acute (already above)
+			   'Ú' => 'U',   'ú' => 'u', # U with acute (already above)
+			   'Ý' => 'Y',   'ý' => 'y', # Y with acute (already above)
+			   'Þ' => 'Th',  'þ' => 'th', # Thorn
+			   'Æ' => 'AE',  'æ' => 'ae', # AE ligature (already above)
+			   'Ø' => 'O',   'ø' => 'o', # O with stroke (already above)
+
+			   # FINNISH specific (similar to Swedish/Norwegian)
+			   'Ä' => 'A',   'ä' => 'a', # A with diaeresis (already above)
+			   'Ö' => 'O',   'ö' => 'o', # O with diaeresis (already above)
+			   'Å' => 'A',   'å' => 'a', # A with ring (already above)
+
+			   # ESTONIAN specific
+			   'Ä' => 'A',   'ä' => 'a', # A with diaeresis (already above)
+			   'Ö' => 'O',   'ö' => 'o', # O with diaeresis (already above)
+			   'Ü' => 'U',   'ü' => 'u', # U with diaeresis (already above)
+			   'Õ' => 'O',   'õ' => 'o', # O with tilde (already above)
+
+			   # LATVIAN specific
+			   'Ā' => 'A',   'ā' => 'a', # A with macron
+			   'Č' => 'C',   'č' => 'c', # C with caron (already above)
+			   'Ē' => 'E',   'ē' => 'e', # E with macron
+			   'Ģ' => 'G',   'ģ' => 'g', # G with cedilla
+			   'Ī' => 'I',   'ī' => 'i', # I with macron
+			   'Ķ' => 'K',   'ķ' => 'k', # K with cedilla
+			   'Ļ' => 'L',   'ļ' => 'l', # L with cedilla
+			   'Ņ' => 'N',   'ņ' => 'n', # N with cedilla
+			   'Š' => 'S',   'š' => 's', # S with caron (already above)
+			   'Ū' => 'U',   'ū' => 'u', # U with macron
+			   'Ž' => 'Z',   'ž' => 'z', # Z with caron (already above)
+
+			   # LITHUANIAN specific
+			   'Ą' => 'A',   'ą' => 'a', # A with ogonek (already above)
+			   'Č' => 'C',   'č' => 'c', # C with caron (already above)
+			   'Ę' => 'E',   'ę' => 'e', # E with ogonek (already above)
+			   'Ė' => 'E',   'ė' => 'e', # E with dot above
+			   'Į' => 'I',   'į' => 'i', # I with ogonek
+			   'Š' => 'S',   'š' => 's', # S with caron (already above)
+			   'Ų' => 'U',   'ų' => 'u', # U with ogonek
+			   'Ū' => 'U',   'ū' => 'u', # U with macron (already above)
+			   'Ž' => 'Z',   'ž' => 'z', # Z with caron (already above)
+
+			   # MALTESE specific
+			   'Ċ' => 'C',   'ċ' => 'c', # C with dot above
+			   'Ġ' => 'G',   'ġ' => 'g', # G with dot above
+			   'Ħ' => 'H',   'ħ' => 'h', # H with stroke
+			   'Ż' => 'Z',   'ż' => 'z', # Z with dot above (already above)
+
+			   # WELSH specific
+			   'Â' => 'A',   'â' => 'a', # A with circumflex (already above)
+			   'Ê' => 'E',   'ê' => 'e', # E with circumflex (already above)
+			   'Î' => 'I',   'î' => 'i', # I with circumflex (already above)
+			   'Ô' => 'O',   'ô' => 'o', # O with circumflex (already above)
+			   'Û' => 'U',   'û' => 'u', # U with circumflex (already above)
+			   'Ŵ' => 'W',   'ŵ' => 'w', # W with circumflex
+			   'Ŷ' => 'Y',   'ŷ' => 'y', # Y with circumflex
+
+			   # LEGACY ENTRIES (from original)
+			   '′' => '',
+			   'Ǵ' => 'g',  'ǵ' => 'g', # G with acute
+			  },
 	     };
 
 1;

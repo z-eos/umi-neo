@@ -8,11 +8,12 @@
 	<img src="/assets/images/umi-logo-black-diagonal.png"
 	     alt="Unified Management Interface"
 	     width="200" height="200"
-	     class="img-responsive">
+	     class="img-responsive"
+	>
       </div>
-      
+
       <div class="col-12 row-login rounded-0">
-	
+
 	<div class="input-group border border-1 rounded-0">
 	  %= label_for username => (class => 'input-group-text') => begin
 	    <i class="fas fa-user-alt"></i>
@@ -27,7 +28,7 @@
 	  %= password_field 'password', class => 'form-control border border-0 rounded-0', id => 'password', placeholder => 'password', required => 'required'
 	</div>
 
-        <div class="input-group">
+	<div class="input-group">
 	  <button class="form-control btn btn-primary btn-block rounded-0 text-uppercase fw-bold" type="submit" value="Login" title="Login">
 	    <i class="fa-solid fa-right-to-bracket"></i> Login
 	  </button>
@@ -35,7 +36,11 @@
 	</div>
 
       </div>
-      
+
+      <div class="col-12">
+	<p class="text-center text-secondary umi-text-tiny">v<%= app->{cfg}->{VERSION} %></p>
+      </div>
+
     </div>
 
 % end

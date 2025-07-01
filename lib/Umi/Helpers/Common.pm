@@ -5,7 +5,7 @@ package Umi::Helpers::Common;
 use Mojo::Base 'Mojolicious::Plugin';
 use Mojo::Util qw( b64_encode b64_decode encode decode url_escape );
 
-use Umi::Constants qw(RE);
+use Umi::Constants qw(RE TRANSLIT);
 
 use Crypt::HSXKPasswd;
 use Crypt::X509;
@@ -35,6 +35,7 @@ sub register {
   my ($self, $app) = @_;
 
   my $re = RE; # defined in Umi::Constants;
+  my $translit_subs = TRANSLIT; # defined in Umi::Constants;
 
   ### BEGINNING OF REGISTER
 
@@ -149,20 +150,6 @@ returns 0 if it is and 1 if not
   $app->helper( h_is_ascii => sub {
 		  my ($self, $arg) = @_;
 		  return $arg // '' ne '' && $arg !~ /^[[:ascii:]]+$/ ? 1 : 0;
-		});
-
-=head2 h_translit
-
-simple transliteration to ASCII with normalization to [:alnum:]
-
-=cut
-
-  $app->helper( h_translit => sub {
-		  my ($self, $in) = @_;
-		  my $ou = unidecode($self->h_decode_text($in));
-		  $ou =~ s/[^[:alnum:]\.-_]//g;s/[^[:alnum:]\s]//g;
-		  $self->h_log($ou);
-		  return $ou;
 		});
 
 =head2 h_lrtrim
@@ -486,6 +473,40 @@ EXAMPLE:
 		 # $self->h_log($decoded);
 		 return $decoded ? $decoded : $alt;
 	       });
+
+=head2 h_translit
+
+simple transliteration to ASCII with normalization to [a-zA-Z0-9.-_]
+
+constant TRANSLATE includes comprehensive character mappings for major
+European languages
+
+=cut
+
+  $app->helper( h_translit => sub {
+		  my ($self, $in) = @_;
+		  # $self->h_log($in);
+
+		  # Ensure proper UTF-8 handling
+		  $in = decode('UTF-8', $in) unless utf8::is_utf8($in);
+
+		  # Sort by length (longest first) to handle multi-character mappings correctly
+		  my @sorted_keys = sort { length($b) <=> length($a) } keys %$translit_subs;
+		  # $self->h_log(\@sorted_keys);
+
+		  for my $cyrillic (@sorted_keys) {
+		    my $latin = $translit_subs->{$cyrillic};
+		    $in =~ s/\Q$cyrillic\E/$latin/g;
+		  }
+		  # $self->h_log($in);
+
+		  # Clean up: remove non-ASCII and normalize
+		  $in =~ s/[^\x00-\x7F]//g; # Remove non-ASCII
+		  $in =~ s/[^[:alnum:]._-]//g; # Keep only allowed characters
+		  # $self->h_log($in);
+
+		  return $in;
+		});
 
 =head2 h_maybe_percent_decode_utf8
 
@@ -1963,6 +1984,26 @@ calculates number of full years since date
 		  return $years;
 		});
 
+=head2 h_get_value_safe
+
+  my $val = $self->h_get_attr_safe($entry, 'attr');
+
+Return the first value of attribute C<attr> from a L<Net::LDAP::Entry> object C<$entry>,
+or undef if the attribute is absent or empty.
+
+Silent on missing attributes. Suitable for use with C<get_value()> on entries returned
+by C<Net::LDAP::Search>.
+
+=cut
+
+  $app->helper( h_get_value_safe => sub {
+		  my ($self, $entry, $attr) = @_;
+		  return undef unless $entry && $attr && $entry->exists($attr);
+		  my $val = $entry->get_value($attr);
+		  return defined($val) && length($val) ? $val : undef;
+		});
+
+
   # =head2 h_domains_to_hash
 
   # convert an array of domain names into a hash where the keys are the
@@ -2113,7 +2154,6 @@ EXAMPLE
 		  } elsif (exists $p->{login}) {
 		    $rdn_val = $p->{login};
 		  } else {
-		    # $rdn_val = lc(sprintf("%s.%s", $root->get_value('givenName'), $root->get_value('sn')));
 		    $rdn_val = $self->h_get_root_uid_val( $p->{dn_to_new_svc} );
 		  }
 		  my $svc_dn = sprintf(
@@ -2207,12 +2247,6 @@ EXAMPLE
 		  foreach my $df (@{$self->{app}->{cfg}->{ldap}->{authorizedService}->{$p->{authorizedService}}->{data_fields}}) {
 		    if ($df eq 'login') {
 		      $svc_attrs->{uid} = $rdn_val;
-		      # $svc_attrs->{uid} = defined $p->{$df}
-		      #		? $p->{$df}
-		      #		: $self->h_get_root_uid_val($p->{dn_to_new_svc});
-		      #		# lc $self->h_translit( sprintf("%s.%s",
-		      #		#	   $root->get_value('givenName'),
-		      #		#			      $root->get_value('sn')) );
 		      $self->h_log($svc_attrs->{uid});
 		      $svc_details{uid} = $svc_attrs->{uid};
 		    } elsif ($df eq 'userPassword') {
@@ -2244,9 +2278,15 @@ EXAMPLE
 		  ############################################################################
 		  my %replace;
 		  $replace{'%associatedDomain%'} = $svc_attrs->{associatedDomain} if exists $svc_attrs->{associatedDomain};
-		  $replace{'%givenName%'} = $root->get_value('givenName');
-		  $replace{'%sn%'} = $root->get_value('sn') // 'NA';
+		  $replace{'%givenName%'} = $root->get_value('givenName') if $root->exists('givenName');
+		  $replace{'%sn%'} = $root->get_value('sn') if $root->exists('sn');
 		  $replace{'%sshPublicKey%'} = $p->{sshPublicKey} // [];
+		  $replace{'%mailLocalAddress%'} = $root->get_value('mail') if $root->exists('mail');
+		  $replace{'%gecos%'} = $self->h_get_value_safe( $root, 'gecos' )
+		    // join(' ', grep defined,
+			    $self->h_get_value_safe( $root, 'givenName' ),
+			    $self->h_get_value_safe( $root, 'sn' ))
+		    // undef;
 
 		  if ( exists $p->{'userCertificate;binary'} ) {
 		    $replace{'%umiUserCertificateSn%'} = '' . $ci->{'S/N'};
@@ -2261,7 +2301,12 @@ EXAMPLE
 		    delete $svc_attrs->{userPassword};
 		  } else {
 		    $replace{'%uid%'} = $svc_attrs->{uid};
-		    $replace{'%cn%'} = $root->get_value('cn') // 'NA';
+
+		    ###########################################################################
+		    # // [] ensures safe array dereference even if undef		      #
+		    # join(' ', grep defined, ...) ensures you don’t join undef values	      #
+		    ###########################################################################
+		    $replace{'%cn%'} = $self->h_get_value_safe( $root, 'cn' ) // $replace{'%gecos%'};
 		  }
 
 		  foreach my $attr (keys %$svc_attrs_must) {
