@@ -20,28 +20,28 @@ UMI v<%= app->{cfg}->{VERSION} %>
 	  % if ( $c->req->headers->user_agent =~ /irefox|ozilla/ ) {
 	  <tr>
 	    <td class="" scope="row"><i class="fa-brands fa-firefox-browser me-2 h3"></i><span class="umi-text-sm"><%= $c->req->headers->user_agent %></span></td>
-	    <td class="align-middle">Alt + Shift + <kbd><em>key</em></kbd></td>
-	    <td class="align-middle">Ctrl + Alt + <kbd><em>key</em></kbd></td>
-	    <td class="align-middle">Alt + Shift + <kbd><em>key</em></kbd></td>
+	    <td class="fw-bold align-middle">Alt + Shift + <kbd class="text-bg-secondary"><em>key</em></kbd></td>
+	    <td class="fw-bold align-middle">Ctrl + Alt + <kbd class="text-bg-secondary"><em>key</em></kbd></td>
+	    <td class="fw-bold align-middle">Alt + Shift + <kbd class="text-bg-secondary"><em>key</em></kbd></td>
 	  </tr>
 	  % } elsif ( $c->req->headers->user_agent =~ /hrom/ ) {
 	  <tr>
 	    <td class="h3" scope="row"><i class="fa-brands fa-chrome"></i></td>
-	    <td class="align-middle">Alt + <kbd><em>key</em></kbd></td>
-	    <td class="align-middle">Ctrl + Alt + <kbd><em>key</em></kbd></td>
-	    <td class="align-middle">Alt + <kbd><em>key</em></kbd></td>
+	    <td class="fw-bold align-middle">Alt + <kbd class="text-bg-secondary"><em>key</em></kbd></td>
+	    <td class="fw-bold align-middle">Ctrl + Alt + <kbd class="text-bg-secondary"><em>key</em></kbd></td>
+	    <td class="fw-bold align-middle">Alt + <kbd class="text-bg-secondary"><em>key</em></kbd></td>
 	  </tr>
 	  % } elsif ( $c->req->headers->user_agent =~ /afar/ ) {
 	  <tr>
 	    <td class="h3" scope="row"><i class="fa-brands fa-safari"></i></td>
-	    <td class="align-middle">N/A</td>
-	    <td class="align-middle">Ctrl + Alt + <kbd><em>key</em></kbd></td>
-	    <td class="align-middle">Alt + <kbd><em>key</em></kbd></td>
+	    <td class="fw-bold align-middle">N/A</td>
+	    <td class="fw-bold align-middle">Ctrl + Alt + <kbd class="text-bg-secondary"><em>key</em></kbd></td>
+	    <td class="fw-bold align-middle">Alt + <kbd class="text-bg-secondary"><em>key</em></kbd></td>
 	  </tr>
 	  % } elsif ( $c->req->headers->user_agent =~ /pera/ ) {
 	  <tr>
 	    <td class="h3" scope="row"><i class="fa-brands fa-opera"></i></td>
-	    <td class="align-middle" colspan="3">v &ge;15: [Alt] + <kbd><em>key</em></kbd>; v &le;12.1: [Shift] [Esc] + <kbd><em>key</em></kbd>
+	    <td class="fw-bold align-middle" colspan="3">v &ge;15: [Alt] + <kbd class="text-bg-secondary"><em>key</em></kbd>; v &le;12.1: [Shift] [Esc] + <kbd class="text-bg-secondary"><em>key</em></kbd>
 	    </td>
 	  </tr>
 	  % }
@@ -55,65 +55,65 @@ UMI v<%= app->{cfg}->{VERSION} %>
       <thead>
 	<tr>
 	  <th scope="col" class="w-50">Action</th>
-	  <th scope="col"><kbd><em>key</em></kbd></th>
+	  <th scope="col"><kbd class="text-bg-secondary">Key</kbd></th>
 	  <th scope="col">Location</th>
 	</tr>
       </thead>
       <tbody>
 	<tr>
 	  <td class="text-secondary"><i class="fas fa-fw fa-search me-2"></i> focus header Search Field</td>
-	  <td class="fw-bold" scope="row"><kbd>s</kbd></td>
+	  <td class="fw-bold" scope="row"><kbd class="text-bg-secondary">s</kbd></td>
 	  <td class="text-secondary">global</td>
 	</tr>
 	<tr>
 	  <td class="text-secondary"><i class="fa-solid fa-fw fa-moon me-2"></i> toggle dark theme</td>
-	  <td class="fw-bold" scope="row"><kbd>d</kbd></td>
+	  <td class="fw-bold" scope="row"><kbd class="text-bg-secondary">d</kbd></td>
 	  <td class="text-secondary">global</td>
 	</tr>
 	<tr>
 	  <td class="text-secondary"><i class="fa-solid fa-fw fa-sun me-2"></i> toggle light theme</td>
-	  <td class="fw-bold" scope="row"><kbd>l</kbd></td>
+	  <td class="fw-bold" scope="row"><kbd class="text-bg-secondary">l</kbd></td>
 	  <td class="text-secondary">global</td>
 	</tr>
 	<tr>
 	  <td class="text-secondary"><i class="fa-solid fa-fw fa-bars me-2"></i> un/collapse right panel</td>
-	  <td class="fw-bold" scope="row"><kbd>r</kbd></td>
+	  <td class="fw-bold" scope="row"><kbd class="text-bg-secondary">r</kbd></td>
 	  <td class="text-secondary">global</td>
 	</tr>
 	<tr>
 	  <td class="text-secondary"><i class="fa-solid fa-fw fa-home me-2"></i> go to the root of the site</td>
-	  <td class="fw-bold" scope="row"><kbd>h</kbd></td>
+	  <td class="fw-bold" scope="row"><kbd class="text-bg-secondary">h</kbd></td>
 	  <td class="text-secondary">global</td>
 	</tr>
 
 	<tr>
 	  <td class="text-secondary"><i class="fa-solid fa-fw fa-expand me-2"></i> un/collapse all search result records</td>
-	  <td class="fw-bold" scope="row"><kbd>t</kbd></td>
+	  <td class="fw-bold" scope="row"><kbd class="text-bg-secondary">t</kbd></td>
 	  <td class="text-secondary">search results</td>
 	</tr>
 	<tr>
 	  <td class="text-secondary"><i class="fa-solid fa-fw fa-right-left me-2"></i> inverse un/collapse state of each search result record</td>
-	  <td class="fw-bold" scope="row"><kbd>i</kbd></td>
+	  <td class="fw-bold" scope="row"><kbd class="text-bg-secondary">i</kbd></td>
 	  <td class="text-secondary">search results</td>
 	</tr>
 
 	<!-- <tr>
-	     <td class="fw-bold" scope="row"><kbd>0</kbd></td>
+	     <td class="fw-bold" scope="row"><kbd class="text-bg-secondary">0</kbd></td>
 	     <td>search results</td>
 	     <td>focus each next root object button ( Enter key to un/collapse )</td>
 	     </tr>
 	     <tr>
-	     <td class="fw-bold" scope="row"><kbd>1</kbd></td>
+	     <td class="fw-bold" scope="row"><kbd class="text-bg-secondary">1</kbd></td>
 	     <td>search results</td>
 	     <td>focus each next root object menu ( Enter key to un/collapse )</td>
 	     </tr>
 	     <tr>
-	     <td class="fw-bold" scope="row"><kbd>2</kbd></td>
+	     <td class="fw-bold" scope="row"><kbd class="text-bg-secondary">2</kbd></td>
 	     <td>search results</td>
 	     <td>focus each next branch object menu ( Enter key to un/collapse )</td>
 	     </tr>
 	     <tr>
-	     <td class="fw-bold" scope="row"><kbd>3</kbd></td>
+	     <td class="fw-bold" scope="row"><kbd class="text-bg-secondary">3</kbd></td>
 	     <td>search results</td>
 	     <td>focus each next leaf object menu ( Enter key to un/collapse )</td>
 	     </tr> -->

@@ -654,7 +654,7 @@ sub translit ($self) {
   my $p = $self->req->params->to_hash;
   $self->stash( params => $p );
   return $self->render( template => 'protected/tool/translit',
-			debug => { ok => [ sprintf('<span class="user-select-all">%s</span>', $self->h_translit($p->{text})) ] } );
+			debug => { ok => [ sprintf('<div class="user-select-all my-4 text-center fs-3">%s</div>', $self->h_translit($p->{text})) ] } );
 }
 
 sub keygen_ssh ($self) {

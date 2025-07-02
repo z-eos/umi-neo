@@ -632,7 +632,7 @@ use constant {
 			   'Â' => 'A',   'â' => 'a', # A with circumflex
 			   'Ã' => 'A',   'ã' => 'a', # A with tilde
 			   'Ä' => 'A',   'ä' => 'a', # A with diaeresis
-			   'Å' => 'A',   'å' => 'a', # A with ring
+			   'Å' => 'A',   'å' => 'aa', # A with ring
 			   'Æ' => 'AE',  'æ' => 'ae', # AE ligature
 			   'Ç' => 'C',   'ç' => 'c',  # C with cedilla
 			   'È' => 'E',   'è' => 'e',  # E with grave
@@ -648,7 +648,7 @@ use constant {
 			   'Ó' => 'O',   'ó' => 'o',  # O with acute
 			   'Ô' => 'O',   'ô' => 'o',  # O with circumflex
 			   'Õ' => 'O',   'õ' => 'o',  # O with tilde
-			   'Ö' => 'O',   'ö' => 'o',  # O with diaeresis
+			   'Ö' => 'O',   'ö' => 'oe',  # O with diaeresis
 			   'Ø' => 'O',   'ø' => 'o',  # O with stroke
 			   'Œ' => 'OE',  'œ' => 'oe', # OE ligature
 			   'Ù' => 'U',   'ù' => 'u',  # U with grave

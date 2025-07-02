@@ -502,7 +502,7 @@ European languages
 
 		  # Clean up: remove non-ASCII and normalize
 		  $in =~ s/[^\x00-\x7F]//g; # Remove non-ASCII
-		  $in =~ s/[^[:alnum:]._-]//g; # Keep only allowed characters
+		  $in =~ s/[^[:alnum:]._ -]//g; # Keep only allowed characters
 		  # $self->h_log($in);
 
 		  return $in;
