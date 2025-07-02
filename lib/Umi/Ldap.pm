@@ -490,7 +490,7 @@ sub all_hosts {
   # collecting domains from services #
   ####################################
   $search_arg = { base => $self->{app}->{cfg}->{ldap}->{base}->{acc_svc_common},
-		  filter => '(&(authorizedService=*@*)(|(objectClass=inetOrgPerson)(objectClass=uidObject)))',
+		  filter => '(&(authorizedService=*@*)(|(objectClass=inetOrgPerson)(objectClass=uidObject)(objectClass=umiOvpnCfg)(objectClass=umiUserCertificate)))',
 		  attrs => ['associatedDomain'] };
   $mesg = $self->search( $search_arg );
   if ( $mesg->code && $mesg->code != 32 ) {
