@@ -654,7 +654,7 @@ sub translit ($self) {
   my $p = $self->req->params->to_hash;
   $self->stash( params => $p );
   return $self->render( template => 'protected/tool/translit',
-			translit => $self->h_translit($p->{text}) );
+			debug => { ok => [ sprintf('<span class="user-select-all">%s</span>', $self->h_translit($p->{text})) ] } );
 }
 
 sub keygen_ssh ($self) {
@@ -1271,17 +1271,14 @@ sub profile_new ($self) {
   $v->error(givenName => ['Required, can contain alfanumeric characters and dash, first letter capital']) if $v->error('givenName');
   $v->error(sn => ['Required, can contain alfanumeric characters and dash, first letter capital']) if $v->error('sn');
 
-  my $nf = $self->h_translit(lc $p->{givenName});
-  my $nl = $self->h_translit(lc $p->{sn});
+  my $nf = lc $self->h_translit($p->{givenName});
+  my $nl = lc $self->h_translit($p->{sn});
   my $nn = sprintf("%s %s", $self->h_translit($p->{givenName}), $self->h_translit($p->{sn}));
 
   my $ldap = Umi::Ldap->new( $self->{app}, $self->session('uid'), $self->session('pwd') );
   my $search_arg = { base => $self->{app}->{cfg}->{ldap}->{base}->{acc_root},
 		     filter => sprintf("(|(&(givenName=%s)(sn=%s))(uid=%s.%s))",
-				       $p->{givenName},
-				       $p->{sn},
-				       $nf,
-				       $nl),
+				       $p->{givenName}, $p->{sn}, $nf, $nl),
 		     scope => "one" };
   my $search = $ldap->search( $search_arg );
   $self->{app}->h_log( $self->{app}->h_ldap_err($search, $search_arg) ) if $search->code;

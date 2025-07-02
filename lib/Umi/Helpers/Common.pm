@@ -2144,7 +2144,7 @@ EXAMPLE
 
 		  $p->{login} = $self->h_macnorm({mac => $p->{login}}) if $p->{authorizedService} eq 'dot1x-eap-md5';
 
-		  ## TO INDEX ALL WHAT IS SEARCHED
+		  ## TODO: IN SLAPD CONFIG TO INDEX ALL WHAT IS SEARCHED
 
 		  # Construct the service DN using parameters from $p and configuration.
 		  my ($ci, $rdn_val);
@@ -2250,9 +2250,9 @@ EXAMPLE
 		      $self->h_log($svc_attrs->{uid});
 		      $svc_details{uid} = $svc_attrs->{uid};
 		    } elsif ($df eq 'userPassword') {
-		      $svc_attrs->{userPassword} = exists $p->{password2} ?
-			$p->{password2} :
-			$pwd->{ssha};
+		      $svc_attrs->{userPassword} = exists $p->{password2}
+			? $p->{password2}
+			: $pwd->{ssha};
 		      $svc_details{userPassword} = $pwd->{clear};
 		    } elsif ($df eq 'sshKeyText' || $df eq 'sshKeyFile') {
 		      push @{$svc_attrs->{sshPublicKey}}, $p->{$df} if exists $p->{$df} && $p->{$df} ne '';
