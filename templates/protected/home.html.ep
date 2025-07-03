@@ -2,7 +2,7 @@
 
 <h1 class="p-3">Welcome, <%= h_decode_text session->{user_obj}->{givenname} %>.<sup title="authenticated as <%= session->{uid} %>"><i class="fa-solid fa-shield-halved fa-xs text-success"></i></sup></h1>
 
-UMI v<%= app->{cfg}->{VERSION} %>
+<h3 class="my-3">Welcome to UMI <span class="badge text-bg-secondary">v<%= app->{cfg}->{VERSION} %></span></h3>
 
 <div class="card mb-3">
   <div id="keys" class="card-header"><h3><b>Access Keys Combinations</b></h3>
@@ -17,20 +17,20 @@ UMI v<%= app->{cfg}->{VERSION} %>
 	  </tr>
 	</thead>
 	<tbody>
-	  % if ( $c->req->headers->user_agent =~ /irefox|ozilla/ ) {
+	  % if ( $c->req->headers->user_agent =~ /hrom/ ) {
 	  <tr>
-	    <td class="" scope="row"><i class="fa-brands fa-firefox-browser me-2 h3"></i><span class="umi-text-sm"><%= $c->req->headers->user_agent %></span></td>
-	    <td class="fw-bold align-middle">Alt + Shift + <kbd class="text-bg-secondary"><em>key</em></kbd></td>
-	    <td class="fw-bold align-middle">Ctrl + Alt + <kbd class="text-bg-secondary"><em>key</em></kbd></td>
-	    <td class="fw-bold align-middle">Alt + Shift + <kbd class="text-bg-secondary"><em>key</em></kbd></td>
-	  </tr>
-	  % } elsif ( $c->req->headers->user_agent =~ /hrom/ ) {
-	  <tr>
-	    <td class="h3" scope="row"><i class="fa-brands fa-chrome"></i></td>
+	    <td class="" scope="row"><i class="fa-brands fa-chrome me-2 h3"></i><span class="umi-text-sm"><%= $c->req->headers->user_agent %></span></td>
 	    <td class="fw-bold align-middle">Alt + <kbd class="text-bg-secondary"><em>key</em></kbd></td>
 	    <td class="fw-bold align-middle">Ctrl + Alt + <kbd class="text-bg-secondary"><em>key</em></kbd></td>
 	    <td class="fw-bold align-middle">Alt + <kbd class="text-bg-secondary"><em>key</em></kbd></td>
 	  </tr>
+	  % } elsif ( $c->req->headers->user_agent =~ /irefox|ecko/ ) {
+	    <tr>
+	      <td class="" scope="row"><i class="fa-brands fa-firefox-browser me-2 h3"></i><span class="umi-text-sm"><%= $c->req->headers->user_agent %></span></td>
+	      <td class="fw-bold align-middle">Alt + Shift + <kbd class="text-bg-secondary"><em>key</em></kbd></td>
+	      <td class="fw-bold align-middle">Ctrl + Alt + <kbd class="text-bg-secondary"><em>key</em></kbd></td>
+	      <td class="fw-bold align-middle">Alt + Shift + <kbd class="text-bg-secondary"><em>key</em></kbd></td>
+	    </tr>
 	  % } elsif ( $c->req->headers->user_agent =~ /afar/ ) {
 	  <tr>
 	    <td class="h3" scope="row"><i class="fa-brands fa-safari"></i></td>

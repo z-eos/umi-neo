@@ -648,7 +648,7 @@ use constant {
 			   'Ó' => 'O',   'ó' => 'o',  # O with acute
 			   'Ô' => 'O',   'ô' => 'o',  # O with circumflex
 			   'Õ' => 'O',   'õ' => 'o',  # O with tilde
-			   'Ö' => 'O',   'ö' => 'oe',  # O with diaeresis
+			   'Ö' => 'O',   'ö' => 'oe', # O with diaeresis
 			   'Ø' => 'O',   'ø' => 'o',  # O with stroke
 			   'Œ' => 'OE',  'œ' => 'oe', # OE ligature
 			   'Ù' => 'U',   'ù' => 'u',  # U with grave

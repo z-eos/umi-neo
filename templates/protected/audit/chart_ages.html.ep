@@ -4,8 +4,14 @@
 % $state = 'all' if ! defined $state;
 
 <h1 class="mt-3 mb-4">
-  Employees (<%= $state %>) ages
+  Stacked Bar Chart of Employee Age Distribution by Gender (<%= $state %>)
 </h1>
+
+<p>This chart represents the age distribution of personnel within defined 5-year age groups, ranging from -20 (for incorrect dates starting in the future, just for audit purposes) to 70+.</p>
+<p>Bars are stacked and segmented by gender</p>
+<p>Each bar height reflects the total number of individuals in that age group, while each segment shows how many individuals of a particular gender are in that group.</p>
+<p>Tooltip provides age group name, gender category, and count. This visualization helps compare gender distributions across age brackets.</p>
+
 
 % my $data = stash->{chart};
 % if ( $data ) {
@@ -14,21 +20,26 @@
 
   <div id="ageChart" style="width: 100%; max-width: 1024px; height: 768px;" class="m-0 p-0"></div>
 
+  %# <pre><%= dumper Mojo::JSON::decode_json $data %></pre>
+
   <script>
-
-   /*
-    * https://echarts.apache.org/en/option.html
-    *                                           */
-
-   // Example JS code to render an ECharts stacked bar chart with 4 ISO/IEC 5218 genders
    const people = <%== $data %>;
 
-   const binLabels = [
-     '15–19', '20–24', '25–29', '30–34',
-     '35–39', '40–44', '45–49', '50–54',
-     '55–59', '60–64', '65–69', '70+'
-   ];
-   const binCount = binLabels.length;
+   const binWidth = 5;
+   const minAge = -20;
+   const maxAge = 75;
+   const binCount = Math.ceil((maxAge - minAge) / binWidth);
+
+   const binLabels = [];
+   for (let i = 0; i < binCount; i++) {
+     let start = minAge + i * binWidth;
+     let end = start + binWidth - 1;
+     if (end >= 70) {
+       binLabels.push('70+');
+     } else {
+       binLabels.push(`${start}–${end}`);
+     }
+   }
 
    // Initialize bins for each gender
    const genders = {
@@ -40,14 +51,31 @@
 
    // Fill bins
    people.forEach(({ age, gender }) => {
-     let index = Math.floor((age - 15) / 5);
+     let index = Math.floor((age - minAge) / binWidth);
      if (index < 0) index = 0;
      if (index >= binCount) index = binCount - 1;
      if (!genders[gender]) return;
      genders[gender].data[index]++;
    });
 
-   // Convert to ECharts series format
+   // Convert negative bins counts to negative values for visualization
+   // Negative bins are those with binLabels starting with negative or <0
+   const negativeBinsIndices = [];
+   binLabels.forEach((label, i) => {
+     // Simple check for negative bin: if label starts with '-' or less than zero range
+     if (label.startsWith('-') || label.includes('–') && parseInt(label.split('–')[0]) < 0) {
+       negativeBinsIndices.push(i);
+     }
+   });
+
+   // Convert counts in negative bins to negative numbers for all genders
+   for (const g in genders) {
+     negativeBinsIndices.forEach(i => {
+       genders[g].data[i] = -genders[g].data[i];
+     });
+   }
+
+   // Prepare series without stacking to group bars side by side
    const series = Object.values(genders).map(g => ({
      name: g.label,
      type: 'bar',
@@ -61,16 +89,17 @@
    chart.setOption({
      tooltip: {
        trigger: 'axis',
-       axisPointer: { type: 'shadow' }
+       axisPointer: { type: 'shadow' },
+       formatter: params => {
+	 return params.map(p => `${p.marker} ${p.seriesName}: ${Math.abs(p.value)}`).join('<br/>');
+       }
      },
      legend: {
        top: 'top',
        itemWidth: 10,
        itemHeight: 10,
        icon: 'rect',
-       textStyle: {
-	 color: getBootstrapVar('--bs-secondary')
-       }
+       textStyle: { color: getBootstrapVar('--bs-secondary') }
      },
      xAxis: {
        type: 'category',
@@ -84,8 +113,12 @@
      yAxis: {
        type: 'value',
        name: 'Count',
-       axisLabel: { color: getBootstrapVar('--bs-secondary') },
-       nameTextStyle: { color: getBootstrapVar('--bs-secondary'), fontWeight: 'bold' }
+       axisLabel: {
+	 color: getBootstrapVar('--bs-secondary'),
+	 formatter: value => Math.abs(value)  // show absolute count on axis labels
+       },
+       nameTextStyle: { color: getBootstrapVar('--bs-secondary'), fontWeight: 'bold' },
+       splitLine: { show: true }
      },
      grid: {
        left: '40px', right: '20px', top: '60px', bottom: '50px', containLabel: true
@@ -97,92 +130,88 @@
      return getComputedStyle(document.body).getPropertyValue(varName).trim() || '#ccc';
    }
 
-
-   %#    const ages = [ <%== join ', ', @$data %> ];
-   %#    // Define bins and labels
-   %#    const binLabels = [
-   %#      '15–19', '20–24', '25–29', '30–34',
-   %#      '35–39', '40–44', '45–49', '50–54',
-   %#      '55–59', '60–64', '65–69', '70+'
-   %#    ];
-   %#    const bins = Array(binLabels.length).fill(0);
-   %#
-   %#    // Fill bins
-   %#    ages.forEach(age => {
-   %#      let index = Math.floor((age - 15) / 5);
-   %#      if (index < 0) index = 0;
-   %#      if (index >= bins.length) index = bins.length - 1;
-   %#      bins[index]++;
-   %#    });
-   %#
-   %#    const total = ages.length;
-   %#    const min = Math.min(...bins);
-   %#    const max = Math.max(...bins);
-   %#
-   %#    // Bootstrap contextual classes in gradient order
-   %#    const bsClasses = ['danger', 'warning', 'info', 'primary', 'success'];
-   %#
-   %#    // Map value to bootstrap class by percentile
-   %#    function getBootstrapColor(value) {
-   %#      const percent = (value - min) / (max - min || 1); // avoid 0-div
-   %#      const step = Math.floor(percent * (bsClasses.length - 1));
-   %#      const varName = `--bs-${bsClasses[step]}`;
-   %#      return getComputedStyle(document.body).getPropertyValue(varName).trim() || '#999';
-   %#    }
-   %#
-   %#    const seriesData = bins.map((count, idx) => ({
-   %#      value: count,
-   %#      name: binLabels[idx],
-   %#      itemStyle: {
-   %#        color: getBootstrapColor(count)
-   %#      }
-   %#    }));
-   %#
-   %#    const chart = echarts.init(document.getElementById('ageChart'));
-   %#    chart.setOption({
-   %#      tooltip: {
-   %#        trigger: 'item',
-   %#        formatter: '{b}: {c} ({d}%)'
-   %#      },
-   %#      xAxis: {
-   %#        type: 'category',
-   %#        data: binLabels,
-   %#        name: 'Age Group',
-   %#        nameLocation: 'middle',  // or 'center'
-   %#        nameGap: 30,             // distance from axis
-   %#        nameTextStyle: {
-   %#	 color: getComputedStyle(document.body).getPropertyValue('--bs-secondary') || '#212529',
-   %#	 fontWeight: 'bold'
-   %#        },
-   %#        axisLabel: {
-   %#	 color: getComputedStyle(document.body).getPropertyValue('--bs-secondary') || '#212529'
-   %#        }
-   %#      },
-   %#      yAxis: {
-   %#        type: 'value',
-   %#        name: 'Employees',
-   %#        nameTextStyle: {
-   %#	 color: getComputedStyle(document.body).getPropertyValue('--bs-secondary') || '#212529',
-   %#	 fontWeight: 'bold'
-   %#        },
-   %#        axisLabel: {
-   %#	 color: getComputedStyle(document.body).getPropertyValue('--bs-secondary') || '#212529'
-   %#        }
-   %#      },
-   %#      grid: {
-   %#        left: '40px',
-   %#        right: '20px',
-   %#        top: '30px',
-   %#        bottom: '50px',
-   %#        containLabel: true
-   %#      },
-   %#      series: [{
-   %#        type: 'bar',
-   %#        data: seriesData,
-   %#        barWidth: '60%'
-   %#      }]
-   %#    });
-
-  </script>
+   //
+   //   /*
+   //    * https://echarts.apache.org/en/option.html
+   //    *                                           */
+   //
+   //   // Example JS code to render an ECharts stacked bar chart with 4 ISO/IEC 5218 genders
+   //   const people = <%== $data %>;
+   //
+   //   const binLabels = [
+   //     '15–19', '20–24', '25–29', '30–34',
+   //     '35–39', '40–44', '45–49', '50–54',
+   //     '55–59', '60–64', '65–69', '70+'
+   //   ];
+   //   const binCount = binLabels.length;
+   //
+   //   // Initialize bins for each gender
+   //   const genders = {
+   //     0: { label: 'Not known', color: getBootstrapVar('--bs-secondary'), data: Array(binCount).fill(0) },
+   //     1: { label: 'Male', color: getBootstrapVar('--bs-primary'), data: Array(binCount).fill(0) },
+   //     2: { label: 'Female', color: getBootstrapVar('--bs-pink'), data: Array(binCount).fill(0) },
+   //     9: { label: 'Not applicable', color: getBootstrapVar('--bs-warning'), data: Array(binCount).fill(0) }
+   //   };
+   //
+   //   // Fill bins
+   //   people.forEach(({ age, gender }) => {
+   //     let index = Math.floor((age - 15) / 5);
+   //     if (index < 0) index = 0;
+   //     if (index >= binCount) index = binCount - 1;
+   //     if (!genders[gender]) return;
+   //     genders[gender].data[index]++;
+   //   });
+   //
+   //   // Convert to ECharts series format
+   //   const series = Object.values(genders).map(g => ({
+   //     name: g.label,
+   //     type: 'bar',
+   //     stack: 'gender',
+   //     itemStyle: { color: g.color },
+   //     emphasis: { focus: 'series' },
+   //     data: g.data
+   //   }));
+   //
+   //   const chart = echarts.init(document.getElementById('ageChart'));
+   //   chart.setOption({
+   //     tooltip: {
+   //       trigger: 'axis',
+   //       axisPointer: { type: 'shadow' }
+   //     },
+   //     legend: {
+   //       top: 'top',
+   //       itemWidth: 10,
+   //       itemHeight: 10,
+   //       icon: 'rect',
+   //       textStyle: {
+   //	 color: getBootstrapVar('--bs-secondary')
+   //       }
+   //     },
+   //     xAxis: {
+   //       type: 'category',
+   //       data: binLabels,
+   //       name: 'Age Group',
+   //       nameLocation: 'middle',
+   //       nameGap: 30,
+   //       axisLabel: { color: getBootstrapVar('--bs-secondary') },
+   //       nameTextStyle: { color: getBootstrapVar('--bs-secondary'), fontWeight: 'bold' }
+   //     },
+   //     yAxis: {
+   //       type: 'value',
+   //       name: 'Count',
+   //       axisLabel: { color: getBootstrapVar('--bs-secondary') },
+   //       nameTextStyle: { color: getBootstrapVar('--bs-secondary'), fontWeight: 'bold' }
+   //     },
+   //     grid: {
+   //       left: '40px', right: '20px', top: '60px', bottom: '50px', containLabel: true
+   //     },
+   //     series
+   //   });
+   //
+   //   function getBootstrapVar(varName) {
+   //     return getComputedStyle(document.body).getPropertyValue(varName).trim() || '#ccc';
+   //   }
+   //
+   //  </script>
 
 % }

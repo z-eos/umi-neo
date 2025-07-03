@@ -21,7 +21,7 @@ use Data::Printer {
 
 has 'cfg' => sub { {} };
 
-our $VERSION = '0.7.9';
+our $VERSION = '0.8.0';
 
 sub startup ($self) {
 
@@ -518,6 +518,10 @@ sub _startup_routes ($self) {
     ->get( '/audit/profile/charts/:state')
     ->requires(is_role => ['admin,coadmin,hr', {cmp => 'or'}])
     ->to('protected#audit_ages_chart', state => 'active');
+  $protected_root
+    ->get( '/audit/profile/services/:service')
+    ->requires(is_role => ['admin,coadmin,hr', {cmp => 'or'}])
+    ->to('protected#audit_services_chart', service => 'all');
 
   ## TOOLs
   ### aside

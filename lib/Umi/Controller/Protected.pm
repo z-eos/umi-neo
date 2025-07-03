@@ -2419,6 +2419,57 @@ sub audit_ages_chart ($self) {
   $self->render( template => 'protected/audit/chart_ages', debug => \%debug, chart => encode_json(\@{[values %ages]}) );
 }
 
+=head1 audit_services_chart
+
+services ration
+
+=cut
+
+sub audit_services_chart ($self) {
+  my $p = $self->req->params->to_hash;
+  # $self->h_log($self->stash('state'));
+
+  my %debug;
+  my $ldap = Umi::Ldap->new( $self->{app}, $self->session('uid'), $self->session('pwd') );
+  my $filter;
+  if ( defined $self->stash('service') ) {
+    if ( $self->stash('service') eq 'all' ) {
+      $filter = '(&(authorizedService=*@*)(|(objectClass=inetOrgPerson)(objectClass=uidObject)))';
+    } else {
+      $filter = sprintf('(&(authorizedService=%s@*)(|(objectClass=inetOrgPerson)(objectClass=uidObject)))', $self->stash('service'));
+    }
+  }
+  my $search_arg = { base => $self->{app}->{cfg}->{ldap}->{base}->{acc_root},
+		     filter => $filter,
+		     scope => 'sub',
+		     attrs => [qw(authorizedService) ] };
+  my $search = $ldap->search( $search_arg );
+  $self->h_log( $self->{app}->h_ldap_err($search, $search_arg) ) if $search->code;
+  # $self->h_log($search->count);
+
+  my %svc;
+  foreach ($search->entries) {
+    my ($k, $v) = split /@/, $_->get_value('authorizedService');
+    $svc{$k}{$v}++;
+    # $self->h_log( $_->get_value('umiUserDateOfBirth') );
+  }
+
+  $search_arg = { base => $self->{app}->{cfg}->{ldap}->{base}->{acc_root},
+		  scope => 'one',
+		  attrs => [qw(mail) ] };
+  my $search = $ldap->search( $search_arg );
+  $self->h_log( $self->{app}->h_ldap_err($search, $search_arg) ) if $search->code;
+  foreach ($search->entries) {
+    my ($k, $v) = split /@/, $_->get_value('mail');
+    $svc{mail}{$v}++;
+    # $self->h_log( $_->get_value('umiUserDateOfBirth') );
+  }
+
+  # $self->h_log(\%svc);
+
+  $self->render( template => 'protected/audit/chart_services', debug => \%debug, chart => encode_json(\%svc) );
+}
+
 =head1 audit_gpg_keys
 
 

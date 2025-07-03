@@ -6,6 +6,12 @@
   <i class="text-body-secondary fs-4">(top <%= app->{cfg}->{tool}->{dns}->{chart}->{top_number} %> domains)</i>
 </h1>
 
+<p>This chart displays the relative frequency of DNS domain names found in LDAP directory entries.</p>
+<p>Each slice represents a domain name; the size of the slice is proportional to the number of times the domain occurs.</p>
+<p>The visualization uses a rose-type doughnut layout (petals sized by area) to emphasize differences in frequency.</p>
+<p>A vertical legend on the right shows each domain name along with its percentage of the total occurrences.</p>
+<p>This visual helps quickly identify the most prevalent domains in the directory.</p>
+
 % my ($insts_str, %insts, $inst_id);
 
 % my $freq = stash->{freq};

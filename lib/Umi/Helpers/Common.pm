@@ -1976,7 +1976,7 @@ calculates number of full years since date
 		  my $then = localtime( generalizedTime_to_time($date) );
 		  my $now  = localtime();
 		  my $years = $now->year - $then->year;
-
+		  # $self->h_log($now->year . ' - ' . $then->year . ' = ' . $years);
 		  # Adjust if current date is before anniversary in the current year
 		  $years--
 		    if $now->mon < $then->mon || ($now->mon == $then->mon && $now->mday < $then->mday);

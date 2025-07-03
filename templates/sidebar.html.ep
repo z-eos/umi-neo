@@ -94,6 +94,11 @@
 		    <i class="fa-solid fa-chart-column fa-fw me-2"></i> ages
 		  </a>
 		</li>
+		<li>
+		  <a class="dropdown-item text-lowercase px-0" href="/audit/profile/services">
+		    <i class="fa-solid fa-bell-concierge fa-fw me-2"></i> services
+		  </a>
+		</li>
 
 	      </ul>
 	    </li>
