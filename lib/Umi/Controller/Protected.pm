@@ -2459,12 +2459,14 @@ sub audit_services_chart ($self) {
 				    $self->{app}->{cfg}->{ldap}->{defaults}->{group}->{blocked}->{gidnumber}),
 		  scope => 'one',
 		  attrs => [qw(mail) ] };
-  my $search = $ldap->search( $search_arg );
+  $search = $ldap->search( $search_arg );
   $self->h_log( $self->{app}->h_ldap_err($search, $search_arg) ) if $search->code;
   foreach ($search->entries) {
-    my ($k, $v) = split /@/, $_->get_value('mail');
-    $svc{mail}{$v}++;
-    # $self->h_log( $_->get_value('umiUserDateOfBirth') );
+    if ($_->exists('mail')) {
+      my ($k, $v) = split /@/, $_->get_value('mail');
+      $svc{mail}{$v}++;
+      # $self->h_log( $_->get_value('umiUserDateOfBirth') );
+    }
   }
 
   # $self->h_log(\%svc);
