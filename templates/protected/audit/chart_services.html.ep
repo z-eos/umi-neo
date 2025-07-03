@@ -1,0 +1,131 @@
+%# -*- mode: web; eval: (follow-mode) -*-
+<link href="/assets/js/datatables/datatables.min.css" rel="stylesheet" type="text/css">
+
+<h1 class="mt-3 mb-4">
+  Domain Occurrences Grouped by Service
+</h1>
+
+<p>This hierarchical sunburst chart visualizes how domains are distributed among various services.</p>
+<p>The inner ring shows services, and each outer ring segment represents a domain used by the respective service.</p>
+<p>The size of each segment reflects the number of times that service–domain pair occurs in the dataset.</p>
+<p>This visualization reveals usage concentration, showing which services dominate and how domain usage is distributed across them.</p>
+
+% my $chart = stash->{chart};
+% if ( defined $chart ) {
+
+  %# <pre><%= dumper Mojo::JSON::decode_json $chart %></pre>
+
+  <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+
+  <div id="myChart" style="width: 100%; max-width: 1024px; height: 768px;" class="vh-100 m-0 p-0"></div>
+
+  <script>
+
+   /*
+    * ECharts Sunburst chart: services → domains
+    * https://echarts.apache.org/en/option.html#series-sunburst
+    */
+
+   const rawData = <%== $chart %>;  // Perl structure: { service => { domain => value } }
+
+   const rootStyles = getComputedStyle(document.documentElement);
+
+   // Color palette from Bootstrap 5
+   const colorPalette = [
+     rootStyles.getPropertyValue('--bs-danger').trim(),
+     rootStyles.getPropertyValue('--bs-warning').trim(),
+     rootStyles.getPropertyValue('--bs-success').trim(),
+     rootStyles.getPropertyValue('--bs-info').trim(),
+     rootStyles.getPropertyValue('--bs-primary').trim(),
+     rootStyles.getPropertyValue('--bs-secondary').trim(),
+     rootStyles.getPropertyValue('--bs-teal')?.trim() || '#20c997',
+     rootStyles.getPropertyValue('--bs-orange')?.trim() || '#fd7e14',
+     rootStyles.getPropertyValue('--bs-pink')?.trim() || '#d63384',
+     rootStyles.getPropertyValue('--bs-indigo')?.trim() || '#6610f2',
+     rootStyles.getPropertyValue('--bs-purple')?.trim() || '#6f42c1',
+     rootStyles.getPropertyValue('--bs-gray')?.trim() || '#6c757d',
+     rootStyles.getPropertyValue('--bs-blue')?.trim() || '#0d6efd'
+   ];
+
+   // Convert raw data to ECharts Sunburst format
+   const chartData = Object.entries(rawData).map(([service, domains], idx) => ({
+     name: service,
+     itemStyle: {
+       color: colorPalette[idx % colorPalette.length]
+     },
+     children: Object.entries(domains).map(([domain, value]) => ({
+       name: domain,
+       value: value
+     }))
+   }));
+
+   // Init chart
+   const myChart = echarts.init(document.getElementById('myChart'));
+
+   // Chart config
+   const option = {
+     title: {
+       text: 'Domain Occurrences Grouped by Service',
+       textStyle: {
+	 color: rootStyles.getPropertyValue('--bs-secondary').trim()
+       }
+     },
+     tooltip: {
+       trigger: 'item',
+       formatter: function (info) {
+	 const name = info.name;
+	 const val = info.value ?? '—';
+	 return `${name}: ${val}`;
+       }
+     },
+     series: {
+       type: 'sunburst',
+       radius: [0, '90%'],
+       sort: null,
+       levels: [
+	 {}, // Level 0 (root, not visible)
+	 {
+	   // Level 1: services
+	   r0: 0,
+	   r: '30%',
+	   label: {
+	     rotate: 'radial',
+	     color: rootStyles.getPropertyValue('--bs-dark').trim(),
+	     fontFamily: 'monospace',
+	     fontSize: 18,
+	     fontWeight: 'bold'
+	   }
+	 },
+	 {
+	   // Level 2: domains
+	   r0: '30%',
+	   r: '90%',
+	   label: {
+	     rotate: 'radial',
+	     color: rootStyles.getPropertyValue('--bs-dark').trim(),
+	     fontFamily: 'mono',
+	     fontWeight: 'bold'
+	   }
+	 }
+       ],
+       data: chartData
+     },
+     backgroundColor: 'transparent'
+   };
+
+   // Render chart
+   myChart.setOption(option);
+
+   // Watch for Bootstrap theme changes
+   const observer = new MutationObserver(() => {
+     option.title.textStyle.color = rootStyles.getPropertyValue('--bs-secondary').trim();
+     option.series.levels[1].label.color = rootStyles.getPropertyValue('--bs-dark').trim();
+     option.series.levels[2].label.color = rootStyles.getPropertyValue('--bs-dark').trim();
+     myChart.setOption(option);
+   });
+
+   observer.observe(document.documentElement, { attributes: true, attributeFilter: ['data-bs-theme'] });
+
+  </script>
+
+% }

@@ -2455,6 +2455,8 @@ sub audit_services_chart ($self) {
   }
 
   $search_arg = { base => $self->{app}->{cfg}->{ldap}->{base}->{acc_root},
+		  filter => sprintf("(!(gidNumber=%s))",
+				    $self->{app}->{cfg}->{ldap}->{defaults}->{group}->{blocked}->{gidnumber}),
 		  scope => 'one',
 		  attrs => [qw(mail) ] };
   my $search = $ldap->search( $search_arg );
