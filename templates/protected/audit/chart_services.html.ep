@@ -80,8 +80,12 @@
      },
      series: {
        type: 'sunburst',
+       nodeClick: 'rootToNode',
        radius: [0, '90%'],
        sort: null,
+       emphasis: {
+	 focus: 'ancestor'
+       },
        levels: [
 	 {}, // Level 0 (root, not visible)
 	 {

@@ -78,7 +78,7 @@
 </div>
 
 %# vh-100 is important, without it dropwown are not shown for collapsed rows
-<div id="searchresult" class="container-fluid vh-100">
+<div id="searchresult" class="container-fluid vh-100 px-0">
 
   % my ($col, $cn, $ct, $mn, $mt);
   % my $mps = '';

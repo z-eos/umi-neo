@@ -592,7 +592,7 @@ sub pwdgen ($self) {
     # $self->h_log($par);
     $pwdgen = $self->h_pwdgen($par);
     my $qr = $self->h_qrcode({toqr => $pwdgen->{clear}, mod => 3, html => 1});
-    # $self->h_log($pwdgen);
+     $self->h_log($pwdgen);
     if ( exists $pwdgen->{error} ) {
       $self->stash({debug => { error => [ $pwdgen->{error} ]}});
     } else {

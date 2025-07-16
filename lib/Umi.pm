@@ -123,15 +123,16 @@ sub startup ($self) {
 		  #'fail_render' => { status => 401, template => 'not_found' },
 		 });
 
-  $self->plugin( CHI =>
-		 {
-		  fs =>
-		  {
-		   driver => 'File',
-		   root_dir => '/tmp/umi-sessions',
-		   expires_in => '7 days',
-		  },
-		 });
+  # $self->plugin( CHI =>
+  #		 {
+  #		  fs => {
+  #			 driver => 'File',
+  #			 root_dir => '/tmp/umi-sessions',
+  #			 expires_in => '7 days',
+  #			},
+  #		 });
+
+  $self->plugin( CHI => $self->config->{plugin}->{CHI} );
 
   $self->_startup_routes;
 
@@ -252,8 +253,8 @@ sub _startup_config ($self) {
 
   $self->app->cfg->{VERSION} = $VERSION;
 
-  $self->plugin('StaticCache' => { even_in_dev => 0 });
-
+  # $self->plugin('StaticCache' => { even_in_dev => 0 });
+  $self->plugin('StaticCache' => $self->config->{plugin}->{StaticCache});
   return $self;
 }
 

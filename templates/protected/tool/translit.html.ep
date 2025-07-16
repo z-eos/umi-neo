@@ -1,7 +1,7 @@
 %# -*- mode: web; eval: (follow-mode); -*-
 <h3 class="fw-bold p-5">
   <i class="fas fa-qrcode fa-lg me-3 text-muted"></i>
-  Text to transliterate<small><em class="text-muted font-monospace"></em></small>
+  Text to transliterate from UTF to ASCII <small><em class="text-muted font-monospace"></em></small>
 </h3>
 <hr>
 

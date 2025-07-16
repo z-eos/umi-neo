@@ -1322,12 +1322,15 @@ END_INPUT
 # noAI #		});
 
   # PWDGEN
+  # expected at least xk_num_words
   $app->helper( h_pwdgen => sub {
 		  my ( $self, $par ) = @_;
 		  # $self->h_log($par);
 		  my ($xk, $error);
 		  my $cf = $app->{cfg}->{tool}->{pwdgen} // undef;
 		  my $p;
+		  # we need at least this for "default generating"
+		  $p->{xk_num_words} = $cf->{xk}->{num_words}->{val} if ! defined $p;
 		  # as pwd_alg value, form returns preset name as class name defined in templates/protected/tool/pwdgen-create.html.ep
 		  $p->{palg} = exists $par->{pwd_alg} ? uc substr($par->{pwd_alg}, 4) : $cf->{xk}->{preset_default};
 		  $p->{pnum} = exists $par->{pwd_num} ? $par->{pwd_num} : $cf->{pnum};
@@ -2137,14 +2140,24 @@ EXAMPLE
 
   $app->helper( h_service_add_if_not_exists => sub {
 		  my ($self, $p, $ldap, $root, $br, $debug, $dry_run) = @_;
-
-		  $dry_run = 0 if ! defined $dry_run;
-
-		  $self->h_log($p) if $dry_run == 1;
-
-		  $p->{login} = $self->h_macnorm({mac => $p->{login}}) if $p->{authorizedService} eq 'dot1x-eap-md5';
+		  # $self->h_log($p);
 
 		  ## TODO: IN SLAPD CONFIG TO INDEX ALL WHAT IS SEARCHED
+
+		  $dry_run = 0 if ! defined $dry_run;
+		  $self->h_log($p) if $dry_run == 1;
+
+		  my $sc = $self->{app}->{cfg}->{ldap}->{authorizedService}->{$p->{authorizedService}};
+
+
+		  # different services expect different format of logins
+		  if ( $p->{authorizedService} eq 'dot1x-eap-md5' ) {
+		    $p->{login} = $self->h_macnorm({mac => $p->{login}});
+		  } elsif ( $sc->{delim_mandatory} && exists $p->{login} && $p->{login} !~ /.+@.+/ ) {
+		    $p->{login} = sprintf("%s@%s", $p->{login}, $p->{associatedDomain});
+		  } elsif ( $sc->{delim_mandatory} && ! exists $p->{login} ) {
+		    $p->{login} = sprintf("%s@%s", $self->h_get_root_uid_val( $p->{dn_to_new_svc} ), $p->{associatedDomain});
+		  }
 
 		  # Construct the service DN using parameters from $p and configuration.
 		  my ($ci, $rdn_val);
@@ -2158,21 +2171,17 @@ EXAMPLE
 		  }
 		  my $svc_dn = sprintf(
 				       '%s=%s,%s',
-				       (exists $self->{app}->{cfg}->{ldap}->{authorizedService}->{$p->{authorizedService}}->{rdn}
-					? $self->{app}->{cfg}->{ldap}->{authorizedService}->{$p->{authorizedService}}->{rdn}
+				       (exists $sc->{rdn}
+					? $sc->{rdn}
 					: $self->{app}->{cfg}->{ldap}->{defaults}->{rdn}),
 				       $rdn_val,
 				       $br->{br_dn}
 				      );
 		  # Search for an existing entry with that DN.
-		  my $if_exist = $ldap->search({
-						base  => $svc_dn,
-						scope => 'base',
-						attrs => [qw(uid authorizedService)],
-					       });
-
+		  my $if_exist = $ldap->search({ base => $svc_dn, scope => 'base', attrs => [qw(uid authorizedService)] });
 		  # If an entry exists, do nothing.
 		  return { svc_dn => $svc_dn } if $if_exist->count;
+
 
 		  # Build a hash of all object classes from the LDAP schema.
 		  my %objectclasses = map { $_->{name} => $_ } $ldap->schema->all_objectclasses;
@@ -2182,7 +2191,7 @@ EXAMPLE
 
 		  # For each objectClass configured for the authorized service,
 		  # mark it and all its superior classes.
-		  foreach my $oc_name (@{$self->{app}->{cfg}->{ldap}->{authorizedService}->{$p->{authorizedService}}->{attr}->{objectClass}}) {
+		  foreach my $oc_name (@{$sc->{attr}->{objectClass}}) {
 		    $all_sup->{$oc_name} = 1;
 		    my @sup = $ldap->get_all_superior_classes($schema, $oc_name);
 		    $all_sup->{$_} = 1 for @sup;
@@ -2207,7 +2216,7 @@ EXAMPLE
 		    }
 		    if (exists $objectclasses{$oc}->{may}) {
 		      foreach my $attr (@{$objectclasses{$oc}->{may}}) {
-			next unless exists $self->{app}->{cfg}->{ldap}->{authorizedService}->{$p->{authorizedService}}->{attr}->{$attr};
+			next unless exists $sc->{attr}->{$attr};
 			if ($attr eq 'userid') {
 			  $svc_attrs_may->{uid}++;
 			} elsif ($attr eq 'userCertificate') {
@@ -2223,11 +2232,11 @@ EXAMPLE
 
 		  # Determine the last uidNumber. Use a filter if defined in config.
 		  my $uidNumber_last;
-		  if (exists $self->{app}->{cfg}->{ldap}->{authorizedService}->{$p->{authorizedService}}->{last_num_filter}) {
+		  if (exists $sc->{last_num_filter}) {
 		    $uidNumber_last =
 		      $ldap->last_num(
 				      undef,
-				      $self->{app}->{cfg}->{ldap}->{authorizedService}->{$p->{authorizedService}}->{last_num_filter},
+				      $sc->{last_num_filter},
 				      undef,
 				      'sub'
 				     );
@@ -2236,37 +2245,43 @@ EXAMPLE
 		  }
 
 		  # Generate a password (and other related values) for the service entry.
-		  my $pwd = $self->h_pwdgen;
+		  my $pwd;
 		  my $svc_attrs = {};
 		  my %svc_details;
 
 		  # Set the objectClass attribute from configuration.
-		  $svc_attrs->{objectClass} = $self->{app}->{cfg}->{ldap}->{authorizedService}->{$p->{authorizedService}}->{attr}->{objectClass};
+		  $svc_attrs->{objectClass} = $sc->{attr}->{objectClass};
 
 		  # Process each data field defined in the configuration.
-		  foreach my $df (@{$self->{app}->{cfg}->{ldap}->{authorizedService}->{$p->{authorizedService}}->{data_fields}}) {
+		  foreach my $df (@{$sc->{data_fields}}) {
 		    if ($df eq 'login') {
 		      $svc_attrs->{uid} = $rdn_val;
 		      $self->h_log($svc_attrs->{uid});
 		      $svc_details{uid} = $svc_attrs->{uid};
+
 		    } elsif ($df eq 'userPassword') {
-		      $svc_attrs->{userPassword} = exists $p->{password2}
-			? $p->{password2}
-			: $pwd->{ssha};
+		      $pwd = exists $p->{password2}
+			? $self->h_pwdgen({ pwd_alg => 'alg-userdefined', pwd_userdefined => $p->{password2}, xk_num_words => 5 })
+			: $self->h_pwdgen({ xk_num_words => 5 });
+		      $svc_attrs->{userPassword} = $pwd->{ssha};
 		      $svc_details{userPassword} = $pwd->{clear};
+		      $self->h_log($pwd);
+
 		    } elsif ($df eq 'sshKeyText' || $df eq 'sshKeyFile') {
 		      push @{$svc_attrs->{sshPublicKey}}, $p->{$df} if exists $p->{$df} && $p->{$df} ne '';
+
 		    } elsif (!exists $p->{$df}) {
-		      if (exists $self->{app}->{cfg}->{ldap}->{authorizedService}->{$p->{authorizedService}}->{attr}->{$df . '_prefix'}) {
+		      if (exists $sc->{attr}->{$df . '_prefix'}) {
 			$svc_attrs->{$df} = sprintf(
 						    "%s/%s.%s",
-						    $self->{app}->{cfg}->{ldap}->{authorizedService}->{$p->{authorizedService}}->{attr}->{$df . '_prefix'},
+						    $sc->{attr}->{$df . '_prefix'},
 						    lc $root->get_value('givenName'),
 						    lc $root->get_value('sn')
 						   );
-		      } elsif (exists $self->{app}->{cfg}->{ldap}->{authorizedService}->{$p->{authorizedService}}->{attr}->{$df}) {
-			$svc_attrs->{$df} = $self->{app}->{cfg}->{ldap}->{authorizedService}->{$p->{authorizedService}}->{attr}->{$df};
+		      } elsif (exists $sc->{attr}->{$df}) {
+			$svc_attrs->{$df} = $sc->{attr}->{$df};
 		      }
+
 		    } else {
 		      $svc_attrs->{$df} = $p->{$df};
 		    }
@@ -2300,38 +2315,49 @@ EXAMPLE
 		    delete $svc_attrs->{uid};
 		    delete $svc_attrs->{userPassword};
 		  } else {
-		    $replace{'%uid%'} = $svc_attrs->{uid};
-
-		    ###########################################################################
-		    # // [] ensures safe array dereference even if undef		      #
-		    # join(' ', grep defined, ...) ensures you don’t join undef values	      #
-		    ###########################################################################
-		    $replace{'%cn%'} = $self->h_get_value_safe( $root, 'cn' ) // $replace{'%gecos%'};
+		    if ( $sc->{delim_mandatory} ) {
+		      $replace{'%login%'} = $p->{login};
+		    } else {
+		      $replace{'%uid%'} = $svc_attrs->{uid};
+		      $replace{'%cn%'} = $self->h_get_value_safe( $root, 'cn' ) // $replace{'%gecos%'};
+		    }
 		  }
 
 		  foreach my $attr (keys %$svc_attrs_must) {
 		    next if exists $svc_attrs->{$attr};
 		    if ($attr eq 'uidNumber') {
 		      $svc_attrs->{$attr} = $uidNumber_last->[0] + 1;
-		    } elsif (exists $self->{app}->{cfg}->{ldap}->{authorizedService}->{$p->{authorizedService}}->{attr}->{$attr}) {
-		      $svc_attrs->{$attr} = $self->{app}->{cfg}->{ldap}->{authorizedService}->{$p->{authorizedService}}->{attr}->{$attr};
+		    } elsif (exists $sc->{attr}->{$attr}) {
+		      $svc_attrs->{$attr} = $sc->{attr}->{$attr};
 		      if ( $attr eq 'userCertificate;binary' ) { # binary data shouldn't be substituted
 			$svc_attrs->{$attr} = $p->{'userCertificate;binary'};
 		      } else {
-			$svc_attrs->{$attr} =~ s/%([[:alpha:]]+(?:;[[:alpha:]]+)*)%/exists $replace{"%$1%"} ? $replace{"%$1%"} : $&/ge;
+			# looks for placeholders enclosed in percent signs like %FOO% or %FOO;BAR% in the string $a.
+			#   For each placeholder:
+			#     - If a corresponding key exists in %replace, substitute it with its value.
+			#     - If the key is absent, leave the original placeholder unchanged.
+			$svc_attrs->{$attr} =~ s/%([[:alpha:]]+(?:;[[:alpha:]]+)*)%/
+			  exists $replace{"%$1%"} ? $replace{"%$1%"} : $&/ge;
 		      }
 		    } else {
 		      $svc_attrs->{$attr} = undef;
 		      $self->h_log('ERROR: must attribute is absent: ' . $attr);
 		    }
+		    $self->h_log('attr: ' . $attr . ' = ' . $svc_attrs->{$attr});
 		  }
+
 		  foreach my $attr (keys %$svc_attrs_may) {
-		    next if exists $svc_attrs->{$attr} || !exists $self->{app}->{cfg}->{ldap}->{authorizedService}->{$p->{authorizedService}}->{attr}->{$attr};
-		    $svc_attrs->{$attr} = $self->{app}->{cfg}->{ldap}->{authorizedService}->{$p->{authorizedService}}->{attr}->{$attr};
+		    next if exists $svc_attrs->{$attr} || !exists $sc->{attr}->{$attr};
+		    $svc_attrs->{$attr} = $sc->{attr}->{$attr};
 		    if ( $attr eq 'userCertificate;binary' ) { # binary data shouldn't be substituted
 		      $svc_attrs->{$attr} = $p->{'userCertificate;binary'};
 		    } else {
-		      $svc_attrs->{$attr} =~ s/%([[:alpha:]]+(?:;[[:alpha:]]+)*)%/exists $replace{"%$1%"} ? $replace{"%$1%"} : $&/ge;
+		      # looks for placeholders enclosed in percent signs like %FOO% or %FOO;BAR% in the string $a.
+		      #   For each placeholder:
+		      #     - If a corresponding key exists in %replace, substitute it with its value.
+		      #     - If the key is absent, leave the original placeholder unchanged.
+		      $svc_attrs->{$attr} =~ s/%([[:alpha:]]+(?:;[[:alpha:]]+)*)%/
+			exists $replace{"%$1%"} ? $replace{"%$1%"} : $&/ge;
 		    }
 		  }
 
@@ -2359,7 +2385,7 @@ EXAMPLE
 		  # $self->h_log($debug);
 
 		  my %r = ( svc_dn => $svc_dn, msg => $msg, svc_details => \%svc_details );
-		  # $self->h_log(\%r);
+		   $self->h_log(\%r);
 		  return \%r;
 
 		});
