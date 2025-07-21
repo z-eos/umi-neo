@@ -75,33 +75,33 @@
 		  %= file_field $a, id => $id, class => 'form-control form-control-sm', accept => '.jpg'
 		% } else {
 
-	            % if ( ! exists $aa->{$a}->{"single"} && $i == 0 ) { #(scalar @$v == 1 || scalar @$v == $i + 1)) {
-	              <span class="input-group-btn">
+		    % if ( ! exists $aa->{$a}->{"single"} && $i == 0 ) { #(scalar @$v == 1 || scalar @$v == $i + 1)) {
+		      <span class="input-group-btn">
 			<button
 			  % if ( $a eq 'objectClass') {
-                            class="btn btn-secondary btn-sm border"
-                            data-bs-toggle="modal" data-bs-target="#modal-objectClass"
+			    class="btn btn-secondary btn-sm border"
+			    data-bs-toggle="modal" data-bs-target="#modal-objectClass"
 			  % } else {
-                            class="btn btn-secondary btn-sm btn-add element-add"
+			    class="btn btn-secondary btn-sm btn-add element-add"
 			  % }
 			  id="<%= $id %>" type="button" title="click to add another <%= $a %> field value">
 			  <i class="fa-solid fa-fw <%= $a eq 'objectClass' ? 'fa-circle-plus' : 'fa-clone' %> text-success-emphasis"></i>
 			</button>
-	              </span>
-	            % } else {
-	              <span class="input-group-btn">
+		      </span>
+		    % } else {
+		      <span class="input-group-btn">
 			<button class="btn btn-sm invisible" type="button"><i class="fa-regular fa-fw fa-trash-can"></i></button>
-	              </span>
-                    % }
+		      </span>
+		    % }
 
-                    % if ( $a eq 'grayPublicKey' || $a eq 'sshPublicKey') {
+		    % if ( $a eq 'grayPublicKey' || $a eq 'sshPublicKey' || $a eq 'description') {
 		      %= text_area $a => $e, rows => 5, class => "form-control", id => $id
-                    % } else {
+		    % } else {
 		      %# WARNING: helper tag works incorrectly
 		      %# = input_tag $a => $e, id => 'val_' . $id, class => 'form-control', title => '', type => 'text'
 		      <input type="text" name="<%= $a %>" id="val_<%= $id %>" class="form-control" title=""
 			     value="<%= Mojo::Util::decode('UTF-8', $e) %>">
-                  % }
+		  % }
 		% }
 		<span class="input-group-btn">
 		  <!-- Delete Button -->
@@ -111,9 +111,9 @@
 		</span>
 	      </div>
 	      % $i++;
-            % }
+	    % }
 	    % $i = 0;
-        % }
+	% }
 	</div>
       </div>
     </div>

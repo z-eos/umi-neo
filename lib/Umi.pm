@@ -21,7 +21,7 @@ use Data::Printer {
 
 has 'cfg' => sub { {} };
 
-our $VERSION = '0.8.0';
+our $VERSION = '0.8.5';
 
 sub startup ($self) {
 
