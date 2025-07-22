@@ -83,6 +83,24 @@ converts color class to bg color class
 		  return $bg;
 	       });
 
+=head1 h_subst_attr_value
+
+helper to return a substitution string for an attribute value if exists in
+config $app->{cfg}->{ui}->{page}->{subst}->{$attr}->{$attr_val}
+
+=cut
+
+  $app->helper( h_subst_attr_value => sub {
+		  my ($c, $attr, $attr_val) = @_;
+		  if ( exists $app->{cfg}->{ui}->{page}->{subst}->{$attr}->{$attr_val} ) {
+		    return sprintf('%s <span class="badge text-bg-secondary umi-text-tiny align-middle" title="substitution of an attribute original value with a human friendly something"><i class="fa-solid fa-rotate umi-text-sm"></i> orig. value: %s</span>',
+				   $app->{cfg}->{ui}->{page}->{subst}->{$attr}->{$attr_val},
+				   $attr_val);
+		  } else {
+		    return $attr_val;
+		  }
+		});
+
 =head1 h_get_col
 
 gets color part after the last dash

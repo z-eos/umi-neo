@@ -7,23 +7,23 @@
 % my $attr_val_class = "";
 % my $count = @$entries;
 <div class="row w-100 <%= app->{cfg}->{ui}->{page}->{header}->{css} %>">
-  <div class="col-xs-6 col-sm-6 col-md-4 col-lg-3">
-    <h3 class="fw-bold">
+  <div class="col-xs-6 col-sm-6 col-md-4 col-lg-3 px-0">
+    <h3 class="fw-bold text-nowrap">
       % if ( exists  $search_common_params->{dn_to_history} ) {
 	<i class="text-info fa-solid <%= app->{cfg}->{ui}->{menu}->{history}->{ico} . ' ' .  app->{cfg}->{ui}->{menu}->{history}->{col} %> me-3"></i>
 	History
       % }
       % else {
 	<i class="fa-solid fa-search fa-lg text-info me-2"></i>
-	Search Results: <span class="fs-6 align-middle"><%= $count %> rows</span>
+	Search Results: <span class="umi-text-tiny align-middle"><%= $count %></span>
       % }
     </h3>
   </div>
-  <div class="col-xs-6 col-sm-6 col-md-8 col-lg-9">
-    <dl class="row font-monospace text-secondary umi-text-xs">
-      <dt class="col-1 text-end px-0">base:</dt>  <dd class="col-11 text-break"><%= $search_arg->{base}   %></dd>
-      <dt class="col-1 text-end px-0">filter:</dt><dd class="col-11 text-break"><%= $search_arg->{filter} %></dd>
-    </dl>
+  <div class="col-xs-6 col-sm-6 col-md-8 col-lg-9 px-0">
+    <ul class="fa-ul list-unstyled font-monospace text-secondary umi-text-xs">
+      <li><span class="fa-li"><i class="fa-solid fa-database" title="base"></i></span> <%= $search_arg->{base}   %></li>
+      <li><span class="fa-li"><i class="fa-solid fa-filter" title="filter"></i></span> <%= $search_arg->{filter} %></li>
+    </ul>
   </div>
 </div>
 
@@ -84,7 +84,6 @@
   % my $mps = '';
   % my $acclog = app->{cfg}->{ldap}->{accesslog};
   % my $re = qr/^.*$acclog$/;
-  % my $subst = app->{cfg}->{ui}->{page}->{subst};
 
   % for my $e ( @$entries ) {
 
@@ -270,8 +269,7 @@
 		      </small>
 		    </div>
 		  % } else {
-		    % $attr_val = $subst->{$attr}->{$attr_val} if exists $subst->{$attr}->{$attr_val};
-		    <div class="col-12 font-monospace pb-1"><%= h_decode_text $attr_val %></div>
+		    <div class="col-12 font-monospace pb-1"><%== h_decode_text h_subst_attr_value $attr, $attr_val %></div>
 		  % }
 		  % $j++
 		% }
