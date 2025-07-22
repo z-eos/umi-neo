@@ -216,7 +216,7 @@
 
 		  % } elsif ( $attr eq 'gidNumber' )
 		  % {
-		    <a href="/search/common?search_filter=gidNumber=<%= $attr_val %>&search_base_case=ou=<%= app->{cfg}->{ldap}->{base}->{group} %>"
+		    <a href="/search/common?search_filter=gidNumber=<%= $attr_val %>&search_base_case=<%= app->{cfg}->{ldap}->{base}->{group} %>"
 		      class="btn btn-link btn-sm px-0<%= ' text-danger fw-bold'
 						     if $attr_val eq app->{cfg}->{ldap}->{defaults}->{group}->{blocked}->{gidnumber} %>"
 		    >
