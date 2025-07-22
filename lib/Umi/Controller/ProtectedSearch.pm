@@ -172,24 +172,37 @@ sub search_common  ($self) {
     $e_info->{$_->dn}->{root_dn} = $self->h_get_root_dn($_->dn) if ! exists $e_info->{$_->dn}->{root_dn};
     $e_info->{$_->dn}->{disabled} = 0;
     if ( defined $e_info->{$_->dn}->{root_dn} && $e_info->{$_->dn}->{root_dn} eq $_->dn ) {
-      $e_info->{$_->dn}->{disabled} = 1 if $_->get_value('gidNumber') eq $self->{app}->{cfg}->{ldap}->{defaults}->{group}->{blocked}->{gidnumber};
+      $e_info->{$_->dn}->{disabled} = 1
+	if $_->get_value('gidNumber') eq $self->{app}->{cfg}->{ldap}->{defaults}->{group}->{blocked}->{gidnumber};
     } else {
       my $e_tmp = $ldap->search( { base => $e_info->{$_->dn}->{root_dn}, scope => 'base' } );
       my $e_tmp_entry = $e_tmp->entry;
-      $e_info->{$_->dn}->{disabled} = 1 if $e_tmp_entry->exists('gidNumber') && $e_tmp_entry->get_value('gidNumber') eq $self->{app}->{cfg}->{ldap}->{defaults}->{group}->{blocked}->{gidnumber};
+      $e_info->{$_->dn}->{disabled} = 1
+	if $e_tmp_entry->exists('gidNumber') && $e_tmp_entry->get_value('gidNumber') eq $self->{app}->{cfg}->{ldap}->{defaults}->{group}->{blocked}->{gidnumber};
     }
   }
   # $self->h_log($search->as_struct);
 
   my @entries = $search->sorted;
   $self->stash(search_common_params => $p, search_arg => $search_arg, e_info => $e_info);
+
+  my @search_sorted = $search->sorted;
+
+  $search_arg = { base => $self->{app}->{cfg}->{ldap}->{base}->{group},
+		  filter => '(cn=*)', scope => 'one', attrs => [qw(cn gidNumber)] };
+  $search = $ldap->search( $search_arg );
+  $self->h_log( $self->{app}->h_ldap_err($search, $search_arg) ) if $search->code;
+  my %groups = map { $_->get_value('gidNumber') => $_->get_value('cn') } $search->entries;
+
   if ( exists $p->{no_layout} ) {
     $self->render( template => 'protected/search/common',
 		   layout => undef,
-		   entries => [ $search->sorted ] );
+		   groups => \%groups,
+		   entries => \@search_sorted );
   } else {
     $self->render( template => 'protected/search/common',
-		   entries => [ $search->sorted ]);
+		   groups => \%groups,
+		   entries => \@search_sorted );
   }
 }
 

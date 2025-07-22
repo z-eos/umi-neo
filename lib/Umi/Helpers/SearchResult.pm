@@ -91,10 +91,13 @@ config $app->{cfg}->{ui}->{page}->{subst}->{$attr}->{$attr_val}
 =cut
 
   $app->helper( h_subst_attr_value => sub {
-		  my ($c, $attr, $attr_val) = @_;
-		  if ( exists $app->{cfg}->{ui}->{page}->{subst}->{$attr}->{$attr_val} ) {
-		    return sprintf('%s <span class="badge text-bg-secondary umi-text-tiny align-middle" title="substitution of an attribute original value with a human friendly something"><i class="fa-solid fa-rotate umi-text-sm"></i> orig. value: %s</span>',
-				   $app->{cfg}->{ui}->{page}->{subst}->{$attr}->{$attr_val},
+		  my ($c, $attr, $attr_val, $hash, $text) = @_;
+		  $text = 'orig. value' if ! defined $text;
+		  $hash = $app->{cfg}->{ui}->{page}->{subst} if ! defined $hash;
+		  if ( exists $hash->{$attr}->{$attr_val} ) {
+		    return sprintf('%s <span class="badge text-bg-secondary umi-text-tiny align-middle ms-2" title="substitution of an attribute original value with a human friendly something"><i class="fa-solid fa-rotate umi-text-sm"></i> %s: %s</span>',
+				   $hash->{$attr}->{$attr_val},
+				   $text,
 				   $attr_val);
 		  } else {
 		    return $attr_val;
