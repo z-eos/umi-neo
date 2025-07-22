@@ -220,11 +220,7 @@
 		       class="btn btn-link btn-sm px-0<%= ' text-danger fw-bold'
 						      if $attr_val eq app->{cfg}->{ldap}->{defaults}->{group}->{blocked}->{gidnumber} %>"
 		    >
-		      <%# == $attr_val %>
-		      <%== h_subst_attr_value 'groups', $attr_val, { groups => $groups }, 'gr.name' %>
-		      <%= $attr_val eq app->{cfg}->{ldap}->{defaults}->{group}->{blocked}->{gidnumber}
-		      ? ' / ' . app->{cfg}->{ldap}->{defaults}->{group}->{blocked}->{cn}
-		      : '' %>
+		      <%== h_subst_attr_value 'groups', $attr_val, { groups => $groups }, 'gr.num.' %>
 		    </a>
 
 		  % } elsif ( $attr eq 'userPassword' )
