@@ -194,14 +194,14 @@ sub search_common  ($self) {
   $self->h_log( $self->{app}->h_ldap_err($search, $search_arg) ) if $search->code;
   my %groups = map { $_->get_value('gidNumber') => $_->get_value('cn') } $search->entries;
 
+  $self->stash(groups => \%groups);
+
   if ( exists $p->{no_layout} ) {
     $self->render( template => 'protected/search/common',
 		   layout => undef,
-		   groups => \%groups,
 		   entries => \@search_sorted );
   } else {
     $self->render( template => 'protected/search/common',
-		   groups => \%groups,
 		   entries => \@search_sorted );
   }
 }

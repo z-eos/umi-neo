@@ -19,9 +19,9 @@ use Data::Printer {
     # use_prototypes => 0,
   };
 
-has 'cfg' => sub { {} };
+our $VERSION = '0.8.6';
 
-our $VERSION = '0.8.5';
+has 'cfg' => sub { {} };
 
 sub startup ($self) {
 
@@ -43,9 +43,9 @@ sub startup ($self) {
   # exit from this "startup" method.				       #
   ######################################################################
 
-  ###################################################################
-  # NB: authentication is performed in lib/Umi/Controller/Public.pm #
-  ###################################################################
+  ######################################################################
+  # NB: authentication is performed in lib/Umi/Controller/Public.pm    #
+  ######################################################################
   $self->plugin( Authentication =>
 		 # Mojolicious::Plugin::Authentication
 		 {

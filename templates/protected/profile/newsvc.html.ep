@@ -9,6 +9,7 @@
 <hr class="p-1">
 
 %= form_for '/profile/newsvc' => {class => "form-horizontal"} => (method => 'POST', enctype => 'multipart/form-data', id => 'dynamicForm') => begin
+
   %= hidden_field dn_to_new_svc => $dn_to_new_svc
 
   % my $options = [['--- choose service ---' => '']];
@@ -133,7 +134,10 @@
     % }
   % }
 
-  %= submit_button 'Submit', class => 'btn btn-success fw-bold text-uppercase my-3'
+  <div class="row my-3">
+    %= submit_button 'Submit', class => 'col-1 btn btn-success fw-bold text-uppercase my-3'
+  </div>
+
 % end
 
 %# %# == h_btns_cp_save_from_element( 'ldif', $ldif_export_params->{dn} . '.ldif' );
@@ -213,7 +217,6 @@
        if (field) {
 	 field.classList.remove('d-none');
 	 field.querySelector('input, select, textarea').disabled = false;
-	 formGroupContainer.appendChild(field);
 
 	 // If the field contains a Select2 widget that has not yet been initialized, initialize it
 	 const selectEl = field.querySelector('select.select2');

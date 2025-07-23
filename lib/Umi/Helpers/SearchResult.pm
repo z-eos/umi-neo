@@ -86,7 +86,18 @@ converts color class to bg color class
 =head1 h_subst_attr_value
 
 helper to return a substitution string for an attribute value if exists in
-config $app->{cfg}->{ui}->{page}->{subst}->{$attr}->{$attr_val}
+config $app->{cfg}->{ui}->{page}->{subst}->{$attr}->{$attr_val} or hash
+passed to the helper
+
+hash format defined for $app->{cfg}->{ui}->{page}->{subst} and is:
+
+    ...
+    attributeName => { attrValueOriginal => attrValueToSubstituteWith }
+    ...
+
+usage:
+
+   <%== h_subst_attr_value 'groups', $attr_val, { groups => $groups }, 'gr.num.' %>
 
 =cut
 
