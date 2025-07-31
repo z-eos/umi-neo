@@ -131,8 +131,8 @@ sub delete ($self) {
 			   search_filter => $p->{search_filter},
 			   ldap_subtree => $p->{ldap_subtree} )
 		 );
-}
 
+}
 =head1 fire
 
 steps to do on employee firing
@@ -205,9 +205,11 @@ sub fire ($self) {
     $self->session(debug => {$msg->{status} => [ $msg->{message} ]});
 
     $msg = $ldap->delete($p->{fire_dn}, 1, 'children');
-    $self->session( debug => $msg );
+    push @{$self->session->{debug}->{$msg->{status}}}, $msg->{message};
 
-    ### alas, this redirect by nature performs a GET request
+    #################################################################
+    # alas, no POST, this redirect by nature performs a GET request #
+    #################################################################
     return $self
       ->redirect_to($self->url_for('search_common')
 		    ->query( search_base_case => $p->{search_base_case},

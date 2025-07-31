@@ -9,8 +9,8 @@
     <small>
       <table class="table table-sm table-hover table-striped">
 	<thead>
-	  <tr class="h3" id="table2">
-	    <th scope="col" class="w-50"></th>
+	  <tr class="h4" id="table2">
+	    <th scope="col" class="w-50 text-uppercase fs-6 align-middle ps-2">your browser</th>
 	    <th scope="col"><i class="fa-brands fa-freebsd"><i class="fa-brands fa-linux"></i></th>
 	    <th scope="col"><i class="fa-brands fa-apple"></i></th>
 	    <th scope="col"><i class="fa-brands fa-windows"></i></th>
@@ -19,28 +19,28 @@
 	<tbody>
 	  % if ( $c->req->headers->user_agent =~ /hrom/ ) {
 	  <tr>
-	    <td class="" scope="row"><i class="fa-brands fa-chrome me-2 h3"></i><span class="umi-text-sm"><%= $c->req->headers->user_agent %></span></td>
+	    <td class="" scope="row"><i class="fa-brands fa-chrome mx-2 h4"></i><span class="umi-text-sm"><%= $c->req->headers->user_agent %></span></td>
 	    <td class="fw-bold align-middle">Alt + <kbd class="text-bg-secondary"><em>key</em></kbd></td>
 	    <td class="fw-bold align-middle">Ctrl + Alt + <kbd class="text-bg-secondary"><em>key</em></kbd></td>
 	    <td class="fw-bold align-middle">Alt + <kbd class="text-bg-secondary"><em>key</em></kbd></td>
 	  </tr>
 	  % } elsif ( $c->req->headers->user_agent =~ /irefox|ecko/ ) {
 	    <tr>
-	      <td class="" scope="row"><i class="fa-brands fa-firefox-browser me-2 h3"></i><span class="umi-text-sm"><%= $c->req->headers->user_agent %></span></td>
+	      <td class="" scope="row"><i class="fa-brands fa-firefox-browser mx-2 h4"></i><span class="umi-text-sm"><%= $c->req->headers->user_agent %></span></td>
 	      <td class="fw-bold align-middle">Alt + Shift + <kbd class="text-bg-secondary"><em>key</em></kbd></td>
 	      <td class="fw-bold align-middle">Ctrl + Alt + <kbd class="text-bg-secondary"><em>key</em></kbd></td>
 	      <td class="fw-bold align-middle">Alt + Shift + <kbd class="text-bg-secondary"><em>key</em></kbd></td>
 	    </tr>
 	  % } elsif ( $c->req->headers->user_agent =~ /afar/ ) {
 	  <tr>
-	    <td class="h3" scope="row"><i class="fa-brands fa-safari"></i></td>
+	    <td class="" scope="row"><i class="fa-brands fa-safari mx-2 h4"></i></td>
 	    <td class="fw-bold align-middle">N/A</td>
 	    <td class="fw-bold align-middle">Ctrl + Alt + <kbd class="text-bg-secondary"><em>key</em></kbd></td>
 	    <td class="fw-bold align-middle">Alt + <kbd class="text-bg-secondary"><em>key</em></kbd></td>
 	  </tr>
 	  % } elsif ( $c->req->headers->user_agent =~ /pera/ ) {
 	  <tr>
-	    <td class="h3" scope="row"><i class="fa-brands fa-opera"></i></td>
+	    <td class="" scope="row"><i class="fa-brands fa-opera mx-2 h4"></i></td>
 	    <td class="fw-bold align-middle" colspan="3">v &ge;15: [Alt] + <kbd class="text-bg-secondary"><em>key</em></kbd>; v &le;12.1: [Shift] [Esc] + <kbd class="text-bg-secondary"><em>key</em></kbd>
 	    </td>
 	  </tr>
@@ -53,7 +53,7 @@
 
     <table class="table table-striped table-hover" id="table2">
       <thead>
-	<tr>
+	<tr class="text-uppercase">
 	  <th scope="col" class="w-50">Action</th>
 	  <th scope="col"><kbd class="text-bg-secondary">Key</kbd></th>
 	  <th scope="col">Location</th>

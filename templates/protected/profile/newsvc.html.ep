@@ -22,7 +22,7 @@
   <div id="authorizedServiceDiv" class="row my-3">
     %= label_for authorizedService => 'Service', class => 'col-sm-3 fw-bold text-end text-uppercase'
     <div class="col-sm-9">
-      %== select_field authorizedService => $options, id => 'authorizedService', class => 'custom-select form-control', onchange => 'toggleInputField()'
+      %== select_field authorizedService => $options, id => 'authorizedService', class => 'custom-select form-select', onchange => 'toggleInputField()'
     </div>
   </div>
 
@@ -62,7 +62,7 @@
       <div id="<%= $fld %>Div" class="row my-3 d-none" title="" data-field="<%= $fld %>">
 	%= label_for $fld => $fld, class => 'col-sm-3 fw-bold text-end text-uppercase', title => $schema->{$fld}->{desc}
 	<div class="col-sm-9">
-	  %= select_field $fld => $options, id => $fld, class => 'custom-select form-control'
+	  %= select_field $fld => $options, id => $fld, class => 'custom-select form-select'
 	</div>
       </div>
     % }
@@ -72,7 +72,7 @@
       <div id="<%= $fld %>Div" class="row my-3 d-none" title="" data-field="<%= $fld %>">
 	%= label_for $fld => $fld, class => 'col-sm-3 fw-bold text-end text-uppercase', title => $schema->{$fld}->{desc}
 	<div class="col-sm-9">
-	  %= select_field $fld => $options, id => $fld, class => 'custom-select form-control'
+	  %= select_field $fld => $options, id => $fld, class => 'custom-select form-select'
 	</div>
       </div>
     % }
@@ -81,7 +81,7 @@
       <div id="<%= $fld %>Div" class="row my-3 d-none" title="" data-field="<%= $fld %>">
 	<span class="col-sm-3 fw-bold text-end text-uppercase" title="<%= $schema->{$fld}->{desc} %>"><%= $fld_label %>:</span>
 	<div class="col-sm-9">
-	  <select name="umiOvpnAddStatus" class="form-control custom-select" id="umiOvpnAddStatus" title="<%= app->{cfg}->{ui}->{form_fields}->{$fld}->{title} %>">
+	  <select name="umiOvpnAddStatus" class="form-select custom-select" id="umiOvpnAddStatus" title="<%= app->{cfg}->{ui}->{form_fields}->{$fld}->{title} %>">
 	    % foreach (sort(keys(%{constant('UMIOVPNADDSTATUS')}))) {
 	      <option value="<%= constant('UMIOVPNADDSTATUS')->{$_} %>"<%= ' selected' if $_ eq 'enabled' %>><%= $_ %></option>
 	    % }
@@ -95,7 +95,7 @@
       <div id="<%= $fld %>Div" class="row my-3 d-none" title="" data-field="<%= $fld %>">
 	%= label_for $fld => $fld_label, class => 'col-sm-3 fw-bold text-end text-uppercase', title => $schema->{$fld}->{desc}
 	<div class="col-sm-9">
-	  %= select_field $fld => $options, id => $fld, class => 'custom-select form-control'
+	  %= select_field $fld => $options, id => $fld, class => 'custom-select form-select'
 	</div>
       </div>
     % }
@@ -137,7 +137,6 @@
   <div class="row my-3">
     %= submit_button 'Submit', class => 'col-1 btn btn-success fw-bold text-uppercase my-3'
   </div>
-
 % end
 
 %# %# == h_btns_cp_save_from_element( 'ldif', $ldif_export_params->{dn} . '.ldif' );
