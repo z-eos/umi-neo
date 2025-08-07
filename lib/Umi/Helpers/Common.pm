@@ -465,13 +465,40 @@ EXAMPLE:
 
 =cut
 
+  # $app->helper(h_decode_text => sub {
+  #		 my ($self, $text, $alt) = @_;
+  #		  $self->h_log($text);
+  #		 return $alt unless defined $text;
+  #		 my $decoded = decode 'UTF-8', $text;
+  #		  $self->h_log($decoded);
+  #		 return $decoded ? $decoded : $alt;
+  #	       });
+
+  # $app->helper(h_decode_text => sub {
+  #		 my ($self, $text, $alt) = @_;
+  #		 return $alt unless defined $text;
+
+  #		 # Check if text is already decoded (contains wide characters)
+  #		 return $text if utf8::valid($text);
+
+  #		 # Only decode if it's still bytes
+  #		 my $decoded = eval { utf8::decode 'UTF-8', $text };
+  #		 $self->h_log($decoded);
+  #		 return $decoded // $alt;
+  #	       });
+
   $app->helper(h_decode_text => sub {
 		 my ($self, $text, $alt) = @_;
-		 # $self->h_log($text);
 		 return $alt unless defined $text;
-		 my $decoded = decode 'UTF-8', $text;
-		 # $self->h_log($decoded);
-		 return $decoded ? $decoded : $alt;
+
+		 # If already UTF-8 string, return as-is
+		 return $text if utf8::is_utf8($text);
+
+		 # Decode and ensure UTF-8 flag is set
+		 my $decoded = Encode::decode('UTF-8', $text);
+		 Encode::_utf8_on($decoded);  # Ensure UTF-8 flag is set
+
+		 return $decoded;
 	       });
 
 =head2 h_translit
@@ -2252,7 +2279,24 @@ EXAMPLE
 		  # Set the objectClass attribute from configuration.
 		  $svc_attrs->{objectClass} = $sc->{attr}->{objectClass};
 
-		  # Process each data field defined in the configuration.
+		  #######################################################################
+		  # processing of each form-field defined in the configuration          #
+		  # EXAMPLE:								#
+		  #									#
+		  #   ssh-acc:								#
+		  #     data_fields:							#
+		  #       - associatedDomain						#
+		  #       ...								#
+		  #       - description							#
+		  #     login_delim: "_"						#
+		  #     attr:								#
+		  #       cn: "%uid%"							#
+		  #       homeDirectory: "/usr/local/home/%uid%"			#
+		  #       ...								#
+		  #       sn: "%sn%"							#
+		  #       sshPublicKey: "%sshPublicKey%"				#
+		  #######################################################################
+
 		  foreach my $df (@{$sc->{data_fields}}) {
 		    if ($df eq 'login') {
 		      $svc_attrs->{uid} = $rdn_val;
@@ -2265,7 +2309,7 @@ EXAMPLE
 			: $self->h_pwdgen({ xk_num_words => 5 });
 		      $svc_attrs->{userPassword} = $pwd->{ssha};
 		      $svc_details{userPassword} = $pwd->{clear};
-		      $self->h_log($pwd);
+		      # $self->h_log($pwd);
 
 		    } elsif ($df eq 'sshKeyText' || $df eq 'sshKeyFile') {
 		      push @{$svc_attrs->{sshPublicKey}}, $p->{$df} if exists $p->{$df} && $p->{$df} ne '';
@@ -2323,8 +2367,11 @@ EXAMPLE
 		    }
 		  }
 
+		  $self->h_log(\%replace);
+		  $self->h_log($svc_attrs);
 		  foreach my $attr (keys %$svc_attrs_must) {
-		    next if exists $svc_attrs->{$attr};
+		    # $self->h_log($attr . ': ' . $self->h_np($replace{$attr}) . '; ' . $self->h_np($svc_attrs->{$attr}));
+		    next if exists $svc_attrs->{$attr} && $svc_attrs->{$attr} =~ /^(?!.*%[[:alpha:]]+%).*$/;
 		    if ($attr eq 'uidNumber') {
 		      $svc_attrs->{$attr} = $uidNumber_last->[0] + 1;
 		    } elsif (exists $sc->{attr}->{$attr}) {
@@ -2343,11 +2390,12 @@ EXAMPLE
 		      $svc_attrs->{$attr} = undef;
 		      $self->h_log('ERROR: must attribute is absent: ' . $attr);
 		    }
-		    $self->h_log('attr: ' . $attr . ' = ' . $svc_attrs->{$attr});
+		    $self->h_log('attr: ' . $attr . ' = ' . $self->h_np($svc_attrs->{$attr}));
 		  }
 
 		  foreach my $attr (keys %$svc_attrs_may) {
-		    next if exists $svc_attrs->{$attr} || !exists $sc->{attr}->{$attr};
+		    # next if exists $svc_attrs->{$attr} || !exists $sc->{attr}->{$attr};
+		    next if exists $svc_attrs->{$attr} && $svc_attrs->{$attr} =~ /^(?!.*%[[:alpha:]]+%).*$/;
 		    $svc_attrs->{$attr} = $sc->{attr}->{$attr};
 		    if ( $attr eq 'userCertificate;binary' ) { # binary data shouldn't be substituted
 		      $svc_attrs->{$attr} = $p->{'userCertificate;binary'};
@@ -2364,7 +2412,7 @@ EXAMPLE
 		  $svc_attrs->{authorizedService} = sprintf('%s@%s', $p->{authorizedService},
 							    $p->{associatedDomain});
 		  # $dry_run=1;
-		  # $self->h_log($svc_dn);
+		  # $self->h_log($svc_attrs);
 		  $self->h_log($svc_attrs) if $dry_run == 1;
 
 		  # Add the service entry to LDAP.

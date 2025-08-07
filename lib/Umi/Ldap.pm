@@ -43,7 +43,10 @@ sub new {
   my $cf = $self->{app}->{cfg}->{ldap};
   # $self->{app}->h_log('Umi::Ldap->ldap() HAS BEEN CALLED');
 
-  my $ldap = Net::LDAP->new( $cf->{conn}->{host} );
+  my $ldap = Net::LDAP->new( $cf->{conn}->{host},
+			     async => 1,
+			     raw => qr/(?i:^jpegPhoto|;binary)/
+			   );
   if ( ! defined $ldap ) {
     $self->{app}->h_log("Error connecting to $cf->{conn}->{host}: $@");
     return undef;
@@ -102,7 +105,7 @@ sub new {
 
   $self->{ldap} = $ldap;
 
-  # $self->{app}->h_log($self->{ldap});
+  # $self->{app}->h_log($ldap->uri);
   # $self->{app}->h_log($m->code);
 
   return $self;

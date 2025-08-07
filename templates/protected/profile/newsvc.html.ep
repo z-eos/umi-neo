@@ -19,11 +19,9 @@
     %           app->{cfg}->{ldap}->{authorizedService}->{$_}->{disabled} == 1 );
     % push @{$options}, [app->{cfg}->{ldap}->{authorizedService}->{$_}->{descr} => $_] if !app->{cfg}->{ldap}->{authorizedService}->{$_}->{disabled};
   % }
-  <div id="authorizedServiceDiv" class="row my-3">
-    %= label_for authorizedService => 'Service', class => 'col-sm-3 fw-bold text-end text-uppercase'
-    <div class="col-sm-9">
-      %== select_field authorizedService => $options, id => 'authorizedService', class => 'custom-select form-select', onchange => 'toggleInputField()'
-    </div>
+  <div id="authorizedServiceDiv" class="input-group my-3">
+    %= label_for authorizedService => 'Service', class => 'input-group-text fw-bold text-end text-uppercase'
+    %== select_field authorizedService => $options, id => 'authorizedService', class => 'custom-select form-select', onchange => 'toggleInputField()'
   </div>
 
   % my $fields = app->{cfg}->{ui}->{form_fields};
@@ -134,8 +132,8 @@
     % }
   % }
 
-  <div class="row my-3">
-    %= submit_button 'Submit', class => 'col-1 btn btn-success fw-bold text-uppercase my-3'
+  <div class="row m-0">
+    %= submit_button 'Submit', class => 'col-1 btn btn-success fw-bold text-uppercase'
   </div>
 % end
 

@@ -19,7 +19,7 @@ use Data::Printer {
     # use_prototypes => 0,
   };
 
-our $VERSION = '0.8.7';
+our $VERSION = '0.8.8';
 
 has 'cfg' => sub { {} };
 

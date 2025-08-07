@@ -95,13 +95,16 @@
 		    % }
 
 		    % if ( $a eq 'grayPublicKey' || $a eq 'sshPublicKey' || $a eq 'description') {
-		      %= text_area $a => $e, rows => 5, class => "form-control", id => $id
+		      %# WARNING: helper tag `text_area` works incorrectly (?), value isn't updated on loop iteration
+		      %# = text_area $a => $e, rows => 5, class => "form-control", id => $id
+		      <textarea class="form-control" id="<%= $id %>" name="<%= $a %>" rows="5"><%= $e %></textarea>
 		    % } else {
-		      %# WARNING: helper tag works incorrectly
-		      %# = input_tag $a => $e, id => 'val_' . $id, class => 'form-control', title => '', type => 'text'
+		      %# WARNING: helper tag `input_tag` works incorrectly (?), value isn't updated on loop iteration
+		      %# = input_tag $a => h_decode_text $e, id => 'val_' . $id, class => 'form-control', title => '', type => 'text'
 		      <input type="text" name="<%= $a %>" id="val_<%= $id %>" class="form-control" title=""
-			     value="<%= Mojo::Util::decode('UTF-8', $e) %>">
-		  % }
+			     value="<%= $e %>">
+		      %# value="<%= Encode::decode('UTF-8', $e) %>">
+		    % }
 		% }
 		<span class="input-group-btn">
 		  <!-- Delete Button -->

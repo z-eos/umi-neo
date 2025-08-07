@@ -886,10 +886,17 @@ sub modify ($self) {
 
   my ($add, $delete, $replace, $changes);
   if ( keys %$p < 3 && !exists $p->{add_objectClass} ) {
+    #############
+    # FIRST RUN #
+    #############
+
     # here we've just clicked, search result  menu `modify` button
     $self->h_log('~~~~~-> MODIFY [' . $self->req->method . ']: FIRST RUN (search result menu choosen)');
   } elsif (exists $p->{add_objectClass}) {
-    # new objectClass addition is chosen
+    ########################################################
+    # ADD OBJECTCLASS: new objectClass addition was chosen #
+    ########################################################
+
     $self->h_log('~~~~~-> MODIFY [' . $self->req->method . ']: ADD OBJECTCLASS');
     $self->h_log($p);
     foreach (keys(%$p)) {
@@ -903,7 +910,10 @@ sub modify ($self) {
       push @{$debug{$msg->{status}}}, $msg->{message};
     }
   } else {
-    # form modification made
+    ###############################################
+    # IS FORM CHANGED? form modification was made #
+    ###############################################
+
     $self->h_log('~~~~~-> MODIFY [' . $self->req->method . ']: IS FORM CHANGED?');
     delete $p->{$_} foreach (keys %{$attr_to_ignore});
     foreach (keys %$p) {
