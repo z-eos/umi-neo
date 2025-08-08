@@ -122,7 +122,7 @@
     </div>
     % }
 
-    %= submit_button 'Submit', class => 'btn btn-success fw-bold text-uppercase mt-3'
+    %= submit_button 'Submit', class => 'btn btn-success fw-bold text-uppercase my-3'
 
 % end
 

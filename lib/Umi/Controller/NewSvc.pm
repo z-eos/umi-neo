@@ -31,58 +31,6 @@ sub newsvc ($self) {
   my $ldap = Umi::Ldap->new( $self->{app}, $self->session('uid'), $self->session('pwd') );
   my %schema_all_attributes = map { $_->{name} => $_ } $ldap->schema->all_attributes;
 
-  # ####################################
-  # # collecting domains from projects #
-  # ####################################
-  # my $search_arg = { base => $self->{app}->{cfg}->{ldap}->{base}->{project},
-  #		     scope => 'one',
-  #		     filter => '(cn=*)',
-  #		     attrs => ['associatedDomain'] };
-  # # $self->h_log($search_arg);
-  # my $search = $ldap->search( $search_arg );
-  # $self->h_log( $self->h_ldap_err($search, $search_arg) ) if $search->code && $search->code != LDAP_NO_SUCH_OBJECT;
-
-  # my ($domains, $associatedDomains, $domains_ref);
-  # foreach ($search->entries) {
-  #   $domains_ref = $_->get_value('associatedDomain', asref => 1);
-  #   push @$associatedDomains, @$domains_ref if $domains_ref->[0] ne 'unknown';
-  # }
-
-  # ####################################
-  # # collecting domains from services #
-  # ####################################
-  # $search_arg = { base => $self->{app}->{cfg}->{ldap}->{base}->{acc_svc_common},
-  #		  filter => '(&(authorizedService=*@*)(objectClass=inetOrgPerson))',
-  #		  attrs => ['associatedDomain'] };
-  # # $self->h_log($search_arg);
-  # $search = $ldap->search( $search_arg );
-  # $self->h_log( $self->h_ldap_err($search, $search_arg) ) if $search->code && $search->code != LDAP_NO_SUCH_OBJECT;
-
-  # foreach ($search->entries) {
-  #   $domains_ref = $_->get_value('associatedDomain', asref => 1);
-  #   push @$associatedDomains, @$domains_ref if $domains_ref->[0] ne 'unknown';
-  # }
-
-  # ($domains, $err) = $ldap->all_hosts;
-  # $self->h_log( $err ) if $err;
-  # # my $axfr = $self->h_dns_resolver({ type => 'AXFR', ns_custom => 1 })->{success};
-  # my $axfr = $self->h_dns_rr({ type => 'AXFR', whole_axfr => 0 })->{success};
-
-  # my ($hosts, $err) = $ldap->all_hosts;
-  # push @{$debug{$err->{status}}}, $err->{message} if defined $err;
-  # undef $err;
-
-  # ##########################################################################
-  # # Sort domains by frequency (descending) then alphabetically (ascending) #
-  # ##########################################################################
-  # my %unique;
-  # $unique{$_}++ foreach (@$associatedDomains, @$domains, @$hosts, sort keys %{$axfr});
-  # @{$domains} = sort {
-  #   $unique{$b} <=> $unique{$a} || # Higher frequency first
-  #     $a cmp $b			   # Then alphabetically
-  #   } keys %unique;
-  # $self->h_log( $domains );
-
   my ($domains, $err) = $ldap->all_hosts;
   push @{$debug{$err->{status}}}, $err->{message} if defined $err;
   undef $err;
@@ -128,7 +76,7 @@ sub newsvc ($self) {
   # $self->h_log($uploads);
   if ( @$uploads ) {
     foreach ( @$uploads ) {
-      # $self->h_log($_);
+      next unless $_->size;
       my $n = $_->name;
       $n =~ s/_binary/;binary/;
       $p->{$n} = $_->slurp;
@@ -143,7 +91,9 @@ sub newsvc ($self) {
   return $self->render(template => 'protected/profile/newsvc') unless exists $p->{authorizedService};
   foreach (@{$self->{app}->{cfg}->{ldap}->{authorizedService}->{$p->{authorizedService}}->{data_fields}}) {
     next if $_ eq 'description';
-    if ( $_ eq 'userPassword' ) {
+    if ( $_ eq 'associatedDomain' ) {
+      $v->error(associatedDomain  => ['Domain is not set, it is mandatory!']) unless exists $p->{associatedDomain};
+    } elsif ( $_ eq 'userPassword' ) {
       # $v->required('password1');
       # $v->required('password2');
       # $v->error( password1 => [ 'field password1 is required' ] ) if ! exists $p->{password1};
@@ -176,8 +126,15 @@ sub newsvc ($self) {
   if ( $p->{authorizedService} eq 'gitlab' && ! $root->exists('mail') ) {
     # gitlab service depends on mail attribute root object
     $v->error( login => [ 'Missing required attribute mail in root object, fix before proceeding.' ] );
+  } elsif ( $p->{authorizedService} eq 'ssh-acc' && ! exists $p->{sshKeyText} && ! exists $p->{sshKeyFile} ) {
+    $v->error( sshKeyFile => [ 'At least ssh key file or ssh key string is expected.' ] );
+    $v->error( sshKeyText => [ 'At least ssh key file or ssh key string is expected.' ] );
+  } elsif ( $p->{authorizedService} eq 'ovpn' ) {
+    $v->error( userCertificate_binary => [ 'Certificate is mandatory.' ] ) unless exists $p->{'userCertificate;binary'};
+    $v->error( umiOvpnCfgIfconfigPush => [ 'IP endpoints for client tunnel are mandatory.' ] ) unless exists $p->{umiOvpnCfgIfconfigPush};
+    $v->error( umiOvpnAddDevOS => [ 'OS of device is expected.' ] ) unless exists $p->{umiOvpnAddDevOS};
+    $v->error( umiOvpnAddDevType => [ 'Type of device is expected.' ] ) unless exists $p->{umiOvpnAddDevType};
   }
-  # $self->h_log($p);
 
   if ( ! $v->has_error ) {
 
