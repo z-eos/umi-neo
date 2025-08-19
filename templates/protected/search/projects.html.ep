@@ -238,19 +238,24 @@
 	    </div>
 	    <div class="col-11 pt-4">
 	      % if ( exists $v->{sprintf("cn=repository,cn=%s,%s",$en,$base_proj)}->{labeleduri} ) {
-		% foreach (sort(@{$v->{sprintf("cn=repository,cn=%s,%s",$en,$base_proj)}->{labeleduri}})) {
-		  <a href="<%= $_ %>"
-		     title="<%= $_ %>"
+		% foreach my $uri (sort(@{$v->{sprintf("cn=repository,cn=%s,%s",$en,$base_proj)}->{labeleduri}})) {
+		  <a href="<%= $uri %>"
+		     title="<%= $uri %>"
 		     target="_blank" role="button"
 		     class="btn btn-secondary">
-		    % my $brand = "bars";
-		    % if ($_ =~ /gitlab/)     { $brand = "fa-brands fa-gitlab"; }
-		    % elsif ($_ =~ /portus/)  { $brand = "fa-brands fa-docker"; }
-		    % elsif ($_ =~ /jenkins/) { $brand = "fa-brands fa-jenkins"; }
-		    % elsif ($_ =~ /portus/)  { $brand = "fa-brands fa-docker"; }
-		    % elsif ($_ =~ /atlas/)   { $brand = "fa-brands fa-confluence"; }
-		    % elsif ($_ =~ /testrai/) { $brand = "fa-solid fa-stethoscope"; }
-		    <i class="<%= $brand %>"></i></a>
+		    % my $brand = "fa-solid fa-bars";
+		    %# if ($uri =~ /gitlab/)     { $brand = "fa-brands fa-gitlab"; }
+		    %# elsif ($uri =~ /github/)  { $brand = "fa-brands fa-github"; }
+		    %# elsif ($uri =~ /portus/)  { $brand = "fa-brands fa-docker"; }
+		    %# elsif ($uri =~ /jenkins/) { $brand = "fa-brands fa-jenkins"; }
+		    %# elsif ($uri =~ /portus/)  { $brand = "fa-brands fa-docker"; }
+		    %# elsif ($uri =~ /atlas/)   { $brand = "fa-brands fa-confluence"; }
+		    %# elsif ($uri =~ /testrai/) { $brand = "fa-solid fa-stethoscope"; }
+
+		    % foreach my $b (keys %{app->{cfg}->{ui}->{icon}->{brands}} ) {
+		      % $brand = app->{cfg}->{ui}->{icon}->{brands}->{$b} if $uri =~ /$b/;
+		    % }
+		      <i class="<%= $brand %>"></i></a>
 		% }
 	      % } else {
 		<span class="font-monospace">unknown</span>
