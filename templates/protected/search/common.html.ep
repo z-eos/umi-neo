@@ -266,7 +266,7 @@
 		      </small>
 		    </div>
 		  % } elsif ($attr eq 'certificateRevocationList;binary')
-		  %{
+		  % {
 		    % my $ci = $self->h_cert_info({ attr => $attr, crl => $attr_val, ts => "%Y%m%d%H%M%S", });
 
 		    <div class="col-12 font-monospace">
