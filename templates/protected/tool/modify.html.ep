@@ -41,6 +41,9 @@
 	    % } elsif ($_ eq 'jpegPhoto')
 	    % {
 	      %= file_field $_, id => $id, class => 'form-control form-control-sm', accept => '.jpg'
+	    % } elsif ($_ eq 'certificateRevocationList')
+	    % {
+	      %= file_field $_ . '_binary', id => $id . '_binary', class => 'form-control form-control-sm', accept => '.der'
 	    % } else {
 	      <input type=text value="" id="<%= $_ %>" name="<%= $_ %>" class="form-control"
 		     placeholder="<%= $aa->{$_}->{desc} %>">

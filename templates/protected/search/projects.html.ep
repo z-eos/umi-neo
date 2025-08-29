@@ -9,6 +9,8 @@
 % my $contextCSN = stash->{contextCSN};
 % if (defined $contextCSN) {
   % $contextCSN = '<sup class="umi-text-xxs ms-3 text-secondary align-top"><i>cache on ' . strftime("%F %T", gmtime($contextCSN)) . '</i></sup>';
+% } else {
+  % $contextCSN = '';
 % }
 
 <div class="row w-100 <%= app->{cfg}->{ui}->{page}->{header}->{css} %> mb-3">

@@ -33,12 +33,7 @@ sub search_common  ($self) {
   $self->h_log($p);
 
   my $v = $self->validation;
-  return $self->render( template => 'protected/search/common',
-			entries => [],
-			search_arg => {},
-			search_common_params => $p,
-			searchres => {},
-			e_info => undef )
+  return $self->render( template => 'protected/home' )
     unless ( exists $p->{search_filter} && $p->{search_filter} ne '')
     || exists $p->{no_layout}
     || exists $p->{ldap_subtree}

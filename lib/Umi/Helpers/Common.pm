@@ -9,13 +9,14 @@ use Umi::Constants qw(RE TRANSLIT);
 
 use Crypt::HSXKPasswd;
 use Crypt::X509;
-# use Crypt::X509::CRL;
+use Crypt::X509::CRL;
 use File::Temp qw/ tempfile tempdir :POSIX /;
 use File::Which qw(which);
 use GD::Barcode::QRcode;
 use GD;
 use IPC::Run qw(run);
 use List::Util qw(tail);
+use Math::BigInt;
 use MIME::Base64 qw(decode_base64 encode_base64);
 use Net::CIDR::Set;
 use Net::LDAP::Util qw(ldap_explode_dn time_to_generalizedTime generalizedTime_to_time);
@@ -1657,6 +1658,7 @@ TODO: error handling
 data taken, generally, from
 
     openssl x509 -text -noout -in target.crt
+    openssl x509 -noout -subject -startdate -enddate -issuer -ext authorityKeyIdentifier -in target.crt
     openssl crl  -text -noout -in crl.der -inform der
 
 =cut
@@ -1665,7 +1667,7 @@ data taken, generally, from
 		  my ( $self, $args ) = @_;
 
 		  # Validate input arguments
-		  return { error => 'No certificate data provided' } unless $args->{cert};
+		  return { error => 'No certificate data provided' } unless $args->{cert} || $args->{crl};
 
 		  my $attr = $args->{attr} // 'userCertificate;binary';
 		  my $ts   = defined $args->{ts} && $args->{ts} ? $args->{ts} : "%a %b %e %H:%M:%S %Y";
@@ -1681,7 +1683,9 @@ data taken, generally, from
 			    Subject      => join(',', @{ $cert->Subject }),
 			    CN           => $cert->subject_cn,
 			    Issuer       => join(',', @{ $cert->Issuer }),
-			    'S/N'        => $cert->serial,
+			    'AKI serial' => $self->h_cert_serial($cert->key_identifier),
+			    'AKI keyid'  => $self->h_cert_serial($cert->authority_serial),
+			    'S/N'        => $self->h_cert_serial($cert->serial),
 			    'Not Before' => strftime($ts, localtime($cert->not_before)),
 			    'Not After'  => strftime($ts, localtime($cert->not_after)),
 			    cert         => $args->{cert},
@@ -1689,33 +1693,72 @@ data taken, generally, from
 			   };
 
 		  } elsif ( $attr eq 'certificateRevocationList;binary' ) {
-		    # !! TODO ¡¡
-		    # Uncomment and implement CRL parsing when needed
-		    # $cert = Crypt::X509::CRL->new( crl => $args->{cert} );
-		    # return { error => sprintf('Error parsing CRL: %s', $cert->error) } if $cert->error;
-		    # my %revoked;
-		    # foreach my $key (sort keys %{ $cert->revocation_list }) {
-		    #   my $hex = sprintf("%X", $key);
-		    #   $hex = length($hex) % 2 ? '0' . $hex : $hex;
-		    #   $revoked{$key} = {
-		    #     sn_hex         => $hex,
-		    #     revocationDate => strftime($ts, localtime($cert->revocation_list->{$key}->{revocationDate})),
-		    #   };
-		    # }
-		    # return {
-		    #   Issuer            => join(',', @{ $cert->Issuer }),
-		    #   AuthIssuer        => join(',', @{ $cert->authorityCertIssuer }),
-		    #   RevokedCertificates => \%revoked,
-		    #   'Update This'     => strftime($ts, localtime($cert->this_update)),
-		    #   'Update Next'     => strftime($ts, localtime($cert->next_update)),
-		    #   cert             => $args->{cert},
-		    #   error            => undef,
-		    # };
+		    $cert = Crypt::X509::CRL->new( crl => $args->{crl} );
+		    # $self->h_log($cert);
+		    return { error => sprintf('Error parsing CRL: %s', $cert->error) } if $cert->error;
+
+		    my %revoked;
+		    foreach my $key (sort keys %{ $cert->revocation_list }) {
+		      my $hex = sprintf("%X", $key);
+		      $hex = length($hex) % 2 ? '0' . $hex : $hex;
+		      $revoked{$key} = {
+			sn_hex         => $hex,
+			revocationDate => strftime($ts, localtime($cert->revocation_list->{$key}->{revocationDate})),
+		      };
+		    }
+
+		    return {
+			    'AKI serial'        => $self->h_cert_serial($cert->key_identifier),
+			    'AKI keyid'         => $self->h_cert_serial($cert->authority_serial),
+			    Issuer              => join(',', @{ $cert->Issuer }),
+			    AuthIssuer          => join(',', @{ $cert->authorityCertIssuer }),
+			    RevokedCertificates => \%revoked,
+			    'Update This'       => strftime($ts, localtime($cert->this_update)),
+			    'Update Next'       => strftime($ts, localtime($cert->next_update)),
+			    cert                => $args->{cert},
+			    error               => undef,
+			   };
 		  }
 
 		  return { error => 'Unknown certificate type' };
 		}
 	      );
+
+=head2 h_cert_serial
+
+Documentation:
+This helper normalizes certificate serial numbers returned
+by Crypt::X509 (e.g. ->serial, ->authority_serial).
+
+Crypt::X509 sometimes returns:
+  - a decimal string representation of the ASN.1 INTEGER, or
+  - raw binary data (depending on the attribute).
+
+OpenSSL, on the other hand, prints serials as colon-separated
+hexadecimal octets (big-endian).
+
+This helper ensures consistent OpenSSL-style output.
+
+Usage in template:
+  %= h_cert_serial($cert->serial)
+  %= h_cert_serial($cert->authority_serial)
+
+=cut
+
+  $app->helper(h_cert_serial => sub {
+		 my ($self, $val) = @_;
+		 return '' unless defined $val;
+		 my $bin;
+		 if ($val =~ /^[0-9]+$/) {
+		   # Looks like decimal digits: interpret as big integer
+		   my $big = Math::BigInt->new($val);
+		   $bin = $big->to_bytes;
+		 } else {
+		   # Otherwise assume it's already binary
+		   $bin = $val;
+		 }
+		 return uc join(":", unpack("(H2)*", $bin));
+	       });
 
 
 =head2 h_btns_cp_save_from_element

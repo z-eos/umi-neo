@@ -43,6 +43,18 @@ sub new {
   my $cf = $self->{app}->{cfg}->{ldap};
   # $self->{app}->h_log('Umi::Ldap->ldap() HAS BEEN CALLED');
 
+  ##############################################
+  #                                            #
+  #                                            #
+  #                                            #
+  #          !!! to do tests with !!!          #
+  #              Test::OpenLDAP                #
+  #         or Net::LDAP::Server::Test         #
+  #                                            #
+  #                                            #
+  #                                            #
+  ##############################################
+
   my $ldap = Net::LDAP->new( $cf->{conn}->{host},
 			     async => 1,
 			     raw => qr/(?i:^jpegPhoto|;binary)/
@@ -263,6 +275,46 @@ sub modify {
     $status = 'ok';
   }
   return {status => $status, message => $message->{html}};
+}
+
+=head2 moddn
+
+Net::LDAP->moddn wrapper
+
+expected input:
+
+    src_dn
+    newrdn
+    deleteoldrdn
+    newsuperior
+
+=cut
+
+sub moddn {
+  my ($self, $args) = @_;
+  # $self->{app}->h_log($args);
+
+  my $msg;
+  if (defined $args->{newsuperior} ) {
+    $msg = $self->ldap->moddn ( $args->{src_dn},
+				newrdn       => $args->{newrdn},
+				deleteoldrdn => $args->{deleteoldrdn} // '1',
+				newsuperior  => $args->{newsuperior} );
+  } else {
+    $msg = $self->ldap->moddn ( $args->{src_dn},
+				newrdn       => $args->{newrdn},
+				deleteoldrdn => $args->{deleteoldrdn} // '1' );
+  }
+  # $self->{app}->h_log($msg);
+  my $return;
+  if ($msg->is_error()) {
+    $return = { status => 'error', message => $self->err( $msg, 0, $args->{src_dn} )->{html} };
+  } else {
+    $return = { status => 'ok', message => sprintf('Entry with DN: <mark>%s</mark> successfully renamed, new RDN: <mark class="bg-success">%s</mark>',
+						   $args->{src_dn}, $args->{newrdn}) };
+  }
+  # $self->{app}->h_log($return);
+  return $return;
 }
 
 sub schema ($self) {
@@ -626,46 +678,6 @@ sub all_users {
   }
   # $self->{app}->h_log( \@users );
   return wantarray ? ( \@users, $err ) : [ \@users, $err ];
-}
-
-=head2 moddn
-
-Net::LDAP->moddn wrapper
-
-expected input:
-
-    src_dn
-    newrdn
-    deleteoldrdn
-    newsuperior
-
-=cut
-
-sub moddn {
-  my ($self, $args) = @_;
-  # $self->{app}->h_log($args);
-
-  my $msg;
-  if (defined $args->{newsuperior} ) {
-    $msg = $self->ldap->moddn ( $args->{src_dn},
-				newrdn       => $args->{newrdn},
-				deleteoldrdn => $args->{deleteoldrdn} // '1',
-				newsuperior  => $args->{newsuperior} );
-  } else {
-    $msg = $self->ldap->moddn ( $args->{src_dn},
-				newrdn       => $args->{newrdn},
-				deleteoldrdn => $args->{deleteoldrdn} // '1' );
-  }
-  # $self->{app}->h_log($msg);
-  my $return;
-  if ($msg->is_error()) {
-    $return = { error => [ $self->err( $msg, 0, $args->{src_dn} )->{html} ] };
-  } else {
-    $return = { ok => [ sprintf('Entry with DN: <mark>%s</mark> successfully renamed, new RDN: <mark class="bg-success">%s</mark>',
-				$args->{src_dn}, $args->{newrdn}) ] };
-  }
-  # $self->{app}->h_log($return);
-  return $return;
 }
 
 =head2 ldif_read

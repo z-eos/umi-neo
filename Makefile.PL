@@ -26,6 +26,7 @@ requires 'File::Which';
 requires 'GD';
 requires 'GD::Barcode::QRcode';
 requires 'IPC::Run';
+requires 'Math::BigInt';
 requires 'Net::CIDR::Set';
 requires 'Net::DNS';
 requires 'Net::LDAP';

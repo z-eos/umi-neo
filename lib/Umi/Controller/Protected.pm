@@ -810,10 +810,10 @@ sub modify ($self) {
 
       if ( $n eq 'userCertificate;binary' ) {
 	$crt = $self->h_cert_info({ cert => $p->{$n}, ts => "%Y%m%d%H%M%S", });
-	$p->{umiUserCertificateSn}        = '' . $crt->{'S/N'},
-	$p->{umiUserCertificateNotBefore} = '' . $crt->{'Not Before'},
-	$p->{umiUserCertificateNotAfter}  = '' . $crt->{'Not After'},
-	$p->{umiUserCertificateSubject}   = '' . $crt->{Subject},
+	$p->{umiUserCertificateSn}        = '' . $crt->{'S/N'};
+	$p->{umiUserCertificateNotBefore} = '' . $crt->{'Not Before'};
+	$p->{umiUserCertificateNotAfter}  = '' . $crt->{'Not After'};
+	$p->{umiUserCertificateSubject}   = '' . $crt->{Subject};
 	$p->{umiUserCertificateIssuer}    = '' . $crt->{Issuer};
 	$p->{cn} = $crt->{CN}
 	  if exists $p->{cn} && $self->{app}->{cfg}->{ldap}->{authorizedService}->{$service}->{rdn} ne 'cn';
@@ -824,6 +824,7 @@ sub modify ($self) {
       } elsif ( $n eq 'jpegPhoto' && $p->{$n} ne '' ) {
 	$p->{$n} = $self->h_img_resize( $p->{$n}, $_->size );
       }
+
     }
   }
   # $self->h_log($p);
@@ -953,7 +954,7 @@ sub modify ($self) {
 
 	my $changes_serialized = nfreeze(\%debug);
 	my $changes_size = length($changes_serialized);
-	 $self->h_log($changes_size);
+	# $self->h_log($changes_size);
 	if ( $changes_size < 1000 ) {
 	  $self->stash(debug => \%debug);
 	} else {

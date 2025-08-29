@@ -255,7 +255,7 @@
 		    <div class="col-12 font-monospace">
 		      <small class="float-left">
 			%# <pre><%= dumper $ci %></pre>
-			<dl class="row">
+			<dl class="row umi-text-tiny">
 			  % foreach my $k (sort keys %$ci) {
 			    % next if $k eq 'cert';
 			    % next if $k eq 'error';
@@ -265,6 +265,51 @@
 			</dl>
 		      </small>
 		    </div>
+		  % } elsif ($attr eq 'certificateRevocationList;binary')
+		  %{
+		    % my $ci = $self->h_cert_info({ attr => $attr, crl => $attr_val, ts => "%Y%m%d%H%M%S", });
+
+		    <div class="col-12 font-monospace">
+		      <small class="float-left">
+			<dl class="row umi-text-tiny">
+			  % foreach my $k (sort keys %$ci) {
+			    % next if $k eq 'cert';
+			    % next if $k eq 'error';
+			    <dt class="col-2 text-end py-0 my-0"><%= $k %></dt>
+			    <dd class="col-10 text-monospace text-start py-0 my-0">
+			      % if ( $k eq 'RevokedCertificates' ) {
+				<details>
+				  <summary class="text-bg-secondary px-2">list of revoked certificates</summary>
+				  <div class="table-responsive">
+				    <table class="table table-sm umi-text-tiny">
+				      <thead class="table-info">
+					<tr>
+					  <th scope="col-8">SN</th>
+					  <th scope="col-4">revokationDate</th>
+					</tr>
+				      </thead>
+				      <tbody>
+					% foreach my $sn ( keys %{$ci->{$k}} ) {
+					  <tr>
+					    <td><%= uc join(":", unpack("(H2)*", $sn)) %></td>
+					    <td><%= $ci->{$k}->{$sn}->{revocationDate} %></td>
+					  </tr>
+					% }
+				      </tbody>
+				    </table>
+				  </div>
+				</details>
+			      % } else {
+				<%= $ci->{$k} %>
+			      % }
+			    </dd>
+			  % }
+			</dl>
+		      </small>
+		    </div>
+		  % } elsif ($attr eq 'umiUserCertificateSn')
+		  %{
+		    <div class="col-12 font-monospace pb-1"><%== h_cert_serial $attr_val %></div>
 		  % } else {
 		    <div class="col-12 font-monospace pb-1"><%== h_decode_text h_subst_attr_value $attr, $attr_val %></div>
 		  % }
