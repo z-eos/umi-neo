@@ -1697,22 +1697,20 @@ data taken, generally, from
 		    # $self->h_log($cert->revocation_list);
 		    return { error => sprintf('Error parsing CRL: %s', $cert->error) } if $cert->error;
 
-		    # my %revoked;
-		    # foreach my $key (sort keys %{ $cert->revocation_list }) {
-		    #   my $hex = sprintf("%X", $key);
-		    #   $hex = length($hex) % 2 ? '0' . $hex : $hex;
-		    #   $revoked{$key} = {
-		    #	sn_hex         => $hex,
-		    #	revocationDate => strftime($ts, localtime($cert->revocation_list->{$key}->{revocationDate})),
-		    #   };
-		    # }
+		    my %revoked;
+		    foreach my $key (sort keys %{ $cert->revocation_list }) {
+		      $revoked{$self->h_cert_serial($key)} = {
+			key_dec         => $key,
+			revocationDate => strftime($ts, localtime($cert->revocation_list->{$key}->{revocationDate})),
+		      };
+		    }
 
 		    return {
 			    'AKI serial'        => $self->h_cert_serial($cert->key_identifier),
 			    'AKI keyid'         => $self->h_cert_serial($cert->authority_serial),
 			    Issuer              => join(',', @{ $cert->Issuer }),
 			    AuthIssuer          => join(',', @{ $cert->authorityCertIssuer }),
-			    RevokedCertificates => $cert->revocation_list,
+			    RevokedCertificates => \%revoked,
 			    'Update This'       => strftime($ts, localtime($cert->this_update)),
 			    'Update Next'       => strftime($ts, localtime($cert->next_update)),
 			    cert                => $args->{cert},

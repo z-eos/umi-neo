@@ -291,7 +291,7 @@
 				      <tbody>
 					% foreach my $sn ( keys %{$ci->{$k}} ) {
 					  <tr>
-					    <td><%= h_cert_serial $sn %></td>
+					    <td><%= $sn %></td>
 					    <td><%= $ci->{$k}->{$sn}->{revocationDate} %></td>
 					  </tr>
 					% }
