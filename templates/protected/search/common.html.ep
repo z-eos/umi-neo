@@ -291,7 +291,7 @@
 				      <tbody>
 					% foreach my $sn ( keys %{$ci->{$k}} ) {
 					  <tr>
-					    <td><%= uc join(":", unpack("(H2)*", $sn)) %></td>
+					    <td><%= h_cert_serial $sn %></td>
 					    <td><%= $ci->{$k}->{$sn}->{revocationDate} %></td>
 					  </tr>
 					% }
