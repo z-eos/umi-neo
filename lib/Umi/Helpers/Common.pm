@@ -1725,7 +1725,7 @@ data taken, generally, from
 =head2 h_cert_serial
 
 Documentation:
-This helper normalizes certificate serial numbers returned
+Normalizes certificate serial numbers returned
 by Crypt::X509 (e.g. ->serial, ->authority_serial).
 
 Crypt::X509 sometimes returns:
@@ -1744,16 +1744,16 @@ Usage in template:
 =cut
 
   $app->helper(h_cert_serial => sub {
-		 my ($self, $val) = @_;
-		 return '' unless defined $val;
+		 my ($self, $cert) = @_;
+		 return { error => 'Error: certificate value not provided' }
+		   unless defined $cert;
 		 my $bin;
-		 if ($val =~ /^[0-9]+$/) {
+		 if ($cert =~ /^[0-9]+$/) {
 		   # Looks like decimal digits: interpret as big integer
-		   my $big = Math::BigInt->new($val);
+		   my $big = Math::BigInt->new($cert);
 		   $bin = $big->to_bytes;
 		 } else {
-		   # Otherwise assume it's already binary
-		   $bin = $val;
+		   $bin = $cert; # Otherwise assume it's already binary
 		 }
 		 return uc join(":", unpack("(H2)*", $bin));
 	       });

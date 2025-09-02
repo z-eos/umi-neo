@@ -41,6 +41,9 @@
 	    % } elsif ($_ eq 'jpegPhoto')
 	    % {
 	      %= file_field $_, id => $id, class => 'form-control form-control-sm', accept => '.jpg'
+	    % } elsif ($_ eq 'cACertificate')
+	    % {
+	      %= file_field $_ . '_binary', id => $id . '_binary', class => 'form-control form-control-sm', accept => '.der'
 	    % } elsif ($_ eq 'certificateRevocationList')
 	    % {
 	      %= file_field $_ . '_binary', id => $id . '_binary', class => 'form-control form-control-sm', accept => '.der'
