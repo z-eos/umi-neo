@@ -67,7 +67,7 @@
     <div class="container-fluid px-0 wrapper  d-flex vh-100 overflow-hidden" id="outerwrapper">
       %= include 'sidebar'  if $c->is_user_authenticated
       <!-- <main class="container-fluid flex-grow-1 mb-3 w-25" id="workingfield"> -->
-      <main class="container-fluid flex-fill overflow-auto mb-3" id="workingfield">
+      <main class="container-fluid flex-fill overflow-auto mb-3 vh-100" id="workingfield">
 	%= include 'message'
 	%= content
       </main>

@@ -458,6 +458,38 @@ sub get_role {
   return [ $res, $err ];
 }
 
+=head2 get_cert
+
+returns cert and it's info for dn provided
+
+=cut
+
+sub get_cert {
+  my ($self, $dn, $attr) = @_;
+  $attr //= 'userCertificate;binary';
+  my ($err, $res);
+  if ( defined $dn ) {
+    my $search_arg = { base => $dn, scope => 'base', };
+    # $self->{app}->h_log( $search_arg );
+    my $msg = $self->search( $search_arg );
+    # $self->{app}->h_log( $search_arg );
+    if ( $msg->code && $msg->code != LDAP_NO_SUCH_OBJECT ) {
+      $self->{app}->h_log( $self->{app}->h_ldap_err($msg, $search_arg) );
+      $err = $self->{app}->h_ldap_err($msg, $search_arg)->{html};
+    } elsif ( $msg->count && $msg->count > 0 && ! $msg->entry->exists($attr) ) {
+      $err = 'attribute ' . $attr . ' does not exist';
+      $self->{app}->h_log( $err );
+    } elsif ( $msg->count && $msg->count > 0 ) {
+      #$self->{app}->h_log( $msg->entry->get_value( 'cn', asref => 1 ) );
+      if ( $msg->count && $msg->count > 0 ) {
+	#$res->{cert} = $msg->entry->get_value( $attr );
+	$res = $self->{app}->h_cert_info({ cert => $msg->entry->get_value( $attr ) });
+      }
+    }
+  }
+  return [ $res, $err ];
+}
+
 =head2 all_hosts
 
 Collect all values of attribute associatedDomain used in: ou=machines, ou=Project and services of ou=People

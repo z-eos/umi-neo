@@ -78,7 +78,7 @@
 </div>
 
 %# vh-100 is important, without it dropwown are not shown for collapsed rows
-<div id="searchresult" class="container-fluid vh-100 px-0">
+<div id="searchresult" class="container-fluid px-0 pb-3">
 
   % my ($col, $cn, $ct, $mn, $mt);
   % my $mps = '';
@@ -87,7 +87,19 @@
 
   % for my $e ( @$entries ) {
 
-    % if ( $e_info->{$e->dn}->{disabled} ) {
+    % my ($ci, $server_sn, $attr);
+    % foreach my $attr ( ('userCertificate;binary', 'cACertificate;binary') ) {
+      % if ( $e->exists($attr) ) {
+	% $ci = $self->h_cert_info({ cert => $e->get_value($attr), ts => "%Y%m%d%H%M%S", });
+	% $server_sn = exists $e_meta->{svc}->{ovpn}->{$e->get_value('authorizedService')}
+	%   ? $e_meta->{svc}->{ovpn}->{$e->get_value('authorizedService')}->{server}->{'AKI keyid'}
+	%   : '';
+      % }
+    % }
+
+    % if ( $e_info->{$e->dn}->{disabled}
+    %      || ( defined $ci && defined $server_sn && $server_sn ne $ci->{'AKI keyid'} )
+    %    ) {
       % $col = 'danger';
     % } else {
       % $col = h_dn_color($e);
@@ -95,7 +107,7 @@
       % elsif ($col eq 'success') { $mps = ' ms-4 ps-1'; }
       % else { $mps = ''; }
     % }
-    % $col .= '-subtle';
+    %# $col .= '-subtle';
 
     % my @dn_ico = ($e->dn =~ /authorizedService=([^,]+)\@/g);
 
@@ -103,9 +115,12 @@
     % my $root_usr_dn = h_get_root_dn $e->dn;
     % $root_usr_dn = '' if ! defined $root_usr_dn;
 
-    <div class="card border border-<%= $col %> my-1" id="card-<%= $i %>">
+    %# ############
+    %# # NEW CARD #
+    %# ############
+    <div class="card border border-<%= $col %>-subtle my-1" id="card-<%= $i %>">
 
-	<div class="card-header bg-<%= $col %> p-0 m-0 fs-6">
+      <div class="card-header bg-<%= $col %>-subtle p-0 m-0 fs-6">
 	<div class="btn-group z-10" role="group">
 	  %# COLLAPSE CARET
 	  <button class="btn border-0<%= ' collapsed' if scalar @$entries > 1 %>" type="button"
@@ -201,9 +216,15 @@
 	    %    )
 	    % {
 	      % $row_color = 'text-bg-danger';
+	    % } elsif ( defined $ci && defined $server_sn && $server_sn ne $ci->{'AKI keyid'} && ($attr eq 'userCertificate;binary' || $attr eq 'cACertificate;binary'))
+	    %#  #########################################################################################################
+	    %#  # set background to 'danger' if authorityKeyIdentifier for client and server certificates doesn't match #
+	    %#  #########################################################################################################
+	    % {
+	      % $row_color = 'text-bg-danger" title="&#x1F4E2;&#x1F4E2;&#x1F4E2; inconsistent PKI &#x1F4E2;&#x1F4E2;&#x1F4E2;';
 	    % }
 
-	    <div class="row <%= $row_color %>">
+	    <div class="row <%== $row_color %>">
 	      <div class="col-3 text-end fw-bold fs-6 text-truncate"><%= $attr %></div>
 	      <div class="col-9">
 
@@ -251,10 +272,9 @@
 
 		  % } elsif ($attr eq 'userCertificate;binary' || $attr eq 'cACertificate;binary')
 		  % {
-		    % my $ci = $self->h_cert_info({ cert => $attr_val, ts => "%Y%m%d%H%M%S", });
+		    % $ci = $self->h_cert_info({ cert => $attr_val, ts => "%Y%m%d%H%M%S", });
 		    <div class="col-12 font-monospace">
 		      <small class="float-left">
-			%# <pre><%= dumper $ci %></pre>
 			<dl class="row umi-text-tiny">
 			  % foreach my $k (sort keys %$ci) {
 			    % next if $k eq 'cert';

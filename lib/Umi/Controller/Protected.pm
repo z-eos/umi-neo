@@ -1911,7 +1911,7 @@ sub resolve ($self) {
 			   fqdn => $p->{name},
 			   type => $p->{type}
 			  });
-  $self->h_log($q);
+  # $self->h_log($q);
   my @r;
   @r = map { $_->{rdstring} } @{$q->{success}} if exists $q->{success};
   push @r, $q->{error}->{errstr}     if exists $q->{error} && $q->{error}->{errstr} ne 'NOERROR';

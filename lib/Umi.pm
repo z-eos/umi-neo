@@ -15,11 +15,18 @@ use Data::Printer {
     hash_max => 0,
     array_max => 0,
     theme => 'Monokai',
-    # max_depth   => 3,
-    # use_prototypes => 0,
+    filters => [{
+		 SCALAR => sub {
+		   my ($scalar, $ddp) = @_;
+		   if ($$scalar =~ /[[:^print:]]/) {
+		     return '[ -*- BINARY DATA -*- ]'; # replace any non-printable content
+		   }
+		   return $$scalar;
+		 },
+		}],
   };
 
-our $VERSION = '0.9.0';
+our $VERSION = '0.9.1';
 
 has 'cfg' => sub { {} };
 

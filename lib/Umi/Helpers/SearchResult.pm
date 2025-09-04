@@ -196,6 +196,7 @@ The relationship between roles is defined by the constant `UMIAUTH` in
 		 return $auth;
 	       });
 
+
 =head2 h_modify_get_e_orig
 
 strip original Net::LDAP::Entry object from binary attributes

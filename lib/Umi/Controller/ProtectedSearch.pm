@@ -163,9 +163,13 @@ sub search_common  ($self) {
 
   # hash to keep aux data like disabled state of the root object for branch/leaf
   my $e_info;
+  my $e_meta = {};
   foreach ($search->entries) {
     $e_info->{$_->dn}->{root_dn} = $self->h_get_root_dn($_->dn) if ! exists $e_info->{$_->dn}->{root_dn};
     $e_info->{$_->dn}->{disabled} = 0;
+
+    $e_meta->{svc}->{ovpn}->{$_->get_value('authorizedService')}->{num}++ if $_->exists('umiUserCertificateSn');
+
     if ( defined $e_info->{$_->dn}->{root_dn} && $e_info->{$_->dn}->{root_dn} eq $_->dn ) {
       $e_info->{$_->dn}->{disabled} = 1
 	if $_->get_value('gidNumber') eq $self->{app}->{cfg}->{ldap}->{defaults}->{group}->{blocked}->{gidnumber};
@@ -176,10 +180,35 @@ sub search_common  ($self) {
 	if $e_tmp_entry->exists('gidNumber') && $e_tmp_entry->get_value('gidNumber') eq $self->{app}->{cfg}->{ldap}->{defaults}->{group}->{blocked}->{gidnumber};
     }
   }
-  # $self->h_log($search->as_struct);
+  # $self->h_log($e_meta->{svc}->{ovpn});
+
+  if ( exists $e_meta->{svc}->{ovpn} ) {
+    foreach (keys %{$e_meta->{svc}->{ovpn}} ) {
+      if ( ! exists $e_meta->{svc}->{ovpn}->{$_}->{server} ) {
+
+	my $crt_search_arg = { base => $self->{app}->{cfg}->{ldap}->{base}->{ovpn},
+			       filter => sprintf('(authorizedService=%s)', $_) };
+	my $crt_search = $ldap->search( $crt_search_arg );
+	$self->h_log( $self->{app}->h_ldap_err($crt_search, $crt_search_arg) ) if $crt_search->code;
+	if ( $crt_search->count > 0 ) {
+	  my $e = $crt_search->entry;
+	  # $self->h_log($e);
+
+	  my $crt = $ldap->get_cert( $e->dn );
+	  # $self->h_log($crt);
+	  $e_meta->{svc}->{ovpn}->{$_}->{server} = $crt->[0]
+	    if defined $crt->[0] && ref($crt->[0]) eq 'HASH';
+	}
+      }
+    }
+  }
+  # $self->h_log($e_meta);
 
   my @entries = $search->sorted;
-  $self->stash(search_common_params => $p, search_arg => $search_arg, e_info => $e_info);
+  $self->stash( search_common_params => $p,
+		search_arg => $search_arg,
+		e_info => $e_info,
+		e_meta => $e_meta );
 
   my @search_sorted = $search->sorted;
 
@@ -229,7 +258,7 @@ sub advanced ($self) {
 
     $scope = 'sub';
   } else {
-    $base   = $p->{base_dn} // $self->{app}->{cfg}->{ldap}->{defaults}->{base}->{dc};
+    $base   = $p->{base_dn} // $self->{app}->{cfg}->{ldap}->{base}->{dc};
     $filter = $p->{search_filter};
     $scope  = $p->{search_scope};
   }
