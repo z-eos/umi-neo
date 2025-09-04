@@ -291,7 +291,7 @@ B<Return:> Hashref with results:
 			   retry          => $A->{retry}          // $self->config->{tool}->{dns}->{resolver}->{retry} // 1,
 			   tcp_timeout    => $A->{tcp_timeout}    // $self->config->{tool}->{dns}->{resolver}->{tcp_timeout} // 1,
 			   udp_timeout    => $A->{udp_timeout}    // $self->config->{tool}->{dns}->{resolver}->{udp_timeout} // 1,
-			   ns_custom      => $A->{ns_custom}      // 0,
+			   ns_custom      => $A->{ns_custom}      // $self->config->{tool}->{dns}->{resolver}->{ns_custom} // 0,
 			   with_txt       => $A->{with_txt}       // 0,
 			   whole_axfr     => $A->{whole_axfr}     // 0,
 			  };
