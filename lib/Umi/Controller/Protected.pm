@@ -892,13 +892,13 @@ sub modify ($self) {
     #############
 
     # here we've just clicked, search result  menu `modify` button
-    $self->h_log('~~~~~-> MODIFY [' . $self->req->method . ']: FIRST RUN (search result menu choosen)');
+    $self->h_log('==========> MODIFY [' . $self->req->method . ']: FIRST RUN (search result menu choosen)');
   } elsif (exists $p->{add_objectClass}) {
     ########################################################
     # ADD OBJECTCLASS: new objectClass addition was chosen #
     ########################################################
 
-    $self->h_log('~~~~~-> MODIFY [' . $self->req->method . ']: ADD OBJECTCLASS');
+    $self->h_log('==========> MODIFY [' . $self->req->method . ']: ADD OBJECTCLASS');
     $self->h_log($p);
     foreach (keys(%$p)) {
       next if $_ !~ /^add_/;
@@ -915,7 +915,7 @@ sub modify ($self) {
     # IS FORM CHANGED? form modification was made #
     ###############################################
 
-    $self->h_log('~~~~~-> MODIFY [' . $self->req->method . ']: IS FORM CHANGED?');
+    $self->h_log('==========> MODIFY [' . $self->req->method . ']: IS FORM CHANGED?');
     delete $p->{$_} foreach (keys %{$attr_to_ignore});
     foreach (keys %$p) {
       delete $p->{$_} if $p->{$_} eq '';

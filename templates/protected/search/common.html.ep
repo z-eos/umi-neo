@@ -275,11 +275,11 @@
 		    % $ci = $self->h_cert_info({ cert => $attr_val, ts => "%Y%m%d%H%M%S", });
 		    <div class="col-12 font-monospace">
 		      <small class="float-left">
-			<dl class="row umi-text-tiny">
+			<dl class="row umi-text-tiny mt-2">
 			  % foreach my $k (sort keys %$ci) {
 			    % next if $k eq 'cert';
+			    <dt class="col-2 text-end py-0 my-0 border-end border-1 border-white"><%= $k %></dt>
 			    % next if $k eq 'error';
-			    <dt class="col-2 text-end py-0 my-0"><%= $k %></dt>
 			    <dd class="col-10 text-monospace text-start py-0 my-0"><%= $ci->{$k} %></dd>
 			  % }
 			</dl>
@@ -291,11 +291,11 @@
 
 		    <div class="col-12 font-monospace">
 		      <small class="float-left">
-			<dl class="row umi-text-tiny">
+			<dl class="row umi-text-tiny mt-2">
 			  % foreach my $k (sort keys %$ci) {
 			    % next if $k eq 'cert';
 			    % next if $k eq 'error';
-			    <dt class="col-2 text-end py-0 my-0"><%= $k %></dt>
+			    <dt class="col-2 text-end py-0 my-0 border-end border-1 border-white"><%= $k %></dt>
 			    <dd class="col-10 text-monospace text-start py-0 my-0">
 			      % if ( $k eq 'RevokedCertificates' ) {
 				<details>

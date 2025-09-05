@@ -19,7 +19,7 @@ use Data::Printer {
 		 SCALAR => sub {
 		   my ($scalar, $ddp) = @_;
 		   if ($$scalar =~ /[[:^print:]]/) {
-		     return '[ -*- BINARY DATA -*- ]'; # replace any non-printable content
+		     return '========== [ BINARY DATA  ] =========='; # replace any non-printable content
 		   }
 		   return $$scalar;
 		 },
