@@ -287,7 +287,12 @@ sub advanced ($self) {
 	&& $e_tmp_entry->get_value('gidNumber') eq $self->{app}->{cfg}->{ldap}->{defaults}->{group}->{blocked}->{gidnumber};
     }
   }
-  $self->stash(search_common_params => $p, search_arg => $search_arg, e_info => $e_info);
+
+  $self->stash( search_common_params => $p,
+		search_arg => $search_arg,
+		e_info => $e_info,
+		e_meta => {},
+		groups => {} );
 
   my @entries = $search->sorted;
   if ( exists $p->{no_layout} ) {

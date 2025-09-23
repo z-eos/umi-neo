@@ -6,6 +6,7 @@ use Mojo::Base 'Umi::Controller', -signatures;
 use Mojo::Util qw( dumper b64_decode );
 
 use Umi::Ldap;
+use POSIX qw(strftime :sys_wait_h);
 
 sub do_login ($self) {
 
@@ -98,6 +99,15 @@ sub other ($self) {
 public (BASIC AUTH) endpoint to get GPG key by keyword matched against a
 value of pgpUserID attribute
 
+on input two placeholders are processed:
+    /public/gpg/:key/:scope
+
+    :key   is pgpKeyID pattern or 'all' or '*'
+	   mandatory, no default
+
+    :scope is one of 'valid', 'expired', 'all' or '*'
+	   optional, default is 'valid'
+
 curl -X GET -u uid=john,ou=People,dc=foo,dc=bar:*** -H "Content-Type: application/json" -d @FILE.json -s http://10.0.0.1:3000/public/gpg/john@foo | jq
 
 
@@ -110,15 +120,31 @@ sub get_gpg_key ($self) {
 
   if ( defined $ldap ) {
     my $key = $self->stash->{key};
+    my $scope = $self->stash->{scope};
     $self->h_log($key);
     return $self->render(json => {})
       unless defined $key
       && $key =~ /^[[:alnum:] _\-@.,]+$/;
 
-    if ($key ne '') {
-      $filter = sprintf("(pgpUserID=*%s*)", $self->stash->{key});
+    if ($key eq 'all' || $key eq '*') {
+      $key = '(pgpUserID=*)';
+    } else {
+      $key = '(pgpUserID=*' . $key . '*)';
     }
-    # $self->h_log($self->stash->{key});
+
+    if ($scope eq 'expired') {
+      $filter = sprintf( "(&%s(pgpKeyExpireTime<=%s))",
+			 $key,
+			 $self->h_ts_to_generalizedTime(strftime("%F %T", localtime), "%F %T") );
+    } elsif ($scope eq 'valid') {
+      $filter = sprintf( "(&%s(pgpKeyExpireTime>=%s))",
+			 $key,
+			 $self->h_ts_to_generalizedTime(strftime("%F %T", localtime), "%F %T") );
+    } else {
+      $filter = $key;
+    }
+
+    $self->h_log($filter);
 
     my $attrs = [qw(pgpCertID pgpKeyID pgpUserID pgpKeyCreateTime pgpKeyExpireTime pgpKey)];
     my $search_arg = { base => $self->{app}->{cfg}->{ldap}->{base}->{pgp},
@@ -128,24 +154,17 @@ sub get_gpg_key ($self) {
     $self->h_log( $self->{app}->h_ldap_err($search, $search_arg) ) if $search->code;
 
     my %gpg;
-    my $now = localtime;
-    foreach ($search->entries) {
-      my $exp_ts = $_->get_value('pgpKeyExpireTime') if $_->exists('pgpKeyExpireTime');
-      # $self->h_log($exp_ts);
-      my $exp = Time::Piece->strptime($exp_ts, '%Y%m%d%H%M%SZ') if defined $exp_ts;
+    $gpg{$_->get_value('pgpCertID')} =
+      {
+       pgpKeyID => $_->get_value('pgpKeyID'),
+       pgpUserID => $_->get_value('pgpUserID'),
+       pgpKeyCreateTime => $_->get_value('pgpKeyCreateTime'),
+       pgpKeyExpireTime => Time::Piece->strptime($_->get_value('pgpKeyExpireTime'), '%Y%m%d%H%M%SZ') // '',
+       pgpKey => $_->get_value('pgpKey'),
+      }
+      foreach ($search->entries);
 
-      next if $self->stash->{key} eq 'active'  && defined $exp && $now > $exp;
-      next if $self->stash->{key} eq 'expired' && ((defined $exp && $now < $exp) || ! defined $exp);
-
-      $gpg{$_->get_value('pgpCertID')} = {
-					  pgpKeyID => $_->get_value('pgpKeyID'),
-					  pgpUserID => $_->get_value('pgpUserID'),
-					  pgpKeyCreateTime => $_->get_value('pgpKeyCreateTime'),
-					  pgpKeyExpireTime => $exp_ts // '',
-					  pgpKey => $_->get_value('pgpKey'),
-					 };
-    }
-
+    $self->h_log(\%gpg);
     return $self->render(json => \%gpg);
   }
 }
