@@ -18,9 +18,9 @@ use Data::Printer {
     filters => [{
 		 SCALAR => sub {
 		   my ($scalar, $ddp) = @_;
-		   if ($$scalar =~ /[[:^print:]]/) {
-		     return '========== [ BINARY DATA  ] =========='; # replace any non-printable content
-		   }
+		   # replace any non-printable content
+		   return '='x10 . ' [ BINARY DATA ] ' . '='x10
+		     if $$scalar =~ /[[:^print:]]/;
 		   return $$scalar;
 		 },
 		}],
@@ -636,7 +636,7 @@ sub _startup_routes ($self) {
   # $self->app->reverse_proxy(1);
   $self->controller_class('Umi::Controller');
   $self->defaults(layout => 'default');
-  $self->log->info('='x25 . '[ STARTUP COMPLETE ]' . '='x25);
+  $self->log->info('='x25 . ' [ STARTUP COMPLETE ] ' . '='x25);
 
   return $self;
 }

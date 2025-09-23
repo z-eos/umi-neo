@@ -57,6 +57,7 @@ sub new {
 
   my $ldap = Net::LDAP->new( $cf->{conn}->{host},
 			     async => 1,
+			     debug => 0,
 			     raw => qr/(?i:^jpegPhoto|;binary)/
 			   );
   if ( ! defined $ldap ) {
@@ -64,30 +65,9 @@ sub new {
     return undef;
   }
 
-  # if ( exists $cf->{conn}->{start_tls} ) {
-  #   # $self->{log}->debug(dumper($cf->{conn}->{start_tls}));
-  #   $m = try {
-  #     $ldap->start_tls(
-  #		       verify     => $cf->{conn}->{start_tls}->{verify},
-  #		       cafile     => $cf->{conn}->{start_tls}->{cafile},
-  #		       checkcrl   => $cf->{conn}->{start_tls}->{checkcrl},
-  #		       sslversion => $cf->{conn}->{start_tls}->{sslversion},
-  #		      );
-  #   }
-  #   catch {
-  #     $self->{app}->h_log("ERROR: Net::LDAP start_tls: $@"); # if $m->error;
-  #   } finally {
-  #     if (@_) {
-  #	$self->{ldap} = @_;
-  #     } else {
-  #	$self->{ldap} = $ldap;
-  #     }
-  #   };
-  # }
-
-  my $dn = $self->{uid_is_dn} ? $self->{uid} : sprintf("uid=%s,%s",
-						       $self->{uid},
-						       $cf->{base}->{acc_root});
+  my $dn = $self->{uid_is_dn}
+    ? $self->{uid}
+    : sprintf("uid=%s,%s", $self->{uid}, $cf->{base}->{acc_root});
 
   my $m;
   if ( exists $cf->{conn}->{start_tls} ) {
@@ -99,7 +79,8 @@ sub new {
 			    checkcrl   => $cf->{conn}->{start_tls}->{checkcrl},
 			    sslversion => $cf->{conn}->{start_tls}->{sslversion},
 			   );
-      $self->{app}->h_log("ERROR: Net::LDAP start_tls: $m->error") if $m->code;
+      $self->{app}->h_log("ERROR: Net::LDAP start_tls: " . $self->{app}->h_np($m->error, 0))
+	if $m->code;
     }
     catch {
       $self->{app}->h_log("ERROR: Net::LDAP start_tls caught message: $_");

@@ -21,7 +21,8 @@
   % }
   <div id="authorizedServiceDiv" class="input-group my-3">
     %= label_for authorizedService => 'Service', class => 'input-group-text fw-bold text-end text-uppercase'
-    %== select_field authorizedService => $options, id => 'authorizedService', class => 'custom-select form-select', onchange => 'toggleInputField()'
+    %### document.addEventListener script at the bottom of the page, serves onchange events
+    %== select_field authorizedService => $options, id => 'authorizedService', class => 'custom-select form-select'
   </div>
 
   % my $fields = app->{cfg}->{ui}->{form_fields};
@@ -199,6 +200,7 @@
    // Respond to changes in selected service
    authorizedService.addEventListener('change', function () {
      const selectedService = this.value;
+     console.log('→'+selectedService+'←');
      const fieldsToShow = fieldMap[selectedService] || [];
 
      // Hide all dynamic form fields and disable their input/select/textarea elements
