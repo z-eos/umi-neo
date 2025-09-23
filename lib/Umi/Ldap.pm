@@ -167,18 +167,38 @@ sub err {
   return $err; # if $mesg->code;
 }
 
+=head2 search
+
+Net::LDAP->search wrapper
+
+expected input:
+
+  mandatory:
+     base
+     attrs
+
+  optional:
+     deref     : default 'never',
+     filter    : default '(objectClass=*)',
+     scope     : default 'sub',
+     sizelimit : default 0,
+     timelimit : default 0,
+
+=cut
+
 sub search {
   my ($self, $a) = @_;
 
   my $cf = $self->{app}->{cfg}->{ldap};
   my $o =
     {
-     base   => $a->{base}   // $cf->{base}->{dc},
-     attrs  => $a->{attrs}  // $cf->{defaults}->{attrs},
-     deref  => $a->{deref}  // $cf->{defaults}->{deref},
-     filter => $a->{filter} // $cf->{defaults}->{filter},
-     scope  => $a->{scope}  // $cf->{defaults}->{scope},
-     sizelimit => $a->{sizelimit} // $cf->{defaults}->{sizelimit},
+     base      => $a->{base}      // $cf->{base}->{dc},
+     attrs     => $a->{attrs}     // $cf->{defaults}->{attrs},
+     deref     => $a->{deref}     // $cf->{defaults}->{deref}     // 'never',
+     filter    => $a->{filter}    // $cf->{defaults}->{filter}    // '(objectClass=*)',
+     scope     => $a->{scope}     // $cf->{defaults}->{scope}     // 'sub',
+     sizelimit => $a->{sizelimit} // $cf->{defaults}->{sizelimit} // 0,
+     timelimit => $a->{timelimit} // $cf->{defaults}->{timelimit} // 0,
     };
 
   # $self->{log}->debug(dumper($o));
@@ -487,111 +507,119 @@ sub all_hosts {
   $format = 'unique-alphabetically' if ! defined $format;
   my ($mesg, $search_arg, $err, $domains, $domains_ref);
 
-  ####################################
-  # collecting domains from machines #
-  ####################################
-  $search_arg = { base => $self->{app}->{cfg}->{ldap}->{base}->{machines},
-		  scope => 'one', attrs => [qw(cn associatedDomain)] };
-  # $self->{app}->h_log( $search_arg );
-  $mesg = $self->search( $search_arg );
-  if ( $mesg->code && $mesg->code != 32 ) {
-    $self->{app}->h_log( $self->{app}->h_ldap_err($mesg, $search_arg) );
-    push @$err, $self->{app}->h_ldap_err($mesg, $search_arg);
-  } else {
-    if ( $mesg->count ) {
-      foreach my $e ($mesg->entries) {
-	push @$domains, $e->get_value('cn');
-	if ($e->exists('associatedDomain')) {
+  $domains = $self->{app}->chi('fs')->get('all_hosts');
+  if ( ! $domains ) {
+    ####################################
+    # collecting domains from machines #
+    ####################################
+    $search_arg = { base => $self->{app}->{cfg}->{ldap}->{base}->{machines},
+		    scope => 'one', attrs => [qw(cn associatedDomain)] };
+    # $self->{app}->h_log( $search_arg );
+    $mesg = $self->search( $search_arg );
+    if ( $mesg->code && $mesg->code != 32 ) {
+      $self->{app}->h_log( $self->{app}->h_ldap_err($mesg, $search_arg) );
+      push @$err, $self->{app}->h_ldap_err($mesg, $search_arg);
+    } else {
+      if ( $mesg->count ) {
+	foreach my $e ($mesg->entries) {
+	  push @$domains, $e->get_value('cn');
+	  if ($e->exists('associatedDomain')) {
+	    $domains_ref = $e->get_value('associatedDomain', asref => 1);
+	    push @$domains, @$domains_ref if $domains_ref->[0] ne 'unknown';
+	  }
+	}
+      }
+    }
+    # $self->{app}->h_log( \%hosts );
+
+    #####################################
+    # collecting domains from netgroups #
+    #####################################
+    $search_arg = { base => 'ou=access,' . $self->{app}->{cfg}->{ldap}->{base}->{netgroup},
+		    filter => '(nisNetgroupTriple=*)',
+		    scope => 'one',
+		    attrs => [qw(cn nisNetgroupTriple)] };
+    $mesg = $self->search( $search_arg );
+    if ( $mesg->code && $mesg->code != 32 ) {
+      $self->{app}->h_log( $self->{app}->h_ldap_err($mesg, $search_arg) );
+      push @$err, $self->{app}->h_ldap_err($mesg, $search_arg);
+    } else {
+      if ( $mesg->count ) {
+	my @tuple;
+	foreach my $e ($mesg->entries) {
+	  foreach (@{$e->get_value('nisnetgrouptriple', asref => 1)}) {
+	    @tuple = split(/,/, substr($_, 1, -1));
+	    push @$domains, sprintf("%s.%s", $tuple[0], $tuple[2]);
+	  }
+	}
+      }
+    }
+    # $self->{app}->h_log( \%hosts );
+
+    ####################################
+    # collecting domains from projects #
+    ####################################
+    $search_arg = { base => $self->{app}->{cfg}->{ldap}->{base}->{project},
+		    scope => 'one',
+		    filter => '(cn=*)',
+		    attrs => ['associatedDomain'] };
+    $mesg = $self->search( $search_arg );
+    if ( $mesg->code && $mesg->code != 32 ) {
+      $self->{app}->h_log( $self->{app}->h_ldap_err($mesg, $search_arg) );
+      push @$err, $self->{app}->h_ldap_err($mesg, $search_arg);
+    } else {
+      if ( $mesg->count ) {
+	foreach my $e ($mesg->entries) {
 	  $domains_ref = $e->get_value('associatedDomain', asref => 1);
 	  push @$domains, @$domains_ref if $domains_ref->[0] ne 'unknown';
 	}
       }
     }
-  }
-  # $self->{app}->h_log( \%hosts );
 
-  #####################################
-  # collecting domains from netgroups #
-  #####################################
-  $search_arg = { base => 'ou=access,' . $self->{app}->{cfg}->{ldap}->{base}->{netgroup},
-		  filter => '(nisNetgroupTriple=*)',
-		  scope => 'one',
-		  attrs => [qw(cn nisNetgroupTriple)] };
-  $mesg = $self->search( $search_arg );
-  if ( $mesg->code && $mesg->code != 32 ) {
-    $self->{app}->h_log( $self->{app}->h_ldap_err($mesg, $search_arg) );
-    push @$err, $self->{app}->h_ldap_err($mesg, $search_arg);
-  } else {
-    if ( $mesg->count ) {
-      my @tuple;
-      foreach my $e ($mesg->entries) {
-	foreach (@{$e->get_value('nisnetgrouptriple', asref => 1)}) {
-	  @tuple = split(/,/, substr($_, 1, -1));
-	  push @$domains, sprintf("%s.%s", $tuple[0], $tuple[2]);
-	}
-      }
-    }
-  }
-  # $self->{app}->h_log( \%hosts );
+    ####################################
+    # collecting domains from services #
+    ####################################
 
-  ####################################
-  # collecting domains from projects #
-  ####################################
-  $search_arg = { base => $self->{app}->{cfg}->{ldap}->{base}->{project},
-		  scope => 'one',
-		  filter => '(cn=*)',
-		  attrs => ['associatedDomain'] };
-  $mesg = $self->search( $search_arg );
-  if ( $mesg->code && $mesg->code != 32 ) {
-    $self->{app}->h_log( $self->{app}->h_ldap_err($mesg, $search_arg) );
-    push @$err, $self->{app}->h_ldap_err($mesg, $search_arg);
-  } else {
-    if ( $mesg->count ) {
-      foreach my $e ($mesg->entries) {
-	  $domains_ref = $e->get_value('associatedDomain', asref => 1);
-	  push @$domains, @$domains_ref if $domains_ref->[0] ne 'unknown';
-      }
-    }
-  }
+    ### !!! WARNING: this query is VERY HEAVY, we need manage that somehow ... !!!
 
-  ####################################
-  # collecting domains from services #
-  ####################################
-  $search_arg = { base => $self->{app}->{cfg}->{ldap}->{base}->{acc_svc_common},
-		  filter => '(&(authorizedService=*@*)(|(objectClass=inetOrgPerson)(objectClass=uidObject)(objectClass=umiOvpnCfg)(objectClass=umiUserCertificate)))',
-		  attrs => ['associatedDomain'] };
-  $mesg = $self->search( $search_arg );
-  if ( $mesg->code && $mesg->code != 32 ) {
-    $self->{app}->h_log( $self->{app}->h_ldap_err($mesg, $search_arg) );
-    push @$err, $self->{app}->h_ldap_err($mesg, $search_arg);
-  } else {
-    if ( $mesg->count ) {
-      foreach my $e ($mesg->entries) {
+    $search_arg = { base => $self->{app}->{cfg}->{ldap}->{base}->{acc_svc_common},
+		    ### filter => '(&(authorizedService=*@*)(|(objectClass=inetOrgPerson)(objectClass=uidObject)(objectClass=umiOvpnCfg)(objectClass=umiUserCertificate)))',
+		    filter => '(associatedDomain=*)',
+		    attrs => ['associatedDomain'] };
+    $mesg = $self->search( $search_arg );
+    if ( $mesg->code && $mesg->code != 32 ) {
+      $self->{app}->h_log( $self->{app}->h_ldap_err($mesg, $search_arg) );
+      push @$err, $self->{app}->h_ldap_err($mesg, $search_arg);
+    } else {
+      if ( $mesg->count ) {
+	foreach my $e ($mesg->entries) {
 	  $domains_ref = $e->get_value('associatedDomain', asref => 1);
 	  push @$domains, @$domains_ref if defined $domains_ref && $domains_ref->[0] ne 'unknown';
+	}
       }
     }
-  }
 
-  ################################
-  # collecting domains from AXFR #
-  ################################
-  my $axfr = $self->{app}->h_dns_rr({ type => 'AXFR', whole_axfr => 0 })->{success};
+    ################################
+    # collecting domains from AXFR #
+    ################################
+    my $axfr = $self->{app}->h_dns_rr({ type => 'AXFR', whole_axfr => 0 })->{success};
 
-  my %unique;
-  $unique{$_}++ foreach (@$domains, sort keys %{$axfr});
+    my %unique;
+    $unique{$_}++ foreach (@$domains, sort keys %{$axfr});
 
-  if ( $format eq 'unique-alphabetically' ) {
-    ##########################################################################
-    # Sort domains by frequency (descending) then alphabetically (ascending) #
-    ##########################################################################
-    @{$domains} = sort {
-      $unique{$b} <=> $unique{$a} || # Higher frequency first
-	$a cmp $b		     # Then alphabetically
-      } keys %unique;
-  } elsif ( $format eq 'frequencies' ) {
-    # @$domains = sort { $unique{$b} <=> $unique{$a} } keys %unique;
-    $domains = \%unique;
+    if ( $format eq 'unique-alphabetically' ) {
+      ##########################################################################
+      # Sort domains by frequency (descending) then alphabetically (ascending) #
+      ##########################################################################
+      @{$domains} = sort {
+	$unique{$b} <=> $unique{$a} || # Higher frequency first
+	  $a cmp $b		       # Then alphabetically
+	} keys %unique;
+    } elsif ( $format eq 'frequencies' ) {
+      # @$domains = sort { $unique{$b} <=> $unique{$a} } keys %unique;
+      $domains = \%unique;
+    }
+    $self->{app}->chi('fs')->set( all_hosts => $domains);
   }
 
   # $self->{app}->h_log( $res );
