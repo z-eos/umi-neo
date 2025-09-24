@@ -20,13 +20,13 @@ use Data::Printer {
 		   my ($scalar, $ddp) = @_;
 		   # replace any non-printable content
 		   return '='x10 . ' [ BINARY DATA ] ' . '='x10
-		     if $$scalar =~ /([[:^print:]]&&[^\n]])/g;
+		     if defined $scalar && $$scalar =~ /([[:^print:]]&&[^\n]])/g;
 		   return $$scalar;
 		 },
 		}],
   };
 
-our $VERSION = '0.9.2';
+our $VERSION = '0.9.3';
 
 has 'cfg' => sub { {} };
 
@@ -283,6 +283,7 @@ sub _startup_routes ($self) {
   $public_root->get('/')->to('public#homepage')->name('public_root');
   $public_root->get('/other')->to('public#other');
 
+  ## GPG keys
   $public_root->get('/gpg/:key/:scope' => { key => qr/[^\/]+/, scope => 'valid' })->to('public#get_gpg_key');
 
   ## MACHINES

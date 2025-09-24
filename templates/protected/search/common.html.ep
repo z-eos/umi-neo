@@ -328,6 +328,7 @@
 		      </small>
 		    </div>
 		  % } else {
+		    % h_log h_decode_text h_subst_attr_value $attr, $attr_val;
 		    <div class="col-12 font-monospace pb-1"><%== h_decode_text h_subst_attr_value $attr, $attr_val %></div>
 		  % }
 		  % $j++

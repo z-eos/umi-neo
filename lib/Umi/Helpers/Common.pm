@@ -1092,6 +1092,7 @@ END_INPUT
 		      map { (split(/:/, $_))[0] => [tail(-1, @{[split(/:/, $_)]})] }
 		      split(/\n/, $stdout);
 
+		    $self->h_log($arg->{key}->{lst});
 		    # Build LDAP entry attributes for pgpKeyInfo object class
 		    $arg->{key}->{snd} =
 		      {
@@ -1107,8 +1108,12 @@ END_INPUT
 		       pgpUserID   => $arg->{key}->{lst}->{colons}->{uid}->[8],
 		       pgpSubKeyID => $arg->{key}->{lst}->{colons}->{sub}->[3],
 		       pgpKeyCreateTime => strftime('%Y%m%d%H%M%SZ', localtime($arg->{key}->{lst}->{colons}->{pub}->[4])),
-		       pgpKeyExpireTime => strftime('%Y%m%d%H%M%SZ', localtime($arg->{key}->{lst}->{colons}->{pub}->[5])),
+		       pgpKeyExpireTime => defined $arg->{key}->{lst}->{colons}->{pub}->[5]
+		       && length($arg->{key}->{lst}->{colons}->{pub}->[5]) > 0
+		       ? strftime('%Y%m%d%H%M%SZ', localtime($arg->{key}->{lst}->{colons}->{pub}->[5]))
+		       : '99991231235959Z',
 		      };
+
 
 		    $res->{send_key} = $arg->{key}->{snd};
 		  }

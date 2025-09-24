@@ -121,7 +121,7 @@ sub get_gpg_key ($self) {
   if ( defined $ldap ) {
     my $key = $self->stash->{key};
     my $scope = $self->stash->{scope};
-    $self->h_log($key);
+    # $self->h_log($key);
     return $self->render(json => {})
       unless defined $key
       && $key =~ /^[[:alnum:] _\-@.,]+$/;
@@ -144,7 +144,7 @@ sub get_gpg_key ($self) {
       $filter = $key;
     }
 
-    $self->h_log($filter);
+    # $self->h_log($filter);
 
     my $attrs = [qw(pgpCertID pgpKeyID pgpUserID pgpKeyCreateTime pgpKeyExpireTime pgpKey)];
     my $search_arg = { base => $self->{app}->{cfg}->{ldap}->{base}->{pgp},
@@ -164,7 +164,7 @@ sub get_gpg_key ($self) {
       }
       foreach ($search->entries);
 
-    $self->h_log(\%gpg);
+    # $self->h_log(\%gpg);
     return $self->render(json => \%gpg);
   }
 }
