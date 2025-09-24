@@ -121,7 +121,7 @@ sub get_gpg_key ($self) {
   if ( defined $ldap ) {
     my $key = $self->stash->{key};
     my $scope = $self->stash->{scope};
-    # $self->h_log($key);
+     $self->h_log($key);
     return $self->render(json => {})
       unless defined $key
       && $key =~ /^[[:alnum:] _\-@.,]+$/;
