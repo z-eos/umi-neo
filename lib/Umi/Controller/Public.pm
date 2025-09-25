@@ -115,13 +115,14 @@ curl -X GET -u uid=john,ou=People,dc=foo,dc=bar:*** -H "Content-Type: applicatio
 
 sub get_gpg_key ($self) {
   my ($filter, $state );
+  # $self->h_log($self->stash->{key});
 
   my $ldap = $self->h_auth_basic;
 
   if ( defined $ldap ) {
     my $key = $self->stash->{key};
     my $scope = $self->stash->{scope};
-     $self->h_log($key);
+    # $self->h_log($key);
     return $self->render(json => {})
       unless defined $key
       && $key =~ /^[[:alnum:] _\-@.,]+$/;

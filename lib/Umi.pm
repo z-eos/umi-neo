@@ -284,7 +284,8 @@ sub _startup_routes ($self) {
   $public_root->get('/other')->to('public#other');
 
   ## GPG keys
-  $public_root->get('/gpg/:key/:scope' => { key => qr/[^\/]+/, scope => 'valid' })->to('public#get_gpg_key');
+  $public_root->get('/gpg/:key/:scope' => [ key => qr/[[:graph:]]+/ ])->to('public#get_gpg_key', scope => 'valid');
+  #$public_root->get('/gpg/*key/:scope')->to('public#get_gpg_key', scope => 'valid');
 
   ## MACHINES
   $public_root->get( '/machines')->to('machines#list');
