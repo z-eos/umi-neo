@@ -1,4 +1,5 @@
 %# -*- mode: web; eval: (follow-mode) -*-
+% use Mojo::Util qw(xml_escape);
 % use POSIX qw(strftime);
 % use Time::Piece;
 % my $now = localtime;
@@ -328,7 +329,7 @@
 		      </small>
 		    </div>
 		  % } else {
-		    <div class="col-12 font-monospace pb-1"><%== h_decode_text h_subst_attr_value $attr, $attr_val %></div>
+		    <div class="col-12 font-monospace pb-1"><%== xml_escape( h_decode_text( h_subst_attr_value( $attr, $attr_val))) %></div>
 		  % }
 		  % $j++
 		% }

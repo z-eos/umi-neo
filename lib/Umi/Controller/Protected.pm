@@ -920,6 +920,8 @@ sub modify ($self) {
     foreach (keys %$p) {
       delete $p->{$_} if $p->{$_} eq '';
     }
+    $p->{gecos} = $self->h_translit($p->{gecos}) if exists $p->{gecos};
+
 
     my $diff = $self->h_hash_diff( $e_orig, $p);
     #$self->h_log($diff);

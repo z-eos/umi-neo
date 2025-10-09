@@ -2210,7 +2210,102 @@ EXAMPLE
 
     my $result = $self->add_branch_if_not_exists($p, $ldap, $root, $br, $debug);
 
+=head3 Building $svc_attrs Hash Logic
+
+The C<$svc_attrs> hash is constructed in the following stages:
+
+=head4 1. Initialize with objectClass
+
+    $svc_attrs->{objectClass} = $sc->{attr}->{objectClass};
+
+Retrieved directly from service configuration.
+
+=head4 2. Schema Analysis
+
+Query LDAP schema to identify:
+
+=over 4
+
+=item * MUST attributes (required by objectClass definitions)
+
+=item * MAY attributes (optional but configured)
+
+=back
+
+Special mappings: C<userid> E<gt> C<uid>, C<userCertificate> E<gt> C<userCertificate;binary>
+
+=head4 3. Process Data Fields
+
+Iterate through C<$sc-E<gt>{data_fields}> and populate attributes:
+
+=over 4
+
+=item * B<login>: Sets C<uid> to RDN value
+
+=item * B<userPassword>: Generates password hash (SSHA)
+
+=item * B<sshKeyText/sshKeyFile>: Accumulates SSH public keys
+
+=item * B<missing fields>: Uses configuration defaults or templates
+
+=item * B<other fields>: Copies directly from request parameters
+
+=back
+
+=head4 4. Build Replacement Hash
+
+Create C<%replace> hash for placeholder substitution:
+
+    %replace = (
+	'%associatedDomain%' => $svc_attrs->{associatedDomain},
+	'%givenName%'        => $root->get_value('givenName'),
+	'%sn%'               => $root->get_value('sn'),
+	'%uid%'              => $svc_attrs->{uid},
+	'%cn%'               => ...,
+	'%gecos%'            => ...,
+    );
+
+For certificate-based services, certificate-specific placeholders are added.
+
+=head4 5. Process MUST Attributes
+
+For each schema-required attribute:
+
+=over 4
+
+=item 1. Skip if already has value without placeholders
+
+=item 2. Auto-increment C<uidNumber> from last used value
+
+=item 3. Get template from configuration
+
+=item 4. Substitute placeholders like C<%uid%>, C<%sn%>, etc.
+
+=back
+
+    $svc_attrs->{$attr} =~ s/%([[:alpha:]]+(?:;[[:alpha:]]+)*)%/
+	exists $replace{"%$1%"} ? $replace{"%$1%"} : $&/ge;
+
+=head4 6. Process MAY Attributes
+
+Same logic as MUST attributes, but only for configured optional attributes.
+
+=head4 7. Post-Processing
+
+=over 4
+
+=item * Transliterate C<gecos> if present
+
+=item * Format C<authorizedService> as C<service@domain>
+
+=back
+
+=head4 Final Result
+
+The C<$svc_attrs> hash contains all attributes ready for C<$ldap-E<gt>add($svc_dn, $svc_attrs)>.
+
 =cut
+
 
   $app->helper( h_service_add_if_not_exists => sub {
 		  my ($self, $p, $ldap, $root, $br, $debug, $dry_run) = @_;
@@ -2455,6 +2550,8 @@ EXAMPLE
 			exists $replace{"%$1%"} ? $replace{"%$1%"} : $&/ge;
 		    }
 		  }
+
+		  $svc_attrs->{gecos} = $self->h_translit($svc_attrs->{gecos}) if exists $svc_attrs->{gecos};
 
 		  $svc_attrs->{authorizedService} = sprintf('%s@%s', $p->{authorizedService},
 							    $p->{associatedDomain});
