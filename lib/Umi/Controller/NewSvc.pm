@@ -134,6 +134,10 @@ sub newsvc ($self) {
     $v->error( umiOvpnCfgIfconfigPush => [ 'IP endpoints for client tunnel are mandatory.' ] ) unless exists $p->{umiOvpnCfgIfconfigPush};
     $v->error( umiOvpnAddDevOS => [ 'OS of device is expected.' ] ) unless exists $p->{umiOvpnAddDevOS};
     $v->error( umiOvpnAddDevType => [ 'Type of device is expected.' ] ) unless exists $p->{umiOvpnAddDevType};
+  } elsif ( $p->{authorizedService} =~ /^dot1x-eap-.*/ ) {
+    $v->error( radiusGroupName => [ 'radiusGroupName is mandatory' ] ) unless exists $p->{radiusGroupName};
+    $v->error( radiusProfileDn => [ 'neither radiusGroupName no radiusGroupName are provided, at least first one is expected' ] )
+      unless exists $p->{radiusGroupName} || exists $p->{radiusProfileDn};
   }
 
   if ( ! $v->has_error ) {

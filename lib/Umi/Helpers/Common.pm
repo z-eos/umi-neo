@@ -423,6 +423,7 @@ digits, separated by this I<delimiter>
 		  my $dlm = $args->{dlm} // '';
 		  my $re1 = $re->{mac}->{mac48};
 		  my $re2 = $re->{mac}->{cisco};
+		  my $re3 = $re->{mac}->{plain};
 
 		  # $self->h_log($args);
 		  if ( $mac =~ /^$re1$/ || $mac =~ /^$re2$/ ) {
@@ -432,8 +433,12 @@ digits, separated by this I<delimiter>
 		      $normalized = join($dlm, $normalized =~ /(..)/g);
 		    }
 		    # $self->h_log($normalized);
-		    return $normalized;
+		    return { mac => $normalized, error => undef };
+		  } elsif ( $mac =~ /^$re3$/ ) {
+		    return { mac => lc($mac), error => undef };
 		  } else {
+		    return { mac => undef,
+			     error => 'incorrect MAC address format, expected MAC-48 (IEEE canonical), EUI-48 (hyphen form), Cisco or Bare/Plain hexadecimal' };
 		    return 0;
 		  }
 		});
@@ -2321,7 +2326,9 @@ The C<$svc_attrs> hash contains all attributes ready for C<$ldap-E<gt>add($svc_d
 
 		  # different services expect different format of logins
 		  if ( $p->{authorizedService} eq 'dot1x-eap-md5' ) {
-		    $p->{login} = $self->h_macnorm({mac => $p->{login}});
+		    my $mac = $self->h_macnorm({mac => $p->{login}});
+		    $p->{login} = $mac->{mac};
+		    push @{$debug->{error}}, $mac->{error} if defined $mac->{error};
 		  } elsif ( $sc->{delim_mandatory} && exists $p->{login} && $p->{login} !~ /.+@.+/ ) {
 		    $p->{login} = sprintf("%s@%s", $p->{login}, $p->{associatedDomain});
 		  } elsif ( $sc->{delim_mandatory} && ! exists $p->{login} ) {
@@ -2349,8 +2356,10 @@ The C<$svc_attrs> hash contains all attributes ready for C<$ldap-E<gt>add($svc_d
 		  # Search for an existing entry with that DN.
 		  my $if_exist = $ldap->search({ base => $svc_dn, scope => 'base', attrs => [qw(uid authorizedService)] });
 		  # If an entry exists, do nothing.
-		  return { svc_dn => $svc_dn } if $if_exist->count;
-
+		  if ( $if_exist->count ) {
+		    push @{$debug->{warn}}, '<mark>' . $svc_dn . '</mark> exists';
+		    return { svc_dn => $svc_dn };
+		  }
 
 		  # Build a hash of all object classes from the LDAP schema.
 		  my %objectclasses = map { $_->{name} => $_ } $ldap->schema->all_objectclasses;
@@ -2568,10 +2577,45 @@ The C<$svc_attrs> hash contains all attributes ready for C<$ldap-E<gt>add($svc_d
 			     message => sprintf('DRYRUN: h_service_add_if_not_exists() ldap->add dn: %s', $svc_dn) }
 		  }
 		  if ($msg) {
+		    $self->h_log($msg);
 		    push @{$debug->{$msg->{status}}}, $msg->{message};
 		    if ($msg->{status} eq 'ok') {
 		      push @{$debug->{$msg->{status}}},
 			sprintf('password: <span class="badge text-bg-secondary user-select-all">%s</span>', $pwd->{clear});
+
+		      if ( $p->{authorizedService} =~ /^dot1x-eap-.*$/ ) {
+			my $search_arg = { base => $svc_attrs->{radiusGroupName},
+					   scope => 'base',
+					   filter => '(&(cn=*)(member=' . $svc_dn . '))', };
+			my $if_exist = $ldap->search( $search_arg );
+			$self->h_log( $self->h_ldap_err($if_exist, $search_arg) ) if $if_exist->code;
+			if ( ! $if_exist->count ) {
+			  my $mesg;
+			  if ( $dry_run == 0 ) {
+			    $mesg = $ldap->modify( $svc_attrs->{radiusGroupName}, [ add => [ member => $svc_dn, ], ], );
+			    if ( $mesg->{status} eq 'error' ) {
+			      push @{$debug->{error}},
+				sprintf('Error during <mark>%s</mark> group modification:</br>%s',
+					$svc_attrs->{radiusGroupName}, $mesg->{message}->{html});
+			    } else {
+			      push @{$debug->{ok}},
+				sprintf('Group <mark>%s</mark> successfully modified with %s',
+					$svc_attrs->{radiusGroupName}, $mesg->{message}->{html});
+			    }
+			  } else {
+			    push @{$debug->{ok}},
+			      sprintf('DRYRUN: RADIUS group <mark>%s</mark> modify:<br> [ add => [ member => <mark>%s</mark>, ], ]',
+				      $svc_attrs->{radiusGroupName}, $svc_dn);
+			  }
+
+			} else {
+			  push @{$debug->{error}},
+			    sprintf('object <mark>%s</mark> is already a member of %s', $svc_dn, $self->h_np($svc_attrs->{radiusGroupName}));
+
+			}
+		      }
+
+
 		    }
 		  }
 		  # $self->h_log($debug);

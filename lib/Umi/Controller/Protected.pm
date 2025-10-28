@@ -118,7 +118,34 @@ sub delete ($self) {
 		       debug => { warn => ['attempt to delete dn: ' . $p->{delete_dn}]})
     unless $auth;
 
-  my $msg = $ldap->delete($p->{delete_dn},
+  # for dot1x-eap-*** services, first we need modify relevant RADIUS group/profile
+  my ($msg, $search_arg, $entry, @group);
+  if ( $p->{delete_dn} =~ /.*,authorizedService=dot1x-eap-.*/ ) {
+    $search_arg = { base => $p->{delete_dn}, scope => 'base' };
+    $msg = $ldap->search( $search_arg );
+    $self->h_log( $self->h_ldap_err($msg, $search_arg) ) if $msg->code;
+    $entry = $msg->entry;
+    push @group, @{$entry->get_value('radiusGroupName', asref => 1)} if $entry->exists('radiusGroupName');
+    push @group, @{$entry->get_value('radiusProfileDn', asref => 1)} if $entry->exists('radiusProfileDn');
+    if ( @group ) {
+      foreach (@group) {
+	my $mesg = $ldap->modify( $_, [ delete => [ member => $p->{delete_dn}, ], ], );
+	if ( $mesg->{status} eq 'error' ) {
+	  push @{$debug{error}},
+	    sprintf('Error deleting <mark>%s</mark> from group:%s</br>%s',
+		    $p->{delete_dn}, $_, $mesg->{message}->{html});
+	} else {
+	  push @{$debug{ok}},
+	    sprintf('<mark>%s</mark> successfully deleted from %s',
+		    $p->{delete_dn}, $mesg->{message}->{html});
+	}
+
+      }
+    }
+  }
+
+
+  $msg = $ldap->delete($p->{delete_dn},
 			  exists $p->{delete_recursive} && $p->{delete_recursive} eq 'on' ? 1 : 0);
   push @{$debug{$msg->{status}}}, $msg->{message};
   $self->stash(debug => \%debug);
@@ -133,6 +160,7 @@ sub delete ($self) {
 		 );
 
 }
+
 =head1 fire
 
 steps to do on employee firing

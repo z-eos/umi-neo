@@ -275,7 +275,7 @@ sub modify {
     $message->{html} = sprintf('DN: %s has been successfully modified.', $dn);
     $status = 'ok';
   }
-  return {status => $status, message => $message->{html}};
+  return {status => $status, message => $message};
 }
 
 =head2 moddn

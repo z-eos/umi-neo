@@ -26,9 +26,12 @@ use constant {
 		     net3b => '(?:(?:[0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){2}',
 		     net2b => '(?:(?:[0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){1}',
 		     mac => {
+			     # 00:1A:2B:3C:4D:5E or 00-1A-2B-3C-4D-5E (MAC-48 IEEE canonical, EUI-48)
 			     mac48 => '(?:[[:xdigit:]]{2}([-:]))(?:[[:xdigit:]]{2}\1){4}[[:xdigit:]]{2}',
-			     # https://stackoverflow.com/a/21457070
+			     # 001a.2b3c.4d5e (https://stackoverflow.com/a/21457070)
 			     cisco => '(?:[[:xdigit:]]{4})(?:([\.])[[:xdigit:]]{4}){2}',
+			     # 001A2B3C4D5E
+			     plain => '[[:xdigit:]]{12}',
 			    },
 		    },
 	      UMIAUTH => {
