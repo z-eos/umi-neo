@@ -10,7 +10,7 @@ ENV DEBIAN_FRONTEND=noninteractive \
 
 RUN echo 'debconf debconf/frontend select Noninteractive' | debconf-set-selections
 
-ARG BUILD_DEPS="libssl-dev git make gcc libgd-dev"
+ARG BUILD_DEPS="libssl-dev git make gcc"
 ARG DEBUG_DEPS="vim net-tools procps busybox"
 ARG TALLYMAN_URL
 ARG TALLYMAN_GPGKEY
@@ -73,9 +73,9 @@ HEALTHCHECK \
 EXPOSE 3000 8073
 ENTRYPOINT ["/pies/conf/rc"]
 
-RUN rm -rf /usr/src/* && \
-    apt-get purge -y --auto-remove ${BUILD_DEPS} && \
-    rm -rf /var/lib/apt/lists/*
+# RUN rm -rf /usr/src/* && \
+#     apt-get purge -y --auto-remove ${BUILD_DEPS} && \
+#     rm -rf /var/lib/apt/lists/*
 
 # https://opencontainers.org/
 # https://github.com/opencontainers/image-spec/blob/master/annotations.md#pre-defined-annotation-keys
