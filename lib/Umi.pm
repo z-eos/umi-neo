@@ -29,7 +29,7 @@ use Data::Printer {
 		}],
   };
 
-our $VERSION = '0.9.5';
+our $VERSION = '0.9.6';
 
 has 'cfg' => sub { {} };
 
@@ -273,7 +273,19 @@ sub _startup_routes ($self) {
   my $root = $self->routes;
 
   ## MANAGEMENT
-  $root->get( '/healthcheck')
+  my $mgmnt = $root
+    ->under(sub {
+	      my $c = shift;
+	      my $allowed = Net::CIDR::Set->new;
+	      $allowed->add($_)
+		for @{$self->app->cfg->{ldap}->{conn}->{management}->{cidr_allowed}};
+	      return 1 if $allowed->contains($c->tx->remote_address // '');
+	      $c->render(text => 'Forbidden', status => 403);
+	      return undef;
+	    }
+	   );
+  
+  $mgmnt->get( '/healthcheck')
     ->to( cb => sub {
 	    my $self = shift;
 	    my $hc = $self->h_healthcheck;
