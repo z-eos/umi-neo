@@ -1,2 +1,2 @@
 #!/bin/sh
-curl -o/dev/null -m ${UMI_HEALTHCHECK_TIMEOUT:-2} -s -S http://localhost:3000/healthcheck
+curl -o/dev/null -m ${UMI_HEALTHCHECK_TIMEOUT:-2} -s -S http://localhost:${UMI_PORT:-3000}/healthcheck
