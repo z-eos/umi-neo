@@ -62,6 +62,7 @@ WORKDIR /
 COPY --from=source /usr/src/umi /umi
 COPY --from=pies /pies  /pies
 COPY --from=source /usr/src/docker/tree/pies.d /pies/conf.d
+COPY --from=source /usr/src/docker/healthcheck /umi
 
 WORKDIR /umi
 ENV PATH="/pies/sbin:/pies/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
