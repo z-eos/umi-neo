@@ -21,7 +21,6 @@ services:
     environment:
       PIES_SYSLOG_SERVER: ${PIES_SYSLOG_SERVER:-/proc/1/fd/1}
       MOJO_REVERSE_PROXY: 1
-      UMI_PORT: ${UMI_PORT:-3000}
     volumes:
       - conf:/umi/conf
 
