@@ -9,7 +9,7 @@ services:
     hostname: umi-neo
     build:
       args:
-        TALLYMANURL: $TALLYMAN_URL
+        TALLYMAN_URL: $TALLYMAN_URL
         TALLYMAN_GPGKEY: $TALLYMAN_GPGKEY
       dockerfile: docker/Dockerfile
       context: ..
