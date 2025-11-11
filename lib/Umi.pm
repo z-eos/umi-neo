@@ -9,6 +9,8 @@ use Umi::Constants qw(COUNTRIES);
 use Mojo::Base qw( Mojolicious -signatures );
 use Mojo::Util qw( dumper );
 
+use Net::CIDR::Set;
+
 # ?? # use Mojolicious::Plugin::Syslog;
 use Data::Printer {
   caller_info => 1,
@@ -19,6 +21,7 @@ use Data::Printer {
 		 SCALAR => sub {
 		   my ($scalar, $ddp) = @_;
 		   # replace any non-printable content
+		   ### !!! debug Use of uninitialized value in pattern match (m//) at /home/zeus/src/umi-neo/umi-neo/lib/Umi.pm line 22.
 		   return '='x10 . ' [ BINARY DATA ] ' . '='x10
 		     if defined $scalar && $$scalar =~ /([[:^print:]]&&[^\n]])/g;
 		   return $$scalar;
@@ -40,6 +43,7 @@ sub startup ($self) {
   $self->plugin('Umi::Helpers::Common');
   $self->plugin('Umi::Helpers::Dns');
   $self->plugin('Umi::Helpers::SearchResult');
+  $self->plugin('Umi::Helpers::Management');
 
   # handling authentication calls.
   my $authn = Umi::Authentication->new($self->app);
@@ -266,15 +270,17 @@ sub _startup_config ($self) {
 }
 
 sub _startup_routes ($self) {
-  # let's deal with routes like this:
-  # - /login and /logout do what they imply and are not subject to
-  #   authentication checks
-  # - anything under /public is... public and not subject to
-  #   authentication checks
-  # - anything else under / is protected
-  # - anything not dealt with explicitly is a 404
   my $root = $self->routes;
 
+  ## MANAGEMENT
+  $root->get( '/healthcheck')
+    ->to( cb => sub {
+	    my $self = shift;
+	    my $hc = $self->h_healthcheck;
+	    return $self->render( text => $hc->{message},
+				  status => $hc->{status} );
+	  });
+  
   ################################################################
   # public routes: a home page and some other page		 #
   # IMPORTANT: all public routes must be prefixed with `/public` #

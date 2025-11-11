@@ -322,6 +322,11 @@ sub schema ($self) {
   return $self->ldap->schema();
 }
 
+sub compare {
+  my ($self, $dn, $attr, $value) = @_;
+  return $self->ldap->compare($dn, attr => $attr, value => $value);
+}
+
 =head2 get_contextCSN
 
 get current contextCSN of top most object $self->{app}->{cfg}->{ldap}->{base}->{dc}
