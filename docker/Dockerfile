@@ -12,6 +12,8 @@ RUN echo 'debconf debconf/frontend select Noninteractive' | debconf-set-selectio
 
 ARG BUILD_DEPS="libssl-dev git make gcc libgd-dev"
 ARG DEBUG_DEPS="vim net-tools procps busybox"
+ARG TALLYMAN_URL
+ARG TALLYMAN_GPGKEY
 
 RUN apt-get -qq update && \
     apt-get -qq install -y --no-install-recommends \
