@@ -10,10 +10,28 @@ ENV DEBIAN_FRONTEND=noninteractive \
 
 RUN echo 'debconf debconf/frontend select Noninteractive' | debconf-set-selections
 
+ARG BUILD_DEPS="libssl-dev git make gcc libgd-dev"
+ARG DEBUG_DEPS="vim net-tools procps busybox"
+
 RUN apt-get -qq update && \
     apt-get -qq install -y --no-install-recommends \
     ca-certificates \
-    libgd-dev
+    libgd-dev \
+    ${BUILD_DEPS} \
+    ${DEBUG_DEPS}
+
+RUN if test -n "$TALLYMAN_URL"; then \
+    if test -n "$TALLYMAN_GPGKEY"; then \
+      gpg --keyserver keyserver.ubuntu.com --recv-keys $TALLYMAN_GPGKEY && \
+      mkdir -p /etc/apt/keyrings && \
+      gpg --output=/etc/apt/keyrings/$TALLYMAN_GPGKEY.gpg --export $TALLYMAN_GPGKEY; \
+      S=" signed-by=/etc/apt/keyrings/$TALLYMAN_GPGKEY.gpg"; \
+    else \
+      S=\
+    fi; \
+    . /etc/os-release && echo "deb [arch=amd64$S] $TALLYMAN_URL/${VERSION_CODENAME} ${VERSION_CODENAME} main" > "/etc/apt/sources.list.d/tallyman.list"; \
+    apt-get -qq update && apt-get -qq install -y --no-install-recommends tallyman; \
+    fi
 
 RUN cpan -T -i \
     Mojolicious \
@@ -45,5 +63,22 @@ COPY --from=source /usr/src/docker/tree/pies.d /pies/conf.d
 
 WORKDIR /umi
 ENV PATH="/pies/sbin:/pies/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+
+HEALTHCHECK \
+    CMD /usr/bin/tallyman ${UMI_HEALTHCHECK_COLLECTOR:+-s$UMI_HEALTHCHECK_COLLECTOR} -- "${UMI_SRVID:-umi}" /umi/healthcheck
+
 EXPOSE 3000 8073
 ENTRYPOINT ["/pies/conf/rc"]
+
+RUN rm -rf /usr/src/* && \
+    apt-get purge -y --auto-remove ${BUILD_DEPS} && \
+    rm -rf /var/lib/apt/lists/*
+
+# https://opencontainers.org/
+# https://github.com/opencontainers/image-spec/blob/master/annotations.md#pre-defined-annotation-keys
+LABEL org.opencontainers.image.title="UMI image" \
+    org.opencontainers.image.authors="zeus@gnu.org.ua" \
+    org.opencontainers.image.documentation="https://github.com/z-eos/umi-neo" \
+    org.opencontainers.image.description="\
+    sofware.pies.port=8073; \
+    sofware.pies.url=http://ps.gnu.org.ua/software/pies/;"

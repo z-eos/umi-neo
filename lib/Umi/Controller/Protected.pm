@@ -936,7 +936,7 @@ sub modify ($self) {
     if ($changes) {
       $self->h_log($changes);
       my $msg = $ldap->modify($s->entry->dn, $changes);
-      push @{$debug{$msg->{status}}}, $msg->{message};
+      push @{$debug{$msg->{status}}}, $msg->{message}->{html};
     }
   } else {
     ###############################################
@@ -969,7 +969,7 @@ sub modify ($self) {
     if ($changes) {
       # $self->h_log($changes);
       my $msg = $ldap->modify($s->entry->dn, $changes);
-      push @{$debug{$msg->{status}}}, $msg->{message}, $self->h_np($changes);
+      push @{$debug{$msg->{status}}}, $msg->{message}->{html}, $self->h_np($changes);
 
       if ( exists $p->{'userCertificate;binary'} ) {
 	# ($service) = $p->{authorizedService} =~ /([^@]+)/;
