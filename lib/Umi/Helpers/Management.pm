@@ -13,6 +13,7 @@ sub register {
 
 =head2 h_healthcheck
 
+Simple healthcheck. It uses predefined in config file credentials for quering LDAP.
 Returns a simple health status hash with HTTP status:
 
 {
