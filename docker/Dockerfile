@@ -27,7 +27,7 @@ RUN if test -n "${TALLYMAN_URL}"; then \
         gpg --output=/etc/apt/keyrings/${TALLYMAN_GPGKEY}.gpg --export ${TALLYMAN_GPGKEY}; \
         S=" signed-by=/etc/apt/keyrings/${TALLYMAN_GPGKEY}.gpg"; \
       else \
-        S=\
+        S=;\
       fi; \
       . /etc/os-release && echo "deb [arch=amd64$S] ${TALLYMAN_URL}/${VERSION_CODENAME} ${VERSION_CODENAME} main" > "/etc/apt/sources.list.d/tallyman.list"; \
       apt-get -qq update && apt-get -qq install -y --no-install-recommends tallyman; \
