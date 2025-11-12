@@ -63,12 +63,20 @@ COPY --from=source /usr/src/umi /umi
 COPY --from=pies /pies  /pies
 COPY --from=source /usr/src/docker/tree/pies.d /pies/conf.d
 COPY --from=source /usr/src/docker/healthcheck /umi
+COPY --from=source /usr/src/docker/tallywrap-on /umi
+COPY --from=source /usr/src/docker/tallywrap-no /umi
 
 WORKDIR /umi
 ENV PATH="/pies/sbin:/pies/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
 
+RUN if command -v tallyman >/dev/null 2>&1; then \
+      ln -fs /umi/tallywrap-on /umi/tallywrap; \
+    else \
+      ln -fs /umi/tallywrap-no /umi/tallywrap; \
+    fi
+
 HEALTHCHECK \
-    CMD /usr/bin/tallyman ${UMI_HEALTHCHECK_COLLECTOR:+-s$UMI_HEALTHCHECK_COLLECTOR} -- "${UMI_SRVID:-umi}" /umi/healthcheck
+    CMD /umi/tallywrap ${UMI_HEALTHCHECK_COLLECTOR:+-s$UMI_HEALTHCHECK_COLLECTOR} -- "${UMI_SRVID:-umi}" /umi/healthcheck
 
 EXPOSE 3000 8073
 ENTRYPOINT ["/pies/conf/rc"]

@@ -1,0 +1,12 @@
+#! /bin/sh
+while [ $# -gt 0 ]
+do
+    case $1 in
+        --)     shift 2
+                exec "$@"
+                ;;
+    esac
+    shift
+done
+echo >&2 "$0: unrecognized command line"
+exit 1

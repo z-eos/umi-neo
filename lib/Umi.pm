@@ -20,10 +20,13 @@ use Data::Printer {
     filters => [{
 		 SCALAR => sub {
 		   my ($scalar, $ddp) = @_;
-		   # replace any non-printable content
-		   ### !!! debug Use of uninitialized value in pattern match (m//) at /home/zeus/src/umi-neo/umi-neo/lib/Umi.pm line 22.
-		   return '='x10 . ' [ BINARY DATA ] ' . '='x10
-		     if defined $scalar && $$scalar =~ /([[:^print:]]&&[^\n]])/g;
+		   return 'undef' unless defined $$scalar;
+		   # checks for actual control characters and high bytes
+		   # while preserving newlines (\x0A), carriage returns
+		   # (\x0D), and tabs (\x09)
+		   if ($$scalar =~ /[\x00-\x08\x0B\x0C\x0E-\x1F\x7F-\xFF]/) {
+		     return '=' x 10 . ' [ BINARY DATA ] ' . '=' x 10;
+		   }
 		   return $$scalar;
 		 },
 		}],
