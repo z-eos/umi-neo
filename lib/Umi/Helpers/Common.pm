@@ -1097,7 +1097,7 @@ END_INPUT
 		      map { (split(/:/, $_))[0] => [tail(-1, @{[split(/:/, $_)]})] }
 		      split(/\n/, $stdout);
 
-		    $self->h_log($arg->{key}->{lst});
+		    # $self->h_log($arg->{key}->{lst});
 		    # Build LDAP entry attributes for pgpKeyInfo object class
 		    $arg->{key}->{snd} =
 		      {

@@ -90,14 +90,16 @@ sub search_common  ($self) {
     $base   = $self->{app}->{cfg}->{ldap}->{base}->{pgp};
     $p->{search_base_case} = $base;
   } elsif ( exists $p->{search_base_case} && $p->{search_base_case} eq 'search_by_mac' ) {
-    my $mac = $self->macnorm({ mac => $filter_meta });
+    my $mac = $self->h_macnorm({ mac => $filter_meta });
     push @{$return->{error}}, 'incorrect MAC address'
       if ! $mac;
+    my $mac_norm = $self->h_macnorm({ mac => $filter_meta });
+    my $mac_norm_dlm = $self->h_macnorm({ mac => $filter_meta, dlm => ':' });
     $filter = sprintf("|(dhcpHWAddress=ethernet %s)(&(uid=%s)(authorizedService=dot1x*))(&(cn=%s)(authorizedService=dot1x*))(hwMac=%s)",
-		      $self->macnorm({ mac => $filter_meta, dlm => ':', }),
-		      $self->macnorm({ mac => $filter_meta }),
-		      $self->macnorm({ mac => $filter_meta }),
-		      $self->macnorm({ mac => $filter_meta }) );
+		      $mac_norm_dlm->{mac},
+		      $mac_norm->{mac},
+		      $mac_norm->{mac},
+		      $mac_norm->{mac} );
     $base   = $self->{app}->{cfg}->{ldap}->{base}->{dc};
     $p->{search_base_case} = $base;
   } elsif ( exists $p->{search_base_case} && $p->{search_base_case} eq 'search_by_name' ) {
