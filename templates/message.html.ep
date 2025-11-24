@@ -30,7 +30,13 @@
 
 % my $debug = {};
 % foreach my $source (keys %$d) {
-  % push @{$debug->{$_}}, @{$d->{$source}->{$_}} foreach (keys %{$d->{$source}});
+  % foreach (keys %{$d->{$source}}) {
+    % if ( exists app->{cfg}->{ui}->{page}->{debug}->{status}->{$_} ) {
+      % push @{$debug->{$_}}, @{$d->{$source}->{$_}};
+    % } else {
+      % push @{$debug->{debug}}, 'UNKNOWN DEBUG STATUS: ' . $_, @{$d->{$source}->{$_}};
+    %}
+  % }
 % }
 %# h_log $debug;
 

@@ -237,9 +237,14 @@ sub advanced ($self) {
    $self->h_log($p);
 
   my $v = $self->validation;
-  return $self->render( template => 'protected/search/advanced' )
-    unless exists $p->{search_filter}
+  do {
+    # $self->stash(debug => { warn => ["Form is empty"] });
+    return $self->render(template => 'protected/search/advanced');
+  # } unless $v->has_data;
+  # return $self->render( template => 'protected/search/advanced' )
+  } unless exists $p->{search_filter}
     || exists $p->{base_dn}
+    || exists $p->{reqDn}
     || exists $p->{reqMod}
     || exists $p->{reqOld}
     || exists $p->{reqEntryUUID} ;
@@ -255,8 +260,9 @@ sub advanced ($self) {
 
     $filter =
       @filter_arr > 1 ? '(&' . join('', @filter_arr) . ')'
-      : @filter_arr == 1 ? $filter_arr[0]
-      :                    '(abc stub)';
+      : @filter_arr == 1
+      ?                  $filter_arr[0]
+      :                  '(abc stub)';
 
     $scope = 'sub';
   } else {
@@ -269,10 +275,16 @@ sub advanced ($self) {
 
   my $search_arg = { base => $base, filter => $filter, scope => $scope };
   $search_arg->{attrs} = $self->h_csv_to_arr($p->{show_attr}) if exists $p->{show_attr};
+  $self->h_log( $search_arg );
+
+  do {
+    # $self->stash(debug => { warn => ["Form is empty"] });
+    return $self->render(template => 'protected/search/advanced',
+			 debug => { warn => ["Form is empty"] });
+  } unless exists $p->{search_filter} && length($p->{search_filter}) > 0;
 
   my $search = $ldap->search( $search_arg );
   $self->h_log( $self->{app}->h_ldap_err($search, $search_arg) ) if $search->code;
-   $self->h_log( $search_arg );
 
   # hash to keep aux data like disabled state of the root object for branch/leaf
   my $e_info;
