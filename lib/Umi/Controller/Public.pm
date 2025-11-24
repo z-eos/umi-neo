@@ -138,14 +138,14 @@ sub get_gpg_key ($self) {
 			 $key,
 			 $self->h_ts_to_generalizedTime(strftime("%F %T", localtime), "%F %T") );
     } elsif ($scope eq 'valid') {
-      $filter = sprintf( "(&%s(pgpKeyExpireTime>=%s))",
+      $filter = sprintf( "(&%s(|(!(pgpKeyExpireTime=*))(pgpKeyExpireTime>=%s)))",
 			 $key,
 			 $self->h_ts_to_generalizedTime(strftime("%F %T", localtime), "%F %T") );
     } else {
       $filter = $key;
     }
 
-    # $self->h_log($filter);
+     $self->h_log($filter);
 
     my $attrs = [qw(pgpCertID pgpKeyID pgpUserID pgpKeyCreateTime pgpKeyExpireTime pgpKey)];
     my $search_arg = { base => $self->{app}->{cfg}->{ldap}->{base}->{pgp},
@@ -160,7 +160,7 @@ sub get_gpg_key ($self) {
        pgpKeyID => $_->get_value('pgpKeyID'),
        pgpUserID => $_->get_value('pgpUserID'),
        pgpKeyCreateTime => $_->get_value('pgpKeyCreateTime'),
-       pgpKeyExpireTime => Time::Piece->strptime($_->get_value('pgpKeyExpireTime'), '%Y%m%d%H%M%SZ') // '',
+       pgpKeyExpireTime => $_->exists('pgpKeyExpireTime') ? Time::Piece->strptime($_->get_value('pgpKeyExpireTime'), '%Y%m%d%H%M%SZ') : '',
        pgpKey => $_->get_value('pgpKey'),
       }
       foreach ($search->entries);
