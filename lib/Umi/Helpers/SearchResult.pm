@@ -106,7 +106,7 @@ usage:
 		  $text = 'orig. value' if ! defined $text;
 		  $hash = $app->{cfg}->{ui}->{page}->{subst} if ! defined $hash;
 		  if ( exists $hash->{$attr}->{$attr_val} ) {
-		    return sprintf('%s <span class="badge text-bg-secondary umi-text-tiny align-middle ms-2" title="substitution of an attribute original value with a human friendly something"><i class="fa-solid fa-rotate umi-text-sm"></i> %s: %s</span>',
+		    return sprintf('%s <span id="h_subst_attr_value" class="badge text-bg-secondary umi-text-tiny align-middle ms-2" title="substitution of an attribute original value with a human friendly something"><i class="fa-solid fa-rotate umi-text-sm"></i> %s: %s</span>',
 				   $hash->{$attr}->{$attr_val},
 				   $text,
 				   $attr_val);

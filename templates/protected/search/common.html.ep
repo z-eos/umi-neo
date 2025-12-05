@@ -329,7 +329,8 @@
 		      </small>
 		    </div>
 		  % } else {
-		    <div class="col-12 font-monospace pb-1"><%== xml_escape( h_decode_text( h_subst_attr_value( $attr, $attr_val))) %></div>
+%#		    <div class="col-12 font-monospace pb-1"><%== xml_escape( h_decode_text( h_subst_attr_value( $attr, $attr_val))) %></div>
+		    <div class="col-12 font-monospace pb-1"><%== h_subst_attr_value $attr, $attr_val %></div>
 		  % }
 		  % $j++
 		% }

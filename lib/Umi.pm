@@ -32,7 +32,7 @@ use Data::Printer {
 		}],
   };
 
-our $VERSION = '0.9.8';
+our $VERSION = '0.9.9';
 
 has 'cfg' => sub { {} };
 
@@ -283,7 +283,7 @@ sub _startup_routes ($self) {
 	    return $self->render( text => $hc->{message},
 				  status => $hc->{status} );
 	  });
-  
+
   ################################################################
   # public routes: a home page and some other page		 #
   # IMPORTANT: all public routes must be prefixed with `/public` #

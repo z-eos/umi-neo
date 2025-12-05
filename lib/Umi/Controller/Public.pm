@@ -160,7 +160,10 @@ sub get_gpg_key ($self) {
        pgpKeyID => $_->get_value('pgpKeyID'),
        pgpUserID => $_->get_value('pgpUserID'),
        pgpKeyCreateTime => $_->get_value('pgpKeyCreateTime'),
-       pgpKeyExpireTime => $_->exists('pgpKeyExpireTime') ? Time::Piece->strptime($_->get_value('pgpKeyExpireTime'), '%Y%m%d%H%M%SZ') : '',
+       pgpKeyExpireTime => $_->exists('pgpKeyExpireTime')
+       ? Time::Piece->strptime($_->get_value('pgpKeyExpireTime'),
+			       '%Y%m%d%H%M%SZ')
+       : '',
        pgpKey => $_->get_value('pgpKey'),
       }
       foreach ($search->entries);
