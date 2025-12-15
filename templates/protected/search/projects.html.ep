@@ -123,18 +123,17 @@
 		      %# foreach my $p (@{$v->{group}->{sprintf("cn=%s_pm,ou=group,%s", $en, $base_proj)}->{memberuid}}) {
 		      % my $name;
 		      % foreach my $p (@{$v->{group}->{$role}->{memberuid}}) {
-			% $name = exists $v->{team}->{sprintf("uid=%s,%s", $p, $base_acc)}->{givenname}
-			%         ? $v->{team}->{sprintf("uid=%s,%s", $p, $base_acc)}->{givenname}->[0] : 'NA'
-			%         . " " .
-			%         exists $v->{team}->{sprintf("uid=%s,%s", $p, $base_acc)}->{sn}
-			%         ? $v->{team}->{sprintf("uid=%s,%s", $p, $base_acc)}->{sn}->[0] : 'NA';
+			% my $dn = sprintf("uid=%s,%s", $p, $base_acc);
+			% $name = exists $v->{team}->{$dn}->{givenname} ? $v->{team}->{$dn}->{givenname}->[0] : 'NA';
+			% $name .= " ";
+			% $name .= exists $v->{team}->{$dn}->{sn} ? $v->{team}->{$dn}->{sn}->[0] : 'NA';
 
 			<div class="col">
 			  <div class="card mb-3 p-2">
 			    <div class="row g-0">
 			      <div class="col-md-4">
-				% if ( exists $v->{team}->{sprintf("uid=%s,%s", $p, $base_acc)}->{jpegphoto} ) {
-				  <img src="data:image/jpg;base64,<%= Mojo::Util::b64_encode $v->{team}->{sprintf("uid=%s,%s", $p, $base_acc)}->{jpegphoto}->[0] %>"
+				% if ( exists $v->{team}->{$dn}->{jpegphoto} ) {
+				  <img src="data:image/jpg;base64,<%= Mojo::Util::b64_encode $v->{team}->{$dn}->{jpegphoto}->[0] %>"
 				       class="img-thumbnail object-fit-cover"
 				       width="100" alt="<%= $name %>">
 				% } else {
@@ -152,19 +151,19 @@
 					<span class="fa-li">
 					  <i class="fa-regular fa-at" title="email"></i>
 					</span>
-					% if ( exists $v->{team}->{sprintf("uid=%s,%s", $p, $base_acc)}->{mail} ) {
-					  %= link_to $v->{team}->{sprintf("uid=%s,%s", $p, $base_acc)}->{mail}->[0] => 'mailto:' . $v->{team}->{sprintf("uid=%s,%s", $p, $base_acc)}->{mail}->[0]
+					% if ( exists $v->{team}->{$dn}->{mail} ) {
+					  %= link_to $v->{team}->{$dn}->{mail}->[0] => 'mailto:' . $v->{team}->{$dn}->{mail}->[0]
 					% } else {
 					  NA
 					%}
-					<%#  = $v->{team}->{sprintf("uid=%s,%s", $p, $base_acc)}->{mail}->[0] =%>
+					<%#  = $v->{team}->{$dn}->{mail}->[0] =%>
 				      </li>
 
 				      <li>
 					<span class="fa-li">
 					  <i class="fa-regular fa-id-card" title="uid"></i>
 					</span>
-					<a href="/profile/<%= $v->{team}->{sprintf("uid=%s,%s", $p, $base_acc)}->{uid}->[0] %>"><%= $v->{team}->{sprintf("uid=%s,%s", $p, $base_acc)}->{uid}->[0] %></a>
+					<a href="/profile/<%= $v->{team}->{$dn}->{uid}->[0] %>"><%= $v->{team}->{$dn}->{uid}->[0] %></a>
 				      </li>
 				    </ul>
 				  </small>
