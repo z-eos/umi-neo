@@ -610,7 +610,7 @@ sub version ($self) {
     $git->{url} = `git config remote.origin.url`;
   }
 
-  $self->stash( git => $git );
+  $self->stash( git => $git, debug => $debug );
 
   $self->render( template => 'protected/tool/version' );
 }
