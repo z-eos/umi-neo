@@ -161,6 +161,30 @@ sub delete ($self) {
 
 }
 
+=head1 moddn
+
+Rename the entry given by "DN" on the server.
+
+=cut
+
+sub moddn ($self) {
+
+  my $par = $self->req->params->to_hash;
+  # $self->h_log($par);
+
+  my $ldap = Umi::Ldap->new( $self->{app}, $self->session('uid'), $self->session('pwd') );
+  my $msg = $ldap->moddn($par);
+  $self->session( debug => $msg );
+
+  ### alas, this redirect by nature performs a GET request
+  return $self
+    ->redirect_to($self->url_for('search_common')
+		  ->query( search_base_case => $par->{search_base_case},
+			   search_filter => $par->{search_filter},
+			   ldap_subtree => $par->{ldap_subtree} )
+		 );
+}
+
 =head1 fire
 
 steps to do on employee firing
@@ -1949,30 +1973,6 @@ sub resolve ($self) {
   $self->render( #template => 'protected/tool/resolv',
 		 layout => undef,
 		 text => join("\n", @r) // '' );
-}
-
-=head1 moddn
-
-Rename the entry given by "DN" on the server.
-
-=cut
-
-sub moddn ($self) {
-
-  my $par = $self->req->params->to_hash;
-  # $self->h_log($par);
-
-  my $ldap = Umi::Ldap->new( $self->{app}, $self->session('uid'), $self->session('pwd') );
-  my $msg = $ldap->moddn($par);
-  $self->session( debug => $msg );
-
-  ### alas, this redirect by nature performs a GET request
-  return $self
-    ->redirect_to($self->url_for('search_common')
-		  ->query( search_base_case => $par->{search_base_case},
-			   search_filter => $par->{search_filter},
-			   ldap_subtree => $par->{ldap_subtree} )
-		 );
 }
 
 sub groups ($self) {

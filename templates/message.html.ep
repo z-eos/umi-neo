@@ -31,11 +31,13 @@
 % my $debug = {};
 % foreach my $source (keys %$d) {
   % foreach (keys %{$d->{$source}}) {
+    % my $val = $d->{$source}->{$_};
+    % my @items = ref $val eq 'ARRAY' ? @$val : ($val);
     % if ( exists app->{cfg}->{ui}->{page}->{debug}->{status}->{$_} ) {
-      % push @{$debug->{$_}}, @{$d->{$source}->{$_}};
+      % push @{$debug->{$_}}, @items;
     % } else {
-      % push @{$debug->{debug}}, 'UNKNOWN DEBUG STATUS: ' . $_, @{$d->{$source}->{$_}};
-    %}
+      % push @{$debug->{debug}}, 'UNKNOWN DEBUG STATUS: ' . $_, @items;
+    % }
   % }
 % }
 %# h_log $debug;
