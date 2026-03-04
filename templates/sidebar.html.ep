@@ -366,6 +366,11 @@
 	      </a>
 	    </li>
 	    <li class="nav-item">
+	      <a class="nav-link btn btn-link text-secondary text-start text-lowercase" href="/tool/version">
+		<i class="fa-brands fa-fw fa-git fa-sm me-1"></i> Version Info
+	      </a>
+	    </li>
+	    <li class="nav-item">
 	      <a class="nav-link btn btn-link text-secondary text-start text-lowercase disabled" href="/about"><i class="fa-solid fa-fw fa-question-circle fa-sm me-1"></i> help</a>
 	    </li>
 	    <li class="nav-item">

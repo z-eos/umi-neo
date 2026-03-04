@@ -32,7 +32,7 @@ use Data::Printer {
 		}],
   };
 
-our $VERSION = '0.9.10';
+our $VERSION = '0.9.11';
 
 has 'cfg' => sub { {} };
 
@@ -628,6 +628,11 @@ sub _startup_routes ($self) {
     ->get( '/tool/sysinfo')
     ->requires(is_role => ['admin,coadmin,hr', {cmp => 'or'}])
     ->to('protected#sysinfo');
+
+  $protected_root
+    ->get( '/tool/version')
+    ->requires(is_role => ['admin,coadmin,hr', {cmp => 'or'}])
+    ->to('protected#version');
 
   $protected_root
     ->get( '/chi')

@@ -584,6 +584,37 @@ sub sysinfo ($self) {
 			); # layout => undef);
 }
 
+sub version ($self) {
+  my $git_log_cmd = q{git log --pretty=format:'%H%x1f%an%x1f%ad%x1f%s%x1e' --date=short --max-count=20};
+  my $debug = {};
+
+  open my $log_fh, '-|', $git_log_cmd ||
+    $debug->{ 'error' => [ "Failed to run git log: $!" ] };
+
+  my $git;
+  if ( ! exists $debug->{error} ) {
+    local $/ = "\x1e";		# record separator
+
+    while (my $record = <$log_fh>) {
+      chomp $record;
+      my @fields = split /\x1f/, $record;
+      next unless @fields == 4;
+      push @{$git->{log}}, {
+		      hash    => $fields[0],
+		      author  => $fields[1],
+		      date    => $fields[2],
+		      subject => $fields[3],
+		     };
+    }
+    close $log_fh;
+    $git->{url} = `git config remote.origin.url`;
+  }
+
+  $self->stash( git => $git );
+
+  $self->render( template => 'protected/tool/version' );
+}
+
 sub pwdgen ($self) {
   my $cf = $self->{app}->{cfg}->{tool}->{pwdgen}->{xk};
   my $par = $self->req->params->to_hash;
