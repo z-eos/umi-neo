@@ -247,8 +247,13 @@
 
 		  % } elsif ( $attr eq 'userPassword' )
 		  % {
-		    <%== '<i class="fa-solid fa-asterisk text-muted"></i>' x 6 %>
-
+		    % if ( $attr_val =~ /^\!.*/) {
+		      <i class="fa-solid fa-triangle-exclamation text-danger me-2"
+			 title="password 1-st character is an exclamation mark"></i>
+		      <%== '<i class="fa-solid fa-asterisk text-danger"></i>' x 6 %>
+		    % } else {
+		      <%== '<i class="fa-solid fa-asterisk text-muted"></i>' x 6 %>
+		    % }
 		  % } elsif ( $attr eq 'reqMod' )
 		  % {
 		    <div class="user-select-all font-monospace umi-text-tiny mb-1" style="white-space: pre;"><%= $attr_val %></div>

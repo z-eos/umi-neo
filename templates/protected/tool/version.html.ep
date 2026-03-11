@@ -6,6 +6,8 @@
 </h2>
 <hr class="p-1 ">
 
+% if ( ref($git) eq 'HASH' && keys %{$git} ) {
+
 <h4 class="my-3">git url: <%= $git->{url} %></h4>
 <h4 class="my-3">git log: <small><em>last 20 commits</em></small></h4>
 
@@ -13,7 +15,9 @@
   % for my $c (@{$git->{log}}) {
     <li class="list-group-item border-0">
       <i class="text-info"><%= $c->{hash} %>:</i> <small class="text-success"><%= $c->{date} %> <%= $c->{author} %></small><br>
-      <strong><%= $c->{subject} %></strong>
     </li>
+    <strong class="fs-4"><%= $c->{subject} %></strong>
   % }
 </ul>
+
+% }
