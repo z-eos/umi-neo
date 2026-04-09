@@ -2164,6 +2164,7 @@ sub onboarding ($self) {
   # $self->h_log(\%debug);
 
   my ($svc_details, $br, $s);
+  ### dry_run to be set here by hands for debugging right here
   my $dry_run = 0;
 
   my (%to_enc, $op_dn, $mesg, $op_attrs);

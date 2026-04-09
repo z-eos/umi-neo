@@ -2343,7 +2343,7 @@ The C<$svc_attrs> hash contains all attributes ready for C<$ldap-E<gt>add($svc_d
 		  } elsif (exists $p->{login}) {
 		    $rdn_val = $p->{login};
 		  } else {
-		    $rdn_val = $self->h_get_root_uid_val( $p->{dn_to_new_svc} );
+		    $rdn_val = $self->h_get_root_uid_val( $p->{dn_to_new_svc} // $p->{dn_to_onboard} );
 		  }
 		  my $svc_dn = sprintf(
 				       '%s=%s,%s',
