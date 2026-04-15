@@ -1193,7 +1193,7 @@ sub profile ($self) {
     $search = $ldap->search( $search_arg );
     $modifiersname->{$k} = $search->as_struct->{$v->{modifiersname}->[0]};
 
-    ### only admins and coadmins need this info
+    ### only admins and coadmins need this data to be shown
     if ( $self->is_role('admin,coadmin,hr', {cmp => 'or'}) || $reqpath eq '/audit/users') {
       ### GROUPS: list of all groups user is a member of
       $search_arg = { base => $self->{app}->{cfg}->{ldap}->{base}->{group},
@@ -1269,10 +1269,11 @@ sub profile ($self) {
 
     ### GPG
     $filter = '(|';
-    $filter .= sprintf("(pgpUserID=*%s*)", $v->{sn}->[0]);
+    $filter .= sprintf("(&(pgpUserID=*%s*)(pgpUserID=*%s*))", $v->{givenname}->[0], $v->{sn}->[0]);
     $filter .= sprintf("(pgpUserID=*%s*)", $v->{mail}->[0]) if exists $v->{mail};
     $filter .= ')';
     $search_arg = { base => $self->{app}->{cfg}->{ldap}->{base}->{pgp}, filter => $filter };
+    # $self->h_log($search_arg);
     $search = $ldap->search( $search_arg );
     $self->h_log( $self->{app}->h_ldap_err($search, $search_arg) ) if $search->code && $search->code != 32;
     $pgp_e = $search->as_struct;
@@ -1283,7 +1284,7 @@ sub profile ($self) {
 	 key   => $pgp_e->{$_}->{pgpkey}->[0],
 	};
     }
-    #$self->h_log($pgp);
+    # $self->h_log($pgp);
 
     ### PROJECTS: list of all projects user is a member of
     $search_arg = { base => 'ou=group,' . $self->{app}->{cfg}->{ldap}->{base}->{project},
