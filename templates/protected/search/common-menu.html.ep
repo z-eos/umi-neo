@@ -38,8 +38,11 @@
       %# -*- for base `people` or `project`, not root objects, skip item 'profile'
       %     || ( $item eq 'profile' && $is_root_ppl == 0 && $is_root_prj == 0 )
       %#
-      %# -*- for not base `people` objects, skip item 'password'
-      %     || ( $item eq 'password' && ( $is_ppl == 0 || $e->dn =~ /^authorizedService=.+/ ) )
+      %# -*- for not base `people` objects, skip item 'password' (attr userPassword)
+      %# ??? do we really need it ???     || ( $item eq 'password' && ( $is_ppl == 0 || $e->dn =~ /^authorizedService=.+/ ) )
+      %#
+      %# -*- for not base `people` objects, skip item 'password' (attr userPassword)
+      %      || ( $item eq 'password' && ! $e->exists('userPassword') )
       %#
       %# -*- for base `accesslog` , not root objects, skip item 'profile'
       %     || ( $item eq 'undo' && $is_al == 0 )

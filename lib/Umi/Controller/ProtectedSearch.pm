@@ -320,14 +320,81 @@ sub advanced ($self) {
 
 }
 
+#
+# +-------------------------------------------------------------+
+# |                     Start search_projects                   |
+# +-------------------------------------------------------------+
+#                                |
+#                                v
+#               +---------------------------------+
+#               | Fetch Cache ('projects') & CSN  |
+#               +---------------------------------+
+#                                |
+#                 +--------------+--------------+
+#                 |                             |
+#          [Valid Cache]                 [Invalid/No Cache]
+#          (chi CSN >= LDAP CSN)         (Or Cache Empty)
+#                 |                             |
+#                 v                             v
+#         +---------------+             +-------------------------------+
+#         | Load from     |             | Clear Cache & Build Filter    |
+#         | Cache & Stash |             | based on $p->{proj} parameter |
+#         +---------------+             +-------------------------------+
+#                 |                                     |
+#                 |                                     v
+#                 |                     +-------------------------------+
+#                 |                     | 1. LDAP Search for Projects   |
+#                 |                     |    Base: ldap->base->project  |
+#                 |                     |    Get array: @project_names  |
+#                 |                     +-------------------------------+
+#                 |                                     |
+#                 |                                     v
+#                 |                     +-------------------------------+
+#                 |                     | Loop Each Project Name ($p)   |
+#                 |                     +-------------------------------+
+#                 |                                     |
+#                 |       +-----------------------------+-----------------------------+
+#                 |       |                             |                             |
+#                 |       v                             v                             v
+#                 | +-----------------------+     +-----------------------+     +-----------------------+
+#                 | | 2. Get Project Entry  |     | 3. Get Project Groups |     | 5. Get Project Mach.  |
+#                 | |    Base: cn=$p,...    |     |    Filter: (cn=$p*)   |     |    (If admin/coadmin) |
+#                 | +-----------------------+     +-----------------------+     +-----------------------+
+#                 |       |                             |                             |
+#                 |       v                             v                             v
+#                 | Store in:                     Store in:                     Extract array:
+#                 | $entries->{$p}                $entries->{$p}->{group}       associateddomain
+#                 |                                     |                             |
+#                 |                                     v                             v
+#                 |                               +-----------------------+     +-----------------------+
+#                 |                               | 4. Loop Group Members |     | 6. Loop domains &     |
+#                 |                               |    Fetch Account Info |     |    Query Mach. Base   |
+#                 |                               |    Filter: (uid=$mu)  |     |    Filter: (cn=*dom)  |
+#                 |                               +-----------------------+     +-----------------------+
+#                 |                                     |                             |
+#                 |                                     v                             v
+#                 |                               Store in:                     Merge into:
+#                 |                               $entries->{$p}->{team}        $entries->{$p}->{machines}
+#                 |                                     |                             |
+#                 |       +-----------------------------+-----------------------------+
+#                 |       |
+#                 v       v
+# +-------------------------------------------------------------+
+# |            Save to Cache, Stash, and Render Page            |
+# +-------------------------------------------------------------+
+#
+#
 sub search_projects  ($self) {
   my $p = $self->req->params->to_hash;
+
+  my $proj = $p->{proj} // $self->stash->{proj} // '';
 
   my $ldap = Umi::Ldap->new( $self->{app}, $self->session('uid'), $self->session('pwd') );
 
   my $contextCSN = $ldap->get_contextCSN;
   my $chi = $self->chi('fs')->get('projects');
-  if ( $chi ) {
+  if ( $chi
+       && ( $proj eq '*' || $proj eq 'all' ) ) {
     if ($chi->{contextCSN} ge $contextCSN) {
       $self->h_log($chi->{contextCSN});
       $self->h_log($contextCSN);
@@ -344,8 +411,6 @@ sub search_projects  ($self) {
       $self->chi('fs')->remove('projects');
     }
   }
-
-  my $proj = $p->{proj} // $self->stash->{proj} // '';
 
   my $filter;
   if ($proj eq 'all') {
@@ -414,28 +479,29 @@ sub search_projects  ($self) {
     }
 
     ### MACHINES
+    # Populates $entries->{$p}->{machines} with data from the LDAP 'machines' branch
+    # where a value of the attribute `host' of ou=hosts,cn=$p,ou=Project, contains
+    # a value of 'grayHostName' corresponding machine.
+    # (Restricted to 'admin' and 'coadmin' roles).
     if ( $self->is_role('admin') or  $self->is_role('coadmin') ) {
       $entries->{$p}->{machines} = {};
-      if ( exists $entries->{$p}->
-	   {sprintf("cn=%s,%s",$p,$self->{app}->{cfg}->{ldap}->{base}->{project})}->
-	   {associateddomain}
-	 ) {
-	foreach (sort(@{
-	  $entries->{$p}->
-	    {sprintf("cn=%s,%s",$p,$self->{app}->{cfg}->{ldap}->{base}->{project})}->
-	    {associateddomain}
-	  })) {
-	  # $self->h_log($_);
+
+      $search_arg = { base => sprintf("ou=hosts,cn=%s,%s",$p,$self->{app}->{cfg}->{ldap}->{base}->{project}),
+		      filter => '(host=*)', attrs => ['host'], };
+      $search = $ldap->search( $search_arg );
+      $self->h_log( $self->{app}->h_ldap_err($search, $search_arg) ) if $search->code;
+
+      if ( $search->count > 0 ) {
+	foreach my $h (sort(@{$search->entry->get_value('host', asref => 1)})) {
+	  # $self->h_log($h);
 	  $search_arg = { base => $self->{app}->{cfg}->{ldap}->{base}->{machines},
-			  filter => sprintf("(cn=*%s)", $_),
+			  filter => sprintf("(cn=*%s)", $h),
 			  attrs => ['*'], };
 	  # $self->h_log($search_arg);
 	  $search = $ldap->search( $search_arg );
 	  $self->h_log( $self->{app}->h_ldap_err($search, $search_arg) ) if $search->code;
 	  %{$entries->{$p}->{machines}} = (%{$entries->{$p}->{machines}}, %{$search->as_struct});
 	}
-      } else {
-	$entries->{$p}->{machines} = {};
       }
     }
   }

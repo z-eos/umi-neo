@@ -32,7 +32,7 @@ use Data::Printer {
 		}],
   };
 
-our $VERSION = '0.9.15';
+our $VERSION = '0.9.16';
 
 has 'cfg' => sub { {} };
 

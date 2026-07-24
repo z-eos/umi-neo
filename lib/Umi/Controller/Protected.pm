@@ -1133,7 +1133,8 @@ sub profile ($self) {
   }
 
   $chi = $self->chi('fs')->get($chi_key); #.'tmp-stub-so-killme');
-  if ( $chi ) {
+  if ( $chi
+       && ( $uid eq 'all' || $uid eq 'active' ) ) {
     if ($chi->{contextCSN} ge $contextCSN) {
       $self->h_log($chi->{contextCSN});
       $self->h_log($contextCSN);
