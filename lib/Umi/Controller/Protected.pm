@@ -702,7 +702,7 @@ sub pwdgen ($self) {
 	  $self->h_log($mesg );
 	  # $self->h_log( $self->{app}->h_ldap_err($mesg, undef) ) if $mesg->code;
 	  $self->stash({debug =>
-			{ $mesg->{status} => [ $mesg->{message},
+			{ $mesg->{status} => [ $mesg->{message}->{html},
 					       sprintf('new password: <span class="badge text-bg-secondary user-select-all">%s</span>',
 						       $pwdgen->{clear}),
 					       $qr->{html} ]
@@ -711,8 +711,8 @@ sub pwdgen ($self) {
       } else {
 	$self->stash({debug =>
 		      { ok  => [ sprintf('<span class="badge text-bg-secondary user-select-all">%s</span>',
-						     $pwdgen->{clear}),
-					     $qr->{html} ]
+					 $pwdgen->{clear}),
+				 $qr->{html} ]
 		      }});
       }
     }
