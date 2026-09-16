@@ -2162,6 +2162,11 @@ sub onboarding ($self) {
 
   $self->stash( is_submited => 1 );
 
+  ##########################################################
+  # DRY RUN: dry_run to be set here by hands for debugging #
+  ##########################################################
+  my $dry_run = 0;
+
   ########################
   # Generate SSH keypair #
   ########################
@@ -2171,8 +2176,6 @@ sub onboarding ($self) {
   # $self->h_log(\%debug);
 
   my ($svc_details, $br, $s);
-  ### dry_run to be set here by hands for debugging
-  my $dry_run = 1;
 
   my (%to_enc, $op_dn, $mesg, $op_attrs);
   foreach my $svc (keys %$service) {
