@@ -14,8 +14,10 @@
   % }
 
   <div class="input-group mb-3">
-    %= label_for givenName => 'First / Last Names', class => 'input-group-text'
-    %= text_field 'givenName', class => 'form-control', id => 'givenName', maxlength => "50", placeholder => 'First name, 1 to 50, UTF-8 characters', title => 'First name, 1 to 50, UTF-8 characters'
+    %= label_for givenName => (class => 'input-group-text') => begin
+      First<%=  b(h_req_mark) %>/ Last<%=  b(h_req_mark) %> Names
+    % end
+    %= text_field 'givenName', class => 'form-control umi-left-input', id => 'givenName', maxlength => "50", placeholder => 'First name, 1 to 50, UTF-8 characters', title => 'First name, 1 to 50, UTF-8 characters'
     %= text_field 'sn', class => 'form-control', id => 'sn', maxlength => "50", placeholder => 'Last name, 1 to 50, UTF-8 characters', title => 'Last name, 1 to 50, UTF-8 characters'
   </div>
 
@@ -26,44 +28,49 @@
   </div>
 
   <div class="input-group mb-3">
-    %= label_for title => 'Title:', class => 'input-group-text'
+    %= label_for title => b('<i class="fa-regular fa-id-badge"></i>' . h_req_mark), class => 'input-group-text'
     %= text_field 'title', class => 'form-control', id => 'title', maxlength => "50", placeholder => 'Employee title', title => 'Employee title'
   </div>
 
   <div class="input-group mb-3">
-    <span class="input-group-text">Employment Date:</span>
+    <span class="input-group-text"><i class="fa-lg fa-solid fa-calendar-plus"></i><%= b(h_req_mark) %></span>
     %= text_field 'umiUserDateOfEmployment', class => 'form-control', id => 'employment', title => 'Employment date', placeholder => 'yyyy-MM-dd'
     <span class="input-group-text"><i class="fa-regular fa-calendar"></i></span>
   </div>
 
   <div class="input-group mb-3">
-    <span class="input-group-text">Employee Location:</span>
-    %= text_field 'l', class => 'form-control', id => 'l', maxlength => "30", placeholder => 'City', title => 'Employee city'
+    <span class="input-group-text"><i class="fa-solid fa-location-dot"></i><%=  b(h_req_mark) %></span>
+    %= text_field 'l', class => 'form-control umi-left-input', id => 'l', maxlength => "30", placeholder => 'City', title => 'Employee city'
     % my $options = [ ['--- choose COUNTRY ---' => ''],
     %                 map { [ $_ => constant('COUNTRIES')->{$_}->{two} ] } sort(keys(%{constant('COUNTRIES')})) ];
     %= select_field 'umiUserCountryOfResidence' => $options, id => 'umiUserCountryOfResidence', class => 'form-select select2-hosts', title => 'Countries (ISO 3166)'
   </div>
 
   <div class="input-group mb-3">
-    <span class="input-group-text">Birth:</span>
+    <span class="input-group-text"><i class="fa-solid fa-cake-candles"></i></span>
     %= text_field 'umiUserDateOfBirth', class => 'form-control', id => 'birth', title => 'Employee birth date', placeholder => 'yyyy-MM-dd'
     <span class="input-group-text"><i class="fa-regular fa-calendar"></i></span>
   </div>
 
   <div class="input-group mb-3">
-    <label class="input-group-text" for="gender">Gender</label>
+    <label class="input-group-text" for="gender">Gender<%= b(h_req_mark) %></label>
     % $options = [ ['--- choose GENDER ---' => ''],
     %              map { [ constant('GENDER')->{$_} => $_ ] } sort(keys(%{constant('GENDER')})) ];
     %= select_field 'umiUserGender' => $options, id => 'umiUserGender', class => 'form-select select2-hosts', title => 'Representation of human sex (see ISO 5218)'
   </div>
 
   <div class="input-group mb-3">
-    %= label_for title => 'Tel:', class => 'input-group-text'
+    %= label_for title => b('<i class="fa-regular fa-envelope"></i>' . h_req_mark), class => 'input-group-text'
+    %= text_field 'mail', class => 'form-control', id => 'mail', maxlength => "250", placeholder => 'john@foo.bar', title => 'Email address.'
+  </div>
+
+  <div class="input-group mb-3">
+    %= label_for title => b('<i class="fa-solid fa-phone"></i>'), class => 'input-group-text'
     %= text_field 'telephoneNumber', class => 'form-control', id => 'telephoneNumber', maxlength => "250", placeholder => '+12034567899, +380441234567', title => 'Comma separated, employee phone number/s'
   </div>
 
   <div class="input-group mb-3">
-    %= label_for title => 'IM:', class => 'input-group-text'
+    %= label_for title => b('<i class="fa-regular fa-message"></i>'), class => 'input-group-text'
     %= text_field 'umiUserIm', class => 'form-control', id => 'umiUserIm', maxlength => "250", placeholder => 'https://t.me/jdoe, xmpp://jdoe@foo.bar', title => 'Comma separated, employee IM IDs'
   </div>
 

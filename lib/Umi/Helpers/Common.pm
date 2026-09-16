@@ -3,7 +3,7 @@
 package Umi::Helpers::Common;
 
 use Mojo::Base 'Mojolicious::Plugin';
-use Mojo::Util qw( b64_encode b64_decode encode decode url_escape );
+use Mojo::Util qw( b64_encode b64_decode encode decode url_escape xml_escape );
 
 use Umi::Constants qw(RE TRANSLIT);
 
@@ -1985,6 +1985,21 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 </script>
 };
+		});
+
+=head2 h_req_mark
+
+helper for a small marker element (the icon/sup indicating "this field is required")
+
+=cut
+
+  $app->helper( h_req_mark => sub {
+		  my ($self, %args) = @_;
+		  my $icon = $args{icon} // 'fa-bookmark';
+		  my $color = $args{color} // 'text-danger-emphasis';
+		  my $title = $args{title} // '!! REQUIRED !!';
+		  my $class = $args{class} // '';
+		  return qq{<sup><i class="fa-solid $icon fa-2xs $color $class" title="$title"></i></sup>};
 		});
 
 =head2 h_nested_params

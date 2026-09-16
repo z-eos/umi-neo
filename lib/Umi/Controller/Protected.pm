@@ -1370,6 +1370,10 @@ sub profile_new ($self) {
 
   $v->error(givenName => ['Required, can contain alfanumeric characters and dash, first letter capital']) if $v->error('givenName');
   $v->error(sn => ['Required, can contain alfanumeric characters and dash, first letter capital']) if $v->error('sn');
+  $v->error(l => ['City is required']) if $v->error('l');
+  $v->error(mail => ['Email is required']) if $v->error('mail');
+  $v->error(umiUserCountryOfResidence => ['Gender is required']) if $v->error('umiUserCountryOfResidence');
+  $v->error(umiUserGender => ['Gender is required']) if $v->error('umiUserGender');
 
   my $nf = lc $self->h_translit($p->{givenName});
   my $nl = lc $self->h_translit($p->{sn});
@@ -1414,20 +1418,21 @@ sub profile_new ($self) {
 
   if ( ! $v->has_error ) {
     my $attrs = {
-		 cn        => $nn,
-		 gecos     => $nn,
-		 gidNumber => $self->{app}->{cfg}->{ldap}->{defaults}->{attr}->{gidNumber}->{onboarding},
-		 givenName => $p->{givenName},
-		 l         => $p->{l},
-		 homeDirectory => sprintf("/usr/local/home/%s.%s", $nf, $nl),
-		 objectClass   => $self->{app}->{cfg}->{ldap}->{objectClass}->{acc_root},
-		 umiUserGender => $p->{umiUserGender},
-		 sn            => $p->{sn},
-		 title         => $p->{title},
-		 uid           => sprintf("%s.%s", $nf, $nl),
+		 cn                        => $nn,
+		 gecos                     => $nn,
+		 gidNumber                 => $self->{app}->{cfg}->{ldap}->{defaults}->{attr}->{gidNumber}->{onboarding},
+		 givenName                 => $p->{givenName},
+		 homeDirectory             => sprintf("/usr/local/home/%s.%s", $nf, $nl),
+		 l                         => $p->{l},
+		 mail                      => $p->{mail},
+		 objectClass               => $self->{app}->{cfg}->{ldap}->{objectClass}->{acc_root},
+		 sn                        => $p->{sn},
+		 title                     => $p->{title},
+		 uid                       => sprintf("%s.%s", $nf, $nl),
 		 umiUserCountryOfResidence => $p->{umiUserCountryOfResidence},
-		 umiUserDateOfEmployment   => $self->h_ts_to_generalizedTime($p->{umiUserDateOfEmployment}),
 		 umiUserDateOfBirth        => $self->h_ts_to_generalizedTime($p->{umiUserDateOfBirth}),
+		 umiUserDateOfEmployment   => $self->h_ts_to_generalizedTime($p->{umiUserDateOfEmployment}),
+		 umiUserGender             => $p->{umiUserGender},
 		};
 
     # $attrs->{jpegPhoto} = $upload->{jpegPhoto}->slurp if $upload->{jpegPhoto}->size > 0;
@@ -2166,8 +2171,8 @@ sub onboarding ($self) {
   # $self->h_log(\%debug);
 
   my ($svc_details, $br, $s);
-  ### dry_run to be set here by hands for debugging right here
-  my $dry_run = 0;
+  ### dry_run to be set here by hands for debugging
+  my $dry_run = 1;
 
   my (%to_enc, $op_dn, $mesg, $op_attrs);
   foreach my $svc (keys %$service) {
@@ -2202,9 +2207,11 @@ sub onboarding ($self) {
 
   my $root_pwd = $self->h_pwdgen;
   $to_enc{root} = $root_pwd->{clear};
-  $mesg = $ldap->modify( $self->session->{user_obj}->{dn},
-			 [ replace => [ userPassword => $root_pwd->{ssha} ] ] );
-  push @{$debug{$mesg->{status}}}, $mesg->{message};
+  if ( $dry_run == 0 ) {
+    $mesg = $ldap->modify( $self->session->{user_obj}->{dn},
+			   [ replace => [ userPassword => $root_pwd->{ssha} ] ] );
+    push @{$debug{$mesg->{status}}}, $mesg->{message};
+  }
 
   ##################################################
   # Generate GPG keypair and uload GPG key to LDAP #

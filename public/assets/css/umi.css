@@ -289,6 +289,12 @@ form.new-user:not(.show-simplified) .show-on-simplified       { display: none; }
     display: none;
 }
 
+@media (min-width: 992px) {
+  .input-group > .form-control.umi-left-input {
+    flex: 0 0 20%;
+  }
+}
+
 /* -------------------------------
 
    Text::Diff::HTML
