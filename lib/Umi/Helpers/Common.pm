@@ -1869,7 +1869,7 @@ Options:
   $text
 </button>
 <script>
-  document.addEventListener('DOMContentLoaded', function () {
+  (function () {
     const btn = document.getElementById('$id');
     if (!btn) return;
     btn.addEventListener('click', function () {
@@ -1888,9 +1888,10 @@ Options:
 	}
       })();
     });
-  });
+  })();
 </script>
 };
+
 		});
 
 =head2 h_btn_save_from_url
