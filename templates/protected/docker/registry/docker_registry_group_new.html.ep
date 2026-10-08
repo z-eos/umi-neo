@@ -1,0 +1,104 @@
+%# -*- mode: web; eval: (follow-mode) -*-
+
+%# h_log stash;
+% my $dn_to_modify_docker_registry_group = stash->{dn_to_modify_docker_registry_group};
+
+% my $action = defined $dn_to_modify_docker_registry_group ? 'modify' : 'new';
+
+<h3 class="fw-bold p-5">
+  <i class="fa-solid <%= $action eq 'new' ? 'fa-file-circle-plus' : 'fa-file-pen' %> fa-lg me-3 text-muted"></i>
+  <%= ucfirst $action %> Docker Registry Group <small><em class="text-muted font-monospace"></em></small>
+</h3>
+<hr>
+
+%# = form_for '/docker/registry/group/' . $action => (class => "form-horizontal", method => 'POST') => begin
+%= form_for '/docker/registry/group/new' => (class => "form-horizontal", method => 'POST') => begin
+
+    % if ( defined $dn_to_modify_docker_registry_group ) {
+    %= hidden_field dn_to_modify_docker_registry_group => $dn_to_modify_docker_registry_group
+  % }
+
+  % param cn => stash->{cn} unless param 'cn';
+  <div class="row mb-3">
+    %= label_for cn => (class =>  'col-sm-2 col-form-label text-end fw-bold') => begin
+      Name:
+    % end
+    <div class="col-sm-10">
+      % if ( defined $dn_to_modify_docker_registry_group )
+      % {
+	%= text_field 'cn', class => 'form-control', id => 'cn', placeholder => 'Group name', disabled => 'disabled'
+      % } else {
+	%= text_field 'cn', class => 'form-control', id => 'cn', placeholder => 'Group name'
+      % }
+    </div>
+  </div>
+
+  % param description => stash->{description} unless param 'description';
+  <div class="row mb-3">
+    %= label_for inputProjDescr => (class => 'col-sm-2 col-form-label text-end fw-bold') => begin
+      Description:
+    % end
+    <div class="col-sm-10">
+      %= text_area 'description', cols => 3, class => 'form-control', placeholder => 'Short description'
+    </div>
+  </div>
+
+  % my ( %m, $members, %p, $permissions, $permissions_orig, $members_orig );
+
+  % %m = map { $_ => 1 } @{stash->{members}};
+  % @$members = map { $m{$_} ? [ $_ => $_, selected => 'selected' ] : $_ } @{stash->{members_orig}};
+  %# h_log \%m;
+  %# h_log stash->{members};
+  %# h_log $members;
+  <div class="row mb-3" title="member name">
+    %= label_for members => 'members', class => 'col-sm-2 col-form-label text-end fw-bold text-uppercase'
+    <div class="col-sm-10">
+      %= select_field members => $members, id => 'members', class => 'form-select select2', multiple => 'multiple'
+    </div>
+  </div>
+
+  % %p = map { $_ => 1 } @{stash->{permissions}};
+  % @$permissions = map { $p{$_} ? [ $_ => $_, selected => 'selected' ] : $_ } @{stash->{permissions_orig}};
+  %# h_log \%p;
+  %# h_log stash->{permissions_orig};
+  %# h_log $permissions;
+  <div class="row mb-3" title="repository permissions">
+    %= label_for permissions => 'permissions', class => 'col-sm-2 col-form-label text-end fw-bold text-uppercase'
+    <div class="col-sm-10">
+      %= select_field permissions => $permissions, id => 'permissions', class => 'form-select select2', multiple => 'multiple'
+    </div>
+  </div>
+
+  %= submit_button 'Submit', class => 'btn btn-success font-weight-bold text-uppercase text-end'
+
+% end
+
+<pre class="mt-5 umi-text-tiny text-muted"><%= dumper stash->{'mojo.validation'}->{error} if %{stash->{'mojo.validation'}->{error}} %></pre>
+
+<style>
+ <%# $option_checked %>
+</style>
+
+% if ( stash->{'mojo.validation'}->{error} ) {
+  <script>
+   % while (my ($k, $v) = each %{stash->{'mojo.validation'}->{error}}) {
+     $('#<%= $k %>').addClass('is-invalid').after('<div id="<%= $k %>ValidationFeedback" class="invalid-feedback font-monospace"></div>');
+     % if (scalar(@$v) == 1) {
+     $('#<%= $k %>ValidationFeedback').text('<%= $v->[0] %>');
+     % } else {
+     $('#<%= $k %>ValidationFeedback').text('is not <%= $v->[0] %>: <%= $v->[2] %>');
+     % }
+   % }
+  </script>
+% }
+
+<script>
+ $(document).ready(function() {
+   $('.select2').select2({
+     allowClear: true,
+     tokenSeparators: [',', ' '],
+     placeholder: "Select or add options",
+     tags: true
+   });
+ });
+</script>
