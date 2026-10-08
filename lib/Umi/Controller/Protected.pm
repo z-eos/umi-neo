@@ -1964,37 +1964,6 @@ sub project_modify ($self) {
   $self->render(template => 'protected/project/new', debug => $debug); # , layout => undef);
 }
 
-# before Helper::Dnssub resolve ($self) {
-# before Helper::Dns  my $p = $self->req->params->to_hash;
-# before Helper::Dns  $self->h_log($p);
-# before Helper::Dns
-# before Helper::Dns  my $a = { query => { A   => $p->{a}   // '',
-# before Helper::Dns		       PTR => $p->{ptr} // '',
-# before Helper::Dns		       MX  => $p->{mx}  // '', }, };
-# before Helper::Dns
-# before Helper::Dns  my $res;
-# before Helper::Dns  while ( my($k, $v) = each %{$a->{query}} ) {
-# before Helper::Dns    next if $v eq '';
-# before Helper::Dns    $res = ref($v) eq 'ARRAY' ? $v : [ $v ];
-# before Helper::Dns
-# before Helper::Dns    push @{$a->{reply}}, $self->h_dns_resolver({ type  => $k,
-# before Helper::Dns						 debug => 0,
-# before Helper::Dns						 name  => $_ })
-# before Helper::Dns      foreach (@{$res});
-# before Helper::Dns  }
-# before Helper::Dns
-# before Helper::Dns  foreach (@{$a->{reply}}) {
-# before Helper::Dns    push @{$a->{body}}, $_->{success}         if exists $_->{success};
-# before Helper::Dns    push @{$a->{body}}, $_->{error}->{errstr} if exists $_->{error};
-# before Helper::Dns  }
-# before Helper::Dns
-# before Helper::Dns  # $self->h_log($_) foreach (@{$a->{body}});
-# before Helper::Dns
-# before Helper::Dns  $self->render( #template => 'protected/tool/resolv',
-# before Helper::Dns		 layout => undef,
-# before Helper::Dns		 text => join("\n", @{$a->{body}}) // '' );
-# before Helper::Dns}
-
 sub resolve ($self) {
   my $p = $self->req->params->to_hash;
   $self->h_log($p);
@@ -2114,15 +2083,31 @@ structure of svc_details
 sub onboarding ($self) {
   my $p = $self->req->params->to_hash;
   $self->h_log($p);
-  $self->stash( dn_to_onboard => $p->{dn_to_onboard} );
+  # $self->stash( dn_to_onboard => $p->{dn_to_onboard} );
 
-  my $ldap = Umi::Ldap->new( $self->{app}, $self->session('uid'), $self->session('pwd') );
-  my $search_arg = { base => $p->{dn_to_onboard}, scope => 'base', };
-  my $search = $ldap->search( $search_arg );
-  $self->h_log( $self->h_ldap_err($search, $search_arg) ) if $search->code && $search->code != LDAP_NO_SUCH_OBJECT;
-  my $root = $search->entry;
+  ##########################################################
+  # DRY RUN: dry_run to be set here by hands for debugging #
+  ##########################################################
+  my $dry_run = 0;
+
+  $self->stash(	dry_run => $dry_run, dn_to_onboard => $self->session->{user_obj}->{dn} );
+
+  my ($ldap, $search, $search_arg, $root);
+  if ( $p ) {
+    $ldap = Umi::Ldap->new( $self->{app}, $self->session('uid'), $self->session('pwd') );
+    $search_arg = { base => $p->{dn_to_onboard}, scope => 'base', };
+    $search = $ldap->search( $search_arg );
+    # $self->h_log($search_arg);
+    $self->h_log( $self->h_ldap_err($search, $search_arg) ) if $search->code && $search->code != LDAP_NO_SUCH_OBJECT;
+    $root = $search->entry;
+  }
 
   my $v = $self->validation;
+
+  # On GET (not POST), render the form and stop here
+  return $self->render(template => 'protected/profile/onboarding') unless $v->has_data;
+
+  $self->stash( is_submited => 1 );
 
   my (%debug, $service);
   my $svcs = $self->{app}->{cfg}->{ui}->{onboarding}->{services};
@@ -2133,7 +2118,10 @@ sub onboarding ($self) {
   ###########################################
   foreach my $svc (keys %$svcs) {
     foreach my $d (@{$svcs->{$svc}->{fqdn}}) {
-      $search_arg = { base => sprintf('authorizedService=%s@%s,%s', $svcs->{$svc}->{svc}, $d, $self->session->{user_obj}->{dn}),
+      $search_arg = { base => sprintf('authorizedService=%s@%s,%s',
+				      $svcs->{$svc}->{svc},
+				      $d,
+				      $self->session->{user_obj}->{dn}),
 		      scope => 'one' };
       # $self->h_log($search_arg);
       $search = $ldap->search( $search_arg );
@@ -2156,16 +2144,6 @@ sub onboarding ($self) {
   # $self->h_log($service);
 
   $self->stash( debug => \%debug );
-
-  # On GET (not POST), render the form and stop here
-  return $self->render(template => 'protected/profile/onboarding') unless $v->has_data;
-
-  $self->stash( is_submited => 1 );
-
-  ##########################################################
-  # DRY RUN: dry_run to be set here by hands for debugging #
-  ##########################################################
-  my $dry_run = 0;
 
   ########################
   # Generate SSH keypair #
@@ -2207,14 +2185,18 @@ sub onboarding ($self) {
 
     $svc_details->{$svc}->{exists} = $service->{$svc}->{exists} == 1 ? 1 : 0;
   }
+  # $self->h_log('DEBUG: ONBOARDING: ssh keypair generated');
 
   my $root_pwd = $self->h_pwdgen;
   $to_enc{root} = $root_pwd->{clear};
+  # $self->h_log($root_pwd);
+  # $self->h_log(\%to_enc);
   if ( $dry_run == 0 ) {
     $mesg = $ldap->modify( $self->session->{user_obj}->{dn},
 			   [ replace => [ userPassword => $root_pwd->{ssha} ] ] );
     push @{$debug{$mesg->{status}}}, $mesg->{message};
   }
+  # $self->h_log('DEBUG: ONBOARDING: root obj password re-generated');
 
   ##################################################
   # Generate GPG keypair and uload GPG key to LDAP #
@@ -2228,17 +2210,21 @@ sub onboarding ($self) {
 				    to_enc => \%to_enc
 				  });
   # $self->stash(debug => $k_gpg->{debug});
+  # $self->h_log($k_gpg);
 
   if ( $dry_run == 0 && exists $k_gpg->{send_key} ) {
     $op_dn = sprintf("pgpCertID=%s,%s",
 		     $k_gpg->{send_key}->{pgpCertID},
 		     $self->{app}->{cfg}->{ldap}->{base}->{pgp});
-    %{$op_attrs} = map { $_ => $k_gpg->{send_key}->{$_} } keys %{$k_gpg->{send_key}};
+    # $self->h_log($k_gpg);
+    # %{$op_attrs} = map { $_ => $k_gpg->{send_key}->{$_} } keys %{$k_gpg->{send_key}};
+    $op_attrs = { %{ $k_gpg->{send_key} } };
     #$self->h_log($add_dn);
     #$self->h_log($add_attrs);
     $mesg = $ldap->add( $op_dn, $op_attrs );
     push @{$debug{$mesg->{status}}}, $mesg->{message};
   }
+  # $self->h_log('DEBUG: ONBOARDING: gpg keypair generated');
 
   delete $debug{ok};
   delete $service->{$_}->{acc} foreach (keys %$service);
@@ -2249,6 +2235,7 @@ sub onboarding ($self) {
 		k_gpg => $k_gpg,
 		k_ssh => $k_ssh );
 
+  # $self->h_log('DEBUG: ONBOARDING: end');
   $self->render(template => 'protected/profile/onboarding');
 }
 
@@ -2617,6 +2604,208 @@ sub audit_gpg_keys ($self) {
 
   return $self->render( template => 'protected/audit/gpg', gpg => \%gpg );
 }
+
+=head1 docker_registry_namespace_new
+
+creates a new docker repository namespace
+
+=cut
+
+sub docker_registry_namespace_new ($self) {
+  my $ldap = Umi::Ldap->new( $self->{app}, $self->session('uid'), $self->session('pwd') );
+  my ($search, $search_arg, $debug);
+  # my ($employees, $err) = $ldap->all_users;
+  my (@repositories, %seen);
+  $search_arg = { base => $self->{app}->{cfg}->{ldap}->{base}->{docker_registry_namespace},
+		  filter => "(ostiariusRepository=*)",
+		  attrs => ['ostiariusRepository'] };
+  $search = $ldap->search( $search_arg );
+  $self->h_log( $self->h_ldap_err($search, $search_arg) ) if $search->code;
+  foreach my $e ($search->entries) {
+    push @repositories, grep { !$seen{$_}++ }
+      @{ $e->get_value('ostiariusRepository', asref => 1) };
+  }
+  @repositories = sort @repositories;
+  # $self->h_log(\@repositories);
+
+  my $par = $self->req->params->to_hash;
+  $self->h_log($par);
+  $self->stash(docker_registry_namespace_new_params => $par, repositories => \@repositories);
+
+  my $v = $self->validation;
+  return $self->render(template => 'protected/docker/registry/docker_registry_namespace_new') unless $v->has_data;
+
+  $v->required('cn')->check('size', 2, 50)->check('like', qr/^[A-Za-z0-9._-]+$/);
+  $v->error( cn   => ['Must be 2-50 charaters in length and can be only ASCII characters: A-Za-z0-9.-_'] )
+    if $v->error('cn');
+  # $self->h_log($v->error);
+
+  if ( ! $v->has_error ) {
+    $search_arg = { base => $self->{app}->{cfg}->{ldap}->{base}->{docker_registry_namespace},
+		    filter => "(cn=" . $par->{cn} . ")",
+		    scope => "one",
+		    attrs => ['cn'] };
+    $search = $ldap->search( $search_arg );
+    $self->h_log( $self->h_ldap_err($search, $search_arg) ) if $search->code;
+    $v->error(cn => ['Repository with such name exists']) if $search->count > 0;
+
+    my $attrs =
+      {
+       objectClass => $self->{app}->{cfg}->{ldap}->{objectClass}->{docker_registry_namespace},
+       cn => lc $par->{cn},
+       ostiariusNamespace => lc $par->{cn},
+       description => $par->{description} ne '' ? $par->{description} : 'no description',
+       ostiariusRepository => $par->{repository}
+      };
+    $self->h_log($attrs);
+
+    my $dn = sprintf("cn=%s,%s", lc $par->{cn}, $self->{app}->{cfg}->{ldap}->{base}->{docker_registry_namespace});
+    my $msg = $ldap->add( $dn, $attrs );
+    push @{$debug->{$msg->{status}}}, $msg->{message};
+    $self->stash(debug => $debug);
+  }
+  $self->render(template => 'protected/docker/registry/docker_registry_namespace_new'); #, layout => undef);
+}
+
+=head1 docker_registry_group_new
+
+creates a new docker repository namespace
+
+=cut
+
+sub docker_registry_group_new ($self) {
+  my (%debug, $p);
+  # my $pp = $self->req->params->to_hash;
+  # $self->h_log($pp);
+  $p = $self->h_nested_params;
+  # $self->h_log($p);
+  foreach (keys %$p) {
+    delete $p->{$_} if $p->{$_} eq '';
+  }
+  # $self->h_log($p);
+
+  my $ldap = Umi::Ldap->new( $self->{app}, $self->session('uid'), $self->session('pwd') );
+
+  my ($i, $l, $r, $memberUid, $err, $msg, $search, $search_arg);
+  ($memberUid, $err) = $ldap->all_users({with => 'svc', svc => {as => 'web@tools.norse.co', rest => '(objectClass=uidObject)'}});
+  push @{$debug{$err->{status}}}, $err->{message} if defined $err;
+  undef $err;
+  my @members_orig = sort map { $_->[1] } @$memberUid;
+  # $self->h_log(\@members_orig);
+
+  $search_arg = { base => $p->{dn_to_modify_docker_registry_group} };
+  $search = $ldap->search( $search_arg );
+  $self->h_log( $self->h_ldap_err($search, $search_arg) ) if $search->code;
+  my $obj = $search->as_struct;
+  my $attrs = $obj->{$p->{dn_to_modify_docker_registry_group}};
+  # $self->h_log($attrs);
+
+  $self->stash( debug => \%debug,
+		description => '',
+		members => [],
+		permissions => [],
+		permissions_orig => [qw(pull push delete create)],
+		members_orig => \@members_orig);
+
+  if ( ! exists $p->{dn_to_modify_docker_registry_group} ) {
+    ####################################################
+    # NEW object creation                              #
+    ####################################################
+    # $self->h_log($p);
+    $self->stash(docker_registry_group_new_params => $p, members => \@members_orig);
+
+
+    my $v = $self->validation;
+    return $self->render(template => 'protected/docker/registry/docker_registry_group_new') unless $v->has_data;
+
+    $v->required('cn')->check('size', 2, 50)->check('like', qr/^[A-Za-z0-9._-]+$/);
+    $v->error( cn   => ['Must be 2-50 charaters in length and can be only ASCII characters: A-Za-z0-9.-_'] )
+      if $v->error('cn');
+    $v->error( members => ['at least one member is expected'] ) if ! exists $p->{members};
+    $v->error( permissions => ['at least one permission is expected'] ) if ! exists $p->{permissions};
+    # $self->h_log($v->error);
+
+    if ( ! $v->has_error ) {
+      $search_arg = { base => $self->{app}->{cfg}->{ldap}->{base}->{docker_registry_group},
+		      filter => "(cn=" . $p->{cn} . ")",
+		      scope => "one",
+		      attrs => ['cn'] };
+      $search = $ldap->search( $search_arg );
+      $self->h_log( $self->h_ldap_err($search, $search_arg) ) if $search->code;
+      $v->error(cn => ['Repository group with such name exists']) if $search->count > 0;
+
+      my $attrs =
+	{
+	 objectClass => $self->{app}->{cfg}->{ldap}->{objectClass}->{docker_registry_group},
+	 cn => lc $p->{cn},
+	 ostiariusMemberName => $p->{members},
+	 description => $p->{description} ne '' ? $p->{description} : 'no description',
+	 ostiariusPermissions => $p->{permissions}
+	};
+      $self->h_log($attrs);
+
+      my $dn = sprintf("cn=%s,%s", lc $p->{cn}, $self->{app}->{cfg}->{ldap}->{base}->{docker_registry_group});
+      my $msg = $ldap->add( $dn, $attrs );
+      push @{$debug{$msg->{status}}}, $msg->{message};
+      $self->stash(debug => \%debug);
+    }
+  } else {
+    ####################################################
+    # object MODIFICATION (Cartesian product grouping) #
+    ####################################################
+    if ( keys %$p > 1 ) {
+      #$self->h_log($p);
+      #$self->h_log($attrs);
+      my $add = [];
+      my $delete = [];
+      my $changes = [];
+
+      my $diff = $self->h_array_diff($attrs->{ostiariusmembername}, $p->{members});
+      #$self->h_log($diff);
+      if ( @{$diff->{added}} ) {
+	push @$add, ostiariusmembername => $diff->{added};
+      }
+      if ( @{$diff->{removed}} ) {
+	push @$delete, ostiariusmembername => $diff->{removed};
+      }
+
+      $diff = $self->h_array_diff($attrs->{ostiariuspermissions}, $p->{permissions});
+      #$self->h_log($diff);
+      if ( @{$diff->{added}} ) {
+	push @$add, ostiariuspermissions => $diff->{added};
+      }
+      if ( @{$diff->{removed}} ) {
+	push @$delete, ostiariuspermissions => $diff->{removed};
+      }
+
+      push @$changes, add => $add if @$add;
+      push @$changes, delete => $delete if @$delete;
+
+      if (@$changes) {
+	# $self->h_log($changes);
+	my $msg = $ldap->modify($p->{dn_to_modify_docker_registry_group}, $changes);
+	$self->stash(debug => {$msg->{status} => [ $msg->{message}, $self->h_np($changes) ]});
+
+	$search_arg = { base => $p->{dn_to_modify_docker_registry_group} };
+	$search = $ldap->search( $search_arg );
+	$self->h_log( $self->h_ldap_err($search, $search_arg) ) if $search->code;
+	$obj   = $search->as_struct;
+	$attrs = $obj->{$p->{dn_to_modify_docker_registry_group}};
+      }
+
+    }
+
+    $self->stash( dn_to_modify_docker_registry_group => $p->{dn_to_modify_docker_registry_group},
+		  cn               => $attrs->{cn}->[0],
+		  description      => $attrs->{description}->[0],
+		  members          => $attrs->{ostiariusmembername},
+		  permissions      => $attrs->{ostiariuspermissions},
+		  members_orig     => \@members_orig );
+  }
+
+  $self->render(template => 'protected/docker/registry/docker_registry_group_new'); #, layout => undef);
+}
+
 
 
 1;

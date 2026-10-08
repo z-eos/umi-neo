@@ -242,6 +242,8 @@
 	      % $row_color = 'text-bg-danger" title="&#x1F4E2;&#x1F4E2;&#x1F4E2; inconsistent PKI &#x1F4E2;&#x1F4E2;&#x1F4E2;';
 	    % }
 
+	    % $row_color .= ' text-secondary text-opacity-50' if $attr =~ /^entry/;
+
 	    <div class="row <%== $row_color %>">
 	      <div class="col-3 text-end fw-bold fs-6 text-truncate"><%= $attr %></div>
 	      <div class="col-9">

@@ -118,7 +118,7 @@
       <small>
 	<em class="">(keep blind entropy above <%= app->{cfg}->{tool}->{pwdgen}->{xk}->{cfg}->{password_entropy_blind_min} %> & seen above <%= app->{cfg}->{tool}->{pwdgen}->{xk}->{cfg}->{password_entropy_seen} %> bits)</em>
 	<button type="button" class="btn btn-link" data-bs-toggle="collapse" href="#pwdStatus"
-		role=«button" aria-expanded="false" aria-controls="pwdStatus">
+		role="button" aria-expanded="false" aria-controls="pwdStatus">
 	  <i class="fa-regular fa-rectangle-list"></i>
 	</button>
       </small>
@@ -600,6 +600,12 @@
    // Update description block
    var descr = presets.preset_descriptions[presetName];
    if (descr) $('#pwd_algHelpBlock').html(descr);
+
+   // reset the optional fields, so a preset only sees its own values:
+   $('#xk_pad_to_length, #xk_padding_characters_before, #xk_padding_characters_after, ' +
+     '#xk_padding_digits_before, #xk_padding_digits_after, ' +
+     '#xk_separator_character_char, #xk_padding_character_char').val('');
+
    if (!preset) return;
 
    // Iterate through each key in the preset
@@ -728,4 +734,3 @@
  updateSepCharHelp();
 
 </script>
-

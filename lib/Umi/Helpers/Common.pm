@@ -1124,8 +1124,6 @@ END_INPUT
 		  }
 
 		  #File::Temp::cleanup();
-
-		   $self->h_log($res->{debug});
 		  # $self->h_log($res);
 		  return $res;
 		});
@@ -1369,6 +1367,7 @@ END_INPUT
 		  my $p;
 		  # we need at least this for "default generating"
 		  $p->{xk_num_words} = $cf->{xk}->{num_words}->{val} if ! defined $p;
+		  $par->{xk_num_words} //= $cf->{xk}->{num_words}->{val};
 		  # as pwd_alg value, form returns preset name as class name defined in templates/protected/tool/pwdgen-create.html.ep
 		  $p->{palg} = exists $par->{pwd_alg} ? uc substr($par->{pwd_alg}, 4) : $cf->{xk}->{preset_default};
 		  $p->{pnum} = exists $par->{pwd_num} ? $par->{pwd_num} : $cf->{pnum};
@@ -1412,64 +1411,134 @@ END_INPUT
 			delete $par->{xk_separator_character_char};
 		      }
 
-		      if ( exists $par->{xk_padding_type} && $par->{xk_padding_type} eq 'pad-none' ) {
+# Claude fix bellow#		      if ( exists $par->{xk_padding_type} && $par->{xk_padding_type} eq 'pad-none' ) {
+# Claude fix bellow#			$par->{xk_padding_type} = 'NONE';
+# Claude fix bellow#			delete $par->{xk_pad_to_length};
+# Claude fix bellow#			delete $par->{xk_padding_alphabet};
+# Claude fix bellow#			delete $par->{xk_padding_character};
+# Claude fix bellow#			delete $par->{xk_padding_character_random};
+# Claude fix bellow#			delete $par->{xk_padding_character_after};
+# Claude fix bellow#			delete $par->{xk_padding_character_before};
+# Claude fix bellow#			delete $par->{xk_padding_character_separator};
+# Claude fix bellow#		      } elsif ( exists $par->{xk_padding_type} && $par->{xk_padding_type} eq 'pad-fixed' ) {
+# Claude fix bellow#			$par->{xk_padding_type} = 'FIXED';
+# Claude fix bellow#		      } elsif ( exists $par->{xk_padding_type} && $par->{xk_padding_type} eq 'pad-adaptive' ) {
+# Claude fix bellow#			$par->{xk_padding_type} = 'ADAPTIVE';
+# Claude fix bellow#		      }
+# Claude fix bellow#
+# Claude fix bellow#		      if ( exists $par->{xk_padding_character} && $par->{xk_padding_character} eq 'pch-separator' ) {
+# Claude fix bellow#			$par->{xk_padding_character} = 'SEPARATOR';
+# Claude fix bellow#			delete $par->{xk_padding_alphabet};
+# Claude fix bellow#		      } elsif ( exists $par->{xk_padding_character} && $par->{xk_padding_character} eq 'pch-random' ) {
+# Claude fix bellow#			$par->{xk_padding_character} = 'RANDOM';
+# Claude fix bellow#			$par->{xk_padding_alphabet} = [ split //, $self->h_lrtrim({str => $par->{'xk_padding_alphabet'}}) ];
+# Claude fix bellow#		      } elsif ( exists $par->{xk_padding_character} && $par->{xk_padding_character} eq 'pch-character' ) {
+# Claude fix bellow#			$par->{xk_padding_character} = $par->{xk_padding_character_char};
+# Claude fix bellow#			delete $par->{xk_padding_character_char};
+# Claude fix bellow#			delete $par->{xk_padding_alphabet};
+# Claude fix bellow#		      }
+
+		      # --- padding type -------------------------------------------------
+		      if ( ($par->{xk_padding_type} // '') eq 'pad-none' ) {
 			$par->{xk_padding_type} = 'NONE';
-			delete $par->{xk_pad_to_length};
-			delete $par->{xk_padding_alphabet};
-			delete $par->{xk_padding_character};
-			delete $par->{xk_padding_character_random};
-			delete $par->{xk_padding_character_after};
-			delete $par->{xk_padding_character_before};
-			delete $par->{xk_padding_character_separator};
-		      } elsif ( exists $par->{xk_padding_type} && $par->{xk_padding_type} eq 'pad-fixed' ) {
+			delete @{$par}{qw(xk_pad_to_length xk_padding_alphabet xk_padding_character
+					  xk_padding_character_char
+					  xk_padding_characters_before xk_padding_characters_after)};
+		      } elsif ( ($par->{xk_padding_type} // '') eq 'pad-fixed' ) {
 			$par->{xk_padding_type} = 'FIXED';
-		      } elsif ( exists $par->{xk_padding_type} && $par->{xk_padding_type} eq 'pad-adaptive' ) {
+			delete $par->{xk_pad_to_length};
+			# FIXED needs both counts; empty means 0
+			for my $k (qw(xk_padding_characters_before xk_padding_characters_after)) {
+			  $par->{$k} = 0 if ($par->{$k} // '') eq '';
+			}
+		      } elsif ( ($par->{xk_padding_type} // '') eq 'pad-adaptive' ) {
 			$par->{xk_padding_type} = 'ADAPTIVE';
+			delete @{$par}{qw(xk_padding_characters_before xk_padding_characters_after)};
 		      }
 
-		      if ( exists $par->{xk_padding_character} && $par->{xk_padding_character} eq 'pch-separator' ) {
+		      # --- padding character --------------------------------------------
+		      if ( ($par->{xk_padding_character} // '') eq 'pch-separator' ) {
 			$par->{xk_padding_character} = 'SEPARATOR';
-			delete $par->{xk_padding_alphabet};
-		      } elsif ( exists $par->{xk_padding_character} && $par->{xk_padding_character} eq 'pch-random' ) {
+			delete @{$par}{qw(xk_padding_alphabet xk_padding_character_char)};
+		      } elsif ( ($par->{xk_padding_character} // '') eq 'pch-random' ) {
 			$par->{xk_padding_character} = 'RANDOM';
-			$par->{xk_padding_alphabet} = [ split //, $self->h_lrtrim({str => $par->{'xk_padding_alphabet'}}) ];
-		      } elsif ( exists $par->{xk_padding_character} && $par->{xk_padding_character} eq 'pch-character' ) {
-			$par->{xk_padding_character} = $par->{xk_padding_character_char};
+			$par->{xk_padding_alphabet}  = [ split //, $self->h_lrtrim({str => $par->{xk_padding_alphabet} // ''}) ];
 			delete $par->{xk_padding_character_char};
-			delete $par->{xk_padding_alphabet};
+		      } elsif ( ($par->{xk_padding_character} // '') eq 'pch-character' ) {
+			$par->{xk_padding_character} = $par->{xk_padding_character_char};
+			delete @{$par}{qw(xk_padding_character_char xk_padding_alphabet)};
+		      }
+
+		      # --- empty alphabets: let the module fall back to symbol_alphabet --
+		      for my $k (qw(xk_separator_alphabet xk_padding_alphabet)) {
+			delete $par->{$k} if ref $par->{$k} eq 'ARRAY' && !@{ $par->{$k} };
 		      }
 
 		      # $self->h_log($par);
 
 		      if (keys %{$par}) {
 			my $j;
+# Claude fix bellow #			foreach my $i (keys %{$par}) {
+# Claude fix bellow #			  next if $i !~ /^xk_/;
+# Claude fix bellow #			  $j = substr $i, 3;
+# Claude fix bellow #
+# Claude fix bellow #			  if ( ! defined $par->{$i} ||
+# Claude fix bellow #			       $par->{$i} eq '' ||
+# Claude fix bellow #			       (exists $par->{$i} && exists $xk_cf->{$j} && $xk_cf->{$j} eq $par->{$i}) ) {
+# Claude fix bellow #			    next;
+# Claude fix bellow #			  } else {
+# Claude fix bellow #			    $xk_cf->{$j} = $par->{$i};
+# Claude fix bellow #			  }
+# Claude fix bellow #
+# Claude fix bellow #			}
+
+			my $xk_cf = Crypt::HSXKPasswd->preset_config( $p->{palg} );
+			# all possible presets keys list
+			my %valid = map { $_ => 1 } qw(
+							allow_accents
+							case_transform
+							num_words
+							pad_to_length
+							padding_alphabet
+							padding_character
+							padding_characters_after
+							padding_characters_before
+							padding_digits_after
+							padding_digits_before
+							padding_type
+							separator_alphabet
+							separator_character
+							symbol_alphabet
+							word_length_max
+							word_length_min
+						     );
+
 			foreach my $i (keys %{$par}) {
 			  next if $i !~ /^xk_/;
-			  $j = substr $i, 3;
-
-			  if ( ! defined $par->{$i} ||
-			       $par->{$i} eq '' ||
-			       (exists $par->{$i} && exists $xk_cf->{$j} && $xk_cf->{$j} eq $par->{$i}) ) {
-			    next;
-			  } else {
-			    $xk_cf->{$j} = $par->{$i};
-			  }
-
+			  my $j = substr $i, 3;
+			  next unless $valid{$j}; # ignore UI-only fields
+			  next if ! defined $par->{$i} || $par->{$i} eq '';
+			  $xk_cf->{$j} = $par->{$i};
 			}
+
 		      }
+
 		      # $self->h_log($xk_cf);
 
 		      try {
 			$xk = Crypt::HSXKPasswd->new( config => $xk_cf );
 		      }
 		      catch { $error = $_; };
+
 		      if ( ! defined $error ) {
 			$p->{pwd}->{clear}    = $xk->password( $p->{pnum} );
+			$error = 'Password generation failure.' if ! defined $p->{pwd}->{clear};
 			%{$p->{pwd}->{stats}} = $xk->stats();
 			$p->{pwd}->{status}   = $xk->status();
 		      } else {
 			$self->h_log($error);
 		      }
+
 		    }
 		  }
 		  # elsif ( ref($p->{pwd}) ne 'HASH' ) {

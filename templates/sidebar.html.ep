@@ -227,6 +227,35 @@
 		  </a>
 		</li>
 	      % }
+
+	      % if ( is_role 'admin,coadmin', {cmp => 'or'} ) {
+		% if ( app->{cfg}->{ui}->{sidebar}->{new}->{'docker-registry'} == 1 ) {
+		  <li class="nav-item dropdown">
+		    <a class="nav-link dropdown-toggle text-secondary text-start text-lowercase"
+		       data-bs-toggle="dropdown"
+		       href="#"
+		       role="button"
+		       aria-expanded="false"
+		    >
+		      <i class="fa-brands fa-fw fa-docker fa-sm me-1"></i> Docker Registry
+		    </a>
+
+		    <ul class="dropdown-menu px-2">
+		      <li class="nav-item">
+			<a class="nav-link btn btn-link text-secondary text-start" href="/docker/registry/namespace/new">
+			  <i class="fa-solid fa-fw fa-object-ungroup"></i> namespace
+			</a>
+		      </li>
+		      <li class="nav-item">
+			<a class="nav-link btn btn-link text-secondary text-start" href="/docker/registry/group/new">
+			  <i class="fa-solid fa-fw fa-object-group"></i> group
+			</a>
+		      </li>
+		    </ul>
+		  </li>
+		% }
+	      % }
+
 	      % if ( app->{cfg}->{ui}->{sidebar}->{new}->{sudo} == 1 ) {
 		<li class="nav-item">
 		  <a class="nav-link btn btn-link text-secondary text-start text-lowercase" href="/sudo/new" tabindex="5">

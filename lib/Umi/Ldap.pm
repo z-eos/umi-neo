@@ -667,7 +667,11 @@ return all, unique users arrayref and error (if any)
 
 sub all_users {
   my ($self, $args) = @_;
-  my $arg = { with => $args->{with} // 'root' };
+  my $arg = {
+	     with => $args->{with} // 'root',
+	     svc  => { as => $args->{svc}->{as} // 'web@*',
+		       rest => $args->{svc}->{rest} // '(objectClass=uidObject)' }
+	    };
   my $o = {
 	   root => {
 		    base   => $self->{app}->{cfg}->{ldap}->{base}->{acc_root},
@@ -690,11 +694,20 @@ sub all_users {
 		   attrs => [qw(givenName sn uid)]
 		  },
 	   web => {
-		   base => $self->{app}->{cfg}->{ldap}->{base}->{acc_root},
-		   filter => "(&(objectClass=simpleSecurityObject)(authorizedService=ssh-acc@*))",
+		   base => $self->{app}->{cfg}->{ldap}->{base}->{people},
+		   filter => "(&(objectClass=uidObject)(authorizedService=web@*))",
 		   scope => 'sub',
 		   attrs => ['uid']
 		  },
+	   svc => {
+		   base => $self->{app}->{cfg}->{ldap}->{base}->{people},
+		   filter => sprintf('(&(authorizedService=%s)%s)',
+				     $arg->{svc}->{as},
+				     $arg->{svc}->{rest}),
+		   scope => 'sub',
+		   attrs => ['uid']
+		  }
+
 	  };
   my ($mesg, $res, $err, @users);
   # $self->{app}->h_log($o->{$arg->{with}});

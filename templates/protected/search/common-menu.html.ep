@@ -32,8 +32,8 @@
 
     % for my $item (sort(keys(%$menu))) {
       % if (
-      %# -*- for not Netgroup objects, skip item 'modify_netgr'
-      %     ( exists $menu->{$item}->{re} && $e->dn !~ /$menu->{$item}->{re}/ )
+      %# -*- for not Netgroup/DockerRegistry objects, skip item 'modify_*'
+      %     ( exists $menu->{$item}->{re} && $e->dn !~ /.*$menu->{$item}->{re}.*/ )
       %#
       %# -*- for base `people` or `project`, not root objects, skip item 'profile'
       %     || ( $item eq 'profile' && $is_root_ppl == 0 && $is_root_prj == 0 )
