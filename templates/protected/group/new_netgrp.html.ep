@@ -162,11 +162,15 @@
  $(document).ready(function() {
 
    $('.select2').select2({
+     theme: 'bootstrap-5',
+     width: '100%',
      placeholder: "Select or add options",
      allowClear: true
    });
 
    $('.select2-hosts').select2({
+     theme: 'bootstrap-5',
+     width: '100%',
      tags: true,
      tokenSeparators: [',', ' '],
      placeholder: "Select or add options",

@@ -1,7 +1,7 @@
 %# -*- mode: web; eval: (follow-mode) -*-
 % use Mojo::Util qw(xml_escape);
-% use POSIX qw(strftime);
-% use Time::Piece;
+%# use POSIX qw(strftime);
+%# use Time::Piece;
 % my $now = localtime;
 % my $i = 0;
 % my $j = 0;
@@ -28,35 +28,6 @@
   </div>
 </div>
 
-<script>
- const params = {
-   base: <%= b($search_arg->{base})->quote %>,
-   filter: <%= b($search_arg->{filter})->quote %>,
-   scope: "<%= exists $search_arg->{scope} ? $search_arg->{scope} : 'sub' =%>
-"<%== exists $search_arg->{attrs} ? ",\n   attrs: \"" . join(',', @{$search_arg->{attrs}}) . '"': '' %>
- };
-
- async function fetchLdif(params = {}) {
-   const queryParams = {
-     base_dn: params.base,
-     search_filter: params.filter,
-     search_scope: params.scope
-   };
-
-   if (params.attrs) {
-     queryParams.show_attr = params.attrs;
-   }
-
-   const query = new URLSearchParams(queryParams).toString();   const baseUrl = '<%= url_for("get_searchresult_ldif")->to_abs %>';
-   const url = baseUrl + '?' + query;
-    console.log(url);
-   const res = await fetch(url);
-   if (!res.ok) throw new Error("Network error");
-   return await res.text();
- }
-
-</script>
-
 <div class="btn-group mb-2" role="group">
   <button id="toggleAllBtn"
 	  accesskey="t"
@@ -73,8 +44,16 @@
     <i id="invertAllIcon" class="fa-solid fa-right-left"></i>
   </button>
 
-  %== h_btn_cp_from_url   id => 'copy-ldif', js_func => sub { return "fetchLdif(params)" }, title => 'Copy LDIF of this search to clipboard';
-  %== h_btn_save_from_url id => 'save-ldif', js_func => sub { return "fetchLdif(params)" }, title => 'Save LDIF of this search to a text file';
+  % my %query = (
+  %   base_dn       => $search_arg->{base},
+  %   search_filter => $search_arg->{filter},
+  %   search_scope  => $search_arg->{scope} // 'sub',
+  % );
+  % $query{show_attr} = join(',', @{$search_arg->{attrs}}) if $search_arg->{attrs};
+  % my $endpoint_url  = url_for('get_searchresult_ldif')->query(%query)->to_abs;
+
+  %== h_btn_cp_from_url   url => $endpoint_url, title => 'Copy LDIF of this search to clipboard';
+  %== h_btn_save_from_url url => $endpoint_url, title => 'Save LDIF of this search to a text file';
 
 </div>
 

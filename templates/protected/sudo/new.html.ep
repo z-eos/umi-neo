@@ -86,7 +86,7 @@
 	      <i class="fa-solid fa-fw fa-trash text-danger-emphasis"></i>
 	    </button>
 	  </span>
-	</div>	  
+	</div>
       % }
     </div>
   </div>
@@ -110,7 +110,7 @@
 	      <i class="fa-solid fa-fw fa-trash text-danger-emphasis"></i>
 	    </button>
 	  </span>
-	</div>	  
+	</div>
       % }
     </div>
   </div>
@@ -165,6 +165,8 @@
  $(document).ready(function() {
 
    $('.select2').select2({
+     theme: 'bootstrap-5',
+     width: '100%',
      tags: true,                      // Enable tagging for custom user input
      placeholder: " --- select an item ---", // Optional placeholder text
      allowClear: true                 // Optional: allows the user to clear selection
@@ -180,20 +182,20 @@
        viewMode: 'calendar',
        toolbarPlacement: 'top',
        components: {
-         calendar: true,
-         date: true,
-         month: true,
-         year: true,
-         decades: true,
-         clock: false,
-         hours: false,
-         minutes: false,
-         seconds: false
+	 calendar: true,
+	 date: true,
+	 month: true,
+	 year: true,
+	 decades: true,
+	 clock: false,
+	 hours: false,
+	 minutes: false,
+	 seconds: false
        },
        buttons: {
-         clear: true,
-         close: true,
-         today: true
+	 clear: true,
+	 close: true,
+	 today: true
        }
      },
      localization: {
@@ -233,16 +235,16 @@
 
        // If a value is selected in the user select, hide the group container
        if (usrVal) {
-         $(config.groupContainer).addClass('d-none');
+	 $(config.groupContainer).addClass('d-none');
        } else {
-         $(config.groupContainer).removeClass('d-none');
+	 $(config.groupContainer).removeClass('d-none');
        }
-       
+
        // If a value is selected in the group select, hide the user container
        if (grpVal) {
-         $(config.userContainer).addClass('d-none');
+	 $(config.userContainer).addClass('d-none');
        } else {
-         $(config.userContainer).removeClass('d-none');
+	 $(config.userContainer).removeClass('d-none');
        }
      }
 

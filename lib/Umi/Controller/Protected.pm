@@ -2605,207 +2605,810 @@ sub audit_gpg_keys ($self) {
   return $self->render( template => 'protected/audit/gpg', gpg => \%gpg );
 }
 
-=head1 docker_registry_namespace_new
-
-creates a new docker repository namespace
-
-=cut
-
-sub docker_registry_namespace_new ($self) {
-  my $ldap = Umi::Ldap->new( $self->{app}, $self->session('uid'), $self->session('pwd') );
-  my ($search, $search_arg, $debug);
-  # my ($employees, $err) = $ldap->all_users;
-  my (@repositories, %seen);
-  $search_arg = { base => $self->{app}->{cfg}->{ldap}->{base}->{docker_registry_namespace},
-		  filter => "(ostiariusRepository=*)",
-		  attrs => ['ostiariusRepository'] };
-  $search = $ldap->search( $search_arg );
-  $self->h_log( $self->h_ldap_err($search, $search_arg) ) if $search->code;
-  foreach my $e ($search->entries) {
-    push @repositories, grep { !$seen{$_}++ }
-      @{ $e->get_value('ostiariusRepository', asref => 1) };
-  }
-  @repositories = sort @repositories;
-  # $self->h_log(\@repositories);
-
-  my $par = $self->req->params->to_hash;
-  $self->h_log($par);
-  $self->stash(docker_registry_namespace_new_params => $par, repositories => \@repositories);
-
-  my $v = $self->validation;
-  return $self->render(template => 'protected/docker/registry/docker_registry_namespace_new') unless $v->has_data;
-
-  $v->required('cn')->check('size', 2, 50)->check('like', qr/^[A-Za-z0-9._-]+$/);
-  $v->error( cn   => ['Must be 2-50 charaters in length and can be only ASCII characters: A-Za-z0-9.-_'] )
-    if $v->error('cn');
-  # $self->h_log($v->error);
-
-  if ( ! $v->has_error ) {
-    $search_arg = { base => $self->{app}->{cfg}->{ldap}->{base}->{docker_registry_namespace},
-		    filter => "(cn=" . $par->{cn} . ")",
-		    scope => "one",
-		    attrs => ['cn'] };
-    $search = $ldap->search( $search_arg );
-    $self->h_log( $self->h_ldap_err($search, $search_arg) ) if $search->code;
-    $v->error(cn => ['Repository with such name exists']) if $search->count > 0;
-
-    my $attrs =
-      {
-       objectClass => $self->{app}->{cfg}->{ldap}->{objectClass}->{docker_registry_namespace},
-       cn => lc $par->{cn},
-       ostiariusNamespace => lc $par->{cn},
-       description => $par->{description} ne '' ? $par->{description} : 'no description',
-       ostiariusRepository => $par->{repository}
-      };
-    $self->h_log($attrs);
-
-    my $dn = sprintf("cn=%s,%s", lc $par->{cn}, $self->{app}->{cfg}->{ldap}->{base}->{docker_registry_namespace});
-    my $msg = $ldap->add( $dn, $attrs );
-    push @{$debug->{$msg->{status}}}, $msg->{message};
-    $self->stash(debug => $debug);
-  }
-  $self->render(template => 'protected/docker/registry/docker_registry_namespace_new'); #, layout => undef);
-}
-
 =head1 docker_registry_group_new
 
 creates a new docker repository namespace
 
 =cut
 
-sub docker_registry_group_new ($self) {
+sub docker_registry_group ($self) {
   my (%debug, $p);
-  # my $pp = $self->req->params->to_hash;
-  # $self->h_log($pp);
   $p = $self->h_nested_params;
-  # $self->h_log($p);
+  $self->h_log($p);
+
+  # Clean up empty strings
   foreach (keys %$p) {
-    delete $p->{$_} if $p->{$_} eq '';
+    delete $p->{$_} if defined $p->{$_} && $p->{$_} eq '';
   }
-  # $self->h_log($p);
+
+  # ==============================================================================
+  # $unwrap_scalar: Extracts a single scalar string from nested array structures
+  # ==============================================================================
+  my $unwrap_scalar = sub ($v) {
+    while (ref $v eq 'ARRAY') {
+      $v = $v->[0];
+    }
+    return defined $v ? trim($v) : '';
+  };
+
+  # ==============================================================================
+  # $unwrap_list: Normalizes multi-select / array form fields into a 1D array ref
+  # ==============================================================================
+  my $unwrap_list = sub ($v) {
+    return [] unless defined $v;
+    while (ref $v eq 'ARRAY' && scalar @$v == 1 && ref $v->[0] eq 'ARRAY') {
+      $v = $v->[0];
+    }
+    my $list = ref $v eq 'ARRAY' ? $v : [$v];
+    return [ grep { defined && length } @$list ];
+  };
+
+  # Resolve DN if accessed via route parameter (e.g. /modify/:mod_cn)
+  my $mod_cn = $self->param('mod_cn');
+  if (defined $mod_cn && length $mod_cn) {
+    $p->{dn_to_modify_docker_registry_group} = sprintf(
+      "cn=%s,%s",
+      $mod_cn,
+      $self->{app}->{cfg}->{ldap}->{base}->{docker_registry_group}
+    );
+  }
 
   my $ldap = Umi::Ldap->new( $self->{app}, $self->session('uid'), $self->session('pwd') );
 
-  my ($i, $l, $r, $memberUid, $err, $msg, $search, $search_arg);
-  ($memberUid, $err) = $ldap->all_users({with => 'svc', svc => {as => 'web@tools.norse.co', rest => '(objectClass=uidObject)'}});
-  push @{$debug{$err->{status}}}, $err->{message} if defined $err;
+  my ($search, $search_arg);
+  my ($memberUid, $err) = $ldap->all_users({
+    with => 'svc',
+    svc  => { as => 'web@tools.norse.co', rest => '(objectClass=uidObject)' }
+  });
+  push @{$debug{$err->{status}}}, $err->{message}->{html} if defined $err;
   undef $err;
+
   my @members_orig = sort map { $_->[1] } @$memberUid;
-  # $self->h_log(\@members_orig);
 
-  $search_arg = { base => $p->{dn_to_modify_docker_registry_group} };
-  $search = $ldap->search( $search_arg );
-  $self->h_log( $self->h_ldap_err($search, $search_arg) ) if $search->code;
-  my $obj = $search->as_struct;
-  my $attrs = $obj->{$p->{dn_to_modify_docker_registry_group}};
-  # $self->h_log($attrs);
+  # Prepend currently logged-in user to the top of the dropdown options
+  my $login_uid = $self->session('uid');
+  if ($login_uid) {
+    @members_orig = grep { $_ ne $login_uid } @members_orig;
+    unshift @members_orig, $login_uid;
+  }
 
-  $self->stash( debug => \%debug,
-		description => '',
-		members => [],
-		permissions => [],
-		permissions_orig => [qw(pull push delete create)],
-		members_orig => \@members_orig);
+  # Unpack form parameters into clean, normalized variables
+  my $cn          = $unwrap_scalar->($p->{cn});
+  my $description = $unwrap_scalar->($p->{description});
+  my $members     = $unwrap_list->($p->{members});
+  my $permissions = $unwrap_list->($p->{permissions});
+
+  # Default stash initialization with normalized inputs to persist form state
+  $self->stash(
+    debug            => \%debug,
+    cn               => $cn,
+    description      => $description,
+    members          => $members,
+    permissions      => $permissions,
+    permissions_orig => [qw(pull push delete create)],
+    members_orig     => \@members_orig,
+  );
 
   if ( ! exists $p->{dn_to_modify_docker_registry_group} ) {
     ####################################################
     # NEW object creation                              #
     ####################################################
-    # $self->h_log($p);
-    $self->stash(docker_registry_group_new_params => $p, members => \@members_orig);
-
+    $self->stash(docker_registry_group_new_params => $p);
 
     my $v = $self->validation;
     return $self->render(template => 'protected/docker/registry/docker_registry_group_new') unless $v->has_data;
 
     $v->required('cn')->check('size', 2, 50)->check('like', qr/^[A-Za-z0-9._-]+$/);
-    $v->error( cn   => ['Must be 2-50 charaters in length and can be only ASCII characters: A-Za-z0-9.-_'] )
+    $v->error( cn => ['Must be 2-50 characters in length and can be only ASCII characters: A-Za-z0-9.-_'] )
       if $v->error('cn');
-    $v->error( members => ['at least one member is expected'] ) if ! exists $p->{members};
-    $v->error( permissions => ['at least one permission is expected'] ) if ! exists $p->{permissions};
-    # $self->h_log($v->error);
+
+    $v->error( members => ['at least one member is expected'] ) unless @$members;
+    $v->error( permissions => ['at least one permission is expected'] ) unless @$permissions;
 
     if ( ! $v->has_error ) {
-      $search_arg = { base => $self->{app}->{cfg}->{ldap}->{base}->{docker_registry_group},
-		      filter => "(cn=" . $p->{cn} . ")",
-		      scope => "one",
-		      attrs => ['cn'] };
+      $search_arg = {
+	base   => $self->{app}->{cfg}->{ldap}->{base}->{docker_registry_group},
+	filter => "(cn=" . $cn . ")",
+	scope  => "one",
+	attrs  => ['cn']
+      };
       $search = $ldap->search( $search_arg );
       $self->h_log( $self->h_ldap_err($search, $search_arg) ) if $search->code;
-      $v->error(cn => ['Repository group with such name exists']) if $search->count > 0;
-
-      my $attrs =
-	{
-	 objectClass => $self->{app}->{cfg}->{ldap}->{objectClass}->{docker_registry_group},
-	 cn => lc $p->{cn},
-	 ostiariusMemberName => $p->{members},
-	 description => $p->{description} ne '' ? $p->{description} : 'no description',
-	 ostiariusPermissions => $p->{permissions}
-	};
-      $self->h_log($attrs);
-
-      my $dn = sprintf("cn=%s,%s", lc $p->{cn}, $self->{app}->{cfg}->{ldap}->{base}->{docker_registry_group});
-      my $msg = $ldap->add( $dn, $attrs );
-      push @{$debug{$msg->{status}}}, $msg->{message};
-      $self->stash(debug => \%debug);
+      $v->error( cn => ['Repository group with such name exists'] ) if $search->count > 0;
     }
+
+    return $self->render(template => 'protected/docker/registry/docker_registry_group_new') if $v->has_error;
+
+    my $dn    = sprintf("cn=%s,%s", lc $cn, $self->{app}->{cfg}->{ldap}->{base}->{docker_registry_group});
+    my $attrs = {
+      objectClass          => $self->{app}->{cfg}->{ldap}->{objectClass}->{docker_registry_group},
+      cn                   => lc $cn,
+      ostiariusMemberName  => $members,
+      description          => length $description ? $description : 'no description',
+      ostiariusPermissions => $permissions,
+    };
+    $self->h_log($attrs);
+
+    my $msg = $ldap->add( $dn, $attrs );
+    push @{$debug{$msg->{status}}}, $msg->{message}->{html} if ref $msg;
+    $self->stash(
+      debug                               => \%debug,
+      dn_to_modify_docker_registry_group => $dn,
+    );
+
   } else {
     ####################################################
-    # object MODIFICATION (Cartesian product grouping) #
+    # object MODIFICATION                              #
     ####################################################
-    if ( keys %$p > 1 ) {
-      #$self->h_log($p);
-      #$self->h_log($attrs);
-      my $add = [];
-      my $delete = [];
-      my $changes = [];
+    my $gr_dn = $p->{dn_to_modify_docker_registry_group};
+    $self->stash( dn_to_modify_docker_registry_group => $gr_dn );
 
-      my $diff = $self->h_array_diff($attrs->{ostiariusmembername}, $p->{members});
-      #$self->h_log($diff);
-      if ( @{$diff->{added}} ) {
-	push @$add, ostiariusmembername => $diff->{added};
-      }
-      if ( @{$diff->{removed}} ) {
-	push @$delete, ostiariusmembername => $diff->{removed};
-      }
+    # Search LDAP group entry safely inside modification scope
+    $search_arg = { base => $gr_dn, scope => 'base' };
+    $search = $ldap->search( $search_arg );
+    $self->h_log( $self->h_ldap_err($search, $search_arg) ) if $search->code;
+    my $gr_e = $search->entry;
 
-      $diff = $self->h_array_diff($attrs->{ostiariuspermissions}, $p->{permissions});
-      #$self->h_log($diff);
-      if ( @{$diff->{added}} ) {
-	push @$add, ostiariuspermissions => $diff->{added};
-      }
-      if ( @{$diff->{removed}} ) {
-	push @$delete, ostiariuspermissions => $diff->{removed};
-      }
-
-      push @$changes, add => $add if @$add;
-      push @$changes, delete => $delete if @$delete;
-
-      if (@$changes) {
-	# $self->h_log($changes);
-	my $msg = $ldap->modify($p->{dn_to_modify_docker_registry_group}, $changes);
-	$self->stash(debug => {$msg->{status} => [ $msg->{message}, $self->h_np($changes) ]});
-
-	$search_arg = { base => $p->{dn_to_modify_docker_registry_group} };
-	$search = $ldap->search( $search_arg );
-	$self->h_log( $self->h_ldap_err($search, $search_arg) ) if $search->code;
-	$obj   = $search->as_struct;
-	$attrs = $obj->{$p->{dn_to_modify_docker_registry_group}};
-      }
-
+    if ( ! $gr_e ) {
+      push @{$debug{error}}, "Group not found for DN: $gr_dn";
+      return $self->render(template => 'protected/docker/registry/docker_registry_group_new');
     }
 
-    $self->stash( dn_to_modify_docker_registry_group => $p->{dn_to_modify_docker_registry_group},
-		  cn               => $attrs->{cn}->[0],
-		  description      => $attrs->{description}->[0],
-		  members          => $attrs->{ostiariusmembername},
-		  permissions      => $attrs->{ostiariuspermissions},
-		  members_orig     => \@members_orig );
+    my $ldap_cn          = $gr_e->get_value('cn');
+    my $ldap_description = $gr_e->get_value('description') // '';
+    my $ldap_members     = $gr_e->get_value('ostiariusMemberName', asref => 1) // [];
+    my $ldap_permissions = $gr_e->get_value('ostiariusPermissions', asref => 1) // [];
+
+    # Initial GET / Load: populate form from LDAP entry
+    if ( scalar keys %$p == 1 ) {
+      $self->stash(
+	cn               => $ldap_cn,
+	description      => $ldap_description,
+	members          => $ldap_members,
+	permissions      => $ldap_permissions,
+	members_orig     => \@members_orig,
+	permissions_orig => [qw(pull push delete create)],
+      );
+    } else {
+      # Form POST: Calculate and apply LDAP attribute diffs
+      my @changes;
+
+      # 1. Description diff
+      if ($description ne $ldap_description) {
+	push @changes, replace => [ description => (length $description ? $description : []) ];
+      }
+
+      # 2. Members diff
+      my $mem_diff = $self->h_array_diff($ldap_members, $members);
+      if (@{$mem_diff->{added}}) {
+	push @changes, add => [ ostiariusMemberName => $mem_diff->{added} ];
+      }
+      if (@{$mem_diff->{removed}}) {
+	push @changes, delete => [ ostiariusMemberName => $mem_diff->{removed} ];
+      }
+
+      # 3. Permissions diff
+      my $perm_diff = $self->h_array_diff($ldap_permissions, $permissions);
+      if (@{$perm_diff->{added}}) {
+	push @changes, add => [ ostiariusPermissions => $perm_diff->{added} ];
+      }
+      if (@{$perm_diff->{removed}}) {
+	push @changes, delete => [ ostiariusPermissions => $perm_diff->{removed} ];
+      }
+
+      if (@changes) {
+	my $msg = $ldap->modify($gr_dn, \@changes);
+	push @{$debug{$msg->{status}}}, [ $msg->{message}->{html}, $self->h_np(\@changes) ] if ref $msg;
+
+	# Refresh entry after modification
+	$search = $ldap->search( $search_arg );
+	$self->h_log( $self->h_ldap_err($search, $search_arg) ) if $search->code;
+	$gr_e = $search->entry;
+
+	$ldap_description = $gr_e->get_value('description') // '';
+	$ldap_members     = $gr_e->get_value('ostiariusMemberName', asref => 1) // [];
+	$ldap_permissions = $gr_e->get_value('ostiariusPermissions', asref => 1) // [];
+      }
+
+      $self->stash(
+	cn               => $ldap_cn,
+	description      => $ldap_description,
+	members          => $ldap_members,
+	permissions      => $ldap_permissions,
+	members_orig     => \@members_orig,
+	permissions_orig => [qw(pull push delete create)],
+      );
+    }
   }
 
-  $self->render(template => 'protected/docker/registry/docker_registry_group_new'); #, layout => undef);
+  $self->render(template => 'protected/docker/registry/docker_registry_group_new');
 }
 
+###sub docker_registry_group ($self) {
+###  my (%debug, $p);
+###  # my $pp = $self->req->params->to_hash;
+###  # $self->h_log($pp);
+###  $p = $self->h_nested_params;
+###  # $self->h_log($p);
+###  foreach (keys %$p) {
+###    delete $p->{$_} if $p->{$_} eq '';
+###  }
+###  # $self->h_log($p);
+###
+###  my $mod_cn = $self->param('mod_cn');
+###  $p->{dn_to_modify_docker_registry_group} =
+###    sprintf("cn=%s,%s",
+###	    $mod_cn,
+###	    $self->{app}->{cfg}->{ldap}->{base}->{docker_registry_group})
+###    if defined $mod_cn;
+###  $self->h_log($p);
+###
+###  my $ldap = Umi::Ldap->new( $self->{app}, $self->session('uid'), $self->session('pwd') );
+###
+###  my ($i, $l, $r, $memberUid, $err, $msg, $search, $search_arg);
+###  ($memberUid, $err) = $ldap->all_users({with => 'svc', svc => {as => 'web@tools.norse.co', rest => '(objectClass=uidObject)'}});
+###  push @{$debug{$err->{status}}}, $err->{message} if defined $err;
+###  undef $err;
+###  my @members_orig = sort map { $_->[1] } @$memberUid;
+###  # $self->h_log(\@members_orig);
+###
+###  $search_arg = { base => $p->{dn_to_modify_docker_registry_group} };
+###  $search = $ldap->search( $search_arg );
+###  $self->h_log( $self->h_ldap_err($search, $search_arg) ) if $search->code;
+###  my $obj = $search->as_struct;
+###  my $attrs = $obj->{$p->{dn_to_modify_docker_registry_group}};
+###  # $self->h_log($attrs);
+###
+###  $self->stash( debug => \%debug,
+###		description => '',
+###		members => [],
+###		permissions => [],
+###		permissions_orig => [qw(pull push delete create)],
+###		members_orig => \@members_orig);
+###
+###  if ( ! exists $p->{dn_to_modify_docker_registry_group} ) {
+###    ####################################################
+###    # NEW object creation                              #
+###    ####################################################
+###    # $self->h_log($p);
+###    $self->stash(docker_registry_group_new_params => $p, members => \@members_orig);
+###
+###
+###    my $v = $self->validation;
+###    return $self->render(template => 'protected/docker/registry/docker_registry_group_new') unless $v->has_data;
+###
+###    $v->required('cn')->check('size', 2, 50)->check('like', qr/^[A-Za-z0-9._-]+$/);
+###    $v->error( cn   => ['Must be 2-50 charaters in length and can be only ASCII characters: A-Za-z0-9.-_'] )
+###      if $v->error('cn');
+###    $v->error( members => ['at least one member is expected'] ) if ! exists $p->{members};
+###    $v->error( permissions => ['at least one permission is expected'] ) if ! exists $p->{permissions};
+###    # $self->h_log($v->error);
+###
+###    if ( ! $v->has_error ) {
+###      $search_arg = { base => $self->{app}->{cfg}->{ldap}->{base}->{docker_registry_group},
+###		      filter => "(cn=" . $p->{cn} . ")",
+###		      scope => "one",
+###		      attrs => ['cn'] };
+###      $search = $ldap->search( $search_arg );
+###      $self->h_log( $self->h_ldap_err($search, $search_arg) ) if $search->code;
+###      $v->error(cn => ['Repository group with such name exists']) if $search->count > 0;
+###
+###      my $attrs =
+###	{
+###	 objectClass => $self->{app}->{cfg}->{ldap}->{objectClass}->{docker_registry_group},
+###	 cn => lc $p->{cn},
+###	 ostiariusMemberName => $p->{members},
+###	 description => $p->{description} ne '' ? $p->{description} : 'no description',
+###	 ostiariusPermissions => $p->{permissions}
+###	};
+###      $self->h_log($attrs);
+###
+###      my $dn = sprintf("cn=%s,%s", lc $p->{cn}, $self->{app}->{cfg}->{ldap}->{base}->{docker_registry_group});
+###      my $msg = $ldap->add( $dn, $attrs );
+###      push @{$debug{$msg->{status}}}, $msg->{message};
+###      $self->stash(debug => \%debug);
+###    }
+###  } else {
+###    ####################################################
+###    # object MODIFICATION (Cartesian product grouping) #
+###    ####################################################
+###    if ( keys %$p > 1 ) {
+###      #$self->h_log($p);
+###      #$self->h_log($attrs);
+###      my ($add, $delete, $changes) = ([], [], []);
+###
+###      my $diff = $self->h_array_diff($attrs->{ostiariusmembername}, $p->{members});
+###      #$self->h_log($diff);
+###      if ( @{$diff->{added}} ) {
+###	push @$add, ostiariusmembername => $diff->{added};
+###      }
+###      if ( @{$diff->{removed}} ) {
+###	push @$delete, ostiariusmembername => $diff->{removed};
+###      }
+###
+###      $diff = $self->h_array_diff($attrs->{ostiariuspermissions}, $p->{permissions});
+###      #$self->h_log($diff);
+###      if ( @{$diff->{added}} ) {
+###	push @$add, ostiariuspermissions => $diff->{added};
+###      }
+###      if ( @{$diff->{removed}} ) {
+###	push @$delete, ostiariuspermissions => $diff->{removed};
+###      }
+###
+###      push @$changes, add => $add if @$add;
+###      push @$changes, delete => $delete if @$delete;
+###
+###      if (@$changes) {
+###	# $self->h_log($changes);
+###	my $msg = $ldap->modify($p->{dn_to_modify_docker_registry_group}, $changes);
+###	$self->stash(debug => {$msg->{status} => [ $msg->{message}, $self->h_np($changes) ]});
+###
+###	$search_arg = { base => $p->{dn_to_modify_docker_registry_group} };
+###	$search = $ldap->search( $search_arg );
+###	$self->h_log( $self->h_ldap_err($search, $search_arg) ) if $search->code;
+###	$obj   = $search->as_struct;
+###	$attrs = $obj->{$p->{dn_to_modify_docker_registry_group}};
+###      }
+###
+###    }
+###
+###    $self->stash( dn_to_modify_docker_registry_group => $p->{dn_to_modify_docker_registry_group},
+###		  cn               => $attrs->{cn}->[0],
+###		  description      => $attrs->{description}->[0],
+###		  members          => $attrs->{ostiariusmembername},
+###		  permissions      => $attrs->{ostiariuspermissions},
+###		  members_orig     => \@members_orig );
+###  }
+###
+###  $self->render(template => 'protected/docker/registry/docker_registry_group_new'); #, layout => undef);
+###}
+###
+=head1 docker_registry_namespace
 
+create/modify docker repository namespace infrastructure
+
+=cut
+
+sub docker_registry_namespace ($self) {
+  my (%debug, $p);
+  $p = $self->h_nested_params;
+  $self->h_log($p);
+
+  # Clean up empty strings
+  foreach (keys %$p) {
+    delete $p->{$_} if defined $p->{$_} && $p->{$_} eq '';
+  }
+  #$self->h_log($p);
+
+  my $mod_cn = $self->param('mod_cn');
+  $p->{dn_to_modify_docker_registry_namespace} =
+    sprintf("cn=%s,%s",
+	    $mod_cn,
+	    $self->{app}->{cfg}->{ldap}->{base}->{docker_registry_namespace})
+    if defined $mod_cn;
+  $self->h_log($p);
+
+  # ==============================================================================
+  # $unwrap_scalar
+  #
+  # PURPOSE:
+  #   Extracts a single scalar string from nested array structures generated by
+  #   Mojolicious's $c->h_nested_params for single-value inputs (text fields, textareas).
+  #
+  # BEHAVIOR:
+  #   - Recursively unwraps nested array wrappers (e.g., [['my_value']] -> 'my_value')
+  #   - Trims leading/trailing whitespace
+  #   - Returns an empty string '' if the value is undefined or empty
+  #
+  # INPUT / OUTPUT EXAMPLES:
+  #   $unwrap_scalar->([['  my_namespace  ']])  => 'my_namespace'
+  #   $unwrap_scalar->([])                      => ''
+  #   $unwrap_scalar->(undef)                   => ''
+  # ==============================================================================
+  my $unwrap_scalar = sub ($v) {
+    while (ref $v eq 'ARRAY') {
+      $v = $v->[0];
+    }
+    return defined $v ? trim($v) : '';
+  };
+
+  # ==============================================================================
+  # $unwrap_list
+  #
+  # PURPOSE:
+  #   Normalizes multi-select / array form fields from $c->h_nested_params into
+  #   a flat 1D array reference.
+  #
+  # BEHAVIOR:
+  #   - Strips redundant outer single-element array wrappers: [[['pull', 'push']]] -> ['pull', 'push']
+  #   - Ensures the return type is always an ARRAY ref (wraps standalone scalars into [$v])
+  #   - Filters out undefined values, empty strings, and unselected options
+  #
+  # INPUT / OUTPUT EXAMPLES:
+  #   $unwrap_list->([[ ['pull', '', undef, 'push'] ]]) => ['pull', 'push']
+  #   $unwrap_list->('single_val')                     => ['single_val']
+  #   $unwrap_list->(undef)                            => []
+  # ==============================================================================
+  my $unwrap_list = sub ($v) {
+    return [] unless defined $v;
+    while (ref $v eq 'ARRAY' && scalar @$v == 1 && ref $v->[0] eq 'ARRAY') {
+      $v = $v->[0];
+    }
+    my $list = ref $v eq 'ARRAY' ? $v : [$v];
+    return [ grep { defined && length } @$list ];
+  };
+
+  my $ldap = Umi::Ldap->new( $self->{app}, $self->session('uid'), $self->session('pwd') );
+
+  my ($search, $search_arg);
+  my ($memberUid_orig, $err) = $ldap->all_users({with => 'svc', svc => {as => 'web@tools.norse.co', rest => '(objectClass=uidObject)'}});
+  push @{$debug{$err->{status}}}, $err->{message} if defined $err;
+  undef $err;
+
+  my @memberUid_orig = sort map { $_->[1] } @$memberUid_orig;
+
+  # Prepend the currently logged-in user to the top of the members list
+  my $login_uid = $self->session('uid');
+  if ($login_uid) {
+    @memberUid_orig = grep { $_ ne $login_uid } @memberUid_orig;
+    unshift @memberUid_orig, $login_uid;
+  }
+
+  my ($repositories_orig, %seen);
+  $search_arg = {
+    base   => $self->{app}->{cfg}->{ldap}->{base}->{docker_registry_namespace},
+    filter => "(ostiariusRepository=*)",
+    attrs  => ['ostiariusRepository']
+  };
+  $search = $ldap->search( $search_arg );
+  $self->h_log( $self->h_ldap_err($search, $search_arg) ) if $search->code;
+  push
+    @$repositories_orig,
+    grep { !$seen{$_}++ }
+    @{$_->get_value('ostiariusRepository', asref => 1)}
+    foreach ($search->entries);
+  @$repositories_orig = sort @$repositories_orig;
+
+  # Unpack group parameters cleanly into flat data structures
+  my ($gr_cn, $gr_description, $repositories, $memberUid, $permissions) = ([], [], [], [[]], [[]]);
+
+  if (exists $p->{gr_cn} || exists $p->{permissions} || exists $p->{memberUid}) {
+    my $num_groups = 1;
+    $num_groups = scalar @{$p->{gr_cn}} if ref $p->{gr_cn} eq 'ARRAY' && scalar @{$p->{gr_cn}} > $num_groups;
+    $num_groups = scalar @{$p->{permissions}} if ref $p->{permissions} eq 'ARRAY' && scalar @{$p->{permissions}} > $num_groups;
+    $num_groups = scalar @{$p->{memberUid}} if ref $p->{memberUid} eq 'ARRAY' && scalar @{$p->{memberUid}} > $num_groups;
+
+    $gr_cn          = [ map { $unwrap_scalar->($p->{gr_cn}->[$_]) } 0 .. ($num_groups - 1) ];
+    $gr_description = [ map { $unwrap_scalar->($p->{gr_description}->[$_]) } 0 .. ($num_groups - 1) ];
+    $permissions    = [ map { $unwrap_list->($p->{permissions}->[$_]) } 0 .. ($num_groups - 1) ];
+    $memberUid      = [ map { $unwrap_list->($p->{memberUid}->[$_]) } 0 .. ($num_groups - 1) ];
+  }
+
+  my $ns_cn = $p->{ns_cn} if exists $p->{ns_cn};
+  my $ns_description = $p->{ns_description} if exists $p->{ns_description};
+
+  # Populate stash with unwrapped arrays so template re-renders all groups correctly
+  $self->stash(
+    debug            => \%debug,
+    ns_cn            => $ns_cn,
+    ns_description   => $ns_description,
+    gr_cn            => $gr_cn,
+    gr_description   => $gr_description,
+    memberUid        => $memberUid,
+    permissions      => $permissions,
+    memberUid_orig   => \@memberUid_orig,
+    permissions_orig => [qw(pull push delete create)],
+    repositories     => $repositories,
+    repositories_orig => $repositories_orig,
+  );
+
+  if ( ! exists $p->{dn_to_modify_docker_registry_namespace} ) {
+    ####################################################
+    # NEW object creation                              #
+    ####################################################
+    $self->stash(docker_registry_namespace_params => $p);
+
+    my $v = $self->validation;
+    return $self->render(template => 'protected/docker/registry/docker_registry_namespace') unless $v->has_data;
+
+    # Namespace Name Validation
+    $v->required('ns_cn')->check('size', 2, 50)->check('like', qr/^[A-Za-z0-9._-]+$/);
+    $v->error( ns_cn => ['Must be 2-50 characters in length and can be only ASCII characters: A-Za-z0-9.-_'] )
+      if $v->error('ns_cn');
+    $v->required('repository');
+
+    $search_arg = { base => $self->{app}->{cfg}->{ldap}->{base}->{docker_registry_namespace},
+		    filter => "(cn=" . $p->{ns_cn} . ")",
+		    scope => "one",
+		    attrs => ['cn'] };
+    $search = $ldap->search( $search_arg );
+    $self->h_log( $self->h_ldap_err($search, $search_arg) ) if $search->code;
+    $v->error(ns_cn => ['Repository namespace with such name already exists']) if $search->count > 0;
+
+    # Validate group details per group index
+    if ( ! $self->h_is_empty_nested_arr($gr_cn) ) {
+      for my $i (0 .. $#$gr_cn) {
+	my $gname = $gr_cn->[$i];
+
+	# Group name format validation
+	if ( length $ns_cn && $gname !~ /^\Q$ns_cn\E-([A-Za-z0-9._-]+)$/ ) {
+	  $v->error( "gr_cn[$i]" => ["Group name must be in format '${ns_cn}-YYY' (e.g. '${ns_cn}-owner')"] );
+	} elsif ( ! length $gname ) {
+	  $v->error( "gr_cn[$i]" => ['Group name is required'] );
+	}
+
+	# Permissions validation per group
+	$v->error( "permissions[$i]" => ['At least one permission is required'] )
+	  if ! defined $permissions->[$i] || ! @{$permissions->[$i]};
+
+	# Members validation per group
+	$v->error( "memberUid[$i]" => ['At least one member is required'] )
+	  if ! defined $memberUid->[$i] || ! @{$memberUid->[$i]};
+
+	$search_arg = { base => $self->{app}->{cfg}->{ldap}->{base}->{docker_registry_group},
+			filter => "(cn=" . $gname . ")",
+			scope => "one",
+			attrs => ['cn'] };
+	$search = $ldap->search( $search_arg );
+	$self->h_log( $self->h_ldap_err($search, $search_arg) ) if $search->code;
+	$v->error( "gr_cn[$i]" => ['Repository group with such name exists'] ) if $search->count > 0;
+
+      }
+    } else {
+      $v->error( gr_cn => ['At least one group is required'] );
+    }
+
+    return $self->render(template => 'protected/docker/registry/docker_registry_namespace') if $v->has_error;
+
+    my $obj = {
+	       ns => {
+		      dn => sprintf("cn=%s,%s", $ns_cn,$self->{app}->{cfg}->{ldap}->{base}->{docker_registry_namespace}),
+		      attrs => {
+				cn                  => $ns_cn,
+				description         => $ns_description,
+				ostiariusNamespace  => $ns_cn,
+				ostiariusRepository => [ ref $p->{repository} eq 'ARRAY' ? @{$p->{repository}} : () ],
+				objectClass         => $self->{app}->{cfg}->{ldap}->{objectClass}->{docker_registry_namespace}
+			       }
+		     },
+	       gr => []
+	      };
+
+    for ( my $i = 0; $i < scalar @$gr_cn; $i++ ) {
+      my $g = {
+	       dn => sprintf("cn=%s,%s", $ns_cn,$self->{app}->{cfg}->{ldap}->{base}->{docker_registry_group}),
+	       attrs => {
+			 cn                   => $gr_cn->[$i],
+			 description          => $gr_description->[$i],
+			 objectClass          => $self->{app}->{cfg}->{ldap}->{objectClass}->{docker_registry_group},
+			 ostiariusNamespace   => $ns_cn,
+			 ostiariusMemberName  => $memberUid->[$i],
+			 ostiariusPermissions => $permissions->[$i],
+			}
+	      };
+      push @{$obj->{gr}}, $g;
+    }
+
+    push @{$debug{debug}}, $self->h_np($obj);
+    $self->h_log($obj);
+
+    $self->stash( dn_to_modify_docker_registry_namespace => sprintf("cn=%s,%s", $ns_cn,$self->{app}->{cfg}->{ldap}->{base}->{docker_registry_namespace}) );
+
+    my $msg = $ldap->add( $obj->{ns}->{dn}, $obj->{ns}->{attrs});
+    push @{$debug{$msg->{status}}}, $msg->{message};
+
+    foreach (@{$obj->{gr}}) {
+      $msg = $ldap->add( $_->{dn}, $_->{attrs});
+      push @{$debug{$msg->{status}}}, $msg->{message};
+    }
+
+} else {
+    ####################################################
+    # MODIFICATION MODE (LDAP Updates)                  #
+    ####################################################
+    my $ns_dn = $p->{dn_to_modify_docker_registry_namespace};
+    $self->stash( dn_to_modify_docker_registry_namespace => $ns_dn );
+
+    # 1. Fetch current Namespace entry from LDAP
+    $search_arg = { base => $ns_dn, scope => 'base' };
+    $search = $ldap->search( $search_arg );
+    $self->h_log( $self->h_ldap_err($search, $search_arg) ) if $search->code;
+    my $ns_e = $search->entry;
+    my $ns_cn_val = $ns_e->get_value('cn');
+
+    # 2. Fetch current child Group entries from LDAP
+    $search_arg = {
+      base   => $self->{app}->{cfg}->{ldap}->{base}->{docker_registry_group},
+      filter => 'cn=' . $ns_cn_val . '-*'
+    };
+    $search = $ldap->search( $search_arg );
+    $self->h_log( $self->h_ldap_err($search, $search_arg) ) if $search->code;
+
+    my %ldap_groups;
+    foreach my $e ($search->entries) {
+      my $gcn = $e->get_value('cn');
+      $ldap_groups{$gcn} = {
+	entry               => $e,
+	dn                  => $e->dn,
+	description         => $e->get_value('description') // '',
+	ostiariusMemberName  => $e->get_value('ostiariusMemberName', asref => 1) // [],
+	ostiariusPermissions => $e->get_value('ostiariusPermissions', asref => 1) // [],
+      };
+    }
+
+    # Initial page render check (before any submit button press)
+    if ( scalar keys %$p == 1 ) {
+      my (@ldap_gr_cn, @ldap_gr_description, @ldap_memberUid, @ldap_permissions);
+      foreach my $gcn (sort keys %ldap_groups) {
+	push @ldap_gr_cn,          $gcn;
+	push @ldap_gr_description, $ldap_groups{$gcn}->{description};
+	push @ldap_memberUid,      $ldap_groups{$gcn}->{ostiariusMemberName};
+	push @ldap_permissions,    $ldap_groups{$gcn}->{ostiariusPermissions};
+      }
+
+      $self->stash(
+	debug             => \%debug,
+	ns_cn             => $ns_cn_val,
+	ns_description    => $ns_e->get_value('description') // '',
+	gr_cn             => \@ldap_gr_cn,
+	gr_description    => \@ldap_gr_description,
+	memberUid         => \@ldap_memberUid,
+	permissions       => \@ldap_permissions,
+	memberUid_orig    => \@memberUid_orig,
+	permissions_orig  => [qw(pull push delete create)],
+	repositories      => $ns_e->get_value('ostiariusRepository', asref => 1) // [],
+	repositories_orig => $repositories_orig,
+      );
+
+    } else {
+      # --------------------------------------------------
+      # Form Submitted: Compute & Apply LDAP Changes
+      # --------------------------------------------------
+
+      # Map submitted groups by CN
+      my %submitted_groups;
+      for my $i (0 .. $#$gr_cn) {
+	my $gname = $gr_cn->[$i];
+	next unless length $gname;
+	$submitted_groups{$gname} = {
+				     cn                   => $gname,
+				     description          => $gr_description->[$i] // '',
+				     ostiariusMemberName  => $memberUid->[$i] // [],
+				     ostiariusPermissions => $permissions->[$i] // [],
+				    };
+      }
+
+      # A. Process Namespace Object Modifications
+      my $submitted_repos    = $unwrap_list->($p->{repository});
+      my $ldap_repos         = $ns_e->get_value('ostiariusRepository', asref => 1) // [];
+      my $repo_diff          = $self->h_array_diff($ldap_repos, $submitted_repos);
+
+      my $submitted_ns_descr = $unwrap_scalar->($p->{ns_description});
+      my $ldap_ns_descr      = $ns_e->get_value('description') // '';
+
+      my @ns_changes;
+      if (@{$repo_diff->{added}}) {
+	push @ns_changes, add => [ ostiariusRepository => $repo_diff->{added} ];
+      }
+      if (@{$repo_diff->{removed}}) {
+	push @ns_changes, delete => [ ostiariusRepository => $repo_diff->{removed} ];
+      }
+      if ($submitted_ns_descr ne $ldap_ns_descr) {
+	push @ns_changes, replace => [ description => ($submitted_ns_descr ne '' ? $submitted_ns_descr : []) ];
+      }
+
+      if (@ns_changes) {
+	my $msg = $ldap->modify($ns_dn, \@ns_changes);
+	push @{$debug{$msg->{status}}}, $msg->{message}->{html} if ref $msg;
+	$self->h_log('DEBUG: here we modify: ' . $ns_dn);
+	$self->h_log(\@ns_changes);
+      }
+
+      # B. Process Group Deletions ($ldap->del)
+      for my $gcn (keys %ldap_groups) {
+	unless (exists $submitted_groups{$gcn}) {
+	  my $del_dn = $ldap_groups{$gcn}->{dn};
+	  $self->h_log('DEBUG: here we delete: ' . $del_dn);
+	  my $msg = $ldap->del($del_dn);
+	  push @{$debug{$msg->{status}}}, "Deleted group $gcn: ", $msg->{message} if ref $msg;
+	}
+      }
+
+      # C. Process Group Additions ($ldap->add)
+      for my $gcn (keys %submitted_groups) {
+	unless (exists $ldap_groups{$gcn}) {
+	  my $gdata  = $submitted_groups{$gcn};
+	  my $add_dn = sprintf("cn=%s,%s", $gcn, $self->{app}->{cfg}->{ldap}->{base}->{docker_registry_group});
+	  my $attrs  = {
+			cn                   => $gcn,
+			description          => $gdata->{description} ne '' ? $gdata->{description} : 'no description',
+			objectClass          => $self->{app}->{cfg}->{ldap}->{objectClass}->{docker_registry_group},
+			ostiariusNamespace   => $ns_cn_val,
+			ostiariusMemberName  => $gdata->{ostiariusMemberName},
+			ostiariusPermissions => $gdata->{ostiariusPermissions},
+		       };
+	  my $msg = $ldap->add($add_dn, $attrs);
+	  push @{$debug{$msg->{status}}}, "Added group $gcn: " . ($msg->{message} // 'OK') if ref $msg;
+	  $self->h_log('DEBUG: here we add: ' . $add_dn);
+	}
+      }
+
+      # D. Process Group Modifications ($ldap->modify)
+      for my $gcn (keys %submitted_groups) {
+	if (exists $ldap_groups{$gcn}) {
+	  my $gdata  = $submitted_groups{$gcn};
+	  my $ldap_g = $ldap_groups{$gcn};
+	  my @g_changes;
+
+	  # Description diff
+	  if ($gdata->{description} ne $ldap_g->{description}) {
+	    push @g_changes, replace => [ description => ($gdata->{description} ne '' ? $gdata->{description} : []) ];
+	  }
+
+	  # Members diff
+	  my $mem_diff = $self->h_array_diff($ldap_g->{ostiariusMemberName}, $gdata->{ostiariusMemberName});
+	  if (@{$mem_diff->{added}}) {
+	    push @g_changes, add => [ ostiariusMemberName => $mem_diff->{added} ];
+	  }
+	  if (@{$mem_diff->{removed}}) {
+	    push @g_changes, delete => [ ostiariusMemberName => $mem_diff->{removed} ];
+	  }
+
+	  # Permissions diff
+	  my $perm_diff = $self->h_array_diff($ldap_g->{ostiariusPermissions}, $gdata->{ostiariusPermissions});
+	  if (@{$perm_diff->{added}}) {
+	    push @g_changes, add => [ ostiariusPermissions => $perm_diff->{added} ];
+	  }
+	  if (@{$perm_diff->{removed}}) {
+	    push @g_changes, delete => [ ostiariusPermissions => $perm_diff->{removed} ];
+	  }
+
+	  if (@g_changes) {
+	    my $msg = $ldap->modify($ldap_g->{dn}, \@g_changes);
+	    push @{$debug{$msg->{status}}}, $msg->{message}->{html} if ref $msg;
+	    $self->h_log('DEBUG: here we modify: ' . $ldap_g->{dn});
+	    $self->h_log(\@g_changes);
+	  }
+	}
+      }
+
+      # E. Re-query LDAP to refresh stash with updated state
+      $search_arg = { base => $ns_dn, scope => 'base' };
+      $search = $ldap->search( $search_arg );
+      $ns_e = $search->entry;
+
+      $search_arg = {
+		     base   => $self->{app}->{cfg}->{ldap}->{base}->{docker_registry_group},
+		     filter => 'cn=' . $ns_cn_val . '-*'
+		    };
+      $search = $ldap->search( $search_arg );
+
+      my (@refreshed_gr_cn, @refreshed_gr_descr, @refreshed_members, @refreshed_perms);
+      foreach my $e ($search->entries) {
+	push @refreshed_gr_cn,    $e->get_value('cn');
+	push @refreshed_gr_descr, $e->get_value('description') // '';
+	push @refreshed_members,  $e->get_value('ostiariusMemberName', asref => 1) // [];
+	push @refreshed_perms,    $e->get_value('ostiariusPermissions', asref => 1) // [];
+      }
+
+      $self->stash(
+		   debug             => \%debug,
+		   ns_cn             => $ns_cn_val,
+		   ns_description    => $ns_e->get_value('description') // '',
+		   gr_cn             => \@refreshed_gr_cn,
+		   gr_description    => \@refreshed_gr_descr,
+		   memberUid         => \@refreshed_members,
+		   permissions       => \@refreshed_perms,
+		   memberUid_orig    => \@memberUid_orig,
+		   permissions_orig  => [qw(pull push delete create)],
+		   repositories      => $ns_e->get_value('ostiariusRepository', asref => 1) // [],
+		   repositories_orig => $repositories_orig,
+		  );
+
+    }
+  }
+  $self->h_log(\%debug);
+  $self->render(template => 'protected/docker/registry/docker_registry_namespace');
+}
 
 1;

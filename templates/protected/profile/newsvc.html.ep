@@ -221,6 +221,7 @@
 	 const selectEl = field.querySelector('select.select2');
 	 if (selectEl && !selectEl.classList.contains('select2-hidden-accessible')) {
 	   $(selectEl).select2({
+	     theme: 'bootstrap-5',
 	     tags: true,
 	     tokenSeparators: [',', ' '],
 	     placeholder: "Select or add options",

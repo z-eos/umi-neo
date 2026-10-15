@@ -87,7 +87,7 @@
 	      <i class="fa-solid fa-fw fa-trash text-danger-emphasis"></i>
 	    </button>
 	  </span>
-	</div>	  
+	</div>
       % }
     </div>
   </div>
@@ -168,11 +168,15 @@
  $(document).ready(function() {
 
    $('.select2').select2({
+     theme: 'bootstrap-5',
+     width: '100%',
      placeholder: "Select or add options", // Optional placeholder text
      allowClear: true                 // Optional: allows the user to clear selection
    });
 
    $('#sargonHost').select2({
+     theme: 'bootstrap-5',
+     width: '100%',
      tags: true,                      // Enable tagging for custom user input
      tokenSeparators: [',', ' '],     // Allow comma and space as delimiters
      placeholder: "Select or add options", // Optional placeholder text
@@ -189,20 +193,20 @@
        viewMode: 'calendar',
        toolbarPlacement: 'top',
        components: {
-         calendar: true,
-         date: true,
-         month: true,
-         year: true,
-         decades: true,
-         clock: false,
-         hours: false,
-         minutes: false,
-         seconds: false
+	 calendar: true,
+	 date: true,
+	 month: true,
+	 year: true,
+	 decades: true,
+	 clock: false,
+	 hours: false,
+	 minutes: false,
+	 seconds: false
        },
        buttons: {
-         clear: true,
-         close: true,
-         today: true
+	 clear: true,
+	 close: true,
+	 today: true
        }
      },
      localization: {

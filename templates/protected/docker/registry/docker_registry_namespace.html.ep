@@ -1,0 +1,319 @@
+%# -*- mode: web; eval: (follow-mode) -*-
+
+% my $dn_to_modify_docker_registry_namespace = stash->{dn_to_modify_docker_registry_namespace};
+
+<h3 class="fw-bold p-5">
+  <i class="fa-brands fa-docker fa-lg me-3 text-muted"></i>
+  <%= defined $dn_to_modify_docker_registry_namespace ? 'Modify' : 'New' %> Docker Registry Namespace
+</h3>
+<hr>
+
+% my $repositories = stash->{repositories};
+
+%= form_for '/docker/registry/namespace' => {class => "form-control"} => (method => 'POST') => begin
+
+  % if ( defined $dn_to_modify_docker_registry_namespace ) {
+    %= hidden_field dn_to_modify_docker_registry_namespace => $dn_to_modify_docker_registry_namespace
+  % }
+
+  % param ns_cn => stash->{ns_cn} unless param 'ns_cn';
+  <div class="row mb-3">
+    %= label_for ns_cn => (class => 'col-sm-2 col-form-label text-end fw-bold text-uppercase') => begin
+      <i class="fa-solid fa-compass-drafting fa-lg"></i>
+    % end
+    <div class="col-sm-10">
+      % if ( defined $dn_to_modify_docker_registry_namespace ) {
+	%= text_field 'ns_cn', class => 'form-control', id => 'ns_cn', placeholder => 'Namespace name', readonly => 'readonly';
+      % } else {
+	%= text_field 'ns_cn', class => 'form-control', id => 'ns_cn', placeholder => 'Namespace name';
+      % }
+    </div>
+  </div>
+
+  % param ns_description => stash->{ns_description} unless param 'ns_description';
+  <div class="row mb-3">
+    %= label_for ns_description => (class => 'col-sm-2 col-form-label text-end fw-bold') => begin
+      <i class="fa-solid fa-fw fa-align-left fa-lg"></i>
+    % end
+    <div class="col-sm-10">
+      %= text_area 'ns_description', cols => 3, class => 'form-control', placeholder => 'Namespace description';
+    </div>
+  </div>
+
+  % param repository => stash->{repositories} unless param 'repositories';
+  <div class="row mb-3" title="repository name">
+    %= label_for repository => (class => 'col-sm-2 col-form-label text-end fw-bold text-uppercase') => begin
+      <i class="fa-solid fa-fw fa-code-branch fa-lg"></i>
+    % end
+    <div class="col-sm-10">
+      %= select_field repository => $repositories_orig, id => 'repository', class => 'form-select select2', multiple => 'multiple';
+    </div>
+  </div>
+
+  <hr>
+
+  <div class="row mb-3">
+    <div class="col-sm-2">
+      <div class="btn-group float-end" role="group">
+	<button type="button" class="btn btn-secondary btn-sm" id="cloneButton" title="add group">
+	  <i class="fa-solid fa-fw fa-circle-plus text-success-emphasis"></i>
+	</button>
+	<button type="button" class="btn btn-secondary btn-sm" id="deleteButton" title="delete last added group">
+	  <i class="fa-solid fa-fw fa-trash text-danger-emphasis"></i>
+	</button>
+      </div>
+    </div>
+    <div class="col-sm-8 fw-bold text-uppercase">Namespace Groups:</div>
+  </div>
+
+  % my $permissions = stash->{permissions};
+  % $permissions = [[]] if ! defined $permissions;
+  % my $permissions_orig = stash->{permissions_orig};
+
+  % my $memberUid = stash->{memberUid};
+  % my $memberUid_orig = stash->{memberUid_orig};
+  % $memberUid = [[]] if ! defined $memberUid;
+
+  % my $gr_cn = stash->{gr_cn};
+  % $gr_cn = [] if ! defined $gr_cn;
+  % my $gr_description = stash->{gr_description};
+  % $gr_description = [] if ! defined $gr_description;
+
+  % my ($opts_p, $opts_m, %s);
+  % for ( my $i = 0; $i < scalar @$permissions; $i++) {
+
+    % if ( h_is_empty_nested_arr($permissions) ) {
+      % $opts_p = $permissions_orig;
+      % $opts_m = $memberUid_orig;
+    % } else {
+      % %s = map { $_ => 1 } @{$permissions->[$i] || []};
+      % my @opts_p_arr = map { $s{$_} ? [ $_ => $_, selected => 'selected' ] : $_ } @$permissions_orig;
+      % $opts_p = \@opts_p_arr;
+
+      % %s = map { $_ => 1 } @{$memberUid->[$i] || []};
+      % my @opts_m_arr = map { $s{$_} ? [ $_ => $_, selected => 'selected' ] : $_ } @$memberUid_orig;
+      % $opts_m = \@opts_m_arr;
+    % }
+
+    <div class="group-block clone-section border bg-body-tertiary p-3 mb-3">
+      <div class="row mb-1">
+	%= label_for gr_cn => (class => 'col-sm-2 col-form-label text-end fw-bold text-uppercase') => begin
+	  <i class="fa-solid fa-fw fa-users-viewfinder fa-lg"></i>
+	%end
+	<div class="col-sm-10">
+	  % if ( defined $dn_to_modify_docker_registry_namespace ) {
+	    %= text_field "gr_cn[$i]", class => 'form-control', id => "gr_cn[$i]", placeholder => 'Group name', readonly => 'readonly', value => $gr_cn->[$i]
+	  % } else {
+	    %= text_field "gr_cn[$i]", class => 'form-control', id => "gr_cn[$i]", placeholder => 'Group name (format: "XXX-", where XXX is namespace name)', value => $gr_cn->[$i]
+	  % }
+	</div>
+      </div>
+
+      <div class="row mb-1">
+	%= label_for gr_description => (class => 'col-sm-2 col-form-label text-end fw-bold text-uppercase') => begin
+	  <i class="fa-solid fa-fw fa-align-left fa-lg"></i>
+	%end
+	<div class="col-sm-10">
+	  %= text_area "gr_description[$i]", cols => 3, class => 'form-control', id => "gr_description[$i]", placeholder => 'Group description', value => $gr_description->[$i]
+	</div>
+      </div>
+
+      <div class="row mb-1" title="permissions">
+	%= label_for permissions => (class => 'col-sm-2 col-form-label text-end fw-bold text-uppercase') => begin
+	  <i class="fa-solid fa-fw fa-arrows-turn-to-dots fa-lg"></i>
+	%end
+	<div class="col-sm-10">
+	  %= select_field "permissions[$i]" => $opts_p, id => "permissions[$i]", class => 'form-select select2-permissions', title => 'permissions', multiple => 'multiple';
+	</div>
+      </div>
+
+      <div class="row" title="members">
+	%= label_for memberUid => (class => 'col-sm-2 col-form-label text-end fw-bold text-uppercase') => begin
+	  <i class="fa-solid fa-fw fa-people-group fa-lg"></i>
+	%end
+	<div class="col-sm-10">
+	  %= select_field "memberUid[$i]" => $opts_m, id => "memberUid[$i]", class => 'form-select select2-members', title => 'members', multiple => 'multiple';
+	</div>
+      </div>
+    </div>
+
+    % undef $opts_p;
+    % undef $opts_m;
+  % }
+
+  <div id="clones-container" class="m-2 p-2"></div>
+
+  <!-- HIDDEN BLUEPRINT -->
+  <div class="d-none">
+    <div id="to-clone-meta" class="group-block border bg-body-tertiary p-3 mb-3">
+      <div class="row mb-1">
+	%= label_for cn => (class => 'col-sm-2 col-form-label text-end fw-bold text-uppercase') => begin
+	  <i class="fa-solid fa-fw fa-users-viewfinder fa-lg"></i>
+	%end
+	<div class="col-sm-10">
+	  %= text_field 'gr_cnMeta', class => 'form-control', placeholder => 'Group name', disabled => 'disabled'
+	</div>
+      </div>
+
+      <div class="row mb-1">
+	%= label_for gr_description => (class => 'col-sm-2 col-form-label text-end fw-bold text-uppercase') => begin
+	  <i class="fa-solid fa-fw fa-align-left fa-lg"></i>
+	%end
+	<div class="col-sm-10">
+	  %= text_area 'gr_descriptionMeta', cols => 3, class => 'form-control', placeholder => 'Short description', disabled => 'disabled'
+	</div>
+      </div>
+
+      <div class="row mb-1" title="permissions">
+	%= label_for permissions => (class => 'col-sm-2 col-form-label text-end fw-bold text-uppercase') => begin
+	  <i class="fa-solid fa-fw fa-arrows-turn-to-dots fa-lg"></i>
+	%end
+	<div class="col-sm-10">
+	  %= select_field 'permissionsMeta' => $permissions_orig, class => 'form-select', title => 'permissions', multiple => 'multiple', disabled => 'disabled'
+	</div>
+      </div>
+
+      <div class="row" title="members">
+	%= label_for memberUid => (class => 'col-sm-2 col-form-label text-end fw-bold text-uppercase') => begin
+	  <i class="fa-solid fa-fw fa-people-group fa-lg"></i>
+	%end
+	<div class="col-sm-10">
+	  %= select_field 'memberUidMeta' => $memberUid_orig, class => 'form-select', title => 'members', multiple => 'multiple', disabled => 'disabled'
+	</div>
+      </div>
+    </div>
+  </div>
+
+  %= submit_button 'Submit', class => 'btn btn-success font-weight-bold text-uppercase text-end mt-3'
+
+% end
+
+<pre class="mt-5 umi-text-tiny text-muted"><%= dumper stash->{'mojo.validation'}->{error} if %{stash->{'mojo.validation'}->{error}} %></pre>
+
+% if ( stash->{'mojo.validation'}->{error} && %{stash->{'mojo.validation'}->{error}} ) {
+  % h_log stash->{'mojo.validation'}->{error};
+  <script>
+   $(document).ready(function() {
+     % my $errors = stash->{'mojo.validation'}->{error};
+     % for my $k (keys %$errors) {
+       % my $v = $errors->{$k};
+       % my $msg = (scalar(@$v) == 1) ? $v->[0] : "is not $v->[0]: $v->[2]";
+     (function() {
+       const fieldKey = <%== Mojo::JSON::encode_json($k) %>;
+       const errorMsg = <%== Mojo::JSON::encode_json($msg) %>;
+
+       let $el = $(document.getElementById(fieldKey));
+
+       if (!$el.length) {
+	 $el = $('[name="' + fieldKey + '"]');
+       }
+
+       if (!$el.length) {
+	 $el = $('[name^="' + fieldKey + '"]').first();
+       }
+
+       if ($el.length) {
+	 $el.addClass('is-invalid');
+
+	 if ($el.hasClass('select2-hidden-accessible')) {
+	   const $s2Container = $el.next('.select2-container');
+	   $s2Container.addClass('is-invalid');
+	   $s2Container.after('<div class="invalid-feedback d-block font-monospace">' + errorMsg + '</div>');
+	 } else {
+	   $el.after('<div class="invalid-feedback font-monospace">' + errorMsg + '</div>');
+	 }
+       }
+     })();
+     % }
+   });
+  </script>
+% }
+
+<script src="/assets/js/umi-tool-modify.js"></script>
+
+<script>
+ $(document).ready(function() {
+
+   $('.select2').select2({
+     theme: 'bootstrap-5',
+     width: '100%',
+     tags: true,
+     tokenSeparators: [',', ' '],
+     placeholder: "Select or add repositories",
+     allowClear: true
+   });
+
+   $('.select2-permissions').select2({
+     theme: 'bootstrap-5',
+     width: '100%',
+     tags: true,
+     tokenSeparators: [',', ' '],
+     placeholder: "Select or add permissions",
+     allowClear: true
+   });
+
+   $('.select2-members').select2({
+     theme: 'bootstrap-5',
+     width: '100%',
+     tags: true,
+     tokenSeparators: [',', ' '],
+     placeholder: "Select or add members",
+     allowClear: true
+   });
+
+   $('#cloneButton').on('click', function () {
+     const elementIndex = $('.clone-section').length;
+     const $newClone = $('#to-clone-meta').clone().removeAttr('id').addClass('clone-section');
+
+     $newClone.find('[name="gr_cnMeta"]')
+	      .removeAttr('disabled')
+	      .attr('name', 'gr_cn[' + elementIndex + ']')
+	      .attr('id', 'gr_cn[' + elementIndex + ']');
+
+     $newClone.find('[name="gr_descriptionMeta"]')
+	      .removeAttr('disabled')
+	      .attr('name', 'gr_description[' + elementIndex + ']')
+	      .attr('id', 'gr_description[' + elementIndex + ']');
+
+     const $permSelect = $newClone.find('[name="permissionsMeta"]')
+				  .removeAttr('disabled')
+				  .attr('name', 'permissions[' + elementIndex + ']')
+				  .attr('id', 'permissions[' + elementIndex + ']')
+				  .addClass('select2-permissions');
+
+     const $memberSelect = $newClone.find('[name="memberUidMeta"]')
+				    .removeAttr('disabled')
+				    .attr('name', 'memberUid[' + elementIndex + ']')
+				    .attr('id', 'memberUid[' + elementIndex + ']')
+				    .addClass('select2-members'); // Correct class for members dropdown
+
+     $newClone.insertBefore('#clones-container');
+
+     $permSelect.select2({
+       theme: 'bootstrap-5',
+       width: '100%',
+       tags: true,
+       tokenSeparators: [',', ' '],
+       placeholder: "Select or add permissions",
+       allowClear: true
+     });
+
+     $memberSelect.select2({
+       theme: 'bootstrap-5',
+       width: '100%',
+       tags: true,
+       tokenSeparators: [',', ' '],
+       placeholder: "Select or add members",
+       allowClear: true
+     });
+   });
+
+   $('#deleteButton').on('click', function () {
+     const $sections = $('.clone-section');
+     if ($sections.length > 1) {
+       $sections.last().remove();
+     }
+   });
+
+ });
+</script>

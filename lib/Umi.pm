@@ -32,7 +32,7 @@ use Data::Printer {
 		}],
   };
 
-our $VERSION = '0.10.0';
+our $VERSION = '0.11.0';
 
 has 'cfg' => sub { {} };
 
@@ -412,27 +412,31 @@ sub _startup_routes ($self) {
   $protected_root
     ->get( '/docker/registry/namespace/new')
     ->requires(is_role => ['admin,coadmin', {cmp => 'or'}])
-    ->to('protected#docker_registry_namespace_new');
+    ->to('protected#docker_registry_namespace');
   $protected_root
     ->post('/docker/registry/namespace/new')
     ->requires(is_role => ['admin,coadmin', {cmp => 'or'}])
-    ->to('protected#docker_registry_namespace_new');
+    ->to('protected#docker_registry_namespace');
+  $protected_root
+    ->get( '/docker/registry/namespace/modify/:mod_cn' => [ mod_cn => qr/[^\/]+/ ])
+    ->requires(is_role => ['admin,coadmin', {cmp => 'or'}])
+    ->to('protected#docker_registry_namespace', mod_cn => '');
 
   $protected_root
     ->get( '/docker/registry/group/new')
     ->requires(is_role => ['admin,coadmin', {cmp => 'or'}])
-    ->to('protected#docker_registry_group_new');
+    ->to('protected#docker_registry_group');
   $protected_root
     ->post('/docker/registry/group/new')
     ->requires(is_role => ['admin,coadmin', {cmp => 'or'}])
-    ->to('protected#docker_registry_group_new');
+    ->to('protected#docker_registry_group');
   $protected_root
-    ->get( '/docker/registry/group/modify/:cn' => [ cn => qr/[^\/]+/ ])
-    ->requires(is_role => ['admin,coadmin,hr', {cmp => 'or'}])
-    ->to('protected#docker_registry_group_modify', proj => '');
+    ->get( '/docker/registry/group/modify/:mod_cn' => [ mod_cn => qr/[^\/]+/ ])
+    ->requires(is_role => ['admin,coadmin', {cmp => 'or'}])
+    ->to('protected#docker_registry_group', mod_cn => '');
   $protected_root
     ->post('/docker/registry/group/modify')
-    ->requires(is_role => ['admin,coadmin,hr', {cmp => 'or'}])
+    ->requires(is_role => ['admin,coadmin', {cmp => 'or'}])
     ->to('protected#docker_registry_group_modify');
 
   ## SARGON

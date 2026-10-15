@@ -209,7 +209,7 @@
 	  <ul class="nav flex-column collapse show ms-3 p-0" id="submenuObjects" style="--bs-nav-link-padding-y: .2rem;">
 	    <li class="nav-item">
 	      <a class="nav-link btn btn-link text-secondary text-start text-lowercase" href="/profile/new" tabindex="2">
-		<i class="fa-solid fa-fw fa-user-plus fa-sm me-1"></i> User
+		<i class="fa-solid fa-fw fa-user-plus fa-sm me-1"></i> User<%== h_rest_mark %>
 	      </a>
 	    </li>
 	    % if ( app->{cfg}->{ui}->{sidebar}->{new}->{project} == 1 ) {
@@ -237,18 +237,18 @@
 		       role="button"
 		       aria-expanded="false"
 		    >
-		      <i class="fa-brands fa-fw fa-docker fa-sm me-1"></i> Docker Registry
+		      <i class="fa-brands fa-fw fa-docker fa-sm me-1"></i> Registry
 		    </a>
 
 		    <ul class="dropdown-menu px-2">
 		      <li class="nav-item">
 			<a class="nav-link btn btn-link text-secondary text-start" href="/docker/registry/namespace/new">
-			  <i class="fa-solid fa-fw fa-object-ungroup"></i> namespace
+			  <i class="fa-solid fa-fw fa-object-ungroup"></i> namespace<%== h_rest_mark %>
 			</a>
 		      </li>
 		      <li class="nav-item">
 			<a class="nav-link btn btn-link text-secondary text-start" href="/docker/registry/group/new">
-			  <i class="fa-solid fa-fw fa-object-group"></i> group
+			  <i class="fa-solid fa-fw fa-object-group"></i> group<%== h_rest_mark %>
 			</a>
 		      </li>
 		    </ul>

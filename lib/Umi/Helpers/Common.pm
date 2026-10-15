@@ -44,29 +44,15 @@ sub register {
 
   my $ldap = $c->h_auth_basic;
 
-Performs HTTP Basic Authentication and returns an authenticated C<Umi::Ldap>
-object on success.
+Performs HTTP Basic Authentication using credentials from the request's C<Authorization> header.
 
-This helper inspects the C<Authorization> header in the incoming request,
-expecting it to contain HTTP Basic credentials. If the credentials are
-missing or invalid, it sets a C<WWW-Authenticate> response header and halts
-the request with a 401 Unauthorized status.
+=over 4
 
-On success, it constructs and returns an instance of L<Umi::Ldap>,
-initialized with the provided username and password. The LDAP connection
-must succeed (i.e., be a L<Net::LDAP> object) or authentication is
-considered to have failed.
+=item B<Inputs>: None directly passed; inspects C<$c-E<gt>req-E<gt>headers-E<gt>authorization>.
 
-B<Returns>: C<Umi::Ldap> object on success, or halts request with a 401
-response on failure.
+=item B<Returns>: L<Umi::Ldap> object on successful authentication; otherwise sets status 401, issues a C<WWW-Authenticate> header, and returns C<undef>.
 
-B<Example>:
-
-  sub some_action {
-    my $self = shift;
-    my $ldap = $self->h_auth_basic or return;
-    ...
-  }
+=back
 
 =cut
 
@@ -100,10 +86,50 @@ B<Example>:
 		  return $ldap;
 		});
 
+=head2 header_form_subsearch_button
+
+  my $label = $c->header_form_subsearch_button($text);
+
+Formats subsearch button text.
+
+=over 4
+
+=item B<Inputs>: C<$text> (String) - Button text label.
+
+=item B<Returns>: String - Uppercased text string.
+
+=back
+
+=cut
+
   $app->helper(		 header_form_subsearch_button => sub {
 			   my ($self, $text) = @_;
 			   return uc($text);
 			 });
+
+=head2 h_ldap_err
+
+  my $err_str = $c->h_ldap_err($message, $search_arg);
+
+Formats LDAP search error responses into a human-readable diagnostic string.
+
+=over 4
+
+=item B<Inputs>:
+
+=over 4
+
+=item * C<$message> (L<Net::LDAP::Message>) - LDAP response message object.
+
+=item * C<$search_arg> (HashRef) - LDAP search options containing C<base>, C<filter>, and optional C<attrs>.
+
+=back
+
+=item B<Returns>: String - Formatted diagnostic error block.
+
+=back
+
+=cut
 
   $app->helper( h_ldap_err => sub {
 		  my ($self, $message, $search_arg) = @_;
@@ -124,11 +150,17 @@ attrs: %s\n",
 
 =head2 h_pad_base64
 
-ensures a given Base64-encoded string is correctly padded by appending the
-necessary C<=> characters.
+  my $padded = $c->h_pad_base64($str);
 
-  say $c->h_pad_base64('YWJjZA');   # Outputs 'YWJjZA=='
-  say $c->h_pad_base64('dGVzdA');   # Outputs 'dGVzdA=='
+Ensures a Base64-encoded string is properly padded with trailing C<=> characters.
+
+=over 4
+
+=item B<Inputs>: C<$to_pad> (String) - Base64 string.
+
+=item B<Returns>: String - Valid padded Base64 string.
+
+=back
 
 =cut
 
@@ -142,9 +174,17 @@ necessary C<=> characters.
 
 =head2 h_is_ascii
 
-checks whether the argument is ASCII
+  my $bool = $c->h_is_ascii($string);
 
-returns 0 if it is and 1 if not
+Determines whether a given string contains non-ASCII characters.
+
+=over 4
+
+=item B<Inputs>: C<$arg> (String) - Input text.
+
+=item B<Returns>: Integer - C<1> if non-ASCII characters are present; C<0> if completely ASCII or empty.
+
+=back
 
 =cut
 
@@ -155,18 +195,27 @@ returns 0 if it is and 1 if not
 
 =head2 h_lrtrim
 
-remove white space/s from both ends of each string
+  my $trimmed = $c->h_lrtrim({ str => $dn_str, delim => ',', tosplit => 1 });
 
-if string is "delim" delimited, then white space/s could be removed
-before and after the delimiter (in most cases str is DN or RDN)
+Trims leading and trailing whitespace from a string or from each element of a delimited string (such as a DN or RDN).
 
-=head3 EXAMPLE
+=over 4
 
-    in: `  uid=abc ,  ou=ABC  ,dc=DDD '
-    ou: `uid=abc,ou=ABC,dc=DDD'
+=item B<Inputs>: C<$args> (HashRef)
 
-    in: `  abcABCDDD '
-    ou: `abcABCDDD'
+=over 4
+
+=item * C<str> (String, Required) - Target string.
+
+=item * C<delim> (String, Optional) - Delimiter character (Default: C<,>).
+
+=item * C<tosplit> (Boolean, Optional) - If true, splits string by C<delim> and trims each segment individually.
+
+=back
+
+=item B<Returns>: String - Trimmed output string.
+
+=back
 
 =cut
 
@@ -186,17 +235,19 @@ before and after the delimiter (in most cases str is DN or RDN)
 		  return $arg->{res};
 		});
 
-
-
 =head2 h_csv_to_arr
 
-  my $arr_ref = $c->h_csv_to_arr($csv_string);
+  my $array_ref = $c->h_csv_to_arr($csv_string);
 
-Splits a comma-separated string into an array reference, trimming leading and trailing whitespace from each resulting element.
+Splits a comma-separated string into an array reference of trimmed strings.
 
-If the string does not contain a comma, a single-element array reference is returned with the trimmed input string.
+=over 4
 
-Returns: array reference
+=item B<Inputs>: C<$csv> (String) - Comma-separated value string.
+
+=item B<Returns>: ArrayRef[String] - Array reference of whitespace-trimmed values.
+
+=back
 
 =cut
 
@@ -205,10 +256,19 @@ $app->helper(h_csv_to_arr => sub {
   return [ map { s/^\s+|\s+$//gr } split /,/, $csv ];
 });
 
-
 =head2 h_trim_leading_newlines
 
-Removes all leading newline characters (`\n`, optionally preceded by `\r`) from the beginning of the input string.
+  my $clean = $c->h_trim_leading_newlines($text);
+
+Strips leading newline sequences (C<\n>, C<\r\n>) from the input string.
+
+=over 4
+
+=item B<Inputs>: C<$text> (String) - Input text string.
+
+=item B<Returns>: String (or C<undef> if input is undefined).
+
+=back
 
 =cut
 
@@ -221,10 +281,17 @@ Removes all leading newline characters (`\n`, optionally preceded by `\r`) from 
 
 =head2 h_compact
 
-removes empty string values from an array or a hash by modifying the data
-structure in place
+  $c->h_compact(\@array_or_hash);
 
-returns compacted array or hash
+Removes empty string or C<undef> values from an array or hash in-place.
+
+=over 4
+
+=item B<Inputs>: C<$target> (ArrayRef|HashRef) - Target data structure.
+
+=item B<Returns>: ArrayRef|HashRef - The modified reference.
+
+=back
 
 =cut
 
@@ -245,20 +312,17 @@ returns compacted array or hash
 
 =head2 h_is_meaningful_arrayref
 
-returns true if its single argument is:
+  my $bool = $c->h_is_meaningful_arrayref($aref);
 
-    a reference to an array,
-    not an empty array, and
-    not an array containing just the empty string
+Checks if the given reference is an array reference containing non-empty data.
 
-    EXAMPLES:
-    Case	Returns
-    -------------------
-    undef	false
-    []		false
-    [""]	false
-    ["foo"]	true
-    ["", "bar"]	true
+=over 4
+
+=item B<Inputs>: C<$aref> (Any) - Variable to test.
+
+=item B<Returns>: Integer - C<1> if valid array reference with non-empty contents; C<0> otherwise.
+
+=back
 
 =cut
 
@@ -272,9 +336,17 @@ returns true if its single argument is:
 
 =head2 h_is_ip_pair
 
-checks whether the argument is a space delimited pair of ip addresses
+  my $bool = $c->h_is_ip_pair($str);
 
-returns 1 if it is and 0 if not
+Validates whether the argument is a space-separated pair of IPv4 addresses.
+
+=over 4
+
+=item B<Inputs>: C<$arg> (String) - String to validate.
+
+=item B<Returns>: Integer - C<1> if matching IP pair pattern; C<0> otherwise.
+
+=back
 
 =cut
 
@@ -285,11 +357,17 @@ returns 1 if it is and 0 if not
 
 =head2 h_telephonenumber
 
-checks whether the argument is a comma delimited telephone numbers in
-international notation
+  my $res = $c->h_telephonenumber($phone_csv_str);
 
-returns hash of two elements: a ref to an array of numbers parsed (empty on success)
-and string of errors (empty on success)
+Parses, validates, and normalizes international telephone numbers provided as a comma-separated list.
+
+=over 4
+
+=item B<Inputs>: C<$str> (String) - Comma-separated list of phone numbers.
+
+=item B<Returns>: HashRef - C<{ num =E<gt> \@normalized_numbers, err =E<gt> $error_string }>
+
+=back
 
 =cut
 
@@ -320,12 +398,19 @@ and string of errors (empty on success)
 		  }
 		});
 
-
 =head2 h_is_ip
 
-checks whether the argument is ip address
+  my $bool = $c->h_is_ip($ip_str);
 
-returns 1 if it is and 0 if not
+Validates whether a string is a valid IPv4 address.
+
+=over 4
+
+=item B<Inputs>: C<$arg> (String) - IP address string.
+
+=item B<Returns>: Integer - C<1> if valid IPv4; C<0> otherwise.
+
+=back
 
 =cut
 
@@ -334,11 +419,19 @@ returns 1 if it is and 0 if not
 		  return (($arg // '') ne '' && $arg =~ /^$re->{ip}$/) ? 1 : 0;
 		});
 
-=head2 ipam_dec2ip
+=head2 h_ipam_dec2ip
 
-decimal IP to a dotted IP converter
+  my $dotted_ip = $c->h_ipam_dec2ip($integer_ip);
 
-stolen from http://ddiguru.com/blog/25-ip-address-conversions-in-perl
+Converts a 32-bit unsigned integer IP address into standard dotted-quad format.
+
+=over 4
+
+=item B<Inputs>: C<$arg> (Integer) - Integer representation of an IP address.
+
+=item B<Returns>: String - Dotted-quad IPv4 address string (e.g., C<"192.168.1.1">).
+
+=back
 
 =cut
 
@@ -349,9 +442,17 @@ stolen from http://ddiguru.com/blog/25-ip-address-conversions-in-perl
 
 =head2 h_ipam_ip2dec
 
-dotted IP to a decimal IP converter
+  my $integer_ip = $c->h_ipam_ip2dec($dotted_ip);
 
-stolen from http://ddiguru.com/blog/25-ip-address-conversions-in-perl
+Converts a dotted-quad IPv4 address string into a 32-bit unsigned integer.
+
+=over 4
+
+=item B<Inputs>: C<$arg> (String, Optional) - Dotted-quad IPv4 string (Default: C<"0.0.0.0">).
+
+=item B<Returns>: Integer - 32-bit unsigned integer value.
+
+=back
 
 =cut
 
@@ -361,6 +462,22 @@ stolen from http://ddiguru.com/blog/25-ip-address-conversions-in-perl
 		  return unpack N => pack 'C4' => split /\./ => $arg;
 		});
 
+=head2 h_ipam_msk_ip2dec
+
+  my $prefix_len = $c->h_ipam_msk_ip2dec($subnet_mask_str);
+
+Calculates the CIDR prefix length (number of set bits) from a dotted-quad subnet mask string.
+
+=over 4
+
+=item B<Inputs>: C<$arg> (String, Optional) - Dotted-quad subnet mask (Default: C<"0.0.0.0">).
+
+=item B<Returns>: Integer - Count of set bits (e.g., C for C<"255.255.255.0">).
+
+=back
+
+=cut
+
   $app->helper( h_ipam_msk_ip2dec => sub {
 		  my ($self, $arg) = @_;
 		  $arg //= '0.0.0.0';
@@ -369,7 +486,17 @@ stolen from http://ddiguru.com/blog/25-ip-address-conversions-in-perl
 
 =head2 h_get_rdn
 
-get RDN (name of the outmost left attribute) of the given DN
+  my $rdn_attr = $c->h_get_rdn($dn);
+
+Extracts the attribute name of the outermost left RDN from a Distinguished Name (DN).
+
+=over 4
+
+=item B<Inputs>: C<$dn> (String) - LDAP DN string (e.g., C<"uid=jdoe,ou=People,dc=example,dc=com">).
+
+=item B<Returns>: String - Leftmost attribute name (e.g., C<"uid">).
+
+=back
 
 =cut
 
@@ -380,7 +507,17 @@ get RDN (name of the outmost left attribute) of the given DN
 
 =head2 h_get_rdn_val
 
-get RDN (outmost left attribute) value of the given DN
+  my $rdn_val = $c->h_get_rdn_val($dn);
+
+Extracts the attribute value of the outermost left RDN from a Distinguished Name (DN).
+
+=over 4
+
+=item B<Inputs>: C<$dn> (String) - LDAP DN string (e.g., C<"uid=jdoe,ou=People,dc=example,dc=com">).
+
+=item B<Returns>: String - Leftmost RDN value (e.g., C<"jdoe">).
+
+=back
 
 =cut
 
@@ -391,27 +528,23 @@ get RDN (outmost left attribute) value of the given DN
 
 =head2 h_macnorm
 
-MAC address field value normalizator.
+  my $res = $c->h_macnorm({ mac => '01:23:45:67:89:AB', dlm => '-' });
 
-The standard (IEEE 802) format for printing MAC-48 addresses in
-human-friendly form is six groups of two hexadecimal digits, separated by
-hyphens (-) or colons (:), in transmission order (e.g. 01-23-45-67-89-ab or
-01:23:45:67:89:ab ) is casted to the twelve hexadecimal digits without
-delimiter.
+Normalizes various MAC address formats (MAC-48, Cisco, bare hex) into bare hex or delimited form.
 
-For the examples above it will look: 0123456789ab
+=over 4
 
-=over
+=item B<Inputs>: C<$args> (HashRef)
 
-=item mac
+=over 4
 
-MAC address to process
+=item * C<mac> (String) - Input MAC address string.
 
-=item dlm
+=item * C<dlm> (String, Optional) - Delimiter character (C<:> or C<->) for formatted output.
 
-I<delimiter>, if defined (allowed characters: `-` and `:`), then returned
-mac is normalyzed to human-friendly form as six groups of two hexadecimal
-digits, separated by this I<delimiter>
+=back
+
+=item B<Returns>: HashRef - C<{ mac =E<gt> $normalized_mac, error =E<gt> $err_msg_or_undef }>
 
 =back
 
@@ -445,7 +578,17 @@ digits, separated by this I<delimiter>
 
 =head2 h_gen_id
 
-get random id of length N passed as input, default is 8
+  my $id = $c->h_gen_id($length);
+
+Generates a random alphanumeric identifier string.
+
+=over 4
+
+=item B<Inputs>: C<$len> (Integer, Optional) - Desired length (Default: C<8>).
+
+=item B<Returns>: String - Random alphanumeric string.
+
+=back
 
 =cut
 
@@ -458,16 +601,25 @@ get random id of length N passed as input, default is 8
 
 =head2 h_decode_text
 
-Attempt to decode the given C<$text> from UTF-8.
+  my $decoded = $c->h_decode_text($text, $alt);
 
-If decoding succeeds, the decoded string is returned.
+Decodes byte text to UTF-8 Perl characters.
 
-If decoding fails or C<$text> is undefined, the optional C<$alt> is returned instead.
+=over 4
 
-EXAMPLE:
+=item B<Inputs>:
 
-  $decoded = $c->h_decode_text($text);
-  $decoded = $c->h_decode_text($text, $alt);
+=over 4
+
+=item * C<$text> (String) - Encoded byte string.
+
+=item * C<$alt> (String, Optional) - Fallback value if C<$text> is undefined.
+
+=back
+
+=item B<Returns>: String - UTF-8 character string or C<$alt>.
+
+=back
 
 =cut
 
@@ -509,10 +661,17 @@ EXAMPLE:
 
 =head2 h_translit
 
-simple transliteration to ASCII with normalization to [a-zA-Z0-9.-_]
+  my $ascii_clean = $c->h_translit($text);
 
-constant TRANSLATE includes comprehensive character mappings for major
-European languages
+Transliterates non-ASCII European and Cyrillic characters into Latin equivalents and normalizes string to ASCII allowed set.
+
+=over 4
+
+=item B<Inputs>: C<$in> (String) - UTF-8 text string.
+
+=item B<Returns>: String - Sanitized ASCII string matching C<[a-zA-Z0-9.-_ ]>.
+
+=back
 
 =cut
 
@@ -543,15 +702,17 @@ European languages
 
 =head2 h_maybe_percent_decode_utf8
 
-Detects whether a string contains percent-encoded UTF-8 byte sequences
-(e.g., "Bj%C3%B8rn"), and if so, decodes it into a proper UTF-8 Perl string.
+  my $decoded = $c->h_maybe_percent_decode_utf8($url_encoded_str);
 
-Returns a scalar string, decoded as UTF-8 if appropriate.
+Detects and decodes percent-encoded UTF-8 URL sequences if present.
 
-=head3 Example
+=over 4
 
-  my $s = "Bj%C3%B8rn";
-  say maybe_percent_decode_utf8($s);  # prints "Bjørn"
+=item B<Inputs>: C<$s> (String) - Input string.
+
+=item B<Returns>: String - URI-decoded UTF-8 string, or original string if no percent encoding detected.
+
+=back
 
 =cut
 
@@ -572,12 +733,29 @@ Returns a scalar string, decoded as UTF-8 if appropriate.
 
 		});
 
+=head2 h_as_struct_decode
 
-=head1 h_as_struct_decode
+  my $val = $c->h_as_struct_decode($obj_hash, $attr, $na);
 
-decode attribute value if it is bytes and not characters
+Safely extracts and UTF-8 decodes the first scalar value of an LDAP attribute from an C<as_struct> result hash.
 
-$obj_hash is ldap search->as_struct hash
+=over 4
+
+=item B<Inputs>:
+
+=over 4
+
+=item * C<$obj_hash> (HashRef) - Single entry hash reference from LDAP C<as_struct>.
+
+=item * C<$attr> (String) - Target LDAP attribute name.
+
+=item * C<$na> (String, Optional) - Fallback string if attribute is missing (Default: HTML C<"unavailable"> tag).
+
+=back
+
+=item B<Returns>: String - Decoded value string or fallback HTML.
+
+=back
 
 =cut
 
@@ -595,15 +773,31 @@ $obj_hash is ldap search->as_struct hash
 		  return $res;
 	       });
 
-
 =head2 h_qrcode
 
-QR CODE generator
+  my $qr_res = $c->h_qrcode({ toqr => 'text', ecc => 'M', mod => 2, html => 1 });
 
-    toqr: text to generate QR code against
-    ecc:  Ecc mode. M, L, H or Q (Default = M)
-    mod:  size of modules (barcode unit) (Default = 1).
-    html: 1 to genegate HTML do display QR code image
+Generates a Base64-encoded PNG QR code image.
+
+=over 4
+
+=item B<Inputs>: C<$args> (HashRef)
+
+=over 4
+
+=item * C<toqr> (String, Required) - Text content to encode into QR code.
+
+=item * C<ecc> (String, Optional) - Error correction level: C<L>, C<M>, C<Q>, C<H> (Default: C<M>).
+
+=item * C<mod> (Integer, Optional) - Module size in pixels (Default: C<1>).
+
+=item * C<html> (Integer, Optional) - If C<1>, includes formatted C<E<lt>imgE<gt>> tag markup (Default: C<1>).
+
+=back
+
+=item B<Returns>: HashRef - C<{ qr =E<gt> $base64_png, html =E<gt> $html_snippet, error =E<gt> $err_msg }>.
+
+=back
 
 =cut
 
@@ -644,7 +838,17 @@ QR CODE generator
 
 =head2 h_img_info
 
-returns hash ref `{ width => XX, height => YY }` of the image on input
+  my $dim = $c->h_img_info($image_blob);
+
+Inspects raw image binary data and returns image dimensions.
+
+=over 4
+
+=item B<Inputs>: C<$image> (Scalar/Blob) - Binary image content.
+
+=item B<Returns>: HashRef - C<{ width =E<gt> $w, height =E<gt> $h }>
+
+=back
 
 =cut
 
@@ -657,9 +861,25 @@ returns hash ref `{ width => XX, height => YY }` of the image on input
 
 =head2 h_img_resize
 
-resize image by default limits in config file: ldap->defaults->attr->jpegPhoto
+  my $resized_blob = $c->h_img_resize($img_blob, $byte_size);
 
-return either image resized or an original
+Resizes an image maintaining aspect ratio according to app config limits (C<jpegPhoto> max size and side).
+
+=over 4
+
+=item B<Inputs>:
+
+=over 4
+
+=item * C<$img> (Scalar/Blob) - Original binary image data.
+
+=item * C<$size> (Integer) - Original file size in bytes.
+
+=back
+
+=item B<Returns>: Scalar/Blob - Resized JPEG binary data or original image if no resizing required.
+
+=back
 
 =cut
 
@@ -701,13 +921,29 @@ return either image resized or an original
 
 		});
 
-=head2 keygen_ssh
+=head2 h_keygen_ssh
 
-ssh key generator
+  my $res = $c->h_keygen_ssh({ key_type => 'Ed25519', bits => 2048, name => { email => 'user@domain' } });
 
-default key_type is RSA, default bits 2048
+Generates an SSH keypair using standard C<ssh-keygen(1)>.
 
-wrapper for ssh-keygen(1)
+=over 4
+
+=item B<Inputs>: C<$args> (HashRef)
+
+=over 4
+
+=item * C<key_type> (String, Optional) - C<RSA>, C<Ed25519>, C<ECDSA256>, etc. (Default: C<Ed25519>).
+
+=item * C<bits> (Integer, Optional) - Bit size for RSA key types (Default: C<2048>).
+
+=item * C<name> (HashRef, Optional) - Comment options including C<email>.
+
+=back
+
+=item B<Returns>: HashRef - C<{ private =E<gt> $pvt_key, public =E<gt> $pub_key, date =E<gt> $timestamp, error =E<gt> \@errors }>
+
+=back
 
 =cut
 
@@ -817,15 +1053,35 @@ wrapper for ssh-keygen(1)
 		  return $res;
 		});
 
-=head2 keygen_gpg
+=head2 h_keygen_gpg
 
-gpg key generator
+  my $res = $c->h_keygen_gpg({ key_type => 'eddsa', bits => 4096, send_key => 0 });
 
-default key_type is , default bits 2048
+Generates or imports a GPG keypair using system C<gpg(1)>.
 
-wrapper for gpg(1)
+=over 4
 
-this method is supposed to work with the only one single key in keyring
+=item B<Inputs>: C<$args> (HashRef)
+
+=over 4
+
+=item * C<key_type> (String, Optional) - C<eddsa> or C<RSA> (Default: C<eddsa>).
+
+=item * C<bits> (Integer, Optional) - Bit length for RSA (Default: C<4096>).
+
+=item * C<import> (HashRef|String, Optional) - Key text or file structure to import existing key instead of generating.
+
+=item * C<send_key> (Boolean, Optional) - Send generated key to LDAP keyserver (Default: C<0>).
+
+=item * C<name> (HashRef, Optional) - C<{ real =E<gt> $name, email =E<gt> $email }>.
+
+=item * C<to_enc> (HashRef, Optional) - Key/value pairs of strings to encrypt with the new key.
+
+=back
+
+=item B<Returns>: HashRef - C<{ fingerprint =E<gt> $hex, public =E<gt> $armored, private =E<gt> $armored, send_key =E<gt> \%ldap_pgp_attr_hash, enc =E<gt> \%enc_results, debug =E<gt> \%debug_msgs }>
+
+=back
 
 =cut
 
@@ -1357,6 +1613,34 @@ END_INPUT
 # noAI #		  return $res;
 # noAI #		});
 
+=head2 h_pwdgen
+
+  my $pwd_res = $c->h_pwdgen(\%params);
+
+Generates or validates passwords using C<Crypt::HSXKPasswd> and produces C<{SSHA}> hashes for OpenLDAP C<userPassword> fields.
+
+=over 4
+
+=item B<Inputs>: C<$par> (HashRef)
+
+=over 4
+
+=item * C<pwd_alg> (String, Optional) - Preset class name (e.g. C<alg-web32>).
+
+=item * C<pwd_num> (Integer, Optional) - Number of passwords.
+
+=item * C<pwd_vrf> / C<pwd_userdefined> (String, Optional) - Plaintext password for direct hashing instead of random generation.
+
+=item * C<xk_*> (Various, Optional) - C<Crypt::HSXKPasswd> overrides (e.g. C<xk_num_words>).
+
+=back
+
+=item B<Returns>: HashRef - C<{ clear =E<gt> $plain, ssha =E<gt> '{SSHA}...', error =E<gt> $err, stats =E<gt> \%stats, status =E<gt> $status }>
+
+=back
+
+=cut
+
   # PWDGEN
   # expected at least xk_num_words
   $app->helper( h_pwdgen => sub {
@@ -1578,27 +1862,25 @@ END_INPUT
 
 =head2 h_hash_diff
 
-    1. It takes two hash references as input: the original hash and
-    the modified hash.
+  my $diff = $c->h_hash_diff($orig_hashref, $mod_hashref);
 
-    2. It iterates through the keys of the original hash to find
-    removed and changed keys.
+Compares two hash references to find added, removed, changed, and unchanged key-value pairs.
 
-    3. It then iterates through the keys of the modified hash to
-    find added keys.
+=over 4
 
-    4. For changed keys, it stores both the old and new values.
+=item B<Inputs>:
 
-    5. It returns a hash reference containing four hashes: removed,
-    added, changed, and unchanged keys and their values.
+=over 4
 
-    [
-	[0] "add",
-	[1] [
-		[0] "roomNumber",
-		[1] 2
-	    ]
-    ]
+=item * C<$original_ref> (HashRef) - Original base hash.
+
+=item * C<$modified_ref> (HashRef) - Modified target hash.
+
+=back
+
+=item B<Returns>: HashRef - C<{ removed =E<gt> \%removed, added =E<gt> \%added, changed =E<gt> \%changed, unchanged =E<gt> \%unchanged }>
+
+=back
 
 =cut
 
@@ -1666,22 +1948,25 @@ END_INPUT
 
 =head2 h_array_diff
 
-    1. It takes two array references as input: the original array and
-    the modified array.
+  my $diff = $c->h_array_diff($orig_aref, $mod_aref);
 
-    2. It creates hash maps of both arrays for efficient lookups.
+Compares two array references to find added, removed, and unchanged elements.
 
-    3. It finds removed elements by checking which elements from the
-    original array don't exist in the modified array.
+=over 4
 
-    4. It finds added elements by checking which elements from the
-    modified array don't exist in the original array.
+=item B<Inputs>:
 
-    5. It finds unchanged elements by checking which elements from the
-    original array still exist in the modified array.
+=over 4
 
-    6. It returns a hash reference containing three arrays: removed,
-    added, and unchanged elements.
+=item * C<$original_ref> (ArrayRef) - Original base array.
+
+=item * C<$modified_ref> (ArrayRef) - Modified target array.
+
+=back
+
+=item B<Returns>: HashRef - C<{ removed =E<gt> \@removed, added =E<gt> \@added, unchanged =E<gt> \@unchanged }>
+
+=back
 
 =cut
 
@@ -1704,9 +1989,27 @@ END_INPUT
 
 =head2 h_file2var
 
-reading file to a string or array
+  my $content = $c->h_file2var($file_path, $msg, $return_as_arr);
 
-TODO: error handling
+Reads a file's entire content into a scalar string or an array of chomp'd lines.
+
+=over 4
+
+=item B<Inputs>:
+
+=over 4
+
+=item * C<$file> (String) - Path to file.
+
+=item * C<$final_message> (Any, Unused) - Reserved parameter.
+
+=item * C<$return_as_arr> (Boolean, Optional) - If C<1>, returns array reference of lines instead of scalar.
+
+=back
+
+=item B<Returns>: String|ArrayRef[String] - File content scalar or array reference of lines.
+
+=back
 
 =cut
 
@@ -1734,11 +2037,27 @@ TODO: error handling
 
 =head2 h_cert_info
 
-data taken, generally, from
+  my $info = $c->h_cert_info({ cert => $cert_binary, attr => 'userCertificate;binary', ts => "%Y-%m-%d" });
 
-    openssl x509 -text -noout -in target.crt
-    openssl x509 -noout -subject -startdate -enddate -issuer -ext authorityKeyIdentifier -in target.crt
-    openssl crl  -text -noout -in crl.der -inform der
+Parses X.509 certificates or CRLs and returns a hash of certificate fields.
+
+=over 4
+
+=item B<Inputs>: C<$args> (HashRef)
+
+=over 4
+
+=item * C<cert> / C<crl> (Binary, Required) - Certificate or CRL raw data.
+
+=item * C<attr> (String, Optional) - Attribute type: C<userCertificate;binary>, C<cACertificate;binary>, or C<certificateRevocationList;binary> (Default: C<userCertificate;binary>).
+
+=item * C<ts> (String, Optional) - C<strftime> date format string (Default: C<"%a %b %e %H:%M:%S %Y">).
+
+=back
+
+=item B<Returns>: HashRef - Parsed subject, issuer, serial numbers, dates, or error structure C<{ error =E<gt> $msg }>.
+
+=back
 
 =cut
 
@@ -1803,22 +2122,17 @@ data taken, generally, from
 
 =head2 h_cert_serial
 
-Documentation:
-Normalizes certificate serial numbers returned
-by Crypt::X509 (e.g. ->serial, ->authority_serial).
+  my $colon_hex = $c->h_cert_serial($serial_val);
 
-Crypt::X509 sometimes returns:
-  - a decimal string representation of the ASN.1 INTEGER, or
-  - raw binary data (depending on the attribute).
+Normalizes certificate serial numbers into OpenSSL-style colon-separated uppercase hexadecimal octets.
 
-OpenSSL, on the other hand, prints serials as colon-separated
-hexadecimal octets (big-endian).
+=over 4
 
-This helper ensures consistent OpenSSL-style output.
+=item B<Inputs>: C<$cert> (String/Integer) - Decimal integer string or raw binary serial number.
 
-Usage in template:
-  %= h_cert_serial($cert->serial)
-  %= h_cert_serial($cert->authority_serial)
+=item B<Returns>: String|HashRef - Colon-separated hex string (e.g. C<"01:23:45:67:89:AB">) or error hash reference if missing.
+
+=back
 
 =cut
 
@@ -1837,20 +2151,35 @@ Usage in template:
 		 return uc join(":", unpack("(H2)*", $bin));
 	       });
 
-
 =head2 h_btns_cp_save_from_element
 
-helper to place two buttons to copy to clipboard and download as file a
-content of an element with id passed to helper
+  my $html = $c->h_btns_cp_save_from_element($target_id, $file_name, $button_class, $wrapper_class, $mimetype, $qrcode);
 
-on input expects:
+Renders HTML action buttons to copy an element's text to the clipboard, download it as a file, and optionally show a QR code.
 
-    target_id:    mandatory
-    file_name:    optional
-    button_class: optional
-    wrapper_class:optional
-    mimetype:     optional
-    qrcode:       optional
+=over 4
+
+=item B<Inputs>:
+
+=over 4
+
+=item * C<$target_id> (String, Mandatory) - DOM element ID containing content.
+
+=item * C<$file_name> (String, Optional) - Default download filename.
+
+=item * C<$button_class> (String, Optional) - CSS class for buttons.
+
+=item * C<$wrapper_class> (String, Optional) - CSS class for button container.
+
+=item * C<$mimetype> (String, Optional) - MIME type for download file.
+
+=item * C<$qrcode> (String, Optional) - Text to encode in a QR code button.
+
+=back
+
+=item B<Returns>: String - Rendered HTML button group string.
+
+=back
 
 =cut
 
@@ -1888,178 +2217,233 @@ on input expects:
 		  return $html;
 		});
 
+###=head2 h_btn_cp_from_url
+###
+###  my $html = $c->h_btn_cp_from_url(id => 'copy-btn', js_func => sub { return "fetchText()" });
+###
+###Renders a button and inline JavaScript to copy text returned asynchronously by a JavaScript expression to the clipboard.
+###
+###=over 4
+###
+###=item B<Inputs>: Named parameters C<%args>
+###
+###=over 4
+###
+###=item * C<id> (String) - HTML element ID.
+###
+###=item * C<title> (String) - Tooltip title text.
+###
+###=item * C<text> (String) - Visible button HTML label.
+###
+###=item * C<js_func> (CodeRef) - Subroutine returning the JS expression string to evaluate.
+###
+###=back
+###
+###=item B<Returns>: String - HTML and inline C<E<lt>scriptE<gt>> tags.
+###
+###=back
+###
+###=cut
+###
+###  $app->helper( h_btn_cp_from_url => sub {
+###		  my ($self, %args) = @_;
+###
+###		  my $id     = $args{id}     || 'btn-copy';
+###		  my $class  = $args{class}  || 'btn btn-sm btn-secondary';
+###		  my $title  = $args{title}  || 'Copy to clipboard';
+###		  my $text   = $args{text}   || '<i class="fa-solid fa-copy"></i>';
+###		  my $js     = $args{js_func} ? $args{js_func}->() : '""';
+###
+###		  return qq{
+###<button id="$id" class="$class" title="$title">
+###  $text
+###</button>
+###<script>
+###  (function () {
+###    const btn = document.getElementById('$id');
+###    if (!btn) return;
+###    btn.addEventListener('click', function () {
+###      (async () => {
+###	try {
+###	  const text = await ($js);
+###	  const temp = document.createElement("textarea");
+###	  temp.value = text;
+###	  document.body.appendChild(temp);
+###	  temp.select();
+###	  document.execCommand("copy");
+###	  document.body.removeChild(temp);
+###	  alert("Copied to clipboard");
+###	} catch (e) {
+###	  alert("Copy failed: " + e);
+###	}
+###      })();
+###    });
+###  })();
+###</script>
+###};
+###
+###		});
+###
+###=head2 h_btn_save_from_url
+###
+###  my $html = $c->h_btn_save_from_url(id => 'save-btn', filename => 'out.txt', js_func => sub { return "fetchData()" });
+###
+###Renders a button and inline JavaScript that fetches text data via JavaScript and triggers a browser file download.
+###
+###=over 4
+###
+###=item B<Inputs>: Named parameters C<%args>
+###
+###=over 4
+###
+###=item * C<id> (String) - HTML element ID.
+###
+###=item * C<title> (String) - Tooltip title text.
+###
+###=item * C<filename> (String) - Target download filename.
+###
+###=item * C<js_func> (CodeRef) - Subroutine returning the JS expression evaluating to text content.
+###
+###=back
+###
+###=item B<Returns>: String - HTML and inline C<E<lt>scriptE<gt>> tags.
+###
+###=back
+###
+###=cut
+###
+###  $app->helper( h_btn_save_from_url => sub {
+###		  my ($self, %args) = @_;
+###		  my $t = localtime;
+###
+###		  my $id       = $args{id}      || 'btn-download';
+###		  my $class    = $args{class}   || 'btn btn-sm btn-secondary';
+###		  my $title    = $args{title}   || 'Download as text file';
+###		  my $text     = $args{text}    || '<i class="fa-solid fa-file-arrow-down"></i>';
+###		  my $filename = $args{filename}|| 'searchresult-' . $t->datetime . '.ldif';
+###		  my $js       = $args{js_func} ? $args{js_func}->() : '""';
+###
+###		  return qq{
+###<button id="$id" class="$class" title="$title">
+###  $text
+###</button>
+###<script>
+###document.addEventListener('DOMContentLoaded', function () {
+###  const btn = document.getElementById('$id');
+###  if (!btn) return;
+###  btn.addEventListener('click', function () {
+###    (async () => {
+###      try {
+###	const text = await ($js);
+###	const blob = new Blob([text], { type: 'text/plain' });
+###	const link = document.createElement('a');
+###	link.href = URL.createObjectURL(blob);
+###	link.download = '$filename';
+###	document.body.appendChild(link);
+###	link.click();
+###	document.body.removeChild(link);
+###      } catch (e) {
+###	alert("Download failed: " + e);
+###      }
+###    })();
+###  });
+###});
+###</script>
+###};
+###		});
+
+
 =head2 h_btn_cp_from_url
 
-  %== h_btn_cp_from_url id => 'copy-ldif', title => 'Copy LDIF', text => '<i class="fa-solid fa-copy"></i>', js_func => sub { return "fetchLdif(params)" };
+    my $html = $c->h_btn_cp_from_url(
+      url   => $url,
+      title => 'Copy LDIF',
+      text  => '<i class="fa-solid fa-copy"></i>'
+    );
 
-Renders a button which, when clicked, copies text returned by the provided JS expression (stringified) into the clipboard.
-
-Options:
-- id:        HTML id of the button.
-- title:     Tooltip text.
-- text:      Visible button label or HTML.
-- js_func:   Subroutine reference that returns the JS expression which evaluates to a string to be copied.
-	     something like this:
-	     <script>
-	       const params = {
-		 base: <%= b($search_arg->{base})->quote %>,
-		 filter: <%= b($search_arg->{filter})->quote %>,
-		 scope: "<%= exists $search_arg->{scope} ? $search_arg->{scope} : 'sub' %>"
-	       };
-
-	       async function fetchLdif(params = {}) {
-		 const query = new URLSearchParams({
-		 base_dn: params.base,
-		 search_filter: params.filter,
-		 search_scope: params.scope
-		 }).toString();
-		 const baseUrl = '<%= url_for("get_searchresult_ldif")->to_abs %>';
-		 const url = baseUrl + '?' + query;
-		 // console.log(url);
-		 const res = await fetch(url);
-		 if (!res.ok) throw new Error("Network error");
-		 return await res.text();
-	       }
-	     </script
-
-=cut
-
-  $app->helper( h_btn_cp_from_url => sub {
-		  my ($self, %args) = @_;
-
-		  my $id     = $args{id}     || 'btn-copy';
-		  my $class  = $args{class}  || 'btn btn-sm btn-secondary';
-		  my $title  = $args{title}  || 'Copy to clipboard';
-		  my $text   = $args{text}   || '<i class="fa-solid fa-copy"></i>';
-		  my $js     = $args{js_func} ? $args{js_func}->() : '""';
-
-		  return qq{
-<button id="$id" class="$class" title="$title">
-  $text
-</button>
-<script>
-  (function () {
-    const btn = document.getElementById('$id');
-    if (!btn) return;
-    btn.addEventListener('click', function () {
-      (async () => {
-	try {
-	  const text = await ($js);
-	  const temp = document.createElement("textarea");
-	  temp.value = text;
-	  document.body.appendChild(temp);
-	  temp.select();
-	  document.execCommand("copy");
-	  document.body.removeChild(temp);
-	  alert("Copied to clipboard");
-	} catch (e) {
-	  alert("Copy failed: " + e);
-	}
-      })();
-    });
-  })();
-</script>
-};
-
-		});
-
-=head2 h_btn_save_from_url
-
-  %== h_btn_save_from_url id => 'download-ldif', title => 'Download LDIF of this search result into text file', filename => 'searchresult.ldif', js_func => sub { return 'fetchLdif(params)' }
-
-Helper that renders a HTML button element with the given C<id> and C<title>,
-which, upon being clicked, fetches text data using the supplied JavaScript
-function expression (provided by C<js_func>) and triggers download of that data
-as a plain text file with name given in C<filename>.
-
-=head3 Parameters
+Generates the HTML markup for a button that fetches text content from a specified URL and copies it to the client clipboard.
 
 =over 4
 
-=item * C<id>
+=item * C<$url> - Target endpoint URL providing the text payload.
 
-String. Required. Will be used as the HTML C<id> of the button.
-
-=item * C<title>
-
-String. Optional. Will be used as the C<title> attribute (tooltip text).
-
-=item * C<filename>
-
-String. Optional. Default is C<data.txt>. Filename for the downloaded file.
-
-=item * C<js_func>
-
-CodeRef. Required. Must return a valid JavaScript expression that evaluates
-into a Promise resolving to text content to be downloaded.
+=item * C<%options> - Optional configuration hash (e.g., C<label>, C<class>, C<id>, C<title>).
 
 =back
 
-=head3 Example Output
+B<JavaScript Dependency:>
 
-  <button id="download-ldif" class="btn btn-sm btn-secondary" title="Download LDIF">
-    <i class="fa-solid fa-file-arrow-down"></i>
-  </button>
-  <script>
-    document.addEventListener('DOMContentLoaded', () => {
-      document.getElementById('download-ldif').addEventListener('click', async () => {
-	const text = await fetchLdif(params);
-	const blob = new Blob([text], { type: 'text/plain' });
-	const link = document.createElement('a');
-	link.href = URL.createObjectURL(blob);
-	link.download = "searchresult.ldif";
-	document.body.appendChild(link);
-	link.click();
-	document.body.removeChild(link);
-      });
-    });
-  </script>
+Depends from the delegated click event listener for async URL actions in umi-common.js
+
+Returns raw HTML string.
 
 =cut
 
-  $app->helper( h_btn_save_from_url => sub {
-		  my ($self, %args) = @_;
-		  my $t = localtime;
+$app->helper( h_btn_cp_from_url => sub {
+    my ($self, %args) = @_;
 
-		  my $id       = $args{id}      || 'btn-download';
-		  my $class    = $args{class}   || 'btn btn-sm btn-secondary';
-		  my $title    = $args{title}   || 'Download as text file';
-		  my $text     = $args{text}    || '<i class="fa-solid fa-file-arrow-down"></i>';
-		  my $filename = $args{filename}|| 'searchresult-' . $t->datetime . '.ldif';
-		  my $js       = $args{js_func} ? $args{js_func}->() : '""';
+    my $url   = $args{url}   || '';
+    my $class = $args{class} || 'btn btn-sm btn-secondary js-btn-copy-url';
+    my $title = $args{title} || 'Copy to clipboard';
+    my $text  = $args{text}  || '<i class="fa-solid fa-copy"></i>';
 
-		  return qq{
-<button id="$id" class="$class" title="$title">
-  $text
-</button>
-<script>
-document.addEventListener('DOMContentLoaded', function () {
-  const btn = document.getElementById('$id');
-  if (!btn) return;
-  btn.addEventListener('click', function () {
-    (async () => {
-      try {
-	const text = await ($js);
-	const blob = new Blob([text], { type: 'text/plain' });
-	const link = document.createElement('a');
-	link.href = URL.createObjectURL(blob);
-	link.download = '$filename';
-	document.body.appendChild(link);
-	link.click();
-	document.body.removeChild(link);
-      } catch (e) {
-	alert("Download failed: " + e);
-      }
-    })();
-  });
+    return qq{<button type="button" class="$class" title="$title" data-fetch-url="$url">$text</button>};
 });
-</script>
-};
-		});
+
+
+=head2 h_btn_save_from_url
+
+    my $html = $c->h_btn_save_from_url(
+      url      => $url,
+      filename => 'searchresult.ldif',
+      title    => 'Save LDIF'
+    );
+
+Generates the HTML markup for a button that fetches data from a specified URL and triggers a client-side file download in the browser.
+
+=over 4
+
+=item * C<$url> - Source URL to fetch the file content from.
+
+=item * C<$filename> - Default base filename presented in the browser save prompt (e.g., C<searchresult.ldif>).
+
+=item * C<%options> - Optional configuration hash (e.g., C<type>, C<class>, C<label>, C<id>).
+
+=back
+
+B<JavaScript Dependency:>
+
+Depends from the delegated click event listener for async URL actions in umi-common.js
+
+Returns raw HTML string.
+
+=cut
+
+$app->helper( h_btn_save_from_url => sub {
+    my ($self, %args) = @_;
+
+    my $url      = $args{url}      || '';
+    my $filename = $args{filename} || 'searchresults-'  . strftime("%Y%m%d%H%M%S", localtime) . '.ldif';
+    my $class    = $args{class}    || 'btn btn-sm btn-secondary js-btn-save-url';
+    my $title    = $args{title}    || 'Download as text file';
+    my $text     = $args{text}     || '<i class="fa-solid fa-file-arrow-down"></i>';
+
+    return qq{<button type="button" class="$class" title="$title" data-fetch-url="$url" data-filename="$filename">$text</button>};
+});
 
 =head2 h_req_mark
 
-helper for a small marker element (the icon/sup indicating "this field is required")
+  my $icon_html = $c->h_req_mark(icon => 'fa-bookmark', color => 'text-danger');
+
+Renders a small indicator icon mark for required form fields.
+
+=over 4
+
+=item B<Inputs>: Named parameters C<%args> (C<icon>, C<color>, C<title>, C<class>).
+
+=item B<Returns>: String - HTML superscript icon tag.
+
+=back
 
 =cut
 
@@ -2072,11 +2456,51 @@ helper for a small marker element (the icon/sup indicating "this field is requir
 		  return qq{<sup><i class="fa-solid $icon fa-2xs $color $class" title="$title"></i></sup>};
 		});
 
+=head2 h_rest_mark
+
+  my $has_rest = $c->h_rest_mark(text => 'REST', color => 'text-danger');
+
+Renders a small indicator icon mark for required form fields.
+
+=over 4
+
+=item B<Inputs>: Named parameters C<%args> (C<icon>, C<color>, C<title>, C<class>).
+
+=item B<Returns>: String - HTML superscript icon tag.
+
+=back
+
+=cut
+
+  $app->helper( h_rest_mark => sub {
+		  my ($self, %args) = @_;
+		  my $text  = $args{text}  // '&#9675'; # 'R'; #'&#127276;'; # '&#127297;'; #'&#9415;';
+		  my $icon  = $args{icon}  // 'fa-registered';
+		  my $color = $args{color} // 'text-success-emphasis';
+		  my $title = $args{title} // 'some REST endpoint/s available';
+		  my $class = $args{class} // '';
+		  my $tag   = $args{tag}   // 'sub';
+		  # $self->h_log(keys %args);
+		  if ( keys %args ) {
+		    return qq{<$tag><i class="fa-solid $icon fa-2xs $color $class" title="$title"></i></$tag>};
+		  } else {
+		    return qq{<$tag class="fa-2xs $color $class text-uppercase" title="$title">$text</$tag>};
+		  }
+		});
+
 =head2 h_nested_params
 
-helper to convert parameters with names like `hosts[0]` into a nested array structure
+  my $nested_hash = $c->h_nested_params;
 
-empty parameters are ignored
+Parses request parameters with bracket notation (e.g. C<hosts[0]>) into structured nested arrays.
+
+=over 4
+
+=item B<Inputs>: None directly passed; inspects C<$c-E<gt>req-E<gt>params>.
+
+=item B<Returns>: HashRef - Parameter hash reference with expanded nested arrays.
+
+=back
 
 =cut
 
@@ -2102,7 +2526,17 @@ empty parameters are ignored
 
 =head2 h_is_empty_nested_arr
 
-verify that an array reference is equal to `[ [] ]`
+  my $bool = $c->h_is_empty_nested_arr($arr);
+
+Verifies if an array reference matches the specific nested structure C<[ [] ]>.
+
+=over 4
+
+=item B<Inputs>: C<$arr> (ArrayRef) - Array reference to test.
+
+=item B<Returns>: Boolean - True if C<$arr> is C<[ [] ]>; false otherwise.
+
+=back
 
 =cut
 
@@ -2120,7 +2554,25 @@ verify that an array reference is equal to `[ [] ]`
 
 =head2 h_ts_to_generalizedTime
 
-convert timestamp like YYYY-mm-dd to YYYYmmdd000000Z
+  my $gen_time = $c->h_ts_to_generalizedTime($date_str, $format);
+
+Converts a date string into LDAP GeneralizedTime format (e.g. C<YYYYMMDDHHMMSSZ>).
+
+=over 4
+
+=item B<Inputs>:
+
+=over 4
+
+=item * C<$date> (String) - Date string.
+
+=item * C<$format> (String, Optional) - C<strptime> input format string (Default: C<'%Y-%m-%d'>).
+
+=back
+
+=item B<Returns>: String - LDAP GeneralizedTime string.
+
+=back
 
 =cut
 
@@ -2134,7 +2586,17 @@ convert timestamp like YYYY-mm-dd to YYYYmmdd000000Z
 
 =head2 h_years_since
 
-calculates number of full years since date
+  my $years = $c->h_years_since($generalized_time_str);
+
+Calculates the number of full elapsed years between an LDAP GeneralizedTime string and the current time.
+
+=over 4
+
+=item B<Inputs>: C<$date> (String) - LDAP GeneralizedTime string.
+
+=item B<Returns>: Integer - Number of full elapsed years.
+
+=back
 
 =cut
 
@@ -2153,13 +2615,25 @@ calculates number of full years since date
 
 =head2 h_get_value_safe
 
-  my $val = $self->h_get_attr_safe($entry, 'attr');
+  my $val = $c->h_get_value_safe($entry, $attr);
 
-Return the first value of attribute C<attr> from a L<Net::LDAP::Entry> object C<$entry>,
-or undef if the attribute is absent or empty.
+Safely retrieves the first scalar value of an attribute from a L<Net::LDAP::Entry> object.
 
-Silent on missing attributes. Suitable for use with C<get_value()> on entries returned
-by C<Net::LDAP::Search>.
+=over 4
+
+=item B<Inputs>:
+
+=over 4
+
+=item * C<$entry> (L<Net::LDAP::Entry>) - LDAP entry object.
+
+=item * C<$attr> (String) - Target attribute name.
+
+=back
+
+=item B<Returns>: String|undef - Attribute value string or C<undef> if absent or empty.
+
+=back
 
 =cut
 
@@ -2204,20 +2678,31 @@ by C<Net::LDAP::Search>.
 
 =head2 h_branch_add_if_not_exists
 
-the subroutine accepts several arguments (the object itself as $self,
-a hashref of parameters $p, the LDAP connection object $ldap, a root
-entry $root and a debug hashref $debug).
+  my $res = $c->h_branch_add_if_not_exists($p, $ldap, $root, $debug, $dry_run);
 
-It builds the branch DN, checks if it already exists, and if not,
-constructs the branch attributes and adds the entry via LDAP.
+Checks if an LDAP service branch DN exists, creating it if it does not.
 
-Finally, it pushes any messages into the debug hash and returns the
-result of the LDAP add operation (or nothing if the entry already
-exists).
+=over 4
 
-EXAMPLE
+=item B<Inputs>:
 
-    my $result = $self->add_branch_if_not_exists($p, $ldap, $root, $debug, $dry_run);
+=over 4
+
+=item * C<$p> (HashRef) - Parameters containing C<authorizedService>, C<associatedDomain>, and optional C<login>.
+
+=item * C<$ldap> (L<Umi::Ldap>|L<Net::LDAP>) - Active LDAP connection object.
+
+=item * C<$root> (L<Net::LDAP::Entry>) - Root entry object.
+
+=item * C<$debug> (HashRef) - Hash reference collecting status/debug messages.
+
+=item * C<$dry_run> (Boolean, Optional) - If C<1>, skips writing to LDAP (Default: C<0>).
+
+=back
+
+=item B<Returns>: HashRef - C<{ br_dn =E<gt> $branch_dn, msg =E<gt> $ldap_result_or_hash }>
+
+=back
 
 =cut
 
@@ -2280,122 +2765,35 @@ EXAMPLE
 
 =head2 h_service_add_if_not_exists
 
-the subroutine accepts
+  my $res = $c->h_service_add_if_not_exists($p, $ldap, $root, $br, $debug, $dry_run);
 
-    $self  the current object (so you can use its helpers and configuration)
-    $p     a hash reference of parameters
-    $ldap  an LDAP connection object
-    $root  an LDAP entry object (used to retrieve attribute values like givenName and sn)
-    $br    a hash reference containing the branch DN (i.e. $br->{br_dn})
-    $debug a hash reference for collecting debug messages
-    $dry_run if set to 1 then LDAP add not done
-
-The subroutine constructs the service DN, determines the required
-attributes (using schema information and placeholder substitution),
-and finally calls $ldap->add(...). It also pushes status messages into
-the debug structure. (You may adjust the return value as needed; here
-it returns an empty hashref in the success case.)
-
-EXAMPLE
-
-    my $result = $self->add_branch_if_not_exists($p, $ldap, $root, $br, $debug);
-
-=head3 Building $svc_attrs Hash Logic
-
-The C<$svc_attrs> hash is constructed in the following stages:
-
-=head4 1. Initialize with objectClass
-
-    $svc_attrs->{objectClass} = $sc->{attr}->{objectClass};
-
-Retrieved directly from service configuration.
-
-=head4 2. Schema Analysis
-
-Query LDAP schema to identify:
+Constructs and provisions a new LDAP authorized service entry with schema validation, placeholder substitutions, and password generation.
 
 =over 4
 
-=item * MUST attributes (required by objectClass definitions)
-
-=item * MAY attributes (optional but configured)
-
-=back
-
-Special mappings: C<userid> E<gt> C<uid>, C<userCertificate> E<gt> C<userCertificate;binary>
-
-=head4 3. Process Data Fields
-
-Iterate through C<$sc-E<gt>{data_fields}> and populate attributes:
+=item B<Inputs>:
 
 =over 4
 
-=item * B<login>: Sets C<uid> to RDN value
+=item * C<$p> (HashRef) - Request form parameters.
 
-=item * B<userPassword>: Generates password hash (SSHA)
+=item * C<$ldap> (L<Umi::Ldap>|L<Net::LDAP>) - LDAP connection object.
 
-=item * B<sshKeyText/sshKeyFile>: Accumulates SSH public keys
+=item * C<$root> (L<Net::LDAP::Entry>) - User root entry object.
 
-=item * B<missing fields>: Uses configuration defaults or templates
+=item * C<$br> (HashRef) - Branch info containing C<br_dn>.
 
-=item * B<other fields>: Copies directly from request parameters
+=item * C<$debug> (HashRef) - Hash reference to accumulate status/error log messages.
 
-=back
-
-=head4 4. Build Replacement Hash
-
-Create C<%replace> hash for placeholder substitution:
-
-    %replace = (
-	'%associatedDomain%' => $svc_attrs->{associatedDomain},
-	'%givenName%'        => $root->get_value('givenName'),
-	'%sn%'               => $root->get_value('sn'),
-	'%uid%'              => $svc_attrs->{uid},
-	'%cn%'               => ...,
-	'%gecos%'            => ...,
-    );
-
-For certificate-based services, certificate-specific placeholders are added.
-
-=head4 5. Process MUST Attributes
-
-For each schema-required attribute:
-
-=over 4
-
-=item 1. Skip if already has value without placeholders
-
-=item 2. Auto-increment C<uidNumber> from last used value
-
-=item 3. Get template from configuration
-
-=item 4. Substitute placeholders like C<%uid%>, C<%sn%>, etc.
+=item * C<$dry_run> (Boolean, Optional) - If C<1>, performs simulation without adding to LDAP (Default: C<0>).
 
 =back
 
-    $svc_attrs->{$attr} =~ s/%([[:alpha:]]+(?:;[[:alpha:]]+)*)%/
-	exists $replace{"%$1%"} ? $replace{"%$1%"} : $&/ge;
-
-=head4 6. Process MAY Attributes
-
-Same logic as MUST attributes, but only for configured optional attributes.
-
-=head4 7. Post-Processing
-
-=over 4
-
-=item * Transliterate C<gecos> if present
-
-=item * Format C<authorizedService> as C<service@domain>
+=item B<Returns>: HashRef - C<{ svc_dn =E<gt> $service_dn, msg =E<gt> $ldap_msg, svc_details =E<gt> \%details }>
 
 =back
-
-=head4 Final Result
-
-The C<$svc_attrs> hash contains all attributes ready for C<$ldap-E<gt>add($svc_dn, $svc_attrs)>.
 
 =cut
-
 
   $app->helper( h_service_add_if_not_exists => sub {
 		  my ($self, $p, $ldap, $root, $br, $debug, $dry_run) = @_;
@@ -2634,7 +3032,7 @@ The C<$svc_attrs> hash contains all attributes ready for C<$ldap-E<gt>add($svc_d
 		    next if exists $svc_attrs->{$attr} && $svc_attrs->{$attr} =~ /^(?!.*%[[:alpha:]]+%).*$/;
 		    $svc_attrs->{$attr} = $sc->{attr}->{$attr};
 		    if ( $attr eq 'userCertificate;binary' ) { # binary data shouldn't be substituted
-		      $svc_attrs->{$attr} = $p->{'userCertificate;binary'};
+		      $svc_attrs->{$attr} =$p->{'userCertificate;binary'};
 		    } else {
 		      # looks for placeholders enclosed in percent signs like %FOO% or %FOO;BAR% in the string $a.
 		      #   For each placeholder:
@@ -2645,52 +3043,49 @@ The C<$svc_attrs> hash contains all attributes ready for C<$ldap-E<gt>add($svc_d
 		    }
 		  }
 
-		  $svc_attrs->{gecos} = $self->h_translit($svc_attrs->{gecos}) if exists $svc_attrs->{gecos};
+		  $svc_attrs->{gecos} =$self->h_translit($svc_attrs->{gecos}) if exists$svc_attrs->{gecos};
 
-		  $svc_attrs->{authorizedService} = sprintf('%s@%s', $p->{authorizedService},
-							    $p->{associatedDomain});
+		  $svc_attrs->{authorizedService} = sprintf('%s@%s', $p->{authorizedService},$p->{associatedDomain});
 		  # $dry_run=1;
-		  # $self->h_log($svc_attrs);
-		  $self->h_log($svc_attrs) if $dry_run == 1;
+		  # $self->h_log($svc_attrs);$self->h_log($svc_attrs) if$dry_run == 1;
 
 		  # Add the service entry to LDAP.
 		  my $msg;
 		  if ( $dry_run == 0 ) {
-		    $msg = $ldap->add($svc_dn, $svc_attrs);
+		    $msg =$ldap->add($svc_dn,$svc_attrs);
 		  } else {
 		    $msg = { status => 'ok',
 			     message => sprintf('DRYRUN: h_service_add_if_not_exists() ldap->add dn: %s', $svc_dn) }
 		  }
 		  if ($msg) {
 		    $self->h_log($msg);
-		    push @{$debug->{$msg->{status}}}, $msg->{message};
+		    push @{$debug->{$msg->{status}}},$msg->{message};
 		    if ($msg->{status} eq 'ok') {
 		      push @{$debug->{$msg->{status}}},
 			sprintf('password: <span class="badge text-bg-secondary user-select-all">%s</span>', $pwd->{clear});
 
 		      if ( $p->{authorizedService} =~ /^dot1x-eap-.*$/ ) {
-			my $search_arg = { base => $svc_attrs->{radiusGroupName},
+			my $search_arg = { base =>$svc_attrs->{radiusGroupName},
 					   scope => 'base',
 					   filter => '(&(cn=*)(member=' . $svc_dn . '))', };
-			my $if_exist = $ldap->search( $search_arg );
-			$self->h_log( $self->h_ldap_err($if_exist, $search_arg) ) if $if_exist->code;
+			my $if_exist =$ldap->search( $search_arg );$self->h_log( $self->h_ldap_err($if_exist, $search_arg) ) if$if_exist->code;
 			if ( ! $if_exist->count ) {
 			  my $mesg;
 			  if ( $dry_run == 0 ) {
-			    $mesg = $ldap->modify( $svc_attrs->{radiusGroupName}, [ add => [ member => $svc_dn, ], ], );
+			    $mesg =$ldap->modify( $svc_attrs->{radiusGroupName}, [ add => [ member =>$svc_dn, ], ], );
 			    if ( $mesg->{status} eq 'error' ) {
 			      push @{$debug->{error}},
 				sprintf('Error during <mark>%s</mark> group modification:</br>%s',
-					$svc_attrs->{radiusGroupName}, $mesg->{message}->{html});
+					$svc_attrs->{radiusGroupName},$mesg->{message}->{html});
 			    } else {
 			      push @{$debug->{ok}},
 				sprintf('Group <mark>%s</mark> successfully modified with %s',
-					$svc_attrs->{radiusGroupName}, $mesg->{message}->{html});
+					$svc_attrs->{radiusGroupName},$mesg->{message}->{html});
 			    }
 			  } else {
 			    push @{$debug->{ok}},
 			      sprintf('DRYRUN: RADIUS group <mark>%s</mark> modify:<br> [ add => [ member => <mark>%s</mark>, ], ]',
-				      $svc_attrs->{radiusGroupName}, $svc_dn);
+				      $svc_attrs->{radiusGroupName},$mesg->{message}->{html});
 			  }
 
 			} else {
@@ -2705,23 +3100,30 @@ The C<$svc_attrs> hash contains all attributes ready for C<$ldap-E<gt>add($svc_d
 		  }
 		  # $self->h_log($debug);
 
-		  my %r = ( svc_dn => $svc_dn, msg => $msg, svc_details => \%svc_details );
-		   $self->h_log(\%r);
+		  my %r = ( svc_dn => $svc_dn, msg => $msg, svc_details => \%svc_details );$self->h_log(\%r);
 		  return \%r;
 
 		});
 
 =head2 h_vcard
 
-receives Net::LDAP::Search->as_struct for root object/s
+  my $vcards_str = $c->h_vcard($entries);
 
-returns all the vCards as a single string
+Generates a vCard address book string from LDAP search entries returned by C<as_struct>.
+
+=over 4
+
+=item B<Inputs>: C<$entries> (HashRef) - LDAP search entries hash reference from C<as_struct>.
+
+=item B<Returns>: String - Concatenated vCard format text string.
+
+=back
 
 =cut
 
   $app->helper( h_vcard => sub {
-		  my ($self, $entries) = @_;
-		  # $self->h_log( $entries );
+		  my ($self,$entries) = @_;
+		  # $self->h_log($entries );
 
 		  my $abook = vCard::AddressBook->new();
 
@@ -2729,30 +3131,29 @@ returns all the vCards as a single string
 		    my %h;
 		    my $e = $entries->{$dn};
 
-		    $h{full_name}    = $e->{gecos}->[0] if ref($e->{gecos}) eq 'ARRAY' && $e->{gecos}->[0] ne '';
-		    $h{given_names}  = $e->{givenname}  if ref($e->{givenname}) eq 'ARRAY' && $e->{givenname}->[0] ne '';
-		    $h{family_names} = $e->{sn}         if ref($e->{sn}) eq 'ARRAY' && $e->{sn}->[0] ne '';
-		    $h{title}        = $e->{title}->[0] if ref($e->{title}) eq 'ARRAY' && $e->{title}->[0] ne '';
+		    $h{full_name}    =$e->{gecos}->[0] if ref($e->{gecos}) eq 'ARRAY' &&$e->{gecos}->[0] ne '';
+		    $h{given_names}  =$e->{givenname}  if ref($e->{givenname}) eq 'ARRAY' &&$e->{givenname}->[0] ne '';
+		    $h{family_names} =$e->{sn}         if ref($e->{sn}) eq 'ARRAY' &&$e->{sn}->[0] ne '';
+		    $h{title}        =$e->{title}->[0] if ref($e->{title}) eq 'ARRAY' &&$e->{title}->[0] ne '';
 		    # otherwise warning '... uninitialized value ... vCard.pm line 112' occures
 		    $h{photo} = '';
 
 		    if (exists $e->{mail}) {
 		      for (@{$e->{mail}}) {
 			next if $_ eq '';
-			push @{$h{email_addresses}}, { type => ['work'], address => $_ };
+			push @{$h{email_addresses}}, { type => ['work'], address =>$_ };
 		      }
 		    }
 
 		    if (exists $e->{telephonenumber}) {
 		      for (@{$e->{telephonenumber}}) {
 			next if $_ eq '';
-			push @{$h{phones}}, { type => ['work'], number => $_ };
+			push @{$h{phones}}, { type => ['work'], number =>$_ };
 		      }
 		    }
 
-		    my $vcard = $abook->add_vcard();
-		    $vcard->load_hashref(\%h);
-		    # $self->h_log( $vcard->as_string );
+		    my $vcard = $abook->add_vcard();$vcard->load_hashref(\%h);
+		    # $self->h_log($vcard->as_string );
 		    # $self->h_log( \%h );
 		  }
 
