@@ -2474,7 +2474,7 @@ Renders a small indicator icon mark for required form fields.
 
   $app->helper( h_rest_mark => sub {
 		  my ($self, %args) = @_;
-		  my $text  = $args{text}  // '&#9675'; # 'R'; #'&#127276;'; # '&#127297;'; #'&#9415;';
+		  my $text  = $args{text}  // '&#9900'; # '&#9675'; # 'R'; #'&#127276;'; # '&#127297;'; #'&#9415;';
 		  my $icon  = $args{icon}  // 'fa-registered';
 		  my $color = $args{color} // 'text-success-emphasis';
 		  my $title = $args{title} // 'some REST endpoint/s available';
@@ -2482,9 +2482,9 @@ Renders a small indicator icon mark for required form fields.
 		  my $tag   = $args{tag}   // 'sub';
 		  # $self->h_log(keys %args);
 		  if ( keys %args ) {
-		    return qq{<$tag><i class="fa-solid $icon fa-2xs $color $class" title="$title"></i></$tag>};
+		    return qq{<$tag><i class="fa-solid $icon umi-text-tiny $color $class" title="$title"></i></$tag>};
 		  } else {
-		    return qq{<$tag class="fa-2xs $color $class text-uppercase" title="$title">$text</$tag>};
+		    return qq{<$tag class="umi-text-tiny $color $class text-uppercase" title="$title">$text</$tag>};
 		  }
 		});
 

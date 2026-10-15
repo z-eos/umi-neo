@@ -281,7 +281,8 @@ sub advanced ($self) {
     # $self->stash(debug => { warn => ["Form is empty"] });
     return $self->render(template => 'protected/search/advanced',
 			 debug => { warn => ["Form is empty"] });
-  } unless exists $p->{search_filter} && length($p->{search_filter}) > 0;
+  } unless defined $filter && length($filter) > 0;
+  ###} unless exists $p->{search_filter} && length($p->{search_filter}) > 0;
 
   my $search = $ldap->search( $search_arg );
   $self->h_log( $self->{app}->h_ldap_err($search, $search_arg) ) if $search->code;
